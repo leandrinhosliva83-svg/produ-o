@@ -166,17 +166,9 @@ td.emp-cell{color:var(--blue-light);font-size:11px;font-weight:700;letter-spacin
 @keyframes shine{0%{background-position:200%}100%{background-position:-200%}}
 .view-content{display:none;}.view-content.active{display:block;}
 .emp-content{display:none;}.emp-content.active{display:block;}
-.emp-update-bar{display:flex;align-items:center;gap:8px;margin-bottom:0;font-size:11px;color:var(--gray);letter-spacing:1.5px;text-transform:uppercase;}
+.emp-update-bar{display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:11px;color:var(--gray);letter-spacing:1.5px;text-transform:uppercase;}
 .emp-update-bar .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 2.5s ease-in-out infinite;}
 .emp-update-bar .upd-text{color:var(--green);}
-.dates-bar{display:flex;align-items:stretch;gap:0;margin-bottom:28px;border:1px solid var(--border);overflow:hidden;}
-.date-box{flex:1;padding:14px 20px;display:flex;flex-direction:column;gap:4px;background:var(--bg2);border-right:1px solid var(--border);}
-.date-box:last-child{border-right:none;}
-.date-box-lbl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gray);}
-.date-box-val{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--white);}
-.date-box-val.green{color:var(--green);}
-.date-box-val.orange{color:var(--orange);}
-.upd-bar-wrap{background:var(--bg3);border-top:1px solid var(--border);padding:8px 20px;display:flex;align-items:center;gap:8px;}
 </style>
 </head>
 <body>
@@ -223,30 +215,10 @@ td.emp-cell{color:var(--blue-light);font-size:11px;font-weight:700;letter-spacin
     <div class="page-sub">Clique no proprietário para ver detalhes</div>
     <!-- CEM -->
     <div class="emp-content active" id="emp-cliente-CEM">
-      <div class="dates-bar" id="bar-CEM" style="display:none">
-        <div class="date-box">
-          <div class="date-box-lbl">📅 Dia Atual</div>
-          <div class="date-box-val green" id="hoje-CEM">—</div>
-        </div>
-        <div class="date-box">
-          <div class="date-box-lbl">🗓️ Fechamento</div>
-          <div class="date-box-val orange" id="fech-cli-CEM">—</div>
-        </div>
-        <div class="date-box" style="flex:2">
-          <div class="date-box-lbl">🔄 Última Atualização</div>
-          <div class="date-box-val" style="font-size:15px;color:var(--gray)" id="upd-cli-CEM">—</div>
-        </div>
-      </div>
-      <!-- Toggle Dia / D-1 -->
-      <div id="toggle-CEM" style="display:none;margin-bottom:20px;display:flex;gap:0;">
-        <button id="btn-dia-CEM" onclick="setPeriodo('CEM','dia')"
-          style="flex:1;padding:10px;font-family:Barlow,sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border:1px solid var(--green);background:var(--green);color:var(--bg);transition:all .2s;">
-          📄 Dia Atual
-        </button>
-        <button id="btn-d1-CEM" onclick="setPeriodo('CEM','d1')"
-          style="flex:1;padding:10px;font-family:Barlow,sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--gray);transition:all .2s;">
-          📄 D-1
-        </button>
+      <div class="emp-update-bar" id="bar-CEM" style="display:none">
+        <div class="dot"></div>
+        <span>CEM — última atualização:</span>
+        <span class="upd-text" id="upd-cli-CEM">—</span>
       </div>
       <div class="owners-grid" id="grid-CEM">
         <div class="empty"><div class="empty-ico">⏳</div><h3>Carregando</h3><p>Buscando dados...</p></div>
@@ -254,30 +226,10 @@ td.emp-cell{color:var(--blue-light);font-size:11px;font-weight:700;letter-spacin
     </div>
     <!-- CEMMA -->
     <div class="emp-content" id="emp-cliente-CEMMA">
-      <div class="dates-bar" id="bar-CEMMA" style="display:none">
-        <div class="date-box">
-          <div class="date-box-lbl">📅 Dia Atual</div>
-          <div class="date-box-val green" id="hoje-CEMMA">—</div>
-        </div>
-        <div class="date-box">
-          <div class="date-box-lbl">🗓️ Fechamento</div>
-          <div class="date-box-val orange" id="fech-cli-CEMMA">—</div>
-        </div>
-        <div class="date-box" style="flex:2">
-          <div class="date-box-lbl">🔄 Última Atualização</div>
-          <div class="date-box-val" style="font-size:15px;color:var(--gray)" id="upd-cli-CEMMA">—</div>
-        </div>
-      </div>
-      <!-- Toggle Dia / D-1 -->
-      <div id="toggle-CEMMA" style="display:none;margin-bottom:20px;display:flex;gap:0;">
-        <button id="btn-dia-CEMMA" onclick="setPeriodo('CEMMA','dia')"
-          style="flex:1;padding:10px;font-family:Barlow,sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border:1px solid var(--green);background:var(--green);color:var(--bg);transition:all .2s;">
-          📄 Dia Atual
-        </button>
-        <button id="btn-d1-CEMMA" onclick="setPeriodo('CEMMA','d1')"
-          style="flex:1;padding:10px;font-family:Barlow,sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--gray);transition:all .2s;">
-          📄 D-1
-        </button>
+      <div class="emp-update-bar" id="bar-CEMMA" style="display:none">
+        <div class="dot"></div>
+        <span>CEMMA — última atualização:</span>
+        <span class="upd-text" id="upd-cli-CEMMA">—</span>
       </div>
       <div class="owners-grid" id="grid-CEMMA">
         <div class="empty"><div class="empty-ico">⏳</div><h3>Carregando</h3><p>Buscando dados...</p></div>
@@ -285,30 +237,10 @@ td.emp-cell{color:var(--blue-light);font-size:11px;font-weight:700;letter-spacin
     </div>
     <!-- COPLASA -->
     <div class="emp-content" id="emp-cliente-COPLASA">
-      <div class="dates-bar" id="bar-COPLASA" style="display:none">
-        <div class="date-box">
-          <div class="date-box-lbl">📅 Dia Atual</div>
-          <div class="date-box-val green" id="hoje-COPLASA">—</div>
-        </div>
-        <div class="date-box">
-          <div class="date-box-lbl">🗓️ Fechamento</div>
-          <div class="date-box-val orange" id="fech-cli-COPLASA">—</div>
-        </div>
-        <div class="date-box" style="flex:2">
-          <div class="date-box-lbl">🔄 Última Atualização</div>
-          <div class="date-box-val" style="font-size:15px;color:var(--gray)" id="upd-cli-COPLASA">—</div>
-        </div>
-      </div>
-      <!-- Toggle Dia / D-1 -->
-      <div id="toggle-COPLASA" style="display:none;margin-bottom:20px;display:flex;gap:0;">
-        <button id="btn-dia-COPLASA" onclick="setPeriodo('COPLASA','dia')"
-          style="flex:1;padding:10px;font-family:Barlow,sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border:1px solid var(--green);background:var(--green);color:var(--bg);transition:all .2s;">
-          📄 Dia Atual
-        </button>
-        <button id="btn-d1-COPLASA" onclick="setPeriodo('COPLASA','d1')"
-          style="flex:1;padding:10px;font-family:Barlow,sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--gray);transition:all .2s;">
-          📄 D-1
-        </button>
+      <div class="emp-update-bar" id="bar-COPLASA" style="display:none">
+        <div class="dot"></div>
+        <span>COPLASA — última atualização:</span>
+        <span class="upd-text" id="upd-cli-COPLASA">—</span>
       </div>
       <div class="owners-grid" id="grid-COPLASA">
         <div class="empty"><div class="empty-ico">⏳</div><h3>Carregando</h3><p>Buscando dados...</p></div>
@@ -338,93 +270,24 @@ td.emp-cell{color:var(--blue-light);font-size:11px;font-weight:700;letter-spacin
       <div class="upload-cards">
         <div class="upload-card">
           <div class="uc-title">CEM</div>
-          <div class="uc-sub" style="margin-bottom:12px;">Carregar planilhas</div>
-          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
-            <div>
-              <div class="uc-sub" style="margin-bottom:4px;color:var(--green);">📄 Dia Atual</div>
-              <div style="display:flex;gap:6px;align-items:center;">
-                <button class="uc-btn" style="flex:1" onclick="document.getElementById('file-CEM-dia').click()">↑ Excel Dia</button>
-                <span style="font-size:10px;color:var(--gray);" id="upd-CEM-dia">—</span>
-              </div>
-              <input type="file" id="file-CEM-dia" accept=".xlsx,.xls" style="display:none" onchange="loadExcel(this,'CEM','dia')">
-            </div>
-            <div>
-              <div class="uc-sub" style="margin-bottom:4px;color:var(--orange);">📄 D-1</div>
-              <div style="display:flex;gap:6px;align-items:center;">
-                <button class="uc-btn" style="flex:1;border-color:var(--orange);color:var(--orange);" onclick="document.getElementById('file-CEM-d1').click()">↑ Excel D-1</button>
-                <span style="font-size:10px;color:var(--gray);" id="upd-CEM-d1">—</span>
-              </div>
-              <input type="file" id="file-CEM-d1" accept=".xlsx,.xls" style="display:none" onchange="loadExcel(this,'CEM','d1')">
-            </div>
-          </div>
-          <div>
-            <div class="uc-sub" style="margin-bottom:6px;">🗓️ Data de fechamento</div>
-            <div style="display:flex;gap:8px;">
-              <input type="date" id="fechamento-CEM" style="flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--white);padding:8px 10px;font-family:Barlow,sans-serif;font-size:13px;outline:none;color-scheme:dark;">
-              <button class="uc-btn" style="width:auto;padding:8px 14px;" onclick="saveFechamento('CEM')">✓</button>
-            </div>
-            <div style="font-size:10px;color:var(--green);margin-top:6px;" id="fech-adm-CEM"></div>
-          </div>
+          <div class="uc-sub">Carregar planilha</div>
+          <div class="uc-update" id="upd-CEM"></div>
+          <button class="uc-btn" onclick="document.getElementById('file-CEM').click()">↑ Excel CEM</button>
+          <input type="file" id="file-CEM" accept=".xlsx,.xls" style="display:none" onchange="loadExcel(this,'CEM')">
         </div>
         <div class="upload-card">
           <div class="uc-title">CEMMA</div>
-          <div class="uc-sub" style="margin-bottom:12px;">Carregar planilhas</div>
-          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
-            <div>
-              <div class="uc-sub" style="margin-bottom:4px;color:var(--green);">📄 Dia Atual</div>
-              <div style="display:flex;gap:6px;align-items:center;">
-                <button class="uc-btn" style="flex:1" onclick="document.getElementById('file-CEMMA-dia').click()">↑ Excel Dia</button>
-                <span style="font-size:10px;color:var(--gray);" id="upd-CEMMA-dia">—</span>
-              </div>
-              <input type="file" id="file-CEMMA-dia" accept=".xlsx,.xls" style="display:none" onchange="loadExcel(this,'CEMMA','dia')">
-            </div>
-            <div>
-              <div class="uc-sub" style="margin-bottom:4px;color:var(--orange);">📄 D-1</div>
-              <div style="display:flex;gap:6px;align-items:center;">
-                <button class="uc-btn" style="flex:1;border-color:var(--orange);color:var(--orange);" onclick="document.getElementById('file-CEMMA-d1').click()">↑ Excel D-1</button>
-                <span style="font-size:10px;color:var(--gray);" id="upd-CEMMA-d1">—</span>
-              </div>
-              <input type="file" id="file-CEMMA-d1" accept=".xlsx,.xls" style="display:none" onchange="loadExcel(this,'CEMMA','d1')">
-            </div>
-          </div>
-          <div>
-            <div class="uc-sub" style="margin-bottom:6px;">🗓️ Data de fechamento</div>
-            <div style="display:flex;gap:8px;">
-              <input type="date" id="fechamento-CEMMA" style="flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--white);padding:8px 10px;font-family:Barlow,sans-serif;font-size:13px;outline:none;color-scheme:dark;">
-              <button class="uc-btn" style="width:auto;padding:8px 14px;" onclick="saveFechamento('CEMMA')">✓</button>
-            </div>
-            <div style="font-size:10px;color:var(--green);margin-top:6px;" id="fech-adm-CEMMA"></div>
-          </div>
+          <div class="uc-sub">Carregar planilha</div>
+          <div class="uc-update" id="upd-CEMMA"></div>
+          <button class="uc-btn" onclick="document.getElementById('file-CEMMA').click()">↑ Excel CEMMA</button>
+          <input type="file" id="file-CEMMA" accept=".xlsx,.xls" style="display:none" onchange="loadExcel(this,'CEMMA')">
         </div>
         <div class="upload-card">
           <div class="uc-title">COPLASA</div>
-          <div class="uc-sub" style="margin-bottom:12px;">Carregar planilhas</div>
-          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
-            <div>
-              <div class="uc-sub" style="margin-bottom:4px;color:var(--green);">📄 Dia Atual</div>
-              <div style="display:flex;gap:6px;align-items:center;">
-                <button class="uc-btn" style="flex:1" onclick="document.getElementById('file-COPLASA-dia').click()">↑ Excel Dia</button>
-                <span style="font-size:10px;color:var(--gray);" id="upd-COPLASA-dia">—</span>
-              </div>
-              <input type="file" id="file-COPLASA-dia" accept=".xlsx,.xls" style="display:none" onchange="loadExcel(this,'COPLASA','dia')">
-            </div>
-            <div>
-              <div class="uc-sub" style="margin-bottom:4px;color:var(--orange);">📄 D-1</div>
-              <div style="display:flex;gap:6px;align-items:center;">
-                <button class="uc-btn" style="flex:1;border-color:var(--orange);color:var(--orange);" onclick="document.getElementById('file-COPLASA-d1').click()">↑ Excel D-1</button>
-                <span style="font-size:10px;color:var(--gray);" id="upd-COPLASA-d1">—</span>
-              </div>
-              <input type="file" id="file-COPLASA-d1" accept=".xlsx,.xls" style="display:none" onchange="loadExcel(this,'COPLASA','d1')">
-            </div>
-          </div>
-          <div>
-            <div class="uc-sub" style="margin-bottom:6px;">🗓️ Data de fechamento</div>
-            <div style="display:flex;gap:8px;">
-              <input type="date" id="fechamento-COPLASA" style="flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--white);padding:8px 10px;font-family:Barlow,sans-serif;font-size:13px;outline:none;color-scheme:dark;">
-              <button class="uc-btn" style="width:auto;padding:8px 14px;" onclick="saveFechamento('COPLASA')">✓</button>
-            </div>
-            <div style="font-size:10px;color:var(--green);margin-top:6px;" id="fech-adm-COPLASA"></div>
-          </div>
+          <div class="uc-sub">Carregar planilha</div>
+          <div class="uc-update" id="upd-COPLASA"></div>
+          <button class="uc-btn" onclick="document.getElementById('file-COPLASA').click()">↑ Excel COPLASA</button>
+          <input type="file" id="file-COPLASA" accept=".xlsx,.xls" style="display:none" onchange="loadExcel(this,'COPLASA')">
         </div>
       </div>
       <!-- Tabela -->
@@ -466,13 +329,7 @@ const BIN_ID  = '69f53f1a856a682189975e25';
 const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
 // Dados por empresa
-const db = {
-  CEM:   { dia:[], d1:[] },
-  CEMMA: { dia:[], d1:[] },
-  COPLASA:{ dia:[], d1:[] }
-};
-const periodoAtivo = { CEM:'dia', CEMMA:'dia', COPLASA:'dia' };
-const fechamento = { CEM:'', CEMMA:'', COPLASA:'' };
+const db = { CEM:[], CEMMA:[], COPLASA:[] };
 let updatedAt = { CEM:'', CEMMA:'', COPLASA:'' };
 let currentEmp = 'CEM';
 let isAdm = false;
@@ -485,10 +342,9 @@ async function init() {
     const r = await fetch(BIN_URL+'/latest',{headers:{'X-Master-Key':API_KEY}});
     const j = await r.json();
     const rec = j.record || {};
-    if(rec.CEM)    { if(Array.isArray(rec.CEM)) db.CEM={dia:rec.CEM,d1:[]}; else Object.assign(db.CEM,rec.CEM); }
-    if(rec.CEMMA)  { if(Array.isArray(rec.CEMMA)) db.CEMMA={dia:rec.CEMMA,d1:[]}; else Object.assign(db.CEMMA,rec.CEMMA); }
-    if(rec.COPLASA){ if(Array.isArray(rec.COPLASA)) db.COPLASA={dia:rec.COPLASA,d1:[]}; else Object.assign(db.COPLASA,rec.COPLASA); }
-    if(rec.fechamento) { Object.assign(fechamento, rec.fechamento); }
+    if(rec.CEM) db.CEM = rec.CEM;
+    if(rec.CEMMA) db.CEMMA = rec.CEMMA;
+    if(rec.COPLASA) db.COPLASA = rec.COPLASA;
     // updatedAt pode ser string (versão antiga) ou objeto {CEM,CEMMA,COPLASA}
     if(rec.updatedAt) {
       if(typeof rec.updatedAt === 'object') {
@@ -501,7 +357,10 @@ async function init() {
     }
     ['CEM','CEMMA','COPLASA'].forEach(e => {
       renderGrid(e);
-      updateToggle(e);
+      if(updatedAt[e]) {
+        const el = document.getElementById('upd-'+e);
+        if(el) el.textContent = 'Atualizado ' + fmtDate(updatedAt[e]);
+      }
     });
   } catch(e){ console.error(e); }
 }
@@ -514,64 +373,31 @@ async function saveAll() {
     await fetch(BIN_URL,{
       method:'PUT',
       headers:{'Content-Type':'application/json','X-Master-Key':API_KEY},
-      body:JSON.stringify({CEM:db.CEM,CEMMA:db.CEMMA,COPLASA:db.COPLASA,updatedAt,fechamento})
+      body:JSON.stringify({CEM:db.CEM,CEMMA:db.CEMMA,COPLASA:db.COPLASA,updatedAt})
     });
     setGlobalTag();
     const el = document.getElementById('upd-'+currentEmp);
     if(el) el.textContent = 'Atualizado ' + fmtDate(now);
-    setGlobalTag();
+    const bar = document.getElementById('bar-'+currentEmp);
+    const txt = document.getElementById('upd-cli-'+currentEmp);
+    if(bar) bar.style.display = 'flex';
+    if(txt) txt.textContent = fmtDate(now);
     toast('✅','Dados de '+currentEmp+' salvos!');
   } catch{ toast('❌','Erro ao salvar.'); }
   finally{ document.getElementById('pbar').classList.remove('on'); }
 }
 
-async function saveFechamento(emp) {
-  const val = document.getElementById('fechamento-'+emp).value;
-  if(!val) return;
-  fechamento[emp] = val;
-  document.getElementById('pbar').classList.add('on');
-  try {
-    await fetch(BIN_URL,{
-      method:'PUT',
-      headers:{'Content-Type':'application/json','X-Master-Key':API_KEY},
-      body:JSON.stringify({CEM:db.CEM,CEMMA:db.CEMMA,COPLASA:db.COPLASA,updatedAt,fechamento})
-    });
-    setGlobalTag();
-    toast('✅','Fechamento de '+emp+' salvo!');
-    const admEl = document.getElementById('fech-adm-'+emp);
-    if(admEl) admEl.textContent = 'Fechamento: ' + fmtDateBR(val);
-  } catch { toast('❌','Erro ao salvar fechamento.'); }
-  finally { document.getElementById('pbar').classList.remove('on'); }
-}
-
-function fmtDateBR(val) {
-  if(!val) return '—';
-  const [y,m,d] = val.split('-');
-  return d+'/'+m+'/'+y;
-}
-
 function setGlobalTag() {
-  const hoje = new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
   ['CEM','CEMMA','COPLASA'].forEach(emp => {
     const dt = updatedAt[emp];
+    if(!dt) return;
     const bar = document.getElementById('bar-'+emp);
-    // Mostrar barra se tiver dado OU fechamento
-    if(db[emp] && db[emp].length > 0) {
-      if(bar) bar.style.display = 'flex';
-    }
-    const hojeEl = document.getElementById('hoje-'+emp);
-    if(hojeEl) hojeEl.textContent = hoje;
-    const fechEl = document.getElementById('fech-cli-'+emp);
-    if(fechEl) fechEl.textContent = fechamento[emp] ? fmtDateBR(fechamento[emp]) : '—';
     const txt = document.getElementById('upd-cli-'+emp);
-    if(txt) txt.textContent = dt ? fmtDate(dt) : '—';
+    if(bar) bar.style.display = 'flex';
+    if(txt) txt.textContent = fmtDate(dt);
     // ADM cards
     const admEl = document.getElementById('upd-'+emp);
-    if(admEl && dt) admEl.textContent = 'Atualizado ' + fmtDate(dt);
-    const admFech = document.getElementById('fech-adm-'+emp);
-    if(admFech && fechamento[emp]) admFech.textContent = 'Fechamento: ' + fmtDateBR(fechamento[emp]);
-    const inputFech = document.getElementById('fechamento-'+emp);
-    if(inputFech && fechamento[emp]) inputFech.value = fechamento[emp];
+    if(admEl) admEl.textContent = 'Atualizado ' + fmtDate(dt);
   });
 }
 
@@ -613,7 +439,7 @@ function checkPw() {
 }
 
 // ── Excel ─────────────────
-function loadExcel(inp, emp, periodo) {
+function loadExcel(inp, emp) {
   const f=inp.files[0]; if(!f) return;
   currentEmp = emp;
   const reader=new FileReader();
@@ -621,43 +447,13 @@ function loadExcel(inp, emp, periodo) {
     const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
     const ws=wb.Sheets[wb.SheetNames[0]];
     const raw=XLSX.utils.sheet_to_json(ws,{header:1,range:9});
-    db[emp][periodo] = parseRows(raw);
-    // marcar horário
-    const now = new Date().toISOString();
-    updatedAt[emp] = now;
-    const el = document.getElementById('upd-'+emp+'-'+periodo);
-    if(el) el.textContent = fmtDate(now);
+    db[emp] = parseRows(raw);
     renderGrid(emp);
     renderAdmTable();
     saveAll();
-    // mostrar toggle se tiver os dois
-    updateToggle(emp);
   };
   reader.readAsArrayBuffer(f);
   inp.value='';
-}
-
-function updateToggle(emp) {
-  const toggle = document.getElementById('toggle-'+emp);
-  if(!toggle) return;
-  const hasDia = db[emp].dia && db[emp].dia.length > 0;
-  const hasD1  = db[emp].d1  && db[emp].d1.length  > 0;
-  toggle.style.display = (hasDia || hasD1) ? 'flex' : 'none';
-}
-
-function setPeriodo(emp, periodo) {
-  periodoAtivo[emp] = periodo;
-  // Estilo botões
-  const btnDia = document.getElementById('btn-dia-'+emp);
-  const btnD1  = document.getElementById('btn-d1-'+emp);
-  if(periodo === 'dia') {
-    btnDia.style.background = 'var(--green)'; btnDia.style.color = 'var(--bg)'; btnDia.style.borderColor = 'var(--green)';
-    btnD1.style.background  = 'transparent';  btnD1.style.color  = 'var(--gray)'; btnD1.style.borderColor = 'var(--border)';
-  } else {
-    btnD1.style.background  = 'var(--orange)'; btnD1.style.color = 'var(--bg)'; btnD1.style.borderColor = 'var(--orange)';
-    btnDia.style.background = 'transparent';   btnDia.style.color = 'var(--gray)'; btnDia.style.borderColor = 'var(--border)';
-  }
-  renderGrid(emp);
 }
 
 function parseRows(raw) {
@@ -678,8 +474,7 @@ function parseRows(raw) {
 // ── Agrupamento ───────────
 function grouped(emp) {
   const m={};
-  const rows = db[emp] ? (db[emp][periodoAtivo[emp]] || []) : [];
-  rows.forEach(d=>{
+  (db[emp]||[]).forEach(d=>{
     const k=d.ownerCode+'||'+d.owner;
     if(!m[k]) m[k]={owner:d.owner,code:d.ownerCode,trucks:[]};
     m[k].trucks.push(d);
@@ -690,8 +485,7 @@ function grouped(emp) {
 function hasVal(v){return v!==undefined&&v!==null&&v!==''&&v!=='—';}
 function activeCols(emp) {
   const c={e:false,f:false,g:false,h:false,j:false};
-  const rows = db[emp] ? (db[emp][periodoAtivo[emp]] || []) : [];
-  rows.forEach(d=>{if(hasVal(d.e))c.e=true;if(hasVal(d.f))c.f=true;if(hasVal(d.g))c.g=true;if(hasVal(d.h))c.h=true;if(hasVal(d.j))c.j=true;});
+  (db[emp]||[]).forEach(d=>{if(hasVal(d.e))c.e=true;if(hasVal(d.f))c.f=true;if(hasVal(d.g))c.g=true;if(hasVal(d.h))c.h=true;if(hasVal(d.j))c.j=true;});
   return c;
 }
 
@@ -700,20 +494,13 @@ function renderGrid(emp) {
   const g=document.getElementById('grid-'+emp);
   const owners=grouped(emp);
   if(!owners.length){
-    const per = periodoAtivo[emp] === 'dia' ? 'Dia Atual' : 'D-1';
-    g.innerHTML='<div class="empty"><div class="empty-ico">📊</div><h3>Sem dados — '+per+'</h3><p>Aguarde o carregamento do Excel de '+emp+' ('+per+')</p></div>';
-    updateToggle(emp);
+    g.innerHTML='<div class="empty"><div class="empty-ico">📊</div><h3>Sem dados</h3><p>Aguardando carregamento do Excel de '+emp+'</p></div>';
     return;
   }
-  updateToggle(emp);
   const totals=owners.map(o=>({key:o.code+o.owner,ton:o.trucks.reduce((s,t)=>s+(parseFloat(t.e)||0)+(parseFloat(t.f)||0)+(parseFloat(t.g)||0),0)}));
   totals.sort((a,b)=>b.ton-a.ton);
   const rankMap={};
   totals.forEach((x,i)=>rankMap[x.key]=i+1);
-  // Mostrar barra de datas
-  const bar = document.getElementById('bar-'+emp);
-  if(bar) bar.style.display = 'flex';
-  setGlobalTag();
   g.innerHTML=owners.map((o,idx)=>{
     const totV=o.trucks.reduce((s,t)=>s+(parseFloat(t.h)||0),0);
     const totT=o.trucks.reduce((s,t)=>s+(parseFloat(t.e)||0)+(parseFloat(t.f)||0)+(parseFloat(t.g)||0),0);
@@ -799,22 +586,16 @@ function renderAdmTable() {
   const wrap = document.getElementById('admTableWrap');
   let html = '';
   ['CEM','CEMMA','COPLASA'].forEach(emp=>{
-    ['dia','d1'].forEach(per=>{
-      const rows = (db[emp] && db[emp][per]) ? db[emp][per] : [];
-      if(!rows.length) return;
-      const tempPeriodo = periodoAtivo[emp];
-      periodoAtivo[emp] = per;
-      const cols = activeCols(emp);
-      periodoAtivo[emp] = tempPeriodo;
-      const colDefs=[{key:'e',label:'Ton. E'},{key:'f',label:'Ton. F'},{key:'g',label:'Ton. G'},{key:'h',label:'Viagens'},{key:'j',label:'Dist. Média'}].filter(c=>cols[c.key]);
-      const label = per === 'dia' ? '📄 Dia Atual' : '📄 D-1';
-      html+=`<div class="adm-section-title">${emp} — ${label}</div>
-      <table style="margin-bottom:32px"><thead><tr>
-        <th>Proprietário</th><th>Cód. Caminhão</th>${colDefs.map(c=>`<th>${c.label}</th>`).join('')}
-      </tr></thead><tbody>
-        ${rows.map(d=>`<tr><td>${d.owner}</td><td class="c">${d.truckCode}</td>${colDefs.map(c=>`<td class="r">${fmt(d[c.key])}</td>`).join('')}</tr>`).join('')}
-      </tbody></table>`;
-    });
+    const rows=db[emp]||[];
+    if(!rows.length) return;
+    const cols=activeCols(emp);
+    const colDefs=[{key:'e',label:'Ton. E'},{key:'f',label:'Ton. F'},{key:'g',label:'Ton. G'},{key:'h',label:'Viagens'},{key:'j',label:'Dist. Média'}].filter(c=>cols[c.key]);
+    html+=`<div class="adm-section-title">${emp}</div>
+    <table style="margin-bottom:32px"><thead><tr>
+      <th>Proprietário</th><th>Cód. Caminhão</th>${colDefs.map(c=>`<th>${c.label}</th>`).join('')}
+    </tr></thead><tbody>
+      ${rows.map(d=>`<tr><td>${d.owner}</td><td class="c">${d.truckCode}</td>${colDefs.map(c=>`<td class="r">${fmt(d[c.key])}</td>`).join('')}</tr>`).join('')}
+    </tbody></table>`;
   });
   wrap.innerHTML = html || '<p style="color:var(--gray);padding:40px 0">Nenhum dado carregado ainda.</p>';
 }
