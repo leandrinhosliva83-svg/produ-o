@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portaria Digital</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, push, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ═══════════════════════════════════════════════════════
+// CONFIGURAÇÃO DO FIREBASE — substitua com seus dados
+// Crie em: https://console.firebase.google.com
+// ═══════════════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyBl1GAFb7_fyjBgRtvpweLUhG8PNc9YKOU",
+  authDomain: "portaria-digital-ecb57.firebaseapp.com",
+  databaseURL: "https://portaria-digital-ecb57-default-rtdb.firebaseio.com",
+  projectId: "portaria-digital-ecb57",
+  storageBucket: "portaria-digital-ecb57.firebasestorage.app",
+  messagingSenderId: "1933440430",
+  appId: "1:1933440430:web:37be210736a84874f8c43f"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+// Expõe funções para o código global
+window._fb = { db, ref, set, get, push, onValue, update };
+window._fbReady = true;
+document.dispatchEvent(new Event('firebase-ready'));
+</script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f0f2f5;color:#111;font-size:16px}
+.tela{display:none;min-height:100vh}.tela.ativa{display:block}
+
+/* LOGIN */
+#tela-login{background:#0d3570;padding:40px 20px;min-height:100vh}
+.login-box{background:#fff;border-radius:12px;padding:28px 20px;max-width:380px;margin:0 auto}
+.login-logo{font-size:40px;text-align:center;margin-bottom:8px}
+.login-titulo{font-size:20px;font-weight:bold;text-align:center;margin-bottom:4px}
+.login-sub{font-size:13px;color:#666;text-align:center;margin-bottom:24px}
+.login-dica{background:#f0f2f5;border-radius:8px;padding:10px 14px;font-size:13px;color:#555;margin-top:16px;text-align:center}
+.erro-login{background:#ffebee;color:#c62828;border-left:4px solid #c62828;padding:10px 14px;border-radius:8px;font-size:14px;margin-bottom:14px;display:none}
+
+/* TOPBAR */
+.topbar{background:#0d3570;color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+.topbar-titulo{font-size:16px;font-weight:bold}
+.topbar-info{font-size:12px;opacity:.7;margin-top:2px}
+.topbar-direita{display:flex;align-items:center;gap:8px}
+.topbar-hora{font-size:13px;background:rgba(255,255,255,.15);padding:4px 10px;border-radius:20px}
+
+/* CAMPOS */
+.campo{margin-bottom:14px}
+.campo label{display:block;font-size:12px;font-weight:bold;color:#555;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+.campo input,.campo select,.campo textarea{display:block;width:100%;padding:12px 14px;font-size:16px;border:2px solid #ddd;border-radius:8px;background:#fafafa;color:#111;font-family:Arial,sans-serif;-webkit-appearance:none}
+.campo input:focus,.campo select:focus,.campo textarea:focus{border-color:#1a56a0;background:#fff;outline:none}
+.campo textarea{min-height:80px;resize:vertical}
+.dois-col{display:flex;gap:10px}.dois-col .campo{flex:1}
+
+/* BOTÕES */
+button{font-family:Arial,sans-serif;cursor:pointer;border:none;-webkit-appearance:none}
+.btn{display:block;width:100%;padding:14px;font-size:16px;font-weight:bold;border-radius:8px;text-align:center;margin-top:10px}
+.btn:active{opacity:.75}
+.btn-az{background:#1a56a0;color:#fff}
+.btn-vd{background:#2e7d32;color:#fff}
+.btn-vm{background:#c62828;color:#fff}
+.btn-ci{background:#fff;color:#1a56a0;border:2px solid #1a56a0!important}
+.btn-gz{background:#eee;color:#444}
+.btn-sm{display:inline-block;width:auto;padding:8px 16px;font-size:14px;margin-top:0;border-radius:8px}
+
+/* MENU */
+.menu-grade{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.menu-btn{background:#fff;border:2px solid #e0e0e0!important;border-radius:10px;padding:20px 12px;text-align:center;width:100%;cursor:pointer;font-family:Arial,sans-serif}
+.menu-btn:active{background:#f0f0f0}
+.menu-ic{font-size:30px;display:block;margin-bottom:8px}
+.menu-nm{font-size:13px;font-weight:bold;display:block;color:#111}
+.menu-sb{font-size:11px;color:#888;margin-top:3px;display:block}
+.menu-btn-largo{grid-column:1/-1}
+
+/* CONTADOR */
+.contador{background:#c62828;color:#fff;border-radius:10px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;cursor:pointer;border:none;width:100%;font-family:Arial,sans-serif}
+.contador:active{opacity:.85}
+.contador-num{font-size:36px;font-weight:bold;line-height:1}
+.contador-txt{font-size:14px;opacity:.9;margin-top:2px}
+
+/* CARD */
+.card{background:#fff;border-radius:10px;border:1px solid #e0e0e0;padding:16px;margin-bottom:14px}
+
+/* CARTÃO AZUL */
+.vcard{background:#0d3570;color:#fff;border-radius:10px;padding:18px;margin-bottom:14px}
+.vcard-cat{font-size:11px;opacity:.5;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.vcard-id{font-size:26px;font-weight:bold;font-family:monospace;margin-bottom:2px}
+.vcard-placa{font-size:14px;opacity:.65;font-family:monospace;margin-bottom:14px}
+.vcard-grade{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.vcard-lbl{font-size:10px;opacity:.45;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px}
+.vcard-val{font-size:13px;font-weight:bold}
+
+/* ALERTAS */
+.alerta{padding:12px 16px;border-radius:8px;font-size:14px;font-weight:bold;margin-bottom:14px}
+.alerta-vd{background:#e8f5e9;color:#2e7d32;border-left:4px solid #2e7d32}
+.alerta-vm{background:#ffebee;color:#c62828;border-left:4px solid #c62828}
+.alerta-az{background:#e3f2fd;color:#1a56a0;border-left:4px solid #1a56a0}
+.alerta-am{background:#fff3e0;color:#e65100;border-left:4px solid #e65100}
+
+/* BADGE */
+.badge{display:inline-block;font-size:11px;font-weight:bold;padding:3px 10px;border-radius:20px}
+.badge-vd{background:#e8f5e9;color:#2e7d32}
+.badge-vm{background:#ffebee;color:#c62828}
+.badge-am{background:#fff3e0;color:#e65100}
+.badge-az{background:#e3f2fd;color:#1a56a0}
+.badge-gz{background:#f0f0f0;color:#666}
+
+/* PLAQUINHA */
+.plq{font-family:monospace;font-size:13px;font-weight:bold;background:#f0f0f0;border:1px solid #ddd;padding:4px 10px;border-radius:6px;white-space:nowrap}
+
+/* ITEM LISTA */
+.item-lista{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #eee;width:100%;background:none;border-left:none;border-right:none;border-top:none;text-align:left;cursor:pointer;font-family:Arial,sans-serif}
+.item-lista:last-child{border-bottom:none}
+.item-lista:active{background:#f5f5f5}
+.il-info{flex:1}
+.il-nm{font-size:14px;font-weight:bold;color:#111;display:block}
+.il-sb{font-size:12px;color:#666;margin-top:2px;display:block}
+
+/* CHECKLIST */
+.chk-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #eee}
+.chk-item:last-child{border-bottom:none}
+.chk-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.chk-dot-vd{background:#2e7d32}.chk-dot-vm{background:#c62828}
+.chk-txt{font-size:13px;flex:1;color:#444}
+.chk-val{font-size:12px;color:#888;font-family:monospace}
+
+/* TAGS */
+.tag{display:inline-flex;align-items:center;gap:6px;background:#e3f2fd;color:#0d3570;border-radius:20px;padding:5px 12px;font-size:13px;margin:3px}
+.tag button{background:none;border:none;color:#0d3570;font-size:16px;cursor:pointer;padding:0}
+.tags-area{min-height:32px;margin-top:8px}
+.add-linha{display:flex;gap:8px}
+
+/* ASSINATURA */
+.sig-canvas{display:block;width:100%;height:160px;border:2px solid #ddd;border-radius:8px;background:#fafafa;touch-action:none;cursor:crosshair}
+
+/* BTN PENDENTE */
+.btn-pendente{background:#c62828;color:#fff;border:none;border-radius:10px;padding:16px;width:100%;font-size:15px;font-weight:bold;cursor:pointer;font-family:Arial,sans-serif;display:block;text-align:center;margin-bottom:8px;animation:pulsar 2s ease-in-out infinite}
+.btn-pendente:active{opacity:.85}
+@keyframes pulsar{0%,100%{box-shadow:0 4px 12px rgba(198,40,40,.4)}50%{box-shadow:0 4px 24px rgba(198,40,40,.8)}}
+
+/* GRADE QR */
+.grade-qr{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.qr-card-imp{background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px;text-align:center}
+.qr-card-imp .qr-label{font-size:11px;font-weight:bold;color:#0d3570;margin-bottom:3px}
+.qr-card-imp .qr-sub{font-size:10px;color:#888;margin-top:4px}
+
+.qrw{display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:10px}
+.secao{font-size:11px;font-weight:bold;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
+.nav-topo{display:flex;align-items:center;gap:12px;padding:16px 16px 0;margin-bottom:16px}
+.pagina-conteudo{padding:0 16px 40px}
+.vazio{font-size:14px;color:#888;text-align:center;padding:32px 0}
+.guarda-info{background:#e3f2fd;border-radius:8px;padding:10px 14px;font-size:14px;color:#0d3570;margin-bottom:14px;font-weight:bold}
+
+/* FIREBASE CONFIG */
+.fb-config-box{background:#fff3e0;border:2px solid #e65100;border-radius:10px;padding:16px;margin-bottom:16px}
+.fb-config-box h3{color:#e65100;font-size:14px;margin-bottom:8px}
+.fb-config-box p{font-size:12px;color:#555;margin-bottom:10px;line-height:1.5}
+.fb-config-box code{background:#f5f5f5;padding:2px 6px;border-radius:4px;font-family:monospace;font-size:12px}
+
+@media print{
+  .topbar,.btn,.nav-topo,.no-print{display:none!important}
+  body{background:#fff}.pagina-conteudo{padding:0}
+  .vcard{background:#fff!important;color:#000!important;border:2px solid #000}
+  .grade-qr{grid-template-columns:1fr 1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="tela-login" class="tela ativa">
+  <div class="login-box">
+    <div class="login-logo">🏭</div>
+    <div class="login-titulo">Portaria Digital</div>
+    <div class="login-sub">Controle de acesso de veículos</div>
+    <div id="erro-login" class="erro-login">Usuário ou senha incorretos.</div>
+    <div class="campo"><label>Usuário</label><input type="text" id="lg-user" placeholder="Digite seu usuário" autocorrect="off" autocapitalize="off" autocomplete="off"></div>
+    <div class="campo"><label>Senha</label><input type="password" id="lg-senha" placeholder="Digite sua senha"></div>
+    <button type="button" class="btn btn-az" id="btn-login">Entrar</button>
+    <div class="login-dica">Primeiro acesso: <strong>admin</strong> / <strong>admin123</strong></div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div id="tela-home" class="tela">
+  <div class="topbar">
+    <div><div class="topbar-titulo">🏭 Portaria Digital</div><div class="topbar-info" id="home-usuario">—</div></div>
+    <div class="topbar-direita">
+      <div class="topbar-hora" id="relogio">--:--</div>
+      <button type="button" class="btn btn-gz btn-sm" id="btn-sair" style="margin-top:0">Sair</button>
+    </div>
+  </div>
+  <div class="pagina-conteudo" style="padding-top:16px">
+    <button type="button" class="contador" id="btn-contador">
+      <div><div class="contador-num" id="num-carros">0</div><div class="contador-txt">veículos dentro agora</div></div>
+      <div style="font-size:24px">›</div>
+    </button>
+    <div class="menu-grade">
+      <button type="button" class="menu-btn" id="mn-cadastro"><span class="menu-ic">🚗</span><span class="menu-nm">Cadastrar</span><span class="menu-sb">QR permanente</span></button>
+      <button type="button" class="menu-btn" id="mn-veiculos"><span class="menu-ic">📋</span><span class="menu-nm">Veículos</span><span class="menu-sb">Ver e imprimir QR</span></button>
+      <button type="button" class="menu-btn" id="mn-leitura"><span class="menu-ic">📷</span><span class="menu-nm">Portaria Entrada</span><span class="menu-sb">Ler QR e registrar</span></button>
+      <button type="button" class="menu-btn" id="mn-setor"><span class="menu-ic">🏭</span><span class="menu-nm">Painel Setor</span><span class="menu-sb">Assinar & liberar</span></button>
+      <button type="button" class="menu-btn" id="mn-saida"><span class="menu-ic">🚦</span><span class="menu-nm">Portaria Saída</span><span class="menu-sb">Liberar saída</span></button>
+      <button type="button" class="menu-btn" id="mn-painel"><span class="menu-ic">📊</span><span class="menu-nm">Painel do dia</span><span class="menu-sb">Resumo de hoje</span></button>
+      <button type="button" class="menu-btn" id="mn-historico"><span class="menu-ic">📅</span><span class="menu-nm">Histórico</span><span class="menu-sb">Todas as entradas</span></button>
+      <button type="button" class="menu-btn menu-btn-largo" id="mn-admin"><span class="menu-ic">⚙️</span><span class="menu-nm">Administração</span><span class="menu-sb">Usuários e guardas</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- VEÍCULOS DENTRO -->
+<div id="tela-dentro" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Veículos dentro agora</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-dentro">← Voltar</button></div>
+  <div class="pagina-conteudo"><div id="lista-dentro"><div class="vazio">Nenhum veículo dentro</div></div></div>
+</div>
+
+<!-- CADASTRO -->
+<div id="tela-cadastro" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Cadastrar veículo</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-cadastro">← Voltar</button></div>
+  <div class="pagina-conteudo">
+
+    <!-- IMPORTAR EXCEL -->
+    <div class="card">
+      <div class="secao">📥 Importar Excel em massa</div>
+      <div style="font-size:13px;color:#555;margin-bottom:10px">Colunas: <strong>A=Placa · B=Frota · C=Categoria · D=Responsável</strong></div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <button type="button" class="btn btn-gz btn-sm" id="btn-baixar-modelo" style="flex:1">⬇ Baixar modelo</button>
+        <label style="flex:1">
+          <span class="btn btn-az btn-sm" style="display:block;text-align:center;cursor:pointer;margin-top:0">📂 Importar Excel</span>
+          <input type="file" id="input-excel" accept=".xlsx,.xls,.csv" style="display:none">
+        </label>
+      </div>
+      <div id="import-resultado" style="display:none"></div>
+    </div>
+
+    <div style="font-size:13px;font-weight:bold;color:#555;margin-bottom:8px;text-align:center">— ou cadastre um por um —</div>
+
+    <div class="card">
+      <div class="secao">Dados do veículo</div>
+      <div class="campo"><label>Placa</label><input type="text" id="c-placa" placeholder="Ex: ABC-1234" maxlength="8" autocomplete="off" oninput="this.value=this.value.toUpperCase()"></div>
+      <div class="campo"><label>Nº de frota</label><input type="text" id="c-frota" placeholder="Ex: 0042" autocomplete="off" oninput="this.value=this.value.toUpperCase()"></div>
+      <div class="campo"><label>Categoria *</label>
+        <select id="c-categoria">
+          <option value="">Selecione...</option>
+          <option>Próprio</option><option>Terceirizado</option><option>Fornecedor</option>
+          <option>Visitante</option><option>Funcionário</option><option>Prestador de serviço</option><option>Outro</option>
+        </select>
+      </div>
+      <div class="campo"><label>Responsável *</label><input type="text" id="c-nome" placeholder="Nome do responsável"></div>
+    </div>
+    <button type="button" class="btn btn-az" id="btn-gerar-qr">✦ Gerar QR Code permanente</button>
+    <div id="cad-resultado" style="display:none;margin-top:16px">
+      <div id="cad-vcard"></div>
+      <div class="card" style="text-align:center">
+        <div class="secao" style="text-align:center">QR Code permanente — cole no veículo</div>
+        <div class="qrw"><div id="qr-saida"></div><div style="font-size:12px;color:#888">Código único e permanente</div></div>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="btn btn-ci btn-sm" onclick="window.print()" style="flex:1">🖨 Imprimir</button>
+          <button type="button" class="btn btn-az btn-sm" id="btn-novo-veiculo" style="flex:1">+ Novo veículo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VEÍCULOS CADASTRADOS -->
+<div id="tela-veiculos" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Veículos cadastrados</div></div></div>
+  <div class="nav-topo">
+    <button type="button" class="btn btn-ci btn-sm" id="btn-volta-veiculos">← Voltar</button>
+    <button type="button" class="btn btn-gz btn-sm" id="btn-imprimir-todos" style="margin-top:0">🖨 Imprimir todos</button>
+  </div>
+  <div class="pagina-conteudo">
+    <div class="campo"><input type="text" id="busca-veiculo" placeholder="🔍 Buscar por placa, frota ou responsável..." autocomplete="off"></div>
+    <div id="lista-veiculos-cad"><div class="vazio">Carregando...</div></div>
+  </div>
+</div>
+
+<!-- DETALHE VEÍCULO + QR -->
+<div id="tela-detalhe" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Detalhes do veículo</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-detalhe">← Voltar</button></div>
+  <div class="pagina-conteudo">
+    <div id="detalhe-vcard"></div>
+    <div class="card" style="text-align:center">
+      <div class="secao" style="text-align:center">QR Code permanente</div>
+      <div class="qrw"><div id="detalhe-qr"></div><div style="font-size:12px;color:#888">Escaneie na portaria</div></div>
+      <button type="button" class="btn btn-ci" onclick="window.print()">🖨 Imprimir</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDITAR VEÍCULO -->
+<div id="tela-editar" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Editar veículo</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-editar">← Voltar</button></div>
+  <div class="pagina-conteudo">
+    <div class="card">
+      <div class="secao">Dados do veículo</div>
+      <div class="campo"><label>Placa</label><input type="text" id="ed-placa" maxlength="8" autocomplete="off" oninput="this.value=this.value.toUpperCase()"></div>
+      <div class="campo"><label>Nº de frota</label><input type="text" id="ed-frota" autocomplete="off" oninput="this.value=this.value.toUpperCase()"></div>
+      <div class="campo"><label>Categoria *</label>
+        <select id="ed-categoria">
+          <option value="">Selecione...</option>
+          <option>Próprio</option><option>Terceirizado</option><option>Fornecedor</option>
+          <option>Visitante</option><option>Funcionário</option><option>Prestador de serviço</option><option>Outro</option>
+        </select>
+      </div>
+      <div class="campo"><label>Responsável *</label><input type="text" id="ed-nome"></div>
+    </div>
+    <button type="button" class="btn btn-vd" id="btn-salvar-edicao">✓ Salvar alterações</button>
+  </div>
+</div>
+
+<!-- PORTARIA ENTRADA -->
+<div id="tela-leitura" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Portaria — Entrada</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-leitura">← Voltar</button></div>
+  <div class="pagina-conteudo">
+    <div id="lr-camera">
+      <div class="card" style="text-align:center;padding:12px">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:12px">📷 Aponte para o QR Code do veículo</div>
+        <div id="qr-reader-entrada"></div>
+      </div>
+      <div class="card">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:8px">Ou selecione da lista:</div>
+        <div id="lr-lista-manual"></div>
+      </div>
+    </div>
+    <div id="lr-form" style="display:none">
+      <div id="lr-vcard"></div>
+      <div class="card">
+        <div class="secao">Dados da visita</div>
+        <div class="guarda-info" id="lr-guarda-box">👤 Guarda: —</div>
+        <div class="campo"><label>Nome do condutor *</label><input type="text" id="lr-cond" placeholder="Quem está conduzindo" autocomplete="off"></div>
+        <div class="campo"><label>Nº do crachá *</label><input type="text" id="lr-crac" placeholder="Ex: 00123" inputmode="numeric" autocomplete="off"></div>
+        <div class="campo"><label>Setor de destino *</label>
+          <select id="lr-setor">
+            <option value="">Selecione...</option>
+            <option>Produção</option><option>Almoxarifado</option><option>Manutenção</option>
+            <option>Administrativo</option><option>Refeitório</option><option>TI</option><option>Segurança</option><option>RH</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label>Acompanhantes</label>
+          <div class="add-linha"><input type="text" id="lr-ac" placeholder="Nome" autocomplete="off" style="flex:1"><button type="button" class="btn btn-az btn-sm" id="btn-add-ac">+ Add</button></div>
+          <div id="lr-tags" class="tags-area"></div>
+        </div>
+        <div class="campo"><label>Observações</label><textarea id="lr-obs" placeholder="Anotações..."></textarea></div>
+      </div>
+      <button type="button" class="btn btn-vd" id="btn-dar-ok">✓ Liberar entrada</button>
+      <button type="button" class="btn btn-gz" id="btn-cancelar-lr">← Voltar</button>
+    </div>
+    <div id="lr-ok" style="display:none">
+      <div class="alerta alerta-vd">✓ Entrada registrada! Aguardando confirmação do setor.</div>
+      <div id="lr-ok-vcard"></div>
+      <button type="button" class="btn btn-az" id="btn-proximo-veiculo">Próximo veículo</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAINEL DO SETOR -->
+<div id="tela-setor" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Painel do Setor</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-setor">← Voltar</button></div>
+  <div class="pagina-conteudo">
+    <div id="setor-opcoes">
+      <div class="card" style="text-align:center;padding:12px">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:12px">📷 Ler QR Code do veículo</div>
+        <div id="qr-reader-setor"></div>
+      </div>
+      <div class="card">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:8px">Ou selecione da lista:</div>
+        <div class="campo" style="margin-bottom:8px"><label>Filtrar por setor</label>
+          <select id="filt-setor">
+            <option value="">Todos</option>
+            <option>Produção</option><option>Almoxarifado</option><option>Manutenção</option>
+            <option>Administrativo</option><option>Refeitório</option><option>TI</option><option>Segurança</option><option>RH</option>
+          </select>
+        </div>
+        <div id="setor-lista"><div class="vazio">Nenhum veículo pendente</div></div>
+      </div>
+    </div>
+    <div id="sig-wrap" style="display:none">
+      <div id="sig-vcard"></div>
+      <div class="card">
+        <div class="secao">Dados da visita</div>
+        <div id="sig-detalhes" style="font-size:13px;color:#555"></div>
+      </div>
+      <div class="card">
+        <div class="secao">✍ Assinatura do responsável</div>
+        <div id="sig-info" style="margin-bottom:10px;font-size:14px;font-weight:bold;color:#0d3570"></div>
+        <div style="font-size:13px;color:#666;margin-bottom:10px">Assine abaixo para confirmar e liberar</div>
+        <canvas id="sig-canvas" class="sig-canvas"></canvas>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button type="button" class="btn btn-gz btn-sm" id="btn-limpar-sig" style="flex:1">↺ Limpar</button>
+          <button type="button" class="btn btn-vd btn-sm" id="btn-confirmar-sig" style="flex:1">✓ Confirmar</button>
+        </div>
+        <button type="button" class="btn btn-gz" id="btn-cancelar-sig" style="margin-top:8px">← Voltar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PORTARIA SAÍDA -->
+<div id="tela-saida" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Portaria — Saída</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-saida">← Voltar</button></div>
+  <div class="pagina-conteudo">
+    <div id="sa-camera">
+      <div class="card" style="text-align:center;padding:12px">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:12px">📷 Ler QR Code do veículo</div>
+        <div id="qr-reader-saida"></div>
+      </div>
+      <div class="card">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:8px">Ou selecione da lista:</div>
+        <div id="sa-lista-manual"></div>
+      </div>
+    </div>
+    <div id="sa-dados" style="display:none"></div>
+  </div>
+</div>
+
+<!-- PAINEL DO DIA -->
+<div id="tela-painel" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">📊 Painel do dia</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-painel">← Voltar</button></div>
+  <div class="pagina-conteudo">
+    <div id="painel-data" style="font-size:13px;color:#666;margin-bottom:16px;text-align:center"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div class="card" style="text-align:center;padding:16px"><div style="font-size:32px;font-weight:bold;color:#1a56a0" id="pd-total">0</div><div style="font-size:12px;color:#666;margin-top:4px">Total entradas</div></div>
+      <div class="card" style="text-align:center;padding:16px"><div style="font-size:32px;font-weight:bold;color:#2e7d32" id="pd-saiu">0</div><div style="font-size:12px;color:#666;margin-top:4px">Já saíram</div></div>
+      <div class="card" style="text-align:center;padding:16px"><div style="font-size:32px;font-weight:bold;color:#c62828" id="pd-dentro">0</div><div style="font-size:12px;color:#666;margin-top:4px">Dentro agora</div></div>
+      <div class="card" style="text-align:center;padding:16px"><div style="font-size:32px;font-weight:bold;color:#e65100" id="pd-pendente">0</div><div style="font-size:12px;color:#666;margin-top:4px">Aguard. setor</div></div>
+    </div>
+    <div class="card"><div class="secao">Por setor hoje</div><div id="pd-setores"></div></div>
+    <div class="card"><div class="secao">Movimentação do dia</div><div id="pd-timeline"></div></div>
+  </div>
+</div>
+
+<!-- HISTÓRICO -->
+<div id="tela-historico" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">📅 Histórico</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-historico">← Voltar</button></div>
+  <div class="pagina-conteudo">
+    <div class="card">
+      <div class="dois-col">
+        <div class="campo"><label>Data</label><input type="date" id="hist-data"></div>
+        <div class="campo"><label>Setor</label>
+          <select id="hist-setor"><option value="">Todos</option>
+            <option>Produção</option><option>Almoxarifado</option><option>Manutenção</option>
+            <option>Administrativo</option><option>Refeitório</option><option>TI</option><option>Segurança</option><option>RH</option>
+          </select>
+        </div>
+      </div>
+      <div class="campo"><label>Buscar</label><input type="text" id="hist-busca" placeholder="Placa, frota ou condutor" autocomplete="off"></div>
+      <button type="button" class="btn btn-az" id="btn-filtrar-hist">🔍 Filtrar</button>
+    </div>
+    <div id="hist-lista"><div class="vazio">Use os filtros acima</div></div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="tela-admin" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Administração</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-admin">← Voltar</button></div>
+  <div class="pagina-conteudo">
+    <div class="card">
+      <div class="secao">Criar usuário</div>
+      <div class="campo"><label>Nome *</label><input type="text" id="ad-nome" placeholder="Nome completo"></div>
+      <div class="dois-col">
+        <div class="campo"><label>Usuário *</label><input type="text" id="ad-user" autocorrect="off" autocapitalize="off" autocomplete="off"></div>
+        <div class="campo"><label>Senha *</label><input type="password" id="ad-senha" autocomplete="new-password"></div>
+      </div>
+      <div class="campo"><label>Perfil</label>
+        <select id="ad-perfil"><option value="guarda">Guarda</option><option value="setor">Resp. de setor</option><option value="admin">Administrador</option></select>
+      </div>
+      <button type="button" class="btn btn-az" id="btn-criar-user">+ Criar usuário</button>
+    </div>
+    <div class="card"><div class="secao">Usuários</div><div id="ad-lista"></div></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// ESTADO LOCAL (cache em memória para velocidade)
+// Os dados reais ficam no Firebase — nunca se perdem
+// ═══════════════════════════════════════════════════════
+var veiculos = [];   // cache local dos veículos do Firebase
+var visitas  = [];   // cache local das visitas do Firebase
+var usuarios = JSON.parse(localStorage.getItem('pd_usr') || 'null');
+if (!usuarios) {
+  usuarios = [{ id:'u0', nome:'Administrador', usuario:'admin', senha:'admin123', perfil:'admin' }];
+  localStorage.setItem('pd_usr', JSON.stringify(usuarios));
+}
+var userLogado = null;
+var acomps = [], vAtivo = null, viAtiva = null, vEditando = null;
+var sigDraw = false, sigCtx = null, sigEl = null;
+var scannerEntrada = null, scannerSaida = null, scannerSetor = null;
+var sigWrapHTML = '';
+var fbPronto = false;
+
+// ── FIREBASE ─────────────────────────────────────────────────
+document.addEventListener('firebase-ready', function(){
+  fbPronto = true;
+  carregarDadosFB();
+});
+
+function carregarDadosFB(){
+  if (!window._fbReady) return;
+  var db = window._fb.db;
+
+  // Escuta veículos em tempo real
+  window._fb.onValue(window._fb.ref(db,'veiculos'), function(snap){
+    veiculos = [];
+    snap.forEach(function(child){
+      veiculos.push(child.val());
+    });
+    if (document.getElementById('tela-veiculos').classList.contains('ativa')) renderVeiculosCad();
+    atualizarContador();
+  });
+
+  // Escuta visitas em tempo real
+  window._fb.onValue(window._fb.ref(db,'visitas'), function(snap){
+    visitas = [];
+    snap.forEach(function(child){
+      visitas.push(child.val());
+    });
+    atualizarContador();
+    if (document.getElementById('tela-setor').classList.contains('ativa')) renderSetor();
+  });
+}
+
+function salvarVeiculo(v){
+  if (!fbPronto) { alert('Firebase não conectado. Configure o Firebase primeiro.'); return false; }
+  window._fb.set(window._fb.ref(window._fb.db,'veiculos/'+v.id), v);
+  return true;
+}
+
+function salvarVisita(vi){
+  if (!fbPronto) return;
+  window._fb.set(window._fb.ref(window._fb.db,'visitas/'+vi.id), vi);
+}
+
+function salvarUsuarios(){
+  localStorage.setItem('pd_usr', JSON.stringify(usuarios));
+}
+
+// ── HELPERS ──────────────────────────────────────────────────
+function agora(){ return new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+function hoje() { return new Date().toLocaleDateString('pt-BR'); }
+function tempoPassado(h){
+  if (!h) return '—';
+  var p=h.split(':'); var agr=new Date(); var ent=new Date();
+  ent.setHours(parseInt(p[0]),parseInt(p[1]),0);
+  var d=Math.floor((agr-ent)/60000); if(d<0)d=0;
+  var hr=Math.floor(d/60); var mn=d%60;
+  return hr>0?hr+'h '+mn+'min':mn+'min';
+}
+
+setInterval(function(){
+  var r=document.getElementById('relogio'); if(r) r.textContent=agora();
+},1000);
+
+// Sessão persistente
+(function(){
+  var s=localStorage.getItem('pd_sessao');
+  if(s){ try{userLogado=JSON.parse(s);}catch(e){} }
+})();
+
+// ── TELAS ────────────────────────────────────────────────────
+function ir(id){
+  pararScanners();
+  document.querySelectorAll('.tela').forEach(function(t){ t.style.display='none'; t.classList.remove('ativa'); });
+  var t=document.getElementById(id); t.style.display='block'; t.classList.add('ativa');
+  window.scrollTo(0,0);
+}
+
+function pararScanners(){
+  [scannerEntrada,scannerSaida,scannerSetor].forEach(function(s){
+    if(s){ try{s.stop();}catch(e){} }
+  });
+  scannerEntrada=null; scannerSaida=null; scannerSetor=null;
+}
+
+// ── LOGIN ────────────────────────────────────────────────────
+function fazerLogin(){
+  var u=(document.getElementById('lg-user').value||'').trim().toLowerCase();
+  var s=(document.getElementById('lg-senha').value||'');
+  var found=null;
+  for(var i=0;i<usuarios.length;i++){
+    if(usuarios[i].usuario.toLowerCase()===u&&usuarios[i].senha===s){found=usuarios[i];break;}
+  }
+  if(!found){document.getElementById('erro-login').style.display='block';document.getElementById('lg-senha').value='';return;}
+  document.getElementById('erro-login').style.display='none';
+  userLogado=found;
+  localStorage.setItem('pd_sessao',JSON.stringify(found));
+  document.getElementById('home-usuario').textContent=found.nome+' — '+labelPerfil(found.perfil);
+  document.getElementById('relogio').textContent=agora();
+  atualizarContador();
+  ir('tela-home');
+}
+function labelPerfil(p){ return p==='admin'?'Administrador':p==='guarda'?'Guarda':p==='setor'?'Resp. Setor':'Usuário'; }
+function sair(){ userLogado=null; localStorage.removeItem('pd_sessao'); document.getElementById('lg-user').value=''; document.getElementById('lg-senha').value=''; ir('tela-login'); }
+
+// ── CARTÃO VEÍCULO ───────────────────────────────────────────
+function vcHTML(v){
+  return '<div class="vcard">'
+    +(v.categoria?'<div class="vcard-cat">'+v.categoria+'</div>':'')
+    +(v.frota?'<div class="vcard-id">Frota '+v.frota+'</div>':'')
+    +(v.placa?'<div class="vcard-placa">'+(v.frota?'Placa: ':'')+v.placa+'</div>':'')
+    +'<div class="vcard-grade">'
+    +'<div style="grid-column:1/-1"><div class="vcard-lbl">Responsável</div><div class="vcard-val">'+v.nome+'</div></div>'
+    +'</div></div>';
+}
+function idLabel(v){
+  if(v.frota&&v.placa) return 'Frota '+v.frota+' / '+v.placa;
+  if(v.frota) return 'Frota '+v.frota;
+  return v.placa||'—';
+}
+
+// ── CONTADOR ─────────────────────────────────────────────────
+function atualizarContador(){
+  var d=visitas.filter(function(v){ return v.data===hoje()&&v.status!=='saiu'&&v.status!=='negado'; });
+  var el=document.getElementById('num-carros'); if(el) el.textContent=d.length;
+}
+function mostrarDentro(){
+  var d=visitas.filter(function(v){ return v.data===hoje()&&v.status!=='saiu'&&v.status!=='negado'; });
+  var el=document.getElementById('lista-dentro');
+  if(!d.length){el.innerHTML='<div class="vazio">Nenhum veículo dentro agora</div>';ir('tela-dentro');return;}
+  el.innerHTML=d.map(function(vi){
+    var v=veiculos.find(function(x){return x.id===vi.vid;})||{};
+    var sm={pendente_setor:'badge-am',liberado:'badge-az'};
+    var lm={pendente_setor:'⏳ Aguardando setor',liberado:'✓ Liberado'};
+    return '<div class="card" style="margin-bottom:10px">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+      +'<span class="plq">'+idLabel(v)+'</span>'
+      +'<span class="badge '+(sm[vi.status]||'badge-gz')+'">'+(lm[vi.status]||vi.status)+'</span></div>'
+      +'<div style="font-size:14px;font-weight:bold;margin-bottom:2px">'+v.categoria+' — '+v.nome+'</div>'
+      +'<div style="font-size:13px;color:#666">Condutor: '+vi.condutor+' • '+vi.setor+'</div>'
+      +'<div style="font-size:13px;color:#666">Entrou: '+vi.horaEntrada+'</div>'
+      +'<div style="font-size:13px;font-weight:bold;color:#c62828;margin-top:4px">⏱ '+tempoPassado(vi.horaEntrada)+'</div>'
+      +'</div>';
+  }).join('');
+  ir('tela-dentro');
+}
+
+// ── CADASTRO ─────────────────────────────────────────────────
+document.getElementById('btn-gerar-qr').addEventListener('click',function(){
+  var placa=(document.getElementById('c-placa').value||'').trim().toUpperCase();
+  var frota=(document.getElementById('c-frota').value||'').trim().toUpperCase();
+  var cat=(document.getElementById('c-categoria').value||'').trim();
+  var nome=(document.getElementById('c-nome').value||'').trim();
+  if(!placa&&!frota){alert('Informe a placa ou o número de frota.');return;}
+  if(!cat){alert('Selecione a categoria.');return;}
+  if(!nome){alert('Informe o nome do responsável.');return;}
+
+  // ID PERMANENTE baseado em placa+frota — nunca muda
+  var idBase = (frota||placa).replace(/[^A-Z0-9]/g,'');
+  var id = 'VH_'+idBase;
+
+  var dup=veiculos.find(function(v){ return v.id===id||(placa&&v.placa===placa)||(frota&&v.frota===frota); });
+  if(dup){if(!confirm('Já existe um veículo com esta placa/frota. Atualizar os dados?'))return; id=dup.id; }
+
+  var v={ id:id, tipo:frota?'frota':'placa', placa:placa, frota:frota, categoria:cat, nome:nome, empresa:'—', modelo:'—', cor:'—', ano:'—', tv:'—' };
+
+  if(salvarVeiculo(v)){
+    document.getElementById('cad-vcard').innerHTML=vcHTML(v);
+    var qDiv=document.getElementById('qr-saida'); qDiv.innerHTML='';
+    new QRCode(qDiv,{text:v.id,width:200,height:200,colorDark:'#0d3570',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+    document.getElementById('cad-resultado').style.display='block';
+    document.getElementById('cad-resultado').scrollIntoView({behavior:'smooth'});
+  }
+});
+
+document.getElementById('btn-novo-veiculo').addEventListener('click',function(){
+  ['c-placa','c-frota','c-nome'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('c-categoria').value='';
+  document.getElementById('cad-resultado').style.display='none';
+  document.getElementById('qr-saida').innerHTML='';
+  window.scrollTo(0,0);
+});
+
+// ── VEÍCULOS CADASTRADOS ─────────────────────────────────────
+function renderVeiculosCad(filtro){
+  var el=document.getElementById('lista-veiculos-cad');
+  var lista=veiculos.slice();
+  if(filtro){
+    var f=filtro.toLowerCase();
+    lista=lista.filter(function(v){
+      return (v.placa&&v.placa.toLowerCase().indexOf(f)>-1)
+          || (v.frota&&v.frota.toLowerCase().indexOf(f)>-1)
+          || (v.nome&&v.nome.toLowerCase().indexOf(f)>-1);
+    });
+  }
+  if(!lista.length){el.innerHTML='<div class="vazio">Nenhum veículo encontrado</div>';return;}
+  el.innerHTML=lista.map(function(v){
+    return '<div style="padding:12px 0;border-bottom:1px solid #eee">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
+      +'<span class="plq">'+idLabel(v)+'</span>'
+      +'<div style="flex:1"><div style="font-size:14px;font-weight:bold">'+v.nome+'</div>'
+      +'<div style="font-size:12px;color:#666">'+(v.categoria||'—')+'</div></div></div>'
+      +'<div style="display:flex;gap:8px">'
+      +'<button type="button" class="btn btn-az btn-sm" style="flex:1" data-acao="ver" data-vid="'+v.id+'">🔍 Ver QR</button>'
+      +'<button type="button" class="btn btn-gz btn-sm" style="flex:1" data-acao="editar" data-vid="'+v.id+'">✏️ Editar</button>'
+      +'<button type="button" class="btn btn-vm btn-sm" style="flex:1" data-acao="excluir" data-vid="'+v.id+'">🗑</button>'
+      +'</div></div>';
+  }).join('');
+  document.querySelectorAll('#lista-veiculos-cad [data-acao]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var acao=btn.getAttribute('data-acao');
+      var vid=btn.getAttribute('data-vid');
+      if(acao==='ver')     mostrarDetalhe(vid);
+      if(acao==='editar')  abrirEdicao(vid);
+      if(acao==='excluir') excluirVeiculo(vid);
+    });
+  });
+}
+
+function mostrarDetalhe(vid){
+  var v=veiculos.find(function(x){return x.id===vid;}); if(!v) return;
+  document.getElementById('detalhe-vcard').innerHTML=vcHTML(v);
+  var qDiv=document.getElementById('detalhe-qr'); qDiv.innerHTML='';
+  new QRCode(qDiv,{text:v.id,width:200,height:200,colorDark:'#0d3570',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+  ir('tela-detalhe');
+}
+
+function abrirEdicao(vid){
+  vEditando=veiculos.find(function(x){return x.id===vid;}); if(!vEditando) return;
+  document.getElementById('ed-placa').value=vEditando.placa||'';
+  document.getElementById('ed-frota').value=vEditando.frota||'';
+  document.getElementById('ed-categoria').value=vEditando.categoria||'';
+  document.getElementById('ed-nome').value=vEditando.nome||'';
+  ir('tela-editar');
+}
+
+function excluirVeiculo(vid){
+  if(!confirm('Excluir este veículo permanentemente?')) return;
+  if(!fbPronto){alert('Firebase não conectado.');return;}
+  // Remove do Firebase
+  window._fb.set(window._fb.ref(window._fb.db,'veiculos/'+vid),null);
+}
+
+document.getElementById('btn-salvar-edicao').addEventListener('click',function(){
+  if(!vEditando) return;
+  var placa=(document.getElementById('ed-placa').value||'').trim().toUpperCase();
+  var frota=(document.getElementById('ed-frota').value||'').trim().toUpperCase();
+  var cat=(document.getElementById('ed-categoria').value||'').trim();
+  var nome=(document.getElementById('ed-nome').value||'').trim();
+  if(!placa&&!frota){alert('Informe placa ou frota.');return;}
+  if(!cat){alert('Selecione a categoria.');return;}
+  if(!nome){alert('Informe o responsável.');return;}
+  vEditando.placa=placa; vEditando.frota=frota;
+  vEditando.tipo=frota?'frota':'placa';
+  vEditando.categoria=cat; vEditando.nome=nome;
+  if(salvarVeiculo(vEditando)){
+    alert('Veículo atualizado!');
+    ir('tela-veiculos');
+  }
+});
+
+// Busca veículos
+document.getElementById('busca-veiculo').addEventListener('input',function(){
+  renderVeiculosCad(this.value);
+});
+
+// Imprimir todos os QR
+document.getElementById('btn-imprimir-todos').addEventListener('click',function(){
+  var win=window.open('','_blank');
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>QR Codes</title>'
+    +'<style>body{font-family:Arial,sans-serif;margin:0;padding:10px}.grade{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.item{text-align:center;border:1px solid #ddd;padding:10px;border-radius:8px}.nm{font-size:12px;font-weight:bold;color:#0d3570;margin-bottom:4px}.sb{font-size:11px;color:#666;margin-top:4px}@media print{.no-print{display:none}}</style>'
+    +'<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script></head><body>'
+    +'<div style="text-align:center;margin-bottom:10px" class="no-print"><button onclick="window.print()">🖨 Imprimir</button></div>'
+    +'<div class="grade">';
+  veiculos.forEach(function(v,i){
+    html+='<div class="item"><div class="nm">'+idLabel(v)+'</div>'
+      +'<div id="qr'+i+'"></div>'
+      +'<div class="sb">'+v.nome+'<br>'+v.categoria+'</div></div>';
+  });
+  html+='</div><script>setTimeout(function(){';
+  veiculos.forEach(function(v,i){
+    html+='new QRCode(document.getElementById("qr'+i+'"),{text:"'+v.id+'",width:100,height:100,colorDark:"#0d3570",colorLight:"#ffffff"});';
+  });
+  html+='},200);<\/script></body></html>';
+  win.document.write(html);
+  win.document.close();
+});
+
+// ── EXCEL ────────────────────────────────────────────────────
+document.getElementById('btn-baixar-modelo').addEventListener('click',function(){
+  var ws_data=[
+    ['ABC-1234','0042','Próprio','João Silva'],
+    ['DEF-5678','0043','Terceirizado','Maria Santos'],
+    ['XYZ-9999','','Fornecedor','Carlos Lima'],
+  ];
+  var wb=XLSX.utils.book_new();
+  var ws=XLSX.utils.aoa_to_sheet(ws_data);
+  ws['!cols']=[{wch:14},{wch:12},{wch:22},{wch:26}];
+  XLSX.utils.book_append_sheet(wb,ws,'Veiculos');
+  XLSX.writeFile(wb,'modelo_veiculos.xlsx');
+});
+
+document.getElementById('input-excel').addEventListener('change',function(e){
+  var file=e.target.files[0]; if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      var data=new Uint8Array(ev.target.result);
+      var wb=XLSX.read(data,{type:'array'});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var allRows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      if(!allRows.length){mostrarImportResult('Planilha vazia.',false);return;}
+      var ok=0,erros=[],novos=[];
+      allRows.forEach(function(row,idx){
+        var colA=(row[0]||'').toString().trim().toUpperCase();
+        var colB=(row[1]||'').toString().trim().toUpperCase();
+        var colC=(row[2]||'').toString().trim();
+        var colD=(row[3]||'').toString().trim();
+        if(!colA&&!colB&&!colC&&!colD) return;
+        if(colA.toLowerCase()==='placa'||colA.toLowerCase()==='a') return;
+        var placa=colA, frota=colB, cat=colC||'—', nome=colD;
+        if(!placa&&!frota){erros.push('Linha '+(idx+1)+': sem placa/frota.');return;}
+        if(!nome){erros.push('Linha '+(idx+1)+': responsável vazio.');return;}
+
+        // ID permanente baseado na identificação
+        var idBase=(frota||placa).replace(/[^A-Z0-9]/g,'');
+        var id='VH_'+idBase;
+
+        var dup=veiculos.find(function(v){return v.id===id||(placa&&v.placa===placa)||(frota&&v.frota===frota);});
+        if(dup){erros.push('Linha '+(idx+1)+': '+(placa||frota)+' já existe.');return;}
+
+        var v={id:id,tipo:frota?'frota':'placa',placa:placa,frota:frota,categoria:cat,nome:nome,empresa:'—',modelo:'—',cor:'—',ano:'—',tv:'—'};
+        novos.push(v);
+        ok++;
+      });
+
+      // Salva todos no Firebase
+      novos.forEach(function(v){ salvarVeiculo(v); });
+
+      if(novos.length>0) mostrarQrsImportados(novos,erros);
+      else mostrarImportResult(ok===0?'Nenhum importado.':'✓ '+ok+' importado(s).'+(erros.length?'<br>'+erros.join('<br>'):'' ),ok>0);
+      e.target.value='';
+    }catch(err){ mostrarImportResult('Erro: '+err.message,false); }
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+function mostrarQrsImportados(novos,erros){
+  var el=document.getElementById('import-resultado');
+  el.style.display='block';
+  var html='<div class="alerta alerta-vd">✓ '+novos.length+' veículo(s) importado(s) e salvos!</div>';
+  if(erros.length) html+='<div class="alerta alerta-am" style="font-size:12px">⚠ '+erros.join('<br>')+'</div>';
+  html+='<div class="grade-qr" id="grade-qrs-imp">';
+  novos.forEach(function(v){
+    html+='<div class="qr-card-imp">'
+      +'<div class="qr-label">'+idLabel(v)+'</div>'
+      +'<div id="qrimp_'+v.id.replace(/[^a-zA-Z0-9]/g,'')+'"></div>'
+      +'<div class="qr-sub">'+v.nome+'<br>'+v.categoria+'</div>'
+      +'</div>';
+  });
+  html+='</div>';
+  html+='<button type="button" class="btn btn-ci" onclick="window.print()" style="margin-top:10px">🖨 Imprimir QR Codes</button>';
+  el.innerHTML=html;
+  setTimeout(function(){
+    novos.forEach(function(v){
+      var divId='qrimp_'+v.id.replace(/[^a-zA-Z0-9]/g,'');
+      var div=document.getElementById(divId);
+      if(div) new QRCode(div,{text:v.id,width:100,height:100,colorDark:'#0d3570',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+    });
+  },200);
+}
+
+function mostrarImportResult(msg,sucesso){
+  var el=document.getElementById('import-resultado');
+  el.style.display='block';
+  el.innerHTML='<div class="alerta '+(sucesso?'alerta-vd':'alerta-vm')+'">'+msg+'</div>';
+}
+
+// ── SCANNER ──────────────────────────────────────────────────
+function iniciarScanner(elementId,onSucesso){
+  var scanner=new Html5Qrcode(elementId);
+  scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:250,height:250}},
+    function(texto){ scanner.stop().then(function(){onSucesso(texto);}).catch(function(){onSucesso(texto);}); },
+    function(){}
+  ).catch(function(){});
+  return scanner;
+}
+
+// ── PORTARIA ENTRADA ─────────────────────────────────────────
+function resetLeitura(){
+  vAtivo=null; acomps=[];
+  document.getElementById('lr-camera').style.display='block';
+  document.getElementById('lr-form').style.display='none';
+  document.getElementById('lr-ok').style.display='none';
+}
+
+function abrirTelaLeitura(){
+  resetLeitura(); ir('tela-leitura');
+  var lista=document.getElementById('lr-lista-manual');
+  lista.innerHTML=veiculos.map(function(v){
+    return '<button type="button" class="item-lista" data-vid="'+v.id+'">'
+      +'<span class="plq">'+idLabel(v)+'</span>'
+      +'<div class="il-info"><span class="il-nm">'+v.nome+'</span><span class="il-sb">'+v.categoria+'</span></div>'
+      +'<span style="font-size:20px;color:#ccc">›</span></button>';
+  }).join('');
+  lista.querySelectorAll('.item-lista').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var v=veiculos.find(function(x){return x.id===btn.getAttribute('data-vid');});
+      if(v) abrirFormEntrada(v);
+    });
+  });
+  setTimeout(function(){try{scannerEntrada=iniciarScanner('qr-reader-entrada',function(txt){
+    var v=veiculos.find(function(x){return x.id===txt;});
+    if(!v){alert('QR Code não reconhecido.');return;}
+    abrirFormEntrada(v);
+  });}catch(e){}},400);
+}
+
+function abrirFormEntrada(v){
+  pararScanners(); vAtivo=v;
+  document.getElementById('lr-camera').style.display='none';
+  document.getElementById('lr-vcard').innerHTML=vcHTML(v);
+  document.getElementById('lr-guarda-box').textContent='👤 Guarda: '+userLogado.nome;
+  ['lr-cond','lr-crac','lr-obs'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('lr-setor').value='';
+  document.getElementById('lr-tags').innerHTML='';
+  acomps=[];
+  document.getElementById('lr-form').style.display='block';
+}
+
+document.getElementById('btn-add-ac').addEventListener('click',function(){
+  var inp=document.getElementById('lr-ac');
+  var n=(inp.value||'').trim(); if(!n)return;
+  acomps.push(n); renderTags(); inp.value='';
+});
+document.getElementById('lr-ac').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('btn-add-ac').click();});
+function renderTags(){
+  document.getElementById('lr-tags').innerHTML=acomps.map(function(x,i){
+    return '<span class="tag">'+x+'<button type="button" data-i="'+i+'">×</button></span>';
+  }).join('');
+  document.querySelectorAll('#lr-tags .tag button').forEach(function(b){
+    b.addEventListener('click',function(){acomps.splice(parseInt(b.getAttribute('data-i')),1);renderTags();});
+  });
+}
+
+document.getElementById('btn-dar-ok').addEventListener('click',function(){
+  var cond=(document.getElementById('lr-cond').value||'').trim();
+  var crac=(document.getElementById('lr-crac').value||'').trim();
+  var setor=document.getElementById('lr-setor').value;
+  if(!cond||!crac||!setor){alert('Preencha condutor, crachá e setor.');return;}
+  var vi={
+    id:'VI'+Date.now(), vid:vAtivo.id,
+    condutor:cond, cracha:crac, setor:setor,
+    acompanhantes:acomps.slice(), status:'pendente_setor',
+    guardaId:userLogado.id, guardaNome:userLogado.nome,
+    obs:(document.getElementById('lr-obs').value||'').trim(),
+    assinatura:false, horaEntrada:agora(), horaSaida:null, data:hoje()
+  };
+  salvarVisita(vi); viAtiva=vi;
+  document.getElementById('lr-form').style.display='none';
+  document.getElementById('lr-ok-vcard').innerHTML=vcHTML(vAtivo)
+    +'<div class="card" style="margin-top:-8px;border-radius:0 0 10px 10px">'
+    +'<div style="font-size:13px;color:#555">Condutor: <strong>'+vi.condutor+'</strong> • Crachá: '+vi.cracha+'</div>'
+    +'<div style="font-size:13px;color:#555">Setor: '+vi.setor+' • Entrou: '+vi.horaEntrada+'</div>'
+    +(vi.obs?'<div style="font-size:13px;color:#e65100;margin-top:4px">📝 Obs: <strong>'+vi.obs+'</strong></div>':'')
+    +'</div>';
+  document.getElementById('lr-ok').style.display='block';
+});
+document.getElementById('btn-cancelar-lr').addEventListener('click',function(){abrirTelaLeitura();});
+document.getElementById('btn-proximo-veiculo').addEventListener('click',function(){abrirTelaLeitura();});
+
+// ── PAINEL DO SETOR ──────────────────────────────────────────
+function abrirTelaSetor(){
+  document.getElementById('setor-opcoes').style.display='block';
+  document.getElementById('sig-wrap').style.display='none';
+  renderSetor(); ir('tela-setor');
+  setTimeout(function(){try{scannerSetor=iniciarScanner('qr-reader-setor',function(txt){
+    var v=veiculos.find(function(x){return x.id===txt;});
+    if(!v){alert('QR não reconhecido.');return;}
+    var vi=visitas.filter(function(x){return x.vid===v.id&&x.data===hoje()&&x.status==='pendente_setor';}).slice(-1)[0];
+    if(!vi){alert('Nenhuma visita pendente para este veículo hoje.');return;}
+    abrirAssinatura(vi.id);
+  });}catch(e){}},400);
+}
+
+function renderSetor(){
+  var filt=document.getElementById('filt-setor').value;
+  var el=document.getElementById('setor-lista');
+  var lista=visitas.filter(function(vi){return vi.status==='pendente_setor'&&vi.data===hoje();});
+  if(filt) lista=lista.filter(function(vi){return vi.setor===filt;});
+  if(!lista.length){el.innerHTML='<div class="vazio">Nenhum veículo pendente</div>';return;}
+  el.innerHTML=lista.map(function(vi){
+    var v=veiculos.find(function(x){return x.id===vi.vid;})||{};
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #eee">'
+      +'<span class="plq">'+idLabel(v)+'</span>'
+      +'<div style="flex:1"><div style="font-size:14px;font-weight:bold">'+v.nome+'</div>'
+      +'<div style="font-size:12px;color:#666">'+vi.condutor+' • '+vi.setor+' • '+vi.horaEntrada+'</div></div>'
+      +'<button type="button" class="btn-pendente" data-viid="'+vi.id+'" style="width:auto;padding:10px 14px;font-size:13px;animation:none;box-shadow:none;border-radius:8px">🔴 Assinar</button>'
+      +'</div>';
+  }).join('');
+  document.querySelectorAll('#setor-lista .btn-pendente').forEach(function(btn){
+    btn.addEventListener('click',function(){abrirAssinatura(btn.getAttribute('data-viid'));});
+  });
+}
+document.getElementById('filt-setor').addEventListener('change',renderSetor);
+
+function abrirAssinatura(viId){
+  pararScanners();
+  viAtiva=visitas.find(function(vi){return vi.id===viId;});
+  var v=veiculos.find(function(x){return x.id===viAtiva.vid;})||{};
+  document.getElementById('setor-opcoes').style.display='none';
+  document.getElementById('sig-vcard').innerHTML=vcHTML(v);
+  document.getElementById('sig-detalhes').innerHTML=
+    'Condutor: <strong>'+viAtiva.condutor+'</strong> • Crachá: '+viAtiva.cracha+'<br>'
+    +'Setor: '+viAtiva.setor+' • Entrou: '+viAtiva.horaEntrada+' • Guarda: '+viAtiva.guardaNome
+    +(viAtiva.obs?'<br><span style="color:#e65100">📝 Obs: <strong>'+viAtiva.obs+'</strong></span>':'');
+  document.getElementById('sig-info').textContent='Responsável: '+userLogado.nome;
+  document.getElementById('sig-wrap').style.display='block';
+  sigEl=document.getElementById('sig-canvas');
+  sigCtx=sigEl.getContext('2d');
+  sigEl.width=sigEl.offsetWidth||400; sigEl.height=160;
+  sigCtx.clearRect(0,0,sigEl.width,sigEl.height);
+  sigCtx.strokeStyle='#0d3570'; sigCtx.lineWidth=2.5; sigCtx.lineCap='round'; sigCtx.lineJoin='round'; sigDraw=false;
+  function gp(e){var r=sigEl.getBoundingClientRect();if(e.touches)return{x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top};return{x:e.offsetX,y:e.offsetY};}
+  sigEl.onmousedown=function(e){sigDraw=true;var p=gp(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);};
+  sigEl.onmousemove=function(e){if(!sigDraw)return;var p=gp(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();};
+  sigEl.onmouseup=sigEl.onmouseleave=function(){sigDraw=false;};
+  sigEl.ontouchstart=function(e){e.preventDefault();sigDraw=true;var p=gp(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);};
+  sigEl.ontouchmove=function(e){e.preventDefault();if(!sigDraw)return;var p=gp(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();};
+  sigEl.ontouchend=function(){sigDraw=false;};
+  document.getElementById('sig-wrap').scrollIntoView({behavior:'smooth'});
+}
+
+document.getElementById('btn-limpar-sig').addEventListener('click',function(){if(sigCtx&&sigEl)sigCtx.clearRect(0,0,sigEl.width,sigEl.height);});
+document.getElementById('btn-confirmar-sig').addEventListener('click',function(){
+  if(!viAtiva)return;
+  var b=document.createElement('canvas');b.width=sigEl.width;b.height=sigEl.height;
+  if(sigEl.toDataURL()===b.toDataURL()){alert('Faça a assinatura antes de confirmar.');return;}
+  viAtiva.status='liberado'; viAtiva.assinatura=true; viAtiva.horaSig=agora();
+  viAtiva.responsavelSetor=userLogado.nome; viAtiva.assinaturaImg=sigEl.toDataURL();
+  salvarVisita(viAtiva); atualizarContador();
+  var v=veiculos.find(function(x){return x.id===viAtiva.vid;})||{};
+  document.getElementById('sig-wrap').innerHTML=
+    '<div class="alerta alerta-vd" style="font-size:16px">✓ Assinatura coletada! '+idLabel(v)+' liberado para sair.</div>'
+    +vcHTML(v)
+    +'<button type="button" class="btn btn-az" id="btn-prox-ass">Próximo veículo</button>';
+  document.getElementById('btn-prox-ass').addEventListener('click',function(){abrirTelaSetor();});
+  viAtiva=null;
+});
+document.getElementById('btn-cancelar-sig').addEventListener('click',function(){
+  document.getElementById('sig-wrap').style.display='none';
+  document.getElementById('setor-opcoes').style.display='block';
+  abrirTelaSetor();
+});
+
+// ── PORTARIA SAÍDA ───────────────────────────────────────────
+function resetSaida(){
+  vAtivo=null; viAtiva=null;
+  document.getElementById('sa-camera').style.display='block';
+  var d=document.getElementById('sa-dados'); d.style.display='none'; d.innerHTML='';
+}
+
+function abrirTelaSaida(){
+  resetSaida(); ir('tela-saida');
+  var ids={};
+  visitas.filter(function(vi){return vi.data===hoje()&&vi.status!=='saiu'&&vi.status!=='negado';}).forEach(function(vi){ids[vi.vid]=true;});
+  var lista=veiculos.filter(function(v){return ids[v.id];});
+  var el=document.getElementById('sa-lista-manual');
+  var bm={pendente_setor:'badge-am',liberado:'badge-vd'};
+  var lm={pendente_setor:'⚠ Pendente','liberado':'✓ Liberado'};
+  el.innerHTML=lista.map(function(v){
+    var vi=visitas.filter(function(x){return x.vid===v.id&&x.data===hoje()&&x.status!=='negado';}).slice(-1)[0];
+    return '<button type="button" class="item-lista" data-vid="'+v.id+'">'
+      +'<span class="plq">'+idLabel(v)+'</span>'
+      +'<div class="il-info"><span class="il-nm">'+v.nome+'</span><span class="il-sb">'+(vi?vi.condutor:'—')+'</span></div>'
+      +'<span class="badge '+(vi?(bm[vi.status]||'badge-gz'):'badge-gz')+'">'+(vi?(lm[vi.status]||vi.status):'—')+'</span>'
+      +'</button>';
+  }).join('');
+  el.querySelectorAll('.item-lista').forEach(function(btn){
+    btn.addEventListener('click',function(){mostrarChecklist(btn.getAttribute('data-vid'));});
+  });
+  setTimeout(function(){try{scannerSaida=iniciarScanner('qr-reader-saida',function(txt){
+    var v=veiculos.find(function(x){return x.id===txt;});
+    if(!v){alert('QR não reconhecido.');return;}
+    mostrarChecklist(v.id);
+  });}catch(e){}},400);
+}
+
+function mostrarChecklist(vid){
+  pararScanners();
+  vAtivo=veiculos.find(function(v){return v.id===vid;});
+  var vi=visitas.filter(function(x){return x.vid===vid&&x.data===hoje()&&x.status!=='negado';}).slice(-1)[0];
+  viAtiva=vi;
+  document.getElementById('sa-camera').style.display='none';
+  var el=document.getElementById('sa-dados'); el.style.display='block';
+  if(!vi){
+    el.innerHTML='<div class="alerta alerta-vm">Nenhuma entrada registrada hoje para este veículo.</div>'
+      +'<button type="button" class="btn btn-gz" id="btn-fechar-sa">← Voltar</button>';
+    document.getElementById('btn-fechar-sa').addEventListener('click',function(){abrirTelaSaida();});
+    return;
+  }
+  var liberado=vi.status==='liberado';
+  var sigImg=vi.assinaturaImg?'<img src="'+vi.assinaturaImg+'" style="max-width:100%;border:1px solid #ddd;border-radius:8px;margin-top:8px">':'<div style="font-size:13px;color:#c62828;margin-top:6px">⚠ Sem assinatura</div>';
+  el.innerHTML=
+    vcHTML(vAtivo)
+    +'<div class="card"><div class="secao">Dados da visita</div>'
+    +'<div style="font-size:14px;margin-bottom:4px">Condutor: <strong>'+vi.condutor+'</strong></div>'
+    +'<div style="font-size:13px;color:#666;margin-bottom:2px">Crachá: '+vi.cracha+' • Setor: '+vi.setor+'</div>'
+    +'<div style="font-size:13px;color:#666">Entrou: '+vi.horaEntrada+' • Guarda: '+vi.guardaNome+'</div>'
+    +(vi.obs?'<div style="font-size:13px;color:#e65100;margin-top:4px">📝 Obs: <strong>'+vi.obs+'</strong></div>':'')
+    +'</div>'
+    +'<div class="card"><div class="secao">Assinatura do setor</div>'
+    +(liberado?'<div style="font-size:13px;color:#2e7d32;font-weight:bold;margin-bottom:8px">✓ Liberado por: '+vi.responsavelSetor+' às '+vi.horaSig+'</div>':'<div style="font-size:13px;color:#c62828;font-weight:bold;margin-bottom:8px">⏳ Aguardando assinatura</div>')
+    +sigImg+'</div>'
+    +(liberado
+      ?'<button type="button" class="btn btn-vd" id="btn-liberar-saida" style="font-size:18px;padding:18px">✓ LIBERAR SAÍDA</button>'
+      :'<div class="alerta alerta-am">⚠ O setor ainda não assinou.</div><button type="button" class="btn btn-gz" id="btn-fechar-sa">← Voltar</button>');
+  var bl=document.getElementById('btn-liberar-saida');
+  if(bl) bl.addEventListener('click',function(){
+    viAtiva.status='saiu'; viAtiva.horaSaida=agora(); viAtiva.guardaSaida=userLogado.nome;
+    salvarVisita(viAtiva); atualizarContador();
+    el.innerHTML='<div class="alerta alerta-vd" style="font-size:16px">✓ Saída de <strong>'+idLabel(vAtivo)+'</strong> registrada às '+viAtiva.horaSaida+'.</div>'
+      +'<button type="button" class="btn btn-az" id="btn-nova-saida">Próxima saída</button>';
+    document.getElementById('btn-nova-saida').addEventListener('click',function(){abrirTelaSaida();});
+    vAtivo=null; viAtiva=null;
+  });
+  var bf=document.getElementById('btn-fechar-sa');
+  if(bf) bf.addEventListener('click',function(){abrirTelaSaida();});
+}
+
+// ── PAINEL DO DIA ────────────────────────────────────────────
+function renderPainel(){
+  var hj=hoje();
+  document.getElementById('painel-data').textContent='Data: '+hj;
+  var vis=visitas.filter(function(v){return v.data===hj;});
+  document.getElementById('pd-total').textContent=vis.length;
+  document.getElementById('pd-saiu').textContent=vis.filter(function(v){return v.status==='saiu';}).length;
+  document.getElementById('pd-dentro').textContent=vis.filter(function(v){return v.status!=='saiu'&&v.status!=='negado';}).length;
+  document.getElementById('pd-pendente').textContent=vis.filter(function(v){return v.status==='pendente_setor';}).length;
+  var setores={};
+  vis.forEach(function(v){if(!v.setor)return;if(!setores[v.setor])setores[v.setor]=0;setores[v.setor]++;});
+  var elSet=document.getElementById('pd-setores');
+  var keys=Object.keys(setores);
+  if(!keys.length){elSet.innerHTML='<div class="vazio">Sem movimentação</div>';}
+  else{
+    var max=Math.max.apply(null,keys.map(function(k){return setores[k];}));
+    elSet.innerHTML=keys.sort(function(a,b){return setores[b]-setores[a];}).map(function(k){
+      var pct=Math.round((setores[k]/max)*100);
+      return '<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="font-weight:bold">'+k+'</span><span style="color:#666">'+setores[k]+'</span></div><div style="background:#f0f0f0;border-radius:6px;height:10px"><div style="background:#1a56a0;height:10px;border-radius:6px;width:'+pct+'%"></div></div></div>';
+    }).join('');
+  }
+  var elTL=document.getElementById('pd-timeline');
+  if(!vis.length){elTL.innerHTML='<div class="vazio">Sem movimentação</div>';return;}
+  var stL={pendente_setor:'⏳',liberado:'✅',saiu:'✔',negado:'❌'};
+  var stC={pendente_setor:'#e65100',liberado:'#1a56a0',saiu:'#2e7d32',negado:'#c62828'};
+  elTL.innerHTML=vis.slice().sort(function(a,b){return a.horaEntrada>b.horaEntrada?1:-1;}).map(function(vi){
+    var v=veiculos.find(function(x){return x.id===vi.vid;})||{};
+    var cor=stC[vi.status]||'#666';
+    return '<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #eee">'
+      +'<div style="font-family:monospace;font-size:13px;color:#666;white-space:nowrap">'+vi.horaEntrada+'</div>'
+      +'<div style="width:3px;background:'+cor+';border-radius:3px;flex-shrink:0"></div>'
+      +'<div><div style="font-size:14px;font-weight:bold">'+idLabel(v)+'</div>'
+      +'<div style="font-size:12px;color:#666">'+vi.condutor+' • '+vi.setor+'</div>'
+      +'<div style="font-size:12px;color:'+cor+';font-weight:bold">'+(stL[vi.status]||vi.status)+(vi.horaSaida?' • Saiu: '+vi.horaSaida:'')+'</div>'
+      +'</div></div>';
+  }).join('');
+}
+
+// ── HISTÓRICO ────────────────────────────────────────────────
+function renderHistorico(){
+  var data=document.getElementById('hist-data').value;
+  var setor=document.getElementById('hist-setor').value;
+  var busca=(document.getElementById('hist-busca').value||'').trim().toLowerCase();
+  var el=document.getElementById('hist-lista');
+  var lista=visitas.slice();
+  if(data){var dataBR=data.split('-').reverse().join('/');lista=lista.filter(function(v){return v.data===dataBR;});}
+  if(setor) lista=lista.filter(function(v){return v.setor===setor;});
+  if(busca){lista=lista.filter(function(vi){var v=veiculos.find(function(x){return x.id===vi.vid;})||{};return idLabel(v).toLowerCase().indexOf(busca)>-1||(vi.condutor||'').toLowerCase().indexOf(busca)>-1;});}
+  if(!lista.length){el.innerHTML='<div class="vazio">Nenhum registro</div>';return;}
+  lista=lista.sort(function(a,b){return a.data>b.data?-1:a.data<b.data?1:a.horaEntrada>b.horaEntrada?-1:1;});
+  var stC={pendente_setor:'#e65100',liberado:'#1a56a0',saiu:'#2e7d32',negado:'#c62828'};
+  var stL={pendente_setor:'⏳ Aguardando',liberado:'✅ Liberado',saiu:'✔ Saiu',negado:'❌ Negado'};
+  el.innerHTML=lista.map(function(vi){
+    var v=veiculos.find(function(x){return x.id===vi.vid;})||{};
+    var cor=stC[vi.status]||'#666';
+    return '<div class="card" style="margin-bottom:10px;border-left:4px solid '+cor+'">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+      +'<span class="plq">'+idLabel(v)+'</span>'
+      +'<span style="font-size:11px;font-weight:bold;color:'+cor+'">'+(stL[vi.status]||vi.status)+'</span></div>'
+      +'<div style="font-size:14px;font-weight:bold;margin-bottom:2px">'+v.nome+' — '+v.categoria+'</div>'
+      +'<div style="font-size:13px;color:#555;margin-bottom:2px">Condutor: '+vi.condutor+' • Crachá: '+vi.cracha+'</div>'
+      +'<div style="font-size:13px;color:#555;margin-bottom:2px">Setor: '+vi.setor+' • Data: '+vi.data+'</div>'
+      +'<div style="font-size:13px;color:#555">Entrada: '+vi.horaEntrada+' • Guarda: '+vi.guardaNome+'</div>'
+      +(vi.horaSaida?'<div style="font-size:13px;color:#2e7d32;font-weight:bold">Saída: '+vi.horaSaida+'</div>':'')
+      +(vi.responsavelSetor?'<div style="font-size:13px;color:#1a56a0">Liberado: '+vi.responsavelSetor+' às '+vi.horaSig+'</div>':'')
+      +'</div>';
+  }).join('');
+}
+
+// ── ADMIN ────────────────────────────────────────────────────
+function renderAdmin(){
+  var el=document.getElementById('ad-lista');
+  el.innerHTML=usuarios.map(function(u){
+    var isMe=u.id===userLogado.id;
+    return '<div class="item-lista" style="cursor:default">'
+      +'<div class="il-info"><span class="il-nm">'+u.nome+(isMe?' (você)':'')+'</span><span class="il-sb">@'+u.usuario+' • '+labelPerfil(u.perfil)+'</span></div>'
+      +(!isMe&&u.id!=='u0'?'<button type="button" class="btn btn-vm btn-sm" style="padding:6px 12px;font-size:12px" data-uid="'+u.id+'">Remover</button>':'')
+      +'</div>';
+  }).join('');
+  document.querySelectorAll('#ad-lista .btn-vm').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      if(!confirm('Remover?'))return;
+      usuarios=usuarios.filter(function(u){return u.id!==btn.getAttribute('data-uid');});
+      salvarUsuarios(); renderAdmin();
+    });
+  });
+}
+document.getElementById('btn-criar-user').addEventListener('click',function(){
+  var nome=(document.getElementById('ad-nome').value||'').trim();
+  var user=(document.getElementById('ad-user').value||'').trim().toLowerCase();
+  var senha=(document.getElementById('ad-senha').value||'');
+  var perfil=document.getElementById('ad-perfil').value;
+  if(!nome||!user||!senha){alert('Preencha nome, usuário e senha.');return;}
+  if(usuarios.find(function(u){return u.usuario===user;})){alert('Usuário já existe.');return;}
+  usuarios.push({id:'u'+Date.now(),nome:nome,usuario:user,senha:senha,perfil:perfil});
+  salvarUsuarios();
+  ['ad-nome','ad-user','ad-senha'].forEach(function(id){document.getElementById(id).value='';});
+  renderAdmin(); alert('Usuário criado!');
+});
+
+// ── NAVEGAÇÃO ────────────────────────────────────────────────
+document.getElementById('btn-login').addEventListener('click',fazerLogin);
+document.getElementById('lg-senha').addEventListener('keydown',function(e){if(e.key==='Enter')fazerLogin();});
+document.getElementById('btn-sair').addEventListener('click',sair);
+document.getElementById('btn-contador').addEventListener('click',mostrarDentro);
+document.getElementById('btn-volta-dentro').addEventListener('click',function(){ir('tela-home');});
+document.getElementById('mn-cadastro').addEventListener('click',function(){ir('tela-cadastro');});
+document.getElementById('mn-veiculos').addEventListener('click',function(){renderVeiculosCad();ir('tela-veiculos');});
+document.getElementById('mn-leitura').addEventListener('click',function(){abrirTelaLeitura();});
+document.getElementById('mn-setor').addEventListener('click',function(){abrirTelaSetor();});
+document.getElementById('mn-saida').addEventListener('click',function(){abrirTelaSaida();});
+document.getElementById('mn-painel').addEventListener('click',function(){renderPainel();ir('tela-painel');});
+document.getElementById('mn-historico').addEventListener('click',function(){
+  var d=new Date();
+  document.getElementById('hist-data').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  renderHistorico(); ir('tela-historico');
+});
+document.getElementById('mn-admin').addEventListener('click',function(){renderAdmin();ir('tela-admin');});
+document.getElementById('btn-volta-cadastro').addEventListener('click',function(){ir('tela-home');});
+document.getElementById('btn-volta-veiculos').addEventListener('click',function(){ir('tela-home');});
+document.getElementById('btn-volta-detalhe').addEventListener('click',function(){ir('tela-veiculos');renderVeiculosCad();});
+document.getElementById('btn-volta-editar').addEventListener('click',function(){ir('tela-veiculos');renderVeiculosCad();});
+document.getElementById('btn-volta-leitura').addEventListener('click',function(){ir('tela-home');});
+document.getElementById('btn-volta-setor').addEventListener('click',function(){ir('tela-home');});
+document.getElementById('btn-volta-saida').addEventListener('click',function(){ir('tela-home');});
+document.getElementById('btn-volta-painel').addEventListener('click',function(){ir('tela-home');});
+document.getElementById('btn-volta-historico').addEventListener('click',function(){ir('tela-home');});
+document.getElementById('btn-volta-admin').addEventListener('click',function(){ir('tela-home');});
+document.getElementById('btn-filtrar-hist').addEventListener('click',renderHistorico);
+
+// Auto-login
+if(userLogado){
+  var uAtual=usuarios.find(function(u){return u.id===userLogado.id;});
+  if(uAtual){
+    userLogado=uAtual;
+    document.getElementById('home-usuario').textContent=uAtual.nome+' — '+labelPerfil(uAtual.perfil);
+    ir('tela-home');
+  }else{localStorage.removeItem('pd_sessao');}
+}
+</script>
+</body>
+</html>
