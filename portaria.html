@@ -242,7 +242,6 @@ button{font-family:Arial,sans-serif;cursor:pointer;border:none;-webkit-appearanc
       <button type="button" class="menu-btn" id="mn-saida"><span class="menu-ic">🚦</span><span class="menu-nm">Portaria Saída</span><span class="menu-sb">Liberar saída</span></button>
       <button type="button" class="menu-btn" id="mn-painel"><span class="menu-ic">📊</span><span class="menu-nm">Painel do dia</span><span class="menu-sb">Resumo de hoje</span></button>
       <button type="button" class="menu-btn" id="mn-historico"><span class="menu-ic">📅</span><span class="menu-nm">Histórico</span><span class="menu-sb">Todas as entradas</span></button>
-      <button type="button" class="menu-btn" id="mn-terceiros"><span class="menu-ic">🚙</span><span class="menu-nm">Terceiros</span><span class="menu-sb">Sem QR Code</span></button>
       <button type="button" class="menu-btn menu-btn-largo" id="mn-admin"><span class="menu-ic">⚙️</span><span class="menu-nm">Administração</span><span class="menu-sb">Usuários e guardas</span></button>
     </div>
   </div>
@@ -585,77 +584,6 @@ button{font-family:Arial,sans-serif;cursor:pointer;border:none;-webkit-appearanc
   </div>
 </div>
 
-<!-- TERCEIROS -->
-<div id="tela-terceiros" class="tela">
-  <div class="topbar"><div><div class="topbar-titulo">🚙 Entrada de Terceiros</div></div></div>
-  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-terceiros">← Voltar</button></div>
-  <div class="pagina-conteudo">
-
-    <!-- PESQUISA -->
-    <div id="terc-pesquisa">
-      <div class="card">
-        <div class="secao">🔍 Buscar registro anterior</div>
-        <div class="campo"><label>Placa do veículo</label>
-          <input type="text" id="terc-busca-placa" placeholder="Ex: ABC-1234" autocomplete="off" oninput="this.value=this.value.toUpperCase()">
-        </div>
-        <button type="button" class="btn btn-az" id="btn-terc-buscar">🔍 Pesquisar</button>
-        <div id="terc-busca-resultado" style="margin-top:12px"></div>
-      </div>
-
-      <div class="card">
-        <div class="secao">➕ Registrar novo terceiro</div>
-        <div class="campo"><label>Placa *</label>
-          <input type="text" id="terc-placa" placeholder="Ex: ABC-1234" maxlength="8" autocomplete="off" oninput="this.value=this.value.toUpperCase()">
-        </div>
-        <div class="campo"><label>Nome do condutor *</label>
-          <input type="text" id="terc-cond" placeholder="Nome completo" autocomplete="off">
-        </div>
-        <div class="campo"><label>Empresa / Origem</label>
-          <input type="text" id="terc-empresa" placeholder="Ex: Transportes Silva" autocomplete="off">
-        </div>
-        <div class="campo"><label>Motivo da visita *</label>
-          <input type="text" id="terc-motivo" placeholder="Ex: Entrega de material" autocomplete="off">
-        </div>
-        <div class="campo"><label>Setor de destino *</label>
-          <div style="display:flex;gap:8px;margin-bottom:8px">
-            <input type="text" id="terc-setor-busca" placeholder="🔍 Buscar setor..." autocomplete="off" style="flex:1">
-            <button type="button" class="btn btn-gz btn-sm" id="btn-terc-add-setor" style="flex-shrink:0;margin-top:0">+ Novo</button>
-          </div>
-          <div id="terc-setor-lista" style="background:#000;border:1px solid var(--borda);border-radius:8px;max-height:180px;overflow-y:auto"></div>
-          <input type="hidden" id="terc-setor">
-          <div id="terc-setor-sel" style="display:none;margin-top:6px;padding:8px 12px;background:rgba(46,204,113,.1);border:1px solid var(--neon);border-radius:8px;font-size:14px;color:var(--neon);font-weight:bold"></div>
-        </div>
-        <div class="campo"><label>Documento (RG/CNH)</label>
-          <input type="text" id="terc-doc" placeholder="Nº do documento" autocomplete="off">
-        </div>
-        <div class="campo"><label>Observações</label>
-          <textarea id="terc-obs" placeholder="Anotações..."></textarea>
-        </div>
-        <!-- Foto opcional -->
-        <div style="margin-bottom:14px">
-          <div id="terc-foto-preview" style="display:none;margin-bottom:8px;position:relative">
-            <img id="terc-foto-img" style="width:100%;border-radius:8px;border:1px solid var(--borda)">
-            <button type="button" id="btn-terc-remover-foto" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:26px;height:26px;font-size:15px;cursor:pointer">×</button>
-          </div>
-          <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:transparent;border:1px solid var(--borda);border-radius:8px;padding:8px 14px;font-size:13px;color:var(--txt2)">
-            📷 <span>Foto (opcional)</span>
-            <input type="file" id="terc-foto-camera" accept="image/*" capture="environment" style="display:none">
-          </label>
-        </div>
-        <button type="button" class="btn btn-vd" id="btn-terc-registrar">✓ Registrar entrada</button>
-      </div>
-    </div>
-
-    <!-- CONFIRMAÇÃO -->
-    <div id="terc-ok" style="display:none">
-      <div class="alerta alerta-vd">✓ Terceiro registrado! Aguardando confirmação do setor.</div>
-      <div id="terc-ok-info"></div>
-      <button type="button" class="btn btn-az" id="btn-terc-novo">Registrar próximo</button>
-    </div>
-
-  </div>
-</div>
-
 <!-- ADMIN -->
 <div id="tela-admin" class="tela">
   <div class="topbar"><div><div class="topbar-titulo">Administração</div></div></div>
@@ -793,7 +721,6 @@ function fazerLogin(){
   localStorage.setItem('pd_sessao',JSON.stringify(found));
   document.getElementById('home-usuario').textContent=found.nome+' — '+labelPerfil(found.perfil);
   setTimeout(inicializarSetores, 100);
-  aplicarPermissoes();
   document.getElementById('relogio').textContent=agora();
   atualizarContador();
   ir('tela-home');
@@ -1216,9 +1143,7 @@ function abrirAssinatura(viId){
   viAtiva=visitas.find(function(vi){return vi.id===viId;});
   var v=veiculos.find(function(x){return x.id===viAtiva.vid;})||{};
   document.getElementById('setor-opcoes').style.display='none';
-  document.getElementById('sig-vcard').innerHTML= viAtiva.terceiro
-    ? '<div class="vcard"><div class="vcard-cat">Terceiro</div><div class="vcard-id">'+viAtiva.placa+'</div><div class="vcard-grade"><div style="grid-column:1/-1"><div class="vcard-lbl">Condutor</div><div class="vcard-val">'+viAtiva.condutor+'</div></div>'+(viAtiva.empresa?'<div style="grid-column:1/-1"><div class="vcard-lbl">Empresa</div><div class="vcard-val">'+viAtiva.empresa+'</div></div>':'')+'</div></div>'
-    : vcHTML(v);
+  document.getElementById('sig-vcard').innerHTML=vcHTML(v);
   document.getElementById('sig-detalhes').innerHTML=
     'Condutor: <strong>'+viAtiva.condutor+'</strong> • Crachá: '+viAtiva.cracha+'<br>'
     +'Setor: '+viAtiva.setor+' • Entrou: '+viAtiva.horaEntrada+' • Guarda: '+viAtiva.guardaNome
@@ -1639,204 +1564,6 @@ function inicializarSetorBusca() {
   }
 }
 
-// ── PERMISSÕES POR PERFIL ────────────────────────────────────
-// admin    → tudo
-// guarda   → portaria entrada, saída, terceiros
-// setor    → somente painel setor
-function aplicarPermissoes() {
-  var p = userLogado.perfil;
-  var mapa = {
-    'mn-cadastro':   ['admin'],
-    'mn-veiculos':   ['admin'],
-    'mn-leitura':    ['admin','guarda'],
-    'mn-setor':      ['admin','setor'],
-    'mn-saida':      ['admin','guarda'],
-    'mn-painel':     ['admin'],
-    'mn-historico':  ['admin'],
-    'mn-terceiros':  ['admin','guarda'],
-    'mn-admin':      ['admin']
-  };
-  Object.keys(mapa).forEach(function(id) {
-    var el = document.getElementById(id);
-    if (!el) return;
-    if (mapa[id].indexOf(p) > -1) {
-      el.style.display = '';
-      el.disabled = false;
-      el.style.opacity = '1';
-    } else {
-      el.style.display = 'none';
-    }
-  });
-  // Se for setor, vai direto para o painel
-  if (p === 'setor') {
-    setTimeout(function(){ abrirTelaSetor(); }, 300);
-  }
-}
-
-// ── TERCEIROS ─────────────────────────────────────────────────
-var tercFoto = null;
-
-function abrirTelaTerceiros() {
-  document.getElementById('terc-pesquisa').style.display = 'block';
-  document.getElementById('terc-ok').style.display = 'none';
-  resetTercForm();
-  ir('tela-terceiros');
-  setTimeout(function(){ inicializarSetorTerceiros(); renderTercBusca(''); }, 200);
-}
-
-function resetTercForm() {
-  ['terc-placa','terc-cond','terc-empresa','terc-motivo','terc-doc','terc-obs'].forEach(function(id){
-    var e = document.getElementById(id); if(e) e.value='';
-  });
-  document.getElementById('terc-setor').value = '';
-  document.getElementById('terc-setor-busca').value = '';
-  document.getElementById('terc-setor-lista').innerHTML = '';
-  document.getElementById('terc-setor-sel').style.display = 'none';
-  document.getElementById('terc-setor-sel').textContent = '';
-  document.getElementById('terc-foto-preview').style.display = 'none';
-  document.getElementById('terc-foto-img').src = '';
-  document.getElementById('terc-foto-camera').value = '';
-  tercFoto = null;
-  document.getElementById('terc-busca-resultado').innerHTML = '';
-  document.getElementById('terc-busca-placa').value = '';
-}
-
-function inicializarSetorTerceiros() {
-  var inp = document.getElementById('terc-setor-busca');
-  var el  = document.getElementById('terc-setor-lista');
-  if (!inp || !el) return;
-  renderSetorListaEl(el, '');
-  inp.addEventListener('input', function(){ renderSetorListaEl(el, this.value); });
-  inp.addEventListener('focus', function(){ renderSetorListaEl(el, this.value); });
-
-  document.getElementById('btn-terc-add-setor').addEventListener('click', function(){
-    var novo = (inp.value||'').trim();
-    if (!novo) { alert('Digite o nome do novo setor.'); return; }
-    if (setoresLista.indexOf(novo) === -1) { setoresLista.push(novo); salvarSetores(); }
-    document.getElementById('terc-setor').value = novo;
-    inp.value = ''; el.innerHTML = '';
-    var s = document.getElementById('terc-setor-sel');
-    s.style.display = 'block'; s.textContent = '✓ ' + novo;
-  });
-}
-
-function renderSetorListaEl(el, filtro) {
-  var lista = setoresLista.filter(function(s){ return !filtro || s.toLowerCase().indexOf(filtro.toLowerCase())>-1; });
-  el.innerHTML = lista.map(function(s){
-    return '<button type="button" data-s="'+s+'" style="display:block;width:100%;text-align:left;padding:10px 14px;background:none;border:none;border-bottom:1px solid var(--borda);color:#fff;font-size:14px;cursor:pointer;font-family:Arial,sans-serif">'+s+'</button>';
-  }).join('');
-  el.querySelectorAll('button[data-s]').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      var s = btn.getAttribute('data-s');
-      document.getElementById('terc-setor').value = s;
-      document.getElementById('terc-setor-busca').value = '';
-      el.innerHTML = '';
-      var sel = document.getElementById('terc-setor-sel');
-      sel.style.display='block'; sel.textContent='✓ '+s;
-    });
-    btn.addEventListener('mouseover', function(){ this.style.background='rgba(46,204,113,.1)'; });
-    btn.addEventListener('mouseout',  function(){ this.style.background='none'; });
-  });
-}
-
-// Foto terceiros
-document.getElementById('terc-foto-camera').addEventListener('change', function(e){
-  var file = e.target.files[0]; if(!file) return;
-  var reader = new FileReader();
-  reader.onload = function(ev){
-    var img = new Image();
-    img.onload = function(){
-      var canvas = document.createElement('canvas');
-      var MAX=800, w=img.width, h=img.height;
-      if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
-      canvas.width=w;canvas.height=h;
-      canvas.getContext('2d').drawImage(img,0,0,w,h);
-      tercFoto = canvas.toDataURL('image/jpeg',0.7);
-      document.getElementById('terc-foto-img').src = tercFoto;
-      document.getElementById('terc-foto-preview').style.display = 'block';
-    };
-    img.src = ev.target.result;
-  };
-  reader.readAsDataURL(file);
-});
-document.getElementById('btn-terc-remover-foto').addEventListener('click', function(){
-  tercFoto=null;
-  document.getElementById('terc-foto-preview').style.display='none';
-  document.getElementById('terc-foto-img').src='';
-  document.getElementById('terc-foto-camera').value='';
-});
-
-// Pesquisa de terceiros por placa
-document.getElementById('btn-terc-buscar').addEventListener('click', function(){
-  var placa = (document.getElementById('terc-busca-placa').value||'').trim().toUpperCase();
-  var el = document.getElementById('terc-busca-resultado');
-  if(!placa){el.innerHTML='<div style="font-size:13px;color:var(--vm)">Informe a placa.</div>';return;}
-  // Busca em visitas de terceiros
-  var lista = visitas.filter(function(v){ return v.terceiro && v.placa && v.placa.toUpperCase()===placa; });
-  if(!lista.length){
-    el.innerHTML='<div style="font-size:13px;color:var(--txt2);padding:10px 0">Nenhum registro encontrado para esta placa.</div>';
-    return;
-  }
-  var stC={pendente_setor:'var(--am)',liberado:'var(--azul)',saiu:'var(--neon)',negado:'var(--vm)'};
-  var stL={pendente_setor:'⏳ Aguardando',liberado:'✅ Liberado',saiu:'✔ Saiu',negado:'❌ Negado'};
-  el.innerHTML='<div style="font-size:12px;font-weight:bold;color:var(--neon);text-transform:uppercase;margin-bottom:8px">'+lista.length+' registro(s) encontrado(s)</div>'
-    +lista.slice(-5).reverse().map(function(vi){
-      return '<div class="card" style="margin-bottom:8px;border-left:3px solid var(--neon)">'
-        +'<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
-        +'<span class="plq">'+vi.placa+'</span>'
-        +'<span style="font-size:11px;font-weight:bold;color:'+(stC[vi.status]||'var(--txt2)')+'">'+(stL[vi.status]||vi.status)+'</span></div>'
-        +'<div style="font-size:13px;margin-bottom:2px">'+vi.condutor+' — '+(vi.empresa||'—')+'</div>'
-        +'<div style="font-size:12px;color:var(--txt2)">'+vi.data+' • '+vi.horaEntrada+' • '+vi.setor+'</div>'
-        +'<div style="font-size:12px;color:var(--txt2)">Motivo: '+(vi.motivo||'—')+'</div>'
-        +'</div>';
-    }).join('');
-});
-
-// Registrar terceiro
-document.getElementById('btn-terc-registrar').addEventListener('click', function(){
-  var placa  = (document.getElementById('terc-placa').value||'').trim().toUpperCase();
-  var cond   = (document.getElementById('terc-cond').value||'').trim();
-  var setor  = document.getElementById('terc-setor').value;
-  var motivo = (document.getElementById('terc-motivo').value||'').trim();
-  if(!placa){alert('Informe a placa do veículo.');return;}
-  if(!cond) {alert('Informe o nome do condutor.');return;}
-  if(!setor){alert('Selecione o setor de destino.');return;}
-  if(!motivo){alert('Informe o motivo da visita.');return;}
-  var vi = {
-    id: 'T'+Date.now(),
-    terceiro: true,
-    placa: placa,
-    condutor: cond,
-    empresa: (document.getElementById('terc-empresa').value||'').trim(),
-    motivo: motivo,
-    setor: setor,
-    doc: (document.getElementById('terc-doc').value||'').trim(),
-    obs: (document.getElementById('terc-obs').value||'').trim(),
-    foto: tercFoto || null,
-    status: 'pendente_setor',
-    guardaId: userLogado.id,
-    guardaNome: userLogado.nome,
-    assinatura: false,
-    horaEntrada: agora(), horaSaida: null, data: hoje(),
-    // sem vid pois não tem veículo cadastrado
-    vid: 'TERCEIRO'
-  };
-  salvarVisita(vi);
-  // Mostra confirmação
-  document.getElementById('terc-pesquisa').style.display='none';
-  document.getElementById('terc-ok-info').innerHTML=
-    '<div class="card">'
-    +'<div style="font-size:16px;font-weight:bold;margin-bottom:8px">'+placa+'</div>'
-    +'<div style="font-size:14px;margin-bottom:4px">'+cond+(vi.empresa?' — '+vi.empresa:'')+'</div>'
-    +'<div style="font-size:13px;color:var(--txt2)">Setor: '+setor+' • Motivo: '+motivo+'</div>'
-    +'<div style="font-size:13px;color:var(--txt2)">Entrou: '+vi.horaEntrada+'</div>'
-    +(vi.foto?'<img src="'+vi.foto+'" style="width:100%;border-radius:8px;margin-top:8px">':'')
-    +'</div>';
-  document.getElementById('terc-ok').style.display='block';
-  atualizarContador();
-});
-document.getElementById('btn-terc-novo').addEventListener('click', function(){ abrirTelaTerceiros(); });
-
 // ── NAVEGAÇÃO ────────────────────────────────────────────────
 // Foto
 document.getElementById('foto-camera').addEventListener('change', function(e){ processarFoto(e.target.files[0]); });
@@ -1865,8 +1592,6 @@ document.getElementById('mn-historico').addEventListener('click',function(){
   document.getElementById('hist-data').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   renderHistorico(); ir('tela-historico');
 });
-document.getElementById('mn-terceiros').addEventListener('click',function(){abrirTelaTerceiros();});
-document.getElementById('btn-volta-terceiros').addEventListener('click',function(){ir('tela-home');});
 document.getElementById('mn-admin').addEventListener('click',function(){renderAdmin();ir('tela-admin');});
 document.getElementById('btn-volta-cadastro').addEventListener('click',function(){ir('tela-home');});
 document.getElementById('btn-volta-veiculos').addEventListener('click',function(){ir('tela-home');});
@@ -1904,7 +1629,6 @@ if(userLogado){
   if(uAtual){
     userLogado=uAtual;
     document.getElementById('home-usuario').textContent=uAtual.nome+' — '+labelPerfil(uAtual.perfil);
-    aplicarPermissoes();
     ir('tela-home');
   }else{localStorage.removeItem('pd_sessao');}
 }
