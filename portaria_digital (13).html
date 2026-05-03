@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portaria Digital</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, sans-serif; background: #f0f2f5; color: #111; font-size: 16px; }
+.tela { display: none; min-height: 100vh; }
+.tela.ativa { display: block; }
+
+/* LOGIN */
+#tela-login { background: #0d3570; padding: 40px 20px; min-height: 100vh; }
+.login-box { background: #fff; border-radius: 12px; padding: 28px 20px; max-width: 380px; margin: 0 auto; }
+.login-logo { font-size: 40px; text-align: center; margin-bottom: 8px; }
+.login-titulo { font-size: 20px; font-weight: bold; text-align: center; margin-bottom: 4px; }
+.login-sub { font-size: 13px; color: #666; text-align: center; margin-bottom: 24px; }
+.login-dica { background: #f0f2f5; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #555; margin-top: 16px; text-align: center; }
+.erro-login { background: #ffebee; color: #c62828; border-left: 4px solid #c62828; padding: 10px 14px; border-radius: 8px; font-size: 14px; margin-bottom: 14px; display: none; }
+
+/* TOPBAR */
+.topbar { background: #0d3570; color: #fff; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
+.topbar-titulo { font-size: 16px; font-weight: bold; }
+.topbar-info { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+.topbar-direita { display: flex; align-items: center; gap: 8px; }
+.topbar-hora { font-size: 13px; background: rgba(255,255,255,0.15); padding: 4px 10px; border-radius: 20px; }
+
+/* CAMPOS */
+.campo { margin-bottom: 14px; }
+.campo label { display: block; font-size: 12px; font-weight: bold; color: #555; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 5px; }
+.campo input, .campo select, .campo textarea { display: block; width: 100%; padding: 12px 14px; font-size: 16px; border: 2px solid #ddd; border-radius: 8px; background: #fafafa; color: #111; font-family: Arial, sans-serif; -webkit-appearance: none; }
+.campo input:focus, .campo select:focus, .campo textarea:focus { border-color: #1a56a0; background: #fff; outline: none; }
+.campo textarea { min-height: 80px; resize: vertical; }
+.dois-col { display: flex; gap: 10px; }
+.dois-col .campo { flex: 1; }
+
+/* BOTÕES */
+button { font-family: Arial, sans-serif; cursor: pointer; border: none; -webkit-appearance: none; }
+.btn { display: block; width: 100%; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 8px; text-align: center; margin-top: 10px; }
+.btn:active { opacity: 0.75; }
+.btn-az  { background: #1a56a0; color: #fff; }
+.btn-vd  { background: #2e7d32; color: #fff; }
+.btn-vm  { background: #c62828; color: #fff; }
+.btn-ci  { background: #fff; color: #1a56a0; border: 2px solid #1a56a0 !important; }
+.btn-gz  { background: #eee; color: #444; }
+.btn-sm  { display: inline-block; width: auto; padding: 8px 16px; font-size: 14px; margin-top: 0; }
+
+/* CARD */
+.card { background: #fff; border-radius: 10px; border: 1px solid #e0e0e0; padding: 16px; margin-bottom: 14px; }
+
+/* CARTÃO AZUL VEÍCULO */
+.vcard { background: #0d3570; color: #fff; border-radius: 10px; padding: 18px; margin-bottom: 14px; }
+.vcard-tipo { font-size: 11px; opacity: 0.5; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+.vcard-id { font-size: 28px; font-weight: bold; font-family: monospace; margin-bottom: 2px; }
+.vcard-placa { font-size: 14px; opacity: 0.6; font-family: monospace; margin-bottom: 14px; }
+.vcard-grade { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.vcard-item-lbl { font-size: 10px; opacity: 0.5; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px; }
+.vcard-item-val { font-size: 13px; font-weight: bold; }
+
+/* ALERTAS */
+.alerta { padding: 12px 16px; border-radius: 8px; font-size: 14px; font-weight: bold; margin-bottom: 14px; }
+.alerta-vd { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #2e7d32; }
+.alerta-vm { background: #ffebee; color: #c62828; border-left: 4px solid #c62828; }
+.alerta-az { background: #e3f2fd; color: #1a56a0; border-left: 4px solid #1a56a0; }
+.alerta-am { background: #fff3e0; color: #e65100; border-left: 4px solid #e65100; }
+
+/* BADGE */
+.badge { display: inline-block; font-size: 11px; font-weight: bold; padding: 3px 10px; border-radius: 20px; }
+.badge-vd { background: #e8f5e9; color: #2e7d32; }
+.badge-vm { background: #ffebee; color: #c62828; }
+.badge-am { background: #fff3e0; color: #e65100; }
+.badge-az { background: #e3f2fd; color: #1a56a0; }
+.badge-gz { background: #f0f0f0; color: #666; }
+
+/* MENU */
+.menu-grade { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+.menu-btn { background: #fff; border: 2px solid #e0e0e0 !important; border-radius: 10px; padding: 20px 12px; text-align: center; width: 100%; cursor: pointer; font-family: Arial, sans-serif; -webkit-appearance: none; }
+.menu-btn:active { background: #f0f0f0; }
+.menu-ic { font-size: 30px; display: block; margin-bottom: 8px; }
+.menu-nm { font-size: 13px; font-weight: bold; display: block; color: #111; }
+.menu-sb { font-size: 11px; color: #888; margin-top: 3px; display: block; }
+.menu-btn-largo { grid-column: 1 / -1; }
+
+/* CONTADOR */
+.contador { background: #c62828; color: #fff; border-radius: 10px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; cursor: pointer; border: none; width: 100%; font-family: Arial, sans-serif; }
+.contador:active { opacity: 0.85; }
+.contador-num { font-size: 36px; font-weight: bold; line-height: 1; }
+.contador-txt { font-size: 14px; opacity: 0.9; margin-top: 2px; }
+
+/* BOTÃO PENDENTE */
+.btn-pendente { background: #c62828; color: #fff; border: none; border-radius: 10px; padding: 16px; width: 100%; font-size: 15px; font-weight: bold; cursor: pointer; font-family: Arial, sans-serif; display: block; text-align: center; margin-bottom: 8px; animation: pulsar 2s ease-in-out infinite; }
+.btn-pendente:active { opacity: 0.85; }
+@keyframes pulsar { 0%,100% { box-shadow: 0 4px 12px rgba(198,40,40,0.4); } 50% { box-shadow: 0 4px 24px rgba(198,40,40,0.8); } }
+
+/* SCANNER */
+.scanner-box { background: #000; border-radius: 12px; overflow: hidden; margin-bottom: 14px; position: relative; }
+.scanner-box video { width: 100%; display: block; }
+#html5-qrcode-button-camera-permission,
+#html5-qrcode-button-camera-start,
+#html5-qrcode-button-camera-stop { display: none !important; }
+#qr-reader { width: 100%; }
+#qr-reader__scan_region { background: #000; }
+#qr-reader__dashboard { display: none; }
+
+/* ASSINATURA */
+.sig-canvas { display: block; width: 100%; height: 160px; border: 2px solid #ddd; border-radius: 8px; background: #fafafa; touch-action: none; cursor: crosshair; }
+
+/* ITENS */
+.item-lista { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #eee; background: none; border-left: none; border-right: none; border-top: none; width: 100%; text-align: left; cursor: pointer; font-family: Arial, sans-serif; }
+.item-lista:last-child { border-bottom: none; }
+.item-lista:active { background: #f5f5f5; }
+.item-lista-info { flex: 1; }
+.item-lista-nm { font-size: 14px; font-weight: bold; color: #111; display: block; }
+.item-lista-sb { font-size: 12px; color: #666; margin-top: 2px; display: block; }
+.plaquinha { font-family: monospace; font-size: 13px; font-weight: bold; background: #f0f0f0; border: 1px solid #ddd; padding: 4px 10px; border-radius: 6px; white-space: nowrap; }
+
+/* CHECKLIST */
+.chk-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #eee; }
+.chk-item:last-child { border-bottom: none; }
+.chk-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.chk-dot-vd { background: #2e7d32; }
+.chk-dot-vm { background: #c62828; }
+.chk-txt { font-size: 13px; flex: 1; color: #444; }
+.chk-val { font-size: 12px; color: #888; font-family: monospace; }
+
+/* TAGS */
+.tag { display: inline-flex; align-items: center; gap: 6px; background: #e3f2fd; color: #0d3570; border-radius: 20px; padding: 5px 12px; font-size: 13px; margin: 3px; }
+.tag button { background: none; border: none; color: #0d3570; font-size: 16px; cursor: pointer; padding: 0; }
+.tags-area { min-height: 32px; margin-top: 8px; }
+.add-linha { display: flex; gap: 8px; }
+
+/* QR */
+.qr-centro { display: flex; flex-direction: column; align-items: center; padding: 16px 0; gap: 10px; }
+.secao { font-size: 11px; font-weight: bold; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+.nav-topo { display: flex; align-items: center; gap: 12px; padding: 16px 16px 0; margin-bottom: 16px; }
+.pagina-conteudo { padding: 0 16px 40px; }
+.vazio { font-size: 14px; color: #888; text-align: center; padding: 32px 0; }
+.guarda-info { background: #e3f2fd; border-radius: 8px; padding: 10px 14px; font-size: 14px; color: #0d3570; margin-bottom: 14px; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="tela-login" class="tela ativa">
+  <div class="login-box">
+    <div class="login-logo">🏭</div>
+    <div class="login-titulo">Portaria Digital</div>
+    <div class="login-sub">Controle de acesso de veículos</div>
+    <div id="erro-login" class="erro-login">Usuário ou senha incorretos.</div>
+    <div class="campo"><label>Usuário</label><input type="text" id="lg-user" placeholder="Digite seu usuário" autocorrect="off" autocapitalize="off" autocomplete="off"></div>
+    <div class="campo"><label>Senha</label><input type="password" id="lg-senha" placeholder="Digite sua senha"></div>
+    <button type="button" class="btn btn-az" id="btn-login">Entrar</button>
+    <div class="login-dica">Primeiro acesso: <strong>admin</strong> / <strong>admin123</strong></div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div id="tela-home" class="tela">
+  <div class="topbar">
+    <div><div class="topbar-titulo">🏭 Portaria Digital</div><div class="topbar-info" id="home-usuario">—</div></div>
+    <div class="topbar-direita">
+      <div class="topbar-hora" id="relogio">--:--</div>
+      <button type="button" class="btn btn-gz btn-sm" id="btn-sair" style="margin-top:0">Sair</button>
+    </div>
+  </div>
+  <div class="pagina-conteudo" style="padding-top:16px">
+    <button type="button" class="contador" id="btn-contador">
+      <div><div class="contador-num" id="num-carros">0</div><div class="contador-txt">veículos dentro agora</div></div>
+      <div style="font-size:24px">›</div>
+    </button>
+    <div class="menu-grade">
+      <button type="button" class="menu-btn" id="mn-cadastro"><span class="menu-ic">🚗</span><span class="menu-nm">Cadastrar veículo</span><span class="menu-sb">QR Code permanente</span></button>
+      <button type="button" class="menu-btn" id="mn-veiculos"><span class="menu-ic">📋</span><span class="menu-nm">Veículos cadastrados</span><span class="menu-sb">Ver QR Code</span></button>
+      <button type="button" class="menu-btn" id="mn-leitura"><span class="menu-ic">📷</span><span class="menu-nm">Portaria Entrada</span><span class="menu-sb">Ler QR e registrar</span></button>
+      <button type="button" class="menu-btn" id="mn-setor"><span class="menu-ic">🏭</span><span class="menu-nm">Painel do Setor</span><span class="menu-sb">Pendentes & assinatura</span></button>
+      <button type="button" class="menu-btn" id="mn-saida"><span class="menu-ic">🚦</span><span class="menu-nm">Portaria Saída</span><span class="menu-sb">Registrar saída</span></button>
+      <button type="button" class="menu-btn menu-btn-largo" id="mn-admin"><span class="menu-ic">⚙️</span><span class="menu-nm">Administração</span><span class="menu-sb">Usuários e guardas</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- VEÍCULOS DENTRO -->
+<div id="tela-dentro" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Veículos dentro agora</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-dentro">← Voltar</button></div>
+  <div class="pagina-conteudo"><div id="lista-dentro"><div class="vazio">Nenhum veículo dentro</div></div></div>
+</div>
+
+<!-- CADASTRO -->
+<div id="tela-cadastro" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Cadastrar veículo</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-cadastro">← Voltar</button></div>
+  <div class="pagina-conteudo">
+    <div class="alerta alerta-az">ℹ️ QR Code <strong>permanente</strong> — cole no veículo.</div>
+
+    <!-- IMPORTAR EXCEL -->
+    <div class="card">
+      <div class="secao">📥 Importar do Excel em massa</div>
+      <div style="font-size:13px;color:#555;margin-bottom:12px">
+        Baixe o modelo, preencha e importe vários veículos de uma vez.
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button type="button" class="btn btn-gz btn-sm" id="btn-baixar-modelo" style="flex:1">⬇ Baixar modelo Excel</button>
+        <label style="flex:1">
+          <span class="btn btn-az btn-sm" style="display:block;text-align:center;cursor:pointer;margin-top:0">📂 Importar Excel</span>
+          <input type="file" id="input-excel" accept=".xlsx,.xls,.csv" style="display:none">
+        </label>
+      </div>
+      <div id="import-resultado" style="display:none"></div>
+      <div style="background:#f8f8f8;border-radius:8px;padding:10px 12px;font-size:12px;color:#666">
+        <strong>Colunas obrigatórias:</strong> tipo (frota/placa), identificacao, modelo, cor, ano, tipo_veiculo, nome_responsavel, empresa
+      </div>
+    </div>
+
+    <div style="font-size:13px;font-weight:bold;color:#555;margin-bottom:8px">— ou cadastre um por um abaixo —</div>
+    <div class="card">
+      <div class="secao">Identificação</div>
+      <div class="dois-col">
+        <div class="campo"><label>Tipo</label><select id="c-tipo"><option value="frota">Nº de frota</option><option value="placa">Placa</option></select></div>
+        <div class="campo"><label id="c-id-lbl">Nº de frota *</label><input type="text" id="c-id" placeholder="Ex: 0042" autocomplete="off"></div>
+      </div>
+      <div id="c-placa-wrap" style="display:none" class="campo"><label>Placa</label><input type="text" id="c-placa" placeholder="ABC-1234" maxlength="8" autocomplete="off"></div>
+      <div class="dois-col">
+        <div class="campo"><label>Modelo</label><input type="text" id="c-modelo" placeholder="Fiat Uno"></div>
+        <div class="campo"><label>Cor</label><input type="text" id="c-cor" placeholder="Branco"></div>
+      </div>
+      <div class="dois-col">
+        <div class="campo"><label>Ano</label><input type="text" id="c-ano" placeholder="2021" maxlength="4" inputmode="numeric"></div>
+        <div class="campo"><label>Tipo veículo</label><select id="c-tv"><option>Carro</option><option>Van</option><option>Caminhão</option><option>Moto</option><option>Ônibus</option><option>Outro</option></select></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="secao">Responsável fixo</div>
+      <div class="campo"><label>Nome *</label><input type="text" id="c-nome" placeholder="Nome do responsável"></div>
+      <div class="campo"><label>Empresa</label><input type="text" id="c-empresa" placeholder="Ex: Transportes Silva"></div>
+    </div>
+    <button type="button" class="btn btn-az" id="btn-gerar-qr">✦ Gerar QR Code permanente</button>
+    <div id="cad-resultado" style="display:none; margin-top:16px">
+      <div id="cad-vcard"></div>
+      <div class="card" style="text-align:center">
+        <div class="secao" style="text-align:center">QR Code permanente — cole no veículo</div>
+        <div class="qr-centro"><div id="qr-saida"></div><div style="font-size:12px;color:#888">Único e permanente</div></div>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="btn btn-ci btn-sm" onclick="window.print()" style="flex:1">🖨 Imprimir</button>
+          <button type="button" class="btn btn-az btn-sm" id="btn-novo-veiculo" style="flex:1">+ Novo veículo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VEÍCULOS CADASTRADOS -->
+<div id="tela-veiculos" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Veículos cadastrados</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-veiculos">← Voltar</button></div>
+  <div class="pagina-conteudo"><div id="lista-veiculos-cad"><div class="vazio">Nenhum veículo cadastrado</div></div></div>
+</div>
+
+<!-- DETALHE VEÍCULO -->
+<div id="tela-detalhe" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Detalhes do veículo</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-detalhe">← Voltar</button></div>
+  <div class="pagina-conteudo">
+    <div id="detalhe-vcard"></div>
+    <div class="card" style="text-align:center">
+      <div class="secao" style="text-align:center">QR Code permanente</div>
+      <div class="qr-centro"><div id="detalhe-qr"></div><div style="font-size:12px;color:#888">Escaneie na portaria</div></div>
+      <button type="button" class="btn btn-ci" onclick="window.print()">🖨 Imprimir</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDITAR VEÍCULO -->
+<div id="tela-editar" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Editar veículo</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-editar">← Voltar</button></div>
+  <div class="pagina-conteudo">
+    <div class="card">
+      <div class="secao">Identificação</div>
+      <div class="dois-col">
+        <div class="campo"><label>Tipo</label><select id="ed-tipo"><option value="frota">Nº de frota</option><option value="placa">Placa</option></select></div>
+        <div class="campo"><label id="ed-id-lbl">Nº de frota *</label><input type="text" id="ed-id" autocomplete="off"></div>
+      </div>
+      <div id="ed-placa-wrap" style="display:none" class="campo"><label>Placa</label><input type="text" id="ed-placa" maxlength="8" autocomplete="off"></div>
+      <div class="dois-col">
+        <div class="campo"><label>Modelo</label><input type="text" id="ed-modelo"></div>
+        <div class="campo"><label>Cor</label><input type="text" id="ed-cor"></div>
+      </div>
+      <div class="dois-col">
+        <div class="campo"><label>Ano</label><input type="text" id="ed-ano" maxlength="4" inputmode="numeric"></div>
+        <div class="campo"><label>Tipo veículo</label><select id="ed-tv"><option>Carro</option><option>Van</option><option>Caminhão</option><option>Moto</option><option>Ônibus</option><option>Outro</option></select></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="secao">Responsável</div>
+      <div class="campo"><label>Nome *</label><input type="text" id="ed-nome"></div>
+      <div class="campo"><label>Empresa</label><input type="text" id="ed-empresa"></div>
+    </div>
+    <button type="button" class="btn btn-vd" id="btn-salvar-edicao">✓ Salvar alterações</button>
+  </div>
+</div>
+
+<!-- PORTARIA ENTRADA -->
+<div id="tela-leitura" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Portaria — Entrada</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-leitura">← Voltar</button></div>
+  <div class="pagina-conteudo">
+
+    <!-- PASSO 1: câmera -->
+    <div id="lr-camera">
+      <div class="card" style="text-align:center;padding:12px">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:12px">📷 Aponte para o QR Code do veículo</div>
+        <div id="qr-reader-entrada"></div>
+        <div style="font-size:13px;color:#888;margin-top:10px" id="lr-status-scan">Aguardando leitura...</div>
+      </div>
+      <div class="card">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:8px">Ou selecione manualmente:</div>
+        <div id="lr-lista-manual"></div>
+      </div>
+    </div>
+
+    <!-- PASSO 2: dados + formulário -->
+    <div id="lr-form" style="display:none">
+      <div id="lr-vcard"></div>
+      <div class="card">
+        <div class="secao">Dados da visita</div>
+        <div class="guarda-info" id="lr-guarda-box">👤 Guarda: —</div>
+        <div class="campo"><label>Nome do condutor *</label><input type="text" id="lr-cond" placeholder="Quem está conduzindo" autocomplete="off"></div>
+        <div class="campo"><label>Nº do crachá *</label><input type="text" id="lr-crac" placeholder="Ex: 00123" inputmode="numeric" autocomplete="off"></div>
+        <div class="campo"><label>Setor de destino *</label>
+          <select id="lr-setor">
+            <option value="">Selecione...</option>
+            <option>Produção</option><option>Almoxarifado</option><option>Manutenção</option>
+            <option>Administrativo</option><option>Refeitório</option><option>TI</option><option>Segurança</option><option>RH</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label>Acompanhantes</label>
+          <div class="add-linha">
+            <input type="text" id="lr-ac" placeholder="Nome" autocomplete="off" style="flex:1">
+            <button type="button" class="btn btn-az btn-sm" id="btn-add-ac">+ Add</button>
+          </div>
+          <div id="lr-tags" class="tags-area"></div>
+        </div>
+        <div class="campo"><label>Observações</label><textarea id="lr-obs" placeholder="Anotações..."></textarea></div>
+      </div>
+      <button type="button" class="btn btn-vd" id="btn-dar-ok">✓ Liberar entrada</button>
+      <button type="button" class="btn btn-gz" id="btn-cancelar-lr">← Ler outro QR Code</button>
+    </div>
+
+    <!-- PASSO 3: confirmação -->
+    <div id="lr-ok" style="display:none">
+      <div class="alerta alerta-vd">✓ Entrada registrada! Botão vermelho pendente no setor.</div>
+      <div id="lr-ok-vcard"></div>
+      <button type="button" class="btn btn-az" id="btn-proximo-veiculo">Próximo veículo</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAINEL DO SETOR -->
+<div id="tela-setor" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Painel do Setor</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-setor">← Voltar</button></div>
+  <div class="pagina-conteudo">
+
+    <!-- OPÇÕES: ler QR ou lista -->
+    <div id="setor-opcoes">
+      <!-- Ler QR Code -->
+      <div class="card" style="text-align:center;padding:12px">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:12px">📷 Ler QR Code do veículo</div>
+        <div id="qr-reader-setor"></div>
+        <div style="font-size:13px;color:#888;margin-top:8px">Aponte para o código colado no veículo</div>
+      </div>
+
+      <!-- Ou lista manual -->
+      <div class="card">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:4px">Ou selecione da lista:</div>
+        <div class="campo" style="margin-bottom:8px"><label>Filtrar por setor</label>
+          <select id="filt-setor">
+            <option value="">Todos</option>
+            <option>Produção</option><option>Almoxarifado</option><option>Manutenção</option>
+            <option>Administrativo</option><option>Refeitório</option><option>TI</option><option>Segurança</option><option>RH</option>
+          </select>
+        </div>
+        <div id="setor-lista"><div class="vazio">Nenhum veículo pendente</div></div>
+      </div>
+    </div>
+
+    <!-- ASSINATURA (abre após selecionar veículo) -->
+    <div id="sig-wrap" style="display:none">
+      <div id="sig-vcard"></div>
+      <div class="card">
+        <div class="secao">Dados da visita</div>
+        <div id="sig-detalhes" style="font-size:13px;color:#555;margin-bottom:4px"></div>
+      </div>
+      <div class="card">
+        <div class="secao">✍ Assinatura do responsável do setor</div>
+        <div id="sig-info" style="margin-bottom:10px;font-size:14px;font-weight:bold;color:#0d3570"></div>
+        <div style="font-size:13px;color:#666;margin-bottom:10px">Assine abaixo para confirmar a chegada e liberar a saída</div>
+        <canvas id="sig-canvas" class="sig-canvas"></canvas>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button type="button" class="btn btn-gz btn-sm" id="btn-limpar-sig" style="flex:1">↺ Limpar</button>
+          <button type="button" class="btn btn-vd btn-sm" id="btn-confirmar-sig" style="flex:1">✓ Confirmar e liberar</button>
+        </div>
+        <button type="button" class="btn btn-gz" id="btn-cancelar-sig" style="margin-top:8px">← Voltar à lista</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- PORTARIA SAÍDA -->
+<div id="tela-saida" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Portaria — Saída</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-saida">← Voltar</button></div>
+  <div class="pagina-conteudo">
+
+    <!-- PASSO 1: câmera -->
+    <div id="sa-camera">
+      <div class="card" style="text-align:center;padding:12px">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:12px">📷 Aponte para o QR Code do veículo</div>
+        <div id="qr-reader-saida"></div>
+        <div style="font-size:13px;color:#888;margin-top:10px" id="sa-status-scan">Aguardando leitura...</div>
+      </div>
+      <div class="card">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:8px">Ou selecione manualmente:</div>
+        <div id="sa-lista-manual"></div>
+      </div>
+    </div>
+
+    <div id="sa-dados" style="display:none"></div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="tela-admin" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Administração</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-admin">← Voltar</button></div>
+  <div class="pagina-conteudo">
+    <div class="card">
+      <div class="secao">Criar usuário</div>
+      <div class="campo"><label>Nome *</label><input type="text" id="ad-nome" placeholder="Nome completo"></div>
+      <div class="dois-col">
+        <div class="campo"><label>Usuário *</label><input type="text" id="ad-user" placeholder="login" autocorrect="off" autocapitalize="off" autocomplete="off"></div>
+        <div class="campo"><label>Senha *</label><input type="password" id="ad-senha" autocomplete="new-password"></div>
+      </div>
+      <div class="campo"><label>Perfil</label>
+        <select id="ad-perfil"><option value="guarda">Guarda</option><option value="setor">Resp. de setor</option><option value="admin">Administrador</option></select>
+      </div>
+      <button type="button" class="btn btn-az" id="btn-criar-user">+ Criar usuário</button>
+    </div>
+    <div class="card"><div class="secao">Usuários</div><div id="ad-lista"></div></div>
+  </div>
+</div>
+
+<script>
+var veiculos = JSON.parse(localStorage.getItem('pd_veic') || '[]');
+var visitas  = JSON.parse(localStorage.getItem('pd_vis')  || '[]');
+var usuarios = JSON.parse(localStorage.getItem('pd_usr')  || 'null');
+if (!usuarios) {
+  usuarios = [{ id:'u0', nome:'Administrador', usuario:'admin', senha:'admin123', perfil:'admin' }];
+  localStorage.setItem('pd_usr', JSON.stringify(usuarios));
+}
+var userLogado = null;
+// Recuperar sessão salva
+(function(){
+  var s = localStorage.getItem('pd_sessao');
+  if (s) { try { userLogado = JSON.parse(s); } catch(e){} }
+})();
+var acomps = [];
+var vAtivo = null, viAtiva = null;
+var sigDraw = false, sigCtx = null, sigEl = null;
+var scannerEntrada = null, scannerSaida = null;
+
+function salvar() {
+  localStorage.setItem('pd_veic', JSON.stringify(veiculos));
+  localStorage.setItem('pd_vis',  JSON.stringify(visitas));
+  localStorage.setItem('pd_usr',  JSON.stringify(usuarios));
+}
+function agora() { return new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+function hoje()  { return new Date().toLocaleDateString('pt-BR'); }
+function tempoPassado(h) {
+  var p=h.split(':'); var agr=new Date(); var ent=new Date();
+  ent.setHours(parseInt(p[0]),parseInt(p[1]),0);
+  var d=Math.floor((agr-ent)/60000); if(d<0)d=0;
+  var hr=Math.floor(d/60); var mn=d%60;
+  return hr>0?hr+'h '+mn+'min':mn+'min';
+}
+setInterval(function(){ var r=document.getElementById('relogio'); if(r)r.textContent=agora(); },1000);
+// Auto-login se sessão salva
+if (userLogado) {
+  var uAtual = usuarios.find(function(u){ return u.id === userLogado.id; });
+  if (uAtual) {
+    userLogado = uAtual;
+    document.getElementById('home-usuario').textContent = uAtual.nome + ' — ' + labelPerfil(uAtual.perfil);
+    document.getElementById('relogio').textContent = agora();
+    atualizarContador();
+    ir('tela-home');
+  } else {
+    userLogado = null;
+    localStorage.removeItem('pd_sessao');
+  }
+}
+
+// TELAS
+function ir(id) {
+  // Para scanners quando sair da tela
+  pararScanners();
+  document.querySelectorAll('.tela').forEach(function(t){ t.style.display='none'; t.classList.remove('ativa'); });
+  var t=document.getElementById(id); t.style.display='block'; t.classList.add('ativa');
+  window.scrollTo(0,0);
+}
+
+function pararScanners() {
+  if (scannerEntrada) { try { scannerEntrada.stop(); } catch(e){} scannerEntrada=null; }
+  if (scannerSaida)   { try { scannerSaida.stop();   } catch(e){} scannerSaida=null;   }
+}
+
+// LOGIN
+function fazerLogin() {
+  var u=(document.getElementById('lg-user').value||'').trim().toLowerCase();
+  var s=(document.getElementById('lg-senha').value||'');
+  var found=null;
+  for(var i=0;i<usuarios.length;i++){
+    if(usuarios[i].usuario.toLowerCase()===u&&usuarios[i].senha===s){found=usuarios[i];break;}
+  }
+  if(!found){document.getElementById('erro-login').style.display='block';document.getElementById('lg-senha').value='';return;}
+  document.getElementById('erro-login').style.display='none';
+  userLogado=found;
+  localStorage.setItem('pd_sessao', JSON.stringify(found));
+  document.getElementById('home-usuario').textContent=found.nome+' — '+labelPerfil(found.perfil);
+  document.getElementById('relogio').textContent=agora();
+  atualizarContador();
+  ir('tela-home');
+}
+function labelPerfil(p){return p==='admin'?'Administrador':p==='guarda'?'Guarda':p==='setor'?'Resp. Setor':'Usuário';}
+function sair(){userLogado=null;localStorage.removeItem('pd_sessao');document.getElementById('lg-user').value='';document.getElementById('lg-senha').value='';ir('tela-login');}
+
+// CONTADOR
+function atualizarContador() {
+  var d=visitas.filter(function(v){return v.data===hoje()&&v.status!=='saiu'&&v.status!=='negado';});
+  document.getElementById('num-carros').textContent=d.length;
+}
+function mostrarDentro() {
+  var d=visitas.filter(function(v){return v.data===hoje()&&v.status!=='saiu'&&v.status!=='negado';});
+  var el=document.getElementById('lista-dentro');
+  if(!d.length){el.innerHTML='<div class="vazio">Nenhum veículo dentro agora</div>';ir('tela-dentro');return;}
+  var sm={pendente_setor:'badge-am',liberado:'badge-vd'};
+  var lm={pendente_setor:'⏳ Aguardando setor',liberado:'✓ Liberado'};
+  el.innerHTML=d.map(function(vi){
+    var v=veiculos.find(function(x){return x.id===vi.vid;})||{};
+    return '<div class="card" style="margin-bottom:10px">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+      +'<span class="plaquinha">'+idLabel(v)+'</span>'
+      +'<span class="badge '+(sm[vi.status]||'badge-gz')+'">'+(lm[vi.status]||vi.status)+'</span></div>'
+      +'<div style="font-size:14px;font-weight:bold;margin-bottom:2px">'+v.modelo+' • '+v.cor+'</div>'
+      +'<div style="font-size:13px;color:#666">Condutor: '+vi.condutor+' • Crachá: '+vi.cracha+'</div>'
+      +'<div style="font-size:13px;color:#666">Setor: '+vi.setor+' • Entrou: '+vi.horaEntrada+'</div>'
+      +'<div style="font-size:13px;font-weight:bold;color:#c62828;margin-top:6px">⏱ '+tempoPassado(vi.horaEntrada)+'</div>'
+      +'</div>';
+  }).join('');
+  ir('tela-dentro');
+}
+
+// CARTÃO VEÍCULO
+function vcHTML(v){
+  var f=v.tipo==='frota';
+  return '<div class="vcard">'
+    +'<div class="vcard-tipo">'+(f?'Nº de frota':'Placa')+'</div>'
+    +'<div class="vcard-id">'+(f?v.frota:v.placa)+'</div>'
+    +(f&&v.placa?'<div class="vcard-placa">Placa: '+v.placa+'</div>':'')
+    +'<div class="vcard-grade">'
+    +'<div><div class="vcard-item-lbl">Modelo</div><div class="vcard-item-val">'+v.modelo+'</div></div>'
+    +'<div><div class="vcard-item-lbl">Cor</div><div class="vcard-item-val">'+v.cor+'</div></div>'
+    +'<div><div class="vcard-item-lbl">Ano</div><div class="vcard-item-val">'+v.ano+'</div></div>'
+    +'<div><div class="vcard-item-lbl">Tipo</div><div class="vcard-item-val">'+v.tv+'</div></div>'
+    +'<div style="grid-column:1/-1"><div class="vcard-item-lbl">Responsável</div><div class="vcard-item-val">'+v.nome+(v.empresa!=='—'?' — '+v.empresa:'')+'</div></div>'
+    +'</div></div>';
+}
+function idLabel(v){return v.tipo==='frota'?'Frota '+v.frota:v.placa;}
+
+// CADASTRO
+document.getElementById('c-tipo').addEventListener('change',function(){
+  var t=this.value;
+  document.getElementById('c-id-lbl').textContent=t==='frota'?'Nº de frota *':'Placa *';
+  document.getElementById('c-id').placeholder=t==='frota'?'Ex: 0042':'ABC-1234';
+  document.getElementById('c-placa-wrap').style.display=t==='frota'?'block':'none';
+  document.getElementById('c-id').value='';
+});
+document.getElementById('btn-gerar-qr').addEventListener('click',function(){
+  var tipo=document.getElementById('c-tipo').value;
+  var cid=(document.getElementById('c-id').value||'').trim().toUpperCase();
+  var nome=(document.getElementById('c-nome').value||'').trim();
+  if(!cid){alert('Informe a identificação do veículo.');return;}
+  if(!nome){alert('Informe o nome do responsável.');return;}
+  var v={id:'V'+Date.now(),tipo:tipo,
+    frota:tipo==='frota'?cid:'',
+    placa:tipo==='frota'?(document.getElementById('c-placa').value||'').trim().toUpperCase():cid,
+    modelo:(document.getElementById('c-modelo').value||'').trim()||'—',
+    cor:(document.getElementById('c-cor').value||'').trim()||'—',
+    ano:(document.getElementById('c-ano').value||'').trim()||'—',
+    tv:document.getElementById('c-tv').value,
+    nome:nome,empresa:(document.getElementById('c-empresa').value||'').trim()||'—'};
+  veiculos.push(v);salvar();
+  document.getElementById('cad-vcard').innerHTML=vcHTML(v);
+  var qDiv=document.getElementById('qr-saida');qDiv.innerHTML='';
+  new QRCode(qDiv,{text:v.id,width:200,height:200,colorDark:'#0d3570',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+  document.getElementById('cad-resultado').style.display='block';
+  document.getElementById('cad-resultado').scrollIntoView({behavior:'smooth'});
+});
+document.getElementById('btn-novo-veiculo').addEventListener('click',function(){
+  ['c-id','c-placa','c-modelo','c-cor','c-ano','c-nome','c-empresa'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('c-tipo').value='frota';
+  document.getElementById('c-placa-wrap').style.display='none';
+  document.getElementById('c-id-lbl').textContent='Nº de frota *';
+  document.getElementById('c-id').placeholder='Ex: 0042';
+  document.getElementById('cad-resultado').style.display='none';
+  document.getElementById('qr-saida').innerHTML='';
+  window.scrollTo(0,0);
+});
+
+// VEÍCULOS CADASTRADOS
+function renderVeiculosCad(){
+  var el=document.getElementById('lista-veiculos-cad');
+  if(!veiculos.length){el.innerHTML='<div class="vazio">Nenhum veículo cadastrado</div>';return;}
+  el.innerHTML=veiculos.map(function(v){
+    return '<div style="padding:12px 0;border-bottom:1px solid #eee">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
+      +'<span class="plaquinha">'+idLabel(v)+'</span>'
+      +'<div style="flex:1"><div style="font-size:14px;font-weight:bold">'+v.modelo+' • '+v.cor+'</div>'
+      +'<div style="font-size:12px;color:#666">'+v.nome+' • '+v.ano+'</div></div></div>'
+      +'<div style="display:flex;gap:8px">'
+      +'<button type="button" class="btn btn-az btn-sm" style="flex:1" data-acao="ver" data-vid="'+v.id+'">🔍 Ver QR</button>'
+      +'<button type="button" class="btn btn-gz btn-sm" style="flex:1" data-acao="editar" data-vid="'+v.id+'">✏️ Editar</button>'
+      +'<button type="button" class="btn btn-vm btn-sm" style="flex:1" data-acao="excluir" data-vid="'+v.id+'">🗑 Excluir</button>'
+      +'</div></div>';
+  }).join('');
+  document.querySelectorAll('#lista-veiculos-cad [data-acao]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var acao=btn.getAttribute('data-acao');
+      var vid=btn.getAttribute('data-vid');
+      if(acao==='ver')    mostrarDetalhe(vid);
+      if(acao==='editar') abrirEdicao(vid);
+      if(acao==='excluir') excluirVeiculo(vid);
+    });
+  });
+}
+function mostrarDetalhe(vid){
+  var v=veiculos.find(function(x){return x.id===vid;});if(!v)return;
+  document.getElementById('detalhe-vcard').innerHTML=vcHTML(v);
+  var qDiv=document.getElementById('detalhe-qr');qDiv.innerHTML='';
+  new QRCode(qDiv,{text:v.id,width:200,height:200,colorDark:'#0d3570',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+  ir('tela-detalhe');
+}
+
+// EDITAR / EXCLUIR VEÍCULO
+var vEditando = null;
+
+function abrirEdicao(vid) {
+  vEditando = veiculos.find(function(x){ return x.id === vid; });
+  if (!vEditando) return;
+  var v = vEditando;
+  document.getElementById('ed-tipo').value = v.tipo;
+  document.getElementById('ed-id').value   = v.tipo==='frota' ? v.frota : v.placa;
+  document.getElementById('ed-id-lbl').textContent = v.tipo==='frota' ? 'Nº de frota *' : 'Placa *';
+  document.getElementById('ed-placa-wrap').style.display = v.tipo==='frota' ? 'block' : 'none';
+  document.getElementById('ed-placa').value   = v.placa || '';
+  document.getElementById('ed-modelo').value  = v.modelo !== '—' ? v.modelo : '';
+  document.getElementById('ed-cor').value     = v.cor !== '—' ? v.cor : '';
+  document.getElementById('ed-ano').value     = v.ano !== '—' ? v.ano : '';
+  document.getElementById('ed-tv').value      = v.tv;
+  document.getElementById('ed-nome').value    = v.nome;
+  document.getElementById('ed-empresa').value = v.empresa !== '—' ? v.empresa : '';
+  ir('tela-editar');
+}
+
+function excluirVeiculo(vid) {
+  if (!confirm('Excluir este veículo permanentemente?')) return;
+  veiculos = veiculos.filter(function(v){ return v.id !== vid; });
+  salvar();
+  renderVeiculosCad();
+}
+
+document.getElementById('ed-tipo').addEventListener('change', function(){
+  var t = this.value;
+  document.getElementById('ed-id-lbl').textContent = t==='frota' ? 'Nº de frota *' : 'Placa *';
+  document.getElementById('ed-placa-wrap').style.display = t==='frota' ? 'block' : 'none';
+});
+
+document.getElementById('btn-salvar-edicao').addEventListener('click', function(){
+  if (!vEditando) return;
+  var tipo = document.getElementById('ed-tipo').value;
+  var cid  = (document.getElementById('ed-id').value||'').trim().toUpperCase();
+  var nome = (document.getElementById('ed-nome').value||'').trim();
+  if (!cid)  { alert('Informe a identificação.'); return; }
+  if (!nome) { alert('Informe o nome do responsável.'); return; }
+  vEditando.tipo    = tipo;
+  vEditando.frota   = tipo==='frota' ? cid : '';
+  vEditando.placa   = tipo==='frota' ? (document.getElementById('ed-placa').value||'').trim().toUpperCase() : cid;
+  vEditando.modelo  = (document.getElementById('ed-modelo').value||'').trim() || '—';
+  vEditando.cor     = (document.getElementById('ed-cor').value||'').trim() || '—';
+  vEditando.ano     = (document.getElementById('ed-ano').value||'').trim() || '—';
+  vEditando.tv      = document.getElementById('ed-tv').value;
+  vEditando.nome    = nome;
+  vEditando.empresa = (document.getElementById('ed-empresa').value||'').trim() || '—';
+  salvar();
+  alert('Veículo atualizado com sucesso!');
+  ir('tela-veiculos');
+  renderVeiculosCad();
+});
+
+// ── SCANNER QR ───────────────────────────────────────────────
+function iniciarScanner(elementId, onSucesso) {
+  var scanner = new Html5Qrcode(elementId);
+  scanner.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: { width: 250, height: 250 } },
+    function(texto) {
+      scanner.stop().then(function(){ onSucesso(texto); }).catch(function(){onSucesso(texto);});
+    },
+    function(err) {}
+  ).catch(function(err) {
+    console.log('Erro câmera:', err);
+  });
+  return scanner;
+}
+
+function onQrEntrada(texto) {
+  var v = veiculos.find(function(x){ return x.id === texto; });
+  if (!v) { alert('QR Code não reconhecido. Use a lista manual abaixo.'); return; }
+  abrirFormEntrada(v);
+}
+
+function onQrSaida(texto) {
+  var v = veiculos.find(function(x){ return x.id === texto; });
+  if (!v) { alert('QR Code não reconhecido. Use a lista manual abaixo.'); return; }
+  mostrarChecklist(v.id);
+}
+
+// ── ENTRADA ──────────────────────────────────────────────────
+function resetLeitura(){
+  vAtivo=null;acomps=[];
+  document.getElementById('lr-camera').style.display='block';
+  document.getElementById('lr-form').style.display='none';
+  document.getElementById('lr-ok').style.display='none';
+}
+
+function abrirTelaLeitura(){
+  resetLeitura();
+  ir('tela-leitura');
+  // Lista manual
+  var lista=document.getElementById('lr-lista-manual');
+  if(!veiculos.length){lista.innerHTML='<div class="vazio">Nenhum veículo cadastrado</div>';}
+  else{
+    lista.innerHTML=veiculos.map(function(v){
+      return '<button type="button" class="item-lista" data-vid="'+v.id+'">'
+        +'<span class="plaquinha">'+idLabel(v)+'</span>'
+        +'<div class="item-lista-info"><span class="item-lista-nm">'+v.modelo+' • '+v.cor+'</span><span class="item-lista-sb">'+v.nome+'</span></div>'
+        +'<span style="font-size:22px;color:#ccc">›</span></button>';
+    }).join('');
+    lista.querySelectorAll('.item-lista').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var v=veiculos.find(function(x){return x.id===btn.getAttribute('data-vid');});
+        if(v)abrirFormEntrada(v);
+      });
+    });
+  }
+  // Iniciar câmera
+  setTimeout(function(){
+    try { scannerEntrada = iniciarScanner('qr-reader-entrada', onQrEntrada); } catch(e){}
+  }, 400);
+}
+
+function abrirFormEntrada(v){
+  pararScanners();
+  vAtivo=v;
+  document.getElementById('lr-camera').style.display='none';
+  document.getElementById('lr-vcard').innerHTML=vcHTML(v);
+  document.getElementById('lr-guarda-box').textContent='👤 Guarda: '+userLogado.nome;
+  document.getElementById('lr-cond').value='';
+  document.getElementById('lr-crac').value='';
+  document.getElementById('lr-setor').value='';
+  document.getElementById('lr-obs').value='';
+  document.getElementById('lr-tags').innerHTML='';
+  acomps=[];
+  document.getElementById('lr-form').style.display='block';
+}
+
+document.getElementById('btn-add-ac').addEventListener('click',function(){
+  var inp=document.getElementById('lr-ac');
+  var n=(inp.value||'').trim();if(!n)return;
+  acomps.push(n);renderTags();inp.value='';
+});
+document.getElementById('lr-ac').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('btn-add-ac').click();});
+function renderTags(){
+  document.getElementById('lr-tags').innerHTML=acomps.map(function(x,i){
+    return '<span class="tag">'+x+'<button type="button" data-i="'+i+'">×</button></span>';
+  }).join('');
+  document.querySelectorAll('#lr-tags .tag button').forEach(function(b){
+    b.addEventListener('click',function(){acomps.splice(parseInt(b.getAttribute('data-i')),1);renderTags();});
+  });
+}
+
+document.getElementById('btn-dar-ok').addEventListener('click',function(){
+  var cond=(document.getElementById('lr-cond').value||'').trim();
+  var crac=(document.getElementById('lr-crac').value||'').trim();
+  var setor=document.getElementById('lr-setor').value;
+  if(!cond||!crac||!setor){alert('Preencha condutor, crachá e setor.');return;}
+  var vi={id:'I'+Date.now(),vid:vAtivo.id,condutor:cond,cracha:crac,setor:setor,
+    acompanhantes:acomps.slice(),status:'pendente_setor',
+    guardaId:userLogado.id,guardaNome:userLogado.nome,
+    obs:(document.getElementById('lr-obs').value||'').trim(),
+    assinatura:false,horaEntrada:agora(),horaSaida:null,data:hoje()};
+  visitas.push(vi);viAtiva=vi;salvar();atualizarContador();
+  document.getElementById('lr-form').style.display='none';
+  document.getElementById('lr-ok-vcard').innerHTML=vcHTML(vAtivo);
+  document.getElementById('lr-ok').style.display='block';
+});
+document.getElementById('btn-cancelar-lr').addEventListener('click',function(){resetLeitura();abrirTelaLeitura();});
+document.getElementById('btn-proximo-veiculo').addEventListener('click',function(){abrirTelaLeitura();});
+
+// ── SETOR ────────────────────────────────────────────────────
+var scannerSetor = null;
+
+function abrirTelaSetor(){
+  document.getElementById('setor-opcoes').style.display='block';
+  document.getElementById('sig-wrap').style.display='none';
+  renderSetor();
+  ir('tela-setor');
+  // Iniciar câmera
+  setTimeout(function(){
+    try { scannerSetor = iniciarScanner('qr-reader-setor', onQrSetor); } catch(e){}
+  }, 400);
+}
+
+function onQrSetor(texto){
+  var v = veiculos.find(function(x){ return x.id === texto; });
+  if(!v){ alert('QR Code não reconhecido. Selecione da lista.'); return; }
+  // Busca visita pendente deste veículo
+  var vi = visitas.filter(function(x){
+    return x.vid===v.id && x.data===hoje() && x.status==='pendente_setor';
+  }).slice(-1)[0];
+  if(!vi){ alert('Nenhuma visita pendente para este veículo hoje.'); return; }
+  abrirAssinatura(vi.id);
+}
+
+function renderSetor(){
+  var filt=document.getElementById('filt-setor').value;
+  var el=document.getElementById('setor-lista');
+  var lista=visitas.filter(function(vi){return vi.status==='pendente_setor'&&vi.data===hoje();});
+  if(filt)lista=lista.filter(function(vi){return vi.setor===filt;});
+  if(!lista.length){el.innerHTML='<div class="vazio">Nenhum veículo pendente</div>';return;}
+  el.innerHTML=lista.map(function(vi){
+    var v=veiculos.find(function(x){return x.id===vi.vid;})||{};
+    return '<div style="margin-bottom:14px">'
+      +'<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #eee">'
+      +'<span class="plaquinha">'+idLabel(v)+'</span>'
+      +'<div style="flex:1"><div style="font-size:14px;font-weight:bold">'+v.modelo+' • '+v.cor+'</div>'
+      +'<div style="font-size:12px;color:#666">'+vi.condutor+' • '+vi.setor+' • '+vi.horaEntrada+'</div></div>'
+      +'<button type="button" class="btn-pendente" data-viid="'+vi.id+'" style="width:auto;padding:10px 14px;font-size:13px;animation:none;box-shadow:none;border-radius:8px">🔴 Assinar</button>'
+      +'</div></div>';
+  }).join('');
+  document.querySelectorAll('#setor-lista .btn-pendente').forEach(function(btn){
+    btn.addEventListener('click',function(){abrirAssinatura(btn.getAttribute('data-viid'));});
+  });
+}
+document.getElementById('filt-setor').addEventListener('change',renderSetor);
+
+function abrirAssinatura(viId){
+  if(scannerSetor){ try{scannerSetor.stop();}catch(e){} scannerSetor=null; }
+  viAtiva=visitas.find(function(vi){return vi.id===viId;});
+  var v=veiculos.find(function(x){return x.id===viAtiva.vid;})||{};
+
+  // Mostrar cartão e dados
+  document.getElementById('setor-opcoes').style.display='none';
+  document.getElementById('sig-vcard').innerHTML=vcHTML(v);
+  document.getElementById('sig-detalhes').innerHTML=
+    'Condutor: <strong>'+viAtiva.condutor+'</strong> • Crachá: '+viAtiva.cracha+'<br>'
+    +'Setor: '+viAtiva.setor+' • Entrou: '+viAtiva.horaEntrada+' • Guarda: '+viAtiva.guardaNome
+    +(viAtiva.acompanhantes&&viAtiva.acompanhantes.length?'<br>Acomp: '+viAtiva.acompanhantes.join(', '):'')
+    +(viAtiva.obs?'<br>Obs: '+viAtiva.obs:'');
+  document.getElementById('sig-info').textContent='Responsável: '+userLogado.nome;
+
+  var wrap=document.getElementById('sig-wrap');
+  wrap.style.display='block';
+  wrap.scrollIntoView({behavior:'smooth'});
+
+  sigEl=document.getElementById('sig-canvas');sigCtx=sigEl.getContext('2d');
+  sigEl.width=sigEl.offsetWidth||400;sigEl.height=160;
+  sigCtx.clearRect(0,0,sigEl.width,sigEl.height);
+  sigCtx.strokeStyle='#0d3570';sigCtx.lineWidth=2.5;sigCtx.lineCap='round';sigCtx.lineJoin='round';sigDraw=false;
+  function gp(e){var r=sigEl.getBoundingClientRect();if(e.touches)return{x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top};return{x:e.offsetX,y:e.offsetY};}
+  sigEl.onmousedown=function(e){sigDraw=true;var p=gp(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);};
+  sigEl.onmousemove=function(e){if(!sigDraw)return;var p=gp(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();};
+  sigEl.onmouseup=sigEl.onmouseleave=function(){sigDraw=false;};
+  sigEl.ontouchstart=function(e){e.preventDefault();sigDraw=true;var p=gp(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);};
+  sigEl.ontouchmove=function(e){e.preventDefault();if(!sigDraw)return;var p=gp(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();};
+  sigEl.ontouchend=function(){sigDraw=false;};
+}
+
+document.getElementById('btn-limpar-sig').addEventListener('click',function(){
+  if(sigCtx&&sigEl)sigCtx.clearRect(0,0,sigEl.width,sigEl.height);
+});
+document.getElementById('btn-confirmar-sig').addEventListener('click',function(){
+  if(!viAtiva)return;
+  var b=document.createElement('canvas');b.width=sigEl.width;b.height=sigEl.height;
+  if(sigEl.toDataURL()===b.toDataURL()){alert('Faça a assinatura antes de confirmar.');return;}
+  viAtiva.status='liberado';viAtiva.assinatura=true;viAtiva.horaSig=agora();
+  viAtiva.responsavelSetor=userLogado.nome;viAtiva.assinaturaImg=sigEl.toDataURL();
+  salvar();atualizarContador();
+  // Mostrar confirmação
+  var v=veiculos.find(function(x){return x.id===viAtiva.vid;})||{};
+  document.getElementById('sig-wrap').innerHTML=
+    '<div class="alerta alerta-vd" style="font-size:16px">✓ Assinatura coletada! <strong>'+idLabel(v)+'</strong> liberado para sair.</div>'
+    +vcHTML(v)
+    +'<button type="button" class="btn btn-az" id="btn-prox-assinatura">Próximo veículo</button>';
+  document.getElementById('btn-prox-assinatura').addEventListener('click',function(){
+    document.getElementById('sig-wrap').innerHTML = sigWrapOriginal;
+    registrarBotoes();
+    abrirTelaSetor();
+  });
+  viAtiva=null;
+});
+document.getElementById('btn-cancelar-sig').addEventListener('click',function(){
+  document.getElementById('sig-wrap').style.display='none';
+  document.getElementById('setor-opcoes').style.display='block';
+  abrirTelaSetor();
+});
+
+// Guarda HTML original do sig-wrap para restaurar
+var sigWrapOriginal = document.getElementById('sig-wrap').innerHTML;
+function registrarBotoes(){
+  document.getElementById('btn-limpar-sig').addEventListener('click',function(){if(sigCtx&&sigEl)sigCtx.clearRect(0,0,sigEl.width,sigEl.height);});
+  document.getElementById('btn-confirmar-sig').addEventListener('click',function(){
+    if(!viAtiva)return;
+    var b=document.createElement('canvas');b.width=sigEl.width;b.height=sigEl.height;
+    if(sigEl.toDataURL()===b.toDataURL()){alert('Faça a assinatura antes de confirmar.');return;}
+    viAtiva.status='liberado';viAtiva.assinatura=true;viAtiva.horaSig=agora();
+    viAtiva.responsavelSetor=userLogado.nome;viAtiva.assinaturaImg=sigEl.toDataURL();
+    salvar();atualizarContador();
+    var v2=veiculos.find(function(x){return x.id===viAtiva.vid;})||{};
+    document.getElementById('sig-wrap').innerHTML=
+      '<div class="alerta alerta-vd" style="font-size:16px">✓ Assinatura coletada! <strong>'+idLabel(v2)+'</strong> liberado para sair.</div>'
+      +vcHTML(v2)
+      +'<button type="button" class="btn btn-az" id="btn-prox-assinatura">Próximo veículo</button>';
+    document.getElementById('btn-prox-assinatura').addEventListener('click',function(){
+      document.getElementById('sig-wrap').innerHTML=sigWrapOriginal;
+      registrarBotoes();
+      abrirTelaSetor();
+    });
+    viAtiva=null;
+  });
+  document.getElementById('btn-cancelar-sig').addEventListener('click',function(){
+    document.getElementById('sig-wrap').style.display='none';
+    document.getElementById('setor-opcoes').style.display='block';
+    abrirTelaSetor();
+  });
+}
+
+// ── SAÍDA ────────────────────────────────────────────────────
+function resetSaida(){
+  vAtivo=null;viAtiva=null;
+  document.getElementById('sa-camera').style.display='block';
+  var d=document.getElementById('sa-dados');d.style.display='none';d.innerHTML='';
+}
+
+function abrirTelaSaida(){
+  resetSaida();
+  ir('tela-saida');
+  // Lista manual
+  var ids={};
+  visitas.filter(function(vi){return vi.data===hoje()&&vi.status!=='saiu'&&vi.status!=='negado';})
+    .forEach(function(vi){ids[vi.vid]=true;});
+  var lista=veiculos.filter(function(v){return ids[v.id];});
+  var el=document.getElementById('sa-lista-manual');
+  if(!lista.length){el.innerHTML='<div class="vazio">Nenhum veículo com entrada ativa</div>';}
+  else{
+    var bm={pendente_setor:'badge-am',liberado:'badge-vd'};
+    var lm={pendente_setor:'⚠ Pendente',liberado:'✓ Liberado'};
+    el.innerHTML=lista.map(function(v){
+      var vi=visitas.filter(function(x){return x.vid===v.id&&x.data===hoje()&&x.status!=='negado';}).slice(-1)[0];
+      return '<button type="button" class="item-lista" data-vid="'+v.id+'">'
+        +'<span class="plaquinha">'+idLabel(v)+'</span>'
+        +'<div class="item-lista-info"><span class="item-lista-nm">'+v.modelo+' • '+v.cor+'</span><span class="item-lista-sb">'+(vi?vi.condutor:'—')+'</span></div>'
+        +'<span class="badge '+(vi?(bm[vi.status]||'badge-gz'):'badge-gz')+'">'+(vi?(lm[vi.status]||vi.status):'—')+'</span>'
+        +'</button>';
+    }).join('');
+    el.querySelectorAll('.item-lista').forEach(function(btn){
+      btn.addEventListener('click',function(){mostrarChecklist(btn.getAttribute('data-vid'));});
+    });
+  }
+  // Iniciar câmera
+  setTimeout(function(){
+    try { scannerSaida = iniciarScanner('qr-reader-saida', onQrSaida); } catch(e){}
+  }, 400);
+}
+
+function mostrarChecklist(vid){
+  pararScanners();
+  vAtivo=veiculos.find(function(v){return v.id===vid;});
+  var vi=visitas.filter(function(x){return x.vid===vid&&x.data===hoje()&&x.status!=='negado';}).slice(-1)[0];
+  viAtiva=vi;
+  document.getElementById('sa-camera').style.display='none';
+  var el=document.getElementById('sa-dados');
+  el.style.display='block';
+
+  // Sem visita hoje
+  if(!vi){
+    el.innerHTML='<div class="alerta alerta-vm">✗ Nenhuma entrada registrada para este veículo hoje.</div>'
+      +'<button type="button" class="btn btn-gz" id="btn-fechar-saida">← Voltar</button>';
+    document.getElementById('btn-fechar-saida').addEventListener('click',function(){abrirTelaSaida();});
+    return;
+  }
+
+  // Assinatura do setor coletada?
+  var assinado = vi.assinatura === true;
+  var liberado = vi.status === 'liberado';
+
+  // Imagem da assinatura (se tiver)
+  var sigImg = vi.assinaturaImg
+    ? '<img src="'+vi.assinaturaImg+'" style="max-width:100%;border:1px solid #ddd;border-radius:8px;margin-top:8px">'
+    : '<div style="font-size:13px;color:#c62828;margin-top:6px">⚠ Nenhuma assinatura coletada ainda</div>';
+
+  el.innerHTML=
+    // Cartão do veículo
+    vcHTML(vAtivo)
+
+    // Dados da visita
+    +'<div class="card">'
+    +'<div class="secao">Dados da visita</div>'
+    +'<div style="font-size:14px;margin-bottom:4px">Condutor: <strong>'+vi.condutor+'</strong></div>'
+    +'<div style="font-size:13px;color:#666;margin-bottom:2px">Crachá: '+vi.cracha+'</div>'
+    +'<div style="font-size:13px;color:#666;margin-bottom:2px">Setor: '+vi.setor+'</div>'
+    +'<div style="font-size:13px;color:#666;margin-bottom:2px">Entrou: '+vi.horaEntrada+' • Guarda: '+vi.guardaNome+'</div>'
+    +(vi.acompanhantes&&vi.acompanhantes.length?'<div style="font-size:13px;color:#666">Acomp: '+vi.acompanhantes.join(', ')+'</div>':'')
+    +'</div>'
+
+    // Assinatura do setor
+    +'<div class="card">'
+    +'<div class="secao">Assinatura do responsável do setor</div>'
+    +(liberado
+      ? '<div style="font-size:13px;color:#2e7d32;font-weight:bold;margin-bottom:8px">✓ Liberado por: '+( vi.responsavelSetor||'—')+'  às '+( vi.horaSig||'—')+'</div>'
+      : '<div style="font-size:13px;color:#c62828;font-weight:bold;margin-bottom:8px">⏳ Aguardando assinatura do setor</div>'
+    )
+    +sigImg
+    +'</div>'
+
+    // Botão liberar ou bloqueado
+    +(liberado
+      ? '<button type="button" class="btn btn-vd" id="btn-liberar-saida" style="font-size:18px;padding:18px">✓ LIBERAR SAÍDA</button>'
+      : '<div class="alerta alerta-am">⚠ O responsável do setor ainda não assinou. Não é possível liberar a saída.</div>'
+        +'<button type="button" class="btn btn-gz" id="btn-fechar-saida">← Voltar</button>'
+    );
+
+  var bl=document.getElementById('btn-liberar-saida');
+  if(bl)bl.addEventListener('click',function(){
+    viAtiva.status='saiu';
+    viAtiva.horaSaida=agora();
+    viAtiva.guardaSaida=userLogado.nome;
+    salvar();atualizarContador();
+    el.innerHTML=
+      '<div class="alerta alerta-vd" style="font-size:16px">✓ Saída de <strong>'+idLabel(vAtivo)+'</strong> liberada por <strong>'+userLogado.nome+'</strong> às '+viAtiva.horaSaida+'.</div>'
+      +vcHTML(vAtivo)
+      +'<button type="button" class="btn btn-az" id="btn-nova-saida">Registrar próxima saída</button>';
+    document.getElementById('btn-nova-saida').addEventListener('click',function(){abrirTelaSaida();});
+    vAtivo=null;viAtiva=null;
+  });
+  var bf=document.getElementById('btn-fechar-saida');
+  if(bf)bf.addEventListener('click',function(){abrirTelaSaida();});
+}
+
+// ── ADMIN ────────────────────────────────────────────────────
+function renderAdmin(){
+  var el=document.getElementById('ad-lista');
+  el.innerHTML=usuarios.map(function(u){
+    var isMe=u.id===userLogado.id;
+    return '<div class="item-lista" style="cursor:default">'
+      +'<div class="item-lista-info"><span class="item-lista-nm">'+u.nome+(isMe?' (você)':'')+'</span><span class="item-lista-sb">@'+u.usuario+' • '+labelPerfil(u.perfil)+'</span></div>'
+      +(!isMe&&u.id!=='u0'?'<button type="button" class="btn btn-vm btn-sm" style="padding:6px 12px;font-size:12px" data-uid="'+u.id+'">Remover</button>':'')
+      +'</div>';
+  }).join('');
+  document.querySelectorAll('#ad-lista .btn-vm').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      if(!confirm('Remover este usuário?'))return;
+      usuarios=usuarios.filter(function(u){return u.id!==btn.getAttribute('data-uid');});
+      salvar();renderAdmin();
+    });
+  });
+}
+document.getElementById('btn-criar-user').addEventListener('click',function(){
+  var nome=(document.getElementById('ad-nome').value||'').trim();
+  var user=(document.getElementById('ad-user').value||'').trim().toLowerCase();
+  var senha=(document.getElementById('ad-senha').value||'');
+  var perfil=document.getElementById('ad-perfil').value;
+  if(!nome||!user||!senha){alert('Preencha nome, usuário e senha.');return;}
+  if(usuarios.find(function(u){return u.usuario===user;})){alert('Usuário já existe.');return;}
+  usuarios.push({id:'u'+Date.now(),nome:nome,usuario:user,senha:senha,perfil:perfil});
+  salvar();
+  document.getElementById('ad-nome').value='';document.getElementById('ad-user').value='';document.getElementById('ad-senha').value='';
+  renderAdmin();alert('Usuário criado com sucesso!');
+});
+
+// ── EXCEL IMPORT/EXPORT ─────────────────────────────────────
+document.getElementById('btn-baixar-modelo').addEventListener('click', function(){
+  var ws_data = [
+    ['tipo','identificacao','placa_extra','modelo','cor','ano','tipo_veiculo','nome_responsavel','empresa'],
+    ['frota','0042','ABC-1234','Fiat Uno','Branco','2021','Carro','João Silva','Transportes Silva'],
+    ['frota','0043','DEF-5678','Ford Cargo','Vermelho','2020','Caminhão','Maria Santos','Logística Santos'],
+    ['placa','XYZ-9999','','Volkswagen Gol','Prata','2022','Carro','Carlos Lima','—'],
+  ];
+  var wb = XLSX.utils.book_new();
+  var ws = XLSX.utils.aoa_to_sheet(ws_data);
+
+  // Largura das colunas
+  ws['!cols'] = [
+    {wch:8},{wch:14},{wch:12},{wch:16},{wch:10},{wch:6},{wch:14},{wch:22},{wch:22}
+  ];
+  XLSX.utils.book_append_sheet(wb, ws, 'Veículos');
+  XLSX.writeFile(wb, 'modelo_veiculos.xlsx');
+});
+
+document.getElementById('input-excel').addEventListener('change', function(e){
+  var file = e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    try {
+      var data = new Uint8Array(ev.target.result);
+      var wb   = XLSX.read(data, {type:'array'});
+      var ws   = wb.Sheets[wb.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(ws, {defval:''});
+
+      if (!rows.length) { mostrarImportResult('Planilha vazia.', false); return; }
+
+      var ok=0, erros=[];
+      rows.forEach(function(row, idx){
+        var tipo  = (row['tipo']||'').toString().trim().toLowerCase();
+        var idval = (row['identificacao']||'').toString().trim().toUpperCase();
+        var nome  = (row['nome_responsavel']||'').toString().trim();
+
+        if (!idval || !nome) {
+          erros.push('Linha '+(idx+2)+': identificacao e nome_responsavel são obrigatórios.');
+          return;
+        }
+        if (tipo !== 'frota' && tipo !== 'placa') tipo = 'frota';
+
+        // Verifica duplicata
+        var jaExiste = veiculos.find(function(v){
+          return tipo==='frota' ? v.frota===idval : v.placa===idval;
+        });
+        if (jaExiste) {
+          erros.push('Linha '+(idx+2)+': '+idval+' já cadastrado, ignorado.');
+          return;
+        }
+
+        var v = {
+          id:      'V'+Date.now()+idx,
+          tipo:    tipo,
+          frota:   tipo==='frota' ? idval : '',
+          placa:   tipo==='frota' ? (row['placa_extra']||'').toString().trim().toUpperCase() : idval,
+          modelo:  (row['modelo']||'').toString().trim() || '—',
+          cor:     (row['cor']||'').toString().trim() || '—',
+          ano:     (row['ano']||'').toString().trim() || '—',
+          tv:      (row['tipo_veiculo']||'Carro').toString().trim(),
+          nome:    nome,
+          empresa: (row['empresa']||'—').toString().trim() || '—'
+        };
+        veiculos.push(v);
+        ok++;
+      });
+      salvar();
+
+      var msg = '✓ '+ok+' veículo(s) importado(s) com sucesso!';
+      if (erros.length) msg += '<br><br><strong>Avisos:</strong><br>' + erros.join('<br>');
+      mostrarImportResult(msg, ok > 0);
+      e.target.value = '';
+    } catch(err){
+      mostrarImportResult('Erro ao ler o arquivo: '+err.message, false);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+function mostrarImportResult(msg, sucesso) {
+  var el = document.getElementById('import-resultado');
+  el.style.display = 'block';
+  el.innerHTML = '<div class="alerta '+(sucesso?'alerta-vd':'alerta-vm')+'">'+msg+'</div>';
+}
+
+// ── NAVEGAÇÃO ────────────────────────────────────────────────
+document.getElementById('btn-login').addEventListener('click',fazerLogin);
+document.getElementById('lg-senha').addEventListener('keydown',function(e){if(e.key==='Enter')fazerLogin();});
+document.getElementById('btn-sair').addEventListener('click',sair);
+document.getElementById('btn-contador').addEventListener('click',mostrarDentro);
+document.getElementById('btn-volta-dentro').addEventListener('click',function(){ir('tela-home');});
+document.getElementById('mn-cadastro').addEventListener('click',function(){ir('tela-cadastro');});
+document.getElementById('mn-veiculos').addEventListener('click',function(){renderVeiculosCad();ir('tela-veiculos');});
+document.getElementById('mn-leitura').addEventListener('click',function(){abrirTelaLeitura();});
+document.getElementById('mn-setor').addEventListener('click',function(){abrirTelaSetor();});
+document.getElementById('mn-saida').addEventListener('click',function(){abrirTelaSaida();});
+document.getElementById('mn-admin').addEventListener('click',function(){renderAdmin();ir('tela-admin');});
+document.getElementById('btn-volta-cadastro').addEventListener('click',function(){ir('tela-home');});
+document.getElementById('btn-volta-veiculos').addEventListener('click',function(){ir('tela-home');});
+document.getElementById('btn-volta-detalhe').addEventListener('click',function(){ir('tela-veiculos');});
+document.getElementById('btn-volta-editar').addEventListener('click',function(){ir('tela-veiculos');renderVeiculosCad();});
+document.getElementById('btn-volta-leitura').addEventListener('click',function(){pararScanners();ir('tela-home');});
+document.getElementById('btn-volta-setor').addEventListener('click',function(){if(scannerSetor){try{scannerSetor.stop();}catch(e){}scannerSetor=null;}ir('tela-home');});
+document.getElementById('btn-volta-saida').addEventListener('click',function(){pararScanners();ir('tela-home');});
+document.getElementById('btn-volta-admin').addEventListener('click',function(){ir('tela-home');});
+</script>
+</body>
+</html>
