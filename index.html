@@ -162,6 +162,20 @@ td.emp-cell{color:var(--blue-light);font-size:11px;font-weight:700;letter-spacin
 .tm-val{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--white);display:block;margin-bottom:3px;}
 .tm-lbl{font-size:8px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);}
 /* FAROL */
+.btn-refresh{
+  display:flex;align-items:center;gap:8px;
+  background:transparent;border:1px solid var(--green);
+  color:var(--green);padding:8px 16px;
+  font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;
+  letter-spacing:2px;text-transform:uppercase;
+  cursor:pointer;transition:all .2s;margin-bottom:20px;
+}
+.btn-refresh:hover{background:var(--green);color:var(--bg);}
+.btn-refresh.loading{opacity:.5;pointer-events:none;}
+.btn-refresh svg{width:14px;height:14px;transition:transform .6s;}
+.btn-refresh.loading svg{animation:spin .8s linear infinite;}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
 .farol{display:inline-flex;align-items:center;gap:6px;margin-left:8px;vertical-align:middle;}
 .farol-luz{width:12px;height:12px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red);}
 .farol-luz.ok{background:var(--green);box-shadow:0 0 8px var(--green);animation:none;}
@@ -263,6 +277,13 @@ td.emp-cell{color:var(--blue-light);font-size:11px;font-weight:700;letter-spacin
           📄 D-1
         </button>
       </div>
+      <button class="btn-refresh" id="refresh-btn-CEM" onclick="refreshDados('CEM')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M23 4v6h-6M1 20v-6h6"/>
+          <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+        </svg>
+        Atualizar dados
+      </button>
       <div class="owners-grid" id="grid-CEM">
         <div class="empty"><div class="empty-ico">⏳</div><h3>Carregando</h3><p>Buscando dados...</p></div>
       </div>
@@ -290,6 +311,13 @@ td.emp-cell{color:var(--blue-light);font-size:11px;font-weight:700;letter-spacin
           📄 D-1
         </button>
       </div>
+      <button class="btn-refresh" id="refresh-btn-CEMMA" onclick="refreshDados('CEMMA')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M23 4v6h-6M1 20v-6h6"/>
+          <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+        </svg>
+        Atualizar dados
+      </button>
       <div class="owners-grid" id="grid-CEMMA">
         <div class="empty"><div class="empty-ico">⏳</div><h3>Carregando</h3><p>Buscando dados...</p></div>
       </div>
@@ -317,6 +345,13 @@ td.emp-cell{color:var(--blue-light);font-size:11px;font-weight:700;letter-spacin
           📄 D-1
         </button>
       </div>
+      <button class="btn-refresh" id="refresh-btn-COPLASA" onclick="refreshDados('COPLASA')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M23 4v6h-6M1 20v-6h6"/>
+          <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+        </svg>
+        Atualizar dados
+      </button>
       <div class="owners-grid" id="grid-COPLASA">
         <div class="empty"><div class="empty-ico">⏳</div><h3>Carregando</h3><p>Buscando dados...</p></div>
       </div>
@@ -458,7 +493,7 @@ td.emp-cell{color:var(--blue-light);font-size:11px;font-weight:700;letter-spacin
 <div class="toast" id="toast"><span id="tIco">✅</span> <span id="tMsg">Salvo!</span></div>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw5x5dnauRVhhjetQq-PoX4CRDp9ATA_iVEvjkQ2B3wZWOUzokke3svZc3YJc38YTwL/exec';
+const SCRIPT_URL = '/api/data';
 
 // Dados por empresa
 const db = {
@@ -632,13 +667,11 @@ function loadExcel(inp, emp, periodo) {
     // Salvar no bin em segundo plano
     document.getElementById('pbar').classList.add('on');
     try {
-      const form = new FormData();
-      form.append('emp', emp);
-      form.append('per', periodo);
-      form.append('updatedAt', now);
-      form.append('data', JSON.stringify(db[emp][periodo]));
-      await fetch(SCRIPT_URL, { method:'POST', body: form, mode:'no-cors' });
-      // no-cors não retorna resposta — assume sucesso
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({emp, per:periodo, data:db[emp][periodo], updatedAt:now})
+      });
       toast('✅', emp+' '+( periodo==='dia'?'Dia':'D-1' )+' salvo!');
     } catch(err) {
       console.error('Erro ao salvar:', err);
@@ -875,6 +908,32 @@ function renderAdmTable() {
     });
   });
   wrap.innerHTML = html || '<p style="color:var(--gray);padding:40px 0">Nenhum dado carregado ainda.</p>';
+}
+
+async function refreshDados(emp) {
+  const btn = document.getElementById('refresh-btn-'+emp);
+  if(btn) btn.classList.add('loading');
+  try {
+    const pers = ['dia','d1'];
+    const fetches = pers.map(per =>
+      fetch(`${SCRIPT_URL}?action=get&emp=${emp}&per=${per}&t=${Date.now()}`)
+        .then(r=>r.json())
+        .then(j=>{
+          if(j.data && j.data.length) db[emp][per] = j.data;
+          if(j.updatedAt) updatedAt[emp][per] = j.updatedAt;
+        })
+        .catch(()=>{})
+    );
+    await Promise.all(fetches);
+    renderGrid(emp);
+    updateToggle(emp);
+    setGlobalTag();
+    toast('✅','Dados de '+emp+' atualizados!');
+  } catch {
+    toast('❌','Erro ao atualizar.');
+  } finally {
+    if(btn) btn.classList.remove('loading');
+  }
 }
 
 function calcProjecao(realizado) {
