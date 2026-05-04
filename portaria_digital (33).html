@@ -1,0 +1,2012 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portaria Digital</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, push, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ═══════════════════════════════════════════════════════
+// CONFIGURAÇÃO DO FIREBASE — substitua com seus dados
+// Crie em: https://console.firebase.google.com
+// ═══════════════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyBl1GAFb7_fyjBgRtvpweLUhG8PNc9YKOU",
+  authDomain: "portaria-digital-ecb57.firebaseapp.com",
+  databaseURL: "https://portaria-digital-ecb57-default-rtdb.firebaseio.com",
+  projectId: "portaria-digital-ecb57",
+  storageBucket: "portaria-digital-ecb57.firebasestorage.app",
+  messagingSenderId: "1933440430",
+  appId: "1:1933440430:web:37be210736a84874f8c43f"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+// Expõe funções para o código global
+window._fb = { db, ref, set, get, push, onValue, update };
+window._fbReady = true;
+document.dispatchEvent(new Event('firebase-ready'));
+</script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:     #14181f;
+  --bg2:    #1a1f2e;
+  --card:   #1e2433;
+  --card2:  #242b3d;
+  --borda:  #2a3350;
+  --verde:  #27ae60;
+  --verde2: #1e8449;
+  --neon:   #2ecc71;
+  --azul:   #1a3a6e;
+  --azul2:  #0f2547;
+  --vm:     #e74c3c;
+  --vm3:    rgba(231,76,60,.18);
+  --am:     #e67e22;
+  --am3:    rgba(230,126,34,.18);
+  --txt:    #ffffff;
+  --txt2:   #8899bb;
+  --txt3:   #556080;
+}
+
+body{font-family:Arial,sans-serif;background:#ffffff;color:var(--txt);font-size:16px;min-height:100vh}
+.tela{display:none;min-height:100vh}.tela.ativa{display:block}
+
+/* LOGIN */
+#tela-login{background:#ffffff;padding:40px 20px;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.login-box{background:linear-gradient(135deg,#1a3d1f 0%,#0f1e3d 100%);border-radius:14px;padding:32px 24px;width:100%;max-width:380px;border:none;box-shadow:0 8px 32px rgba(0,0,0,.25)}
+.login-titulo{font-size:20px;font-weight:bold;text-align:center;color:#ffffff;margin-bottom:4px}
+.login-sub{font-size:13px;color:#ffffff;text-align:center;margin-bottom:24px}
+.login-dica{background:transparent;border-radius:8px;padding:10px 14px;font-size:13px;color:rgba(255,255,255,.7);margin-top:16px;text-align:center;border:1px solid rgba(255,255,255,.2)}
+.erro-login{background:var(--vm3);color:var(--vm);border-left:3px solid var(--vm);padding:10px 14px;border-radius:8px;font-size:14px;margin-bottom:14px;display:none}
+
+/* TOPBAR */
+.topbar{background:linear-gradient(90deg,var(--verde2) 0%,var(--azul) 100%);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+.topbar-titulo{font-size:16px;font-weight:bold;letter-spacing:.02em}
+.topbar-info{font-size:12px;color:rgba(255,255,255,.7);margin-top:2px}
+.topbar-direita{display:flex;align-items:center;gap:8px}
+.topbar-hora{font-size:13px;background:rgba(0,0,0,.25);padding:4px 10px;border-radius:20px;font-family:monospace}
+
+/* CAMPOS */
+.campo{margin-bottom:14px}
+.campo label{display:block;font-size:11px;font-weight:bold;color:var(--neon);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.campo input,.campo select,.campo textarea{
+  display:block;width:100%;padding:12px 14px;font-size:15px;
+  border:1px solid var(--borda);border-radius:8px;
+  background:#ffffff;color:#000000;
+  font-family:Arial,sans-serif;-webkit-appearance:none;outline:none;
+  transition:border-color .2s
+}
+.campo input:focus,.campo select:focus,.campo textarea:focus{border-color:var(--neon);background:#ffffff;color:#000000;box-shadow:0 0 0 2px rgba(46,204,113,.15)}
+.campo select option{background:#fff;color:#000}
+.campo textarea{min-height:80px;resize:vertical;line-height:1.5}
+.dois-col{display:flex;gap:10px}.dois-col .campo{flex:1}
+
+/* BOTÕES */
+button{font-family:Arial,sans-serif;cursor:pointer;border:none;-webkit-appearance:none;touch-action:manipulation}
+.btn{display:block;width:100%;padding:14px;font-size:16px;font-weight:bold;border-radius:8px;text-align:center;margin-top:10px;letter-spacing:.02em;transition:opacity .15s}
+.btn:active{opacity:.8;transform:scale(.98)}
+.btn-az{background:#000000;color:#ffffff;border:1px solid #000!important}
+.btn-vd{background:var(--verde);color:#fff}
+.btn-vm{background:var(--vm);color:#fff}
+.btn-ci{background:transparent;color:var(--neon);border:1px solid var(--neon)!important}
+.btn-gz{background:var(--card2);color:var(--txt2);border:1px solid var(--borda)!important}
+.btn-sm{display:inline-block;width:auto;padding:8px 16px;font-size:14px;margin-top:0;border-radius:8px}
+
+/* MENU */
+.menu-grade{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.menu-btn{background:var(--card);border:1px solid var(--borda)!important;border-radius:12px;padding:20px 12px;text-align:center;width:100%;cursor:pointer;font-family:Arial,sans-serif;transition:border-color .2s,background .2s}
+.menu-btn:active{background:var(--card2);border-color:var(--neon)!important}
+.menu-ic{font-size:28px;display:block;margin-bottom:8px}
+.menu-nm{font-size:13px;font-weight:bold;display:block;color:var(--txt)}
+.menu-sb{font-size:11px;color:var(--txt2);margin-top:3px;display:block}
+.menu-btn-largo{grid-column:1/-1}
+
+/* CONTADOR */
+.contador{background:linear-gradient(90deg,var(--verde2),var(--azul));color:#fff;border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;cursor:pointer;border:none;width:100%;font-family:Arial,sans-serif}
+.contador:active{opacity:.9}
+.contador-num{font-size:38px;font-weight:bold;line-height:1}
+.contador-txt{font-size:13px;color:rgba(255,255,255,.8);margin-top:2px}
+
+/* CARD */
+.card{background:var(--card);border-radius:10px;border:1px solid var(--borda);padding:16px;margin-bottom:14px}
+
+/* CARTÃO AZUL VEÍCULO */
+.vcard{background:linear-gradient(135deg,var(--verde2) 0%,var(--azul) 100%);color:#fff;border-radius:10px;padding:18px;margin-bottom:14px}
+.vcard-cat{font-size:10px;opacity:.6;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px}
+.vcard-id{font-size:26px;font-weight:bold;font-family:monospace;margin-bottom:2px}
+.vcard-placa{font-size:14px;opacity:.65;font-family:monospace;margin-bottom:14px}
+.vcard-grade{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.vcard-lbl{font-size:10px;opacity:.45;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px}
+.vcard-val{font-size:13px;font-weight:bold}
+
+/* ALERTAS */
+.alerta{padding:12px 16px;border-radius:8px;font-size:14px;font-weight:bold;margin-bottom:14px}
+.alerta-vd{background:rgba(39,174,96,.15);color:var(--neon);border-left:4px solid var(--neon)}
+.alerta-vm{background:var(--vm3);color:var(--vm);border-left:4px solid var(--vm)}
+.alerta-az{background:rgba(26,58,110,.3);color:#6fa3d8;border-left:4px solid #6fa3d8}
+.alerta-am{background:var(--am3);color:var(--am);border-left:4px solid var(--am)}
+
+/* BADGE */
+.badge{display:inline-block;font-size:11px;font-weight:bold;padding:3px 10px;border-radius:20px}
+.badge-vd{background:rgba(46,204,113,.15);color:var(--neon)}
+.badge-vm{background:var(--vm3);color:var(--vm)}
+.badge-am{background:var(--am3);color:var(--am)}
+.badge-az{background:rgba(41,128,185,.2);color:#6fa3d8}
+.badge-gz{background:var(--card2);color:var(--txt2)}
+
+/* PLAQUINHA */
+.plq{font-family:monospace;font-size:13px;font-weight:bold;background:var(--card2);border:1px solid var(--borda);color:var(--txt);padding:4px 10px;border-radius:6px;white-space:nowrap}
+
+/* ITEM LISTA */
+.item-lista{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--borda);width:100%;background:none;border-left:none;border-right:none;border-top:none;text-align:left;cursor:pointer;font-family:Arial,sans-serif}
+.item-lista:last-child{border-bottom:none}
+.item-lista:active{background:var(--card2)}
+.il-info{flex:1}
+.il-nm{font-size:14px;font-weight:bold;color:var(--txt);display:block}
+.il-sb{font-size:12px;color:var(--txt2);margin-top:2px;display:block}
+
+/* CHECKLIST */
+.chk-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--borda)}
+.chk-item:last-child{border-bottom:none}
+.chk-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.chk-dot-vd{background:var(--neon)}.chk-dot-vm{background:var(--vm)}
+.chk-txt{font-size:13px;flex:1;color:var(--txt2)}
+.chk-val{font-size:12px;color:var(--txt3);font-family:monospace}
+
+/* TAGS */
+.tag{display:inline-flex;align-items:center;gap:6px;background:rgba(46,204,113,.12);color:var(--neon);border:1px solid rgba(46,204,113,.3);border-radius:20px;padding:5px 12px;font-size:13px;margin:3px}
+.tag button{background:none;border:none;color:var(--neon);font-size:16px;cursor:pointer;padding:0}
+.tags-area{min-height:32px;margin-top:8px}
+.add-linha{display:flex;gap:8px}
+
+/* ASSINATURA */
+.sig-canvas{display:block;width:100%;height:160px;border:2px solid var(--neon);border-radius:8px;background:#ffffff;touch-action:none;cursor:crosshair}
+
+/* BTN PENDENTE */
+.btn-pendente{background:var(--vm);color:#fff;border:none;border-radius:10px;padding:16px;width:100%;font-size:15px;font-weight:bold;cursor:pointer;font-family:Arial,sans-serif;display:block;text-align:center;margin-bottom:8px;animation:pulsar 2s ease-in-out infinite}
+.btn-pendente:active{opacity:.85}
+@keyframes pulsar{0%,100%{box-shadow:0 0 12px rgba(231,76,60,.4)}50%{box-shadow:0 0 24px rgba(231,76,60,.8)}}
+
+/* GRADE QR */
+.grade-qr{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.qr-card-imp{background:var(--card2);border:1px solid var(--borda);border-radius:8px;padding:10px;text-align:center}
+.qr-card-imp .qr-label{font-size:11px;font-weight:bold;color:var(--neon);margin-bottom:3px}
+.qr-card-imp .qr-sub{font-size:10px;color:var(--txt2);margin-top:4px}
+
+.qrw{display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:10px}
+.secao{font-size:11px;font-weight:bold;color:var(--neon);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;border-bottom:1px solid var(--borda);padding-bottom:8px}
+.nav-topo{display:flex;align-items:center;gap:12px;padding:16px 16px 0;margin-bottom:16px}
+.pagina-conteudo{padding:0 16px 40px}
+.vazio{font-size:14px;color:var(--txt2);text-align:center;padding:32px 0}
+.guarda-info{background:rgba(41,128,185,.15);border-radius:8px;padding:10px 14px;font-size:14px;color:#6fa3d8;margin-bottom:14px;font-weight:bold;border:1px solid rgba(41,128,185,.3)}
+
+@media print{
+  .topbar,.btn,.nav-topo,.no-print{display:none!important}
+  body{background:#fff;color:#000}.pagina-conteudo{padding:0}
+  .vcard{background:#1A3A5C!important;color:#fff!important}
+  .card{background:#fff!important;border:1px solid #ddd!important;color:#000!important}
+  .campo label{color:#1A5C2A!important}
+  .secao{color:#1A5C2A!important}
+  .grade-qr{grid-template-columns:1fr 1fr 1fr}
+  .qr-card-imp{background:#f8f8f8!important;border:1px solid #ddd!important}
+  .qr-card-imp .qr-label{color:#1A5C2A!important}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="tela-login" class="tela ativa">
+  <div class="login-box">
+    <div style="text-align:center;margin-bottom:16px"><img src="data:image/png;base64,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ISqZc6BKVVWoCnW9ewMYEbtZzuIgi/jeI+PRBotLXbJcKasNXr9wtKpr74XjPwobqtUheQ0upMEWJj5qSRZBO1OUa+7OrYPEODJXgM0gy1BjkSznxtoaLi9u6ca0tfjv1loz3ntUhdFo9/w77yPW5Fh7FMwJEecMdT0G9Tz04Hme/cbvHrsP98QI4XBljTyQsutFkgneyjRka5LRDUwz1E8EPqVwUY4JZc14XFH7yMuvvs7N1dUd972zgjgxymTZZhja6sruVaqr0uNcjmlqnM6bTidnY7BCWQ2w9tjJH3CChLAejHAxCSFNGzAwW3IHUyW2zZygLRriGL6LAsaSmeQ0F7FkLqPTW2RtVFObAm8yvGTTPbBp0rem8QuNEFpryUyO0Q6Dtd1L34eQtKazgmjK0ph0WjrsdyTg61VyV+Ks540LP9z1uo8yR2FNcSBsXLnK/f4dxCAYl6VaJ5JM1anAbcSqAQUfDc0/sY1AThrLbH8n6o7fPwrvKXRMGG8M6C8sU5cVTjIGgwHdzhKrPuNsf4GciA1gY2ovbYmgNmWXaAQx5DZnWAt+nHP5zRs7PuOn3vdTurI6ZnEhEuMGRgSsa6qqcU/vMURUlMjO75jd/95ITWbWcWadThH4kz/5nWOpCk+MEA7+9AdSfP7HtOMNw2GNiqUix2qq0p2FSe8hgzeCb2K9TRQMepvBLnMXtt2FMO11ax8oxjVS1RRiyDRHfcbaSk1ddKlDlbRdDFid3KuAmpQAK0KoLL3iDBrOcvniyo7PuNvv0+8tYJ0QQ5mSOIJplrwTN8jW9+TGuPX700/DONCYrLg7vCcb0c5/b2UA4RrdvOTSpd2LFB91TowQAixqThZzZGODURkJErGaOje52JR9JwmgN2nJakJToIhNX/7suxHZ8ft7/fl+31Hd9efgsQ6qymPqElNVdLKcQg1upKxevEl25gwmBCQYUhfeJMXafPRSBTRG1gY1C72CMLJcubhztEz0HkOND6Om7ZrBGdcEr+0sZGLsjt+fvIcwvu3PM5vt+nORGsEzGm/wtW/+22OpBeGECWG8uErXL3POCMEaxFkya6bWUZCUVyimyTIHq5MS8bsMIrn9ILrTz/f7fltNIgGxkUot4nPKOqfwOYUBLSG/mlFdFFxwEHOqODEBGKKkj95IoJMXjIZjXN1n5VLNS8+PdxzQeVaTd8cUnR4iBmstZTmeHnNXTXcnTTg1H936HmO5698bPKFWBn73BOSWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlh8h/n+3qk3uVSmEmgAAAABJRU5ErkJggg==" style="height:34px;width:auto"></div>
+<div class="login-titulo">Portaria Digital</div>
+    <div class="login-sub">Controle de acesso de veículos</div>
+    <div id="erro-login" class="erro-login">Usuário ou senha incorretos.</div>
+    <div class="campo"><label>Usuário</label><input type="text" id="lg-user" placeholder="Digite seu usuário" autocorrect="off" autocapitalize="off" autocomplete="off"></div>
+    <div class="campo"><label>Senha</label><input type="password" id="lg-senha" placeholder="Digite sua senha"></div>
+    <button type="button" class="btn btn-az" id="btn-login">Entrar</button>
+
+
+    <!-- Criar conta -->
+    <div id="criar-conta-wrap" style="margin-top:16px;border-top:1px solid rgba(255,255,255,.15);padding-top:16px">
+      <div style="text-align:center;margin-bottom:12px">
+        <button type="button" id="btn-toggle-criar" style="background:transparent;border:none;color:rgba(255,255,255,.6);font-size:13px;cursor:pointer;font-family:Arial,sans-serif;text-decoration:underline">
+          Criar nova conta
+        </button>
+      </div>
+      <div id="form-criar-conta" style="display:none">
+        <div class="campo"><label>Nome completo *</label><input type="text" id="novo-nome" placeholder="Seu nome" autocomplete="off"></div>
+        <div class="campo"><label>Usuário *</label><input type="text" id="novo-user" placeholder="login" autocorrect="off" autocapitalize="off" autocomplete="off"></div>
+        <div class="campo"><label>Senha *</label><input type="password" id="novo-senha" placeholder="senha" autocomplete="new-password"></div>
+<input type="hidden" id="novo-perfil" value="usuario">
+        <div id="novo-erro" style="color:var(--vm);font-size:13px;margin-bottom:8px;display:none"></div>
+        <button type="button" class="btn btn-gz" id="btn-criar-conta">+ Criar conta</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div id="tela-home" class="tela">
+  <div class="topbar">
+    <div><div style="display:flex;align-items:center;gap:10px"><img src="data:image/png;base64,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ISqZc6BKVVWoCnW9ewMYEbtZzuIgi/jeI+PRBotLXbJcKasNXr9wtKpr74XjPwobqtUheQ0upMEWJj5qSRZBO1OUa+7OrYPEODJXgM0gy1BjkSznxtoaLi9u6ca0tfjv1loz3ntUhdFo9/w77yPW5Fh7FMwJEecMdT0G9Tz04Hme/cbvHrsP98QI4XBljTyQsutFkgneyjRka5LRDUwz1E8EPqVwUY4JZc14XFH7yMuvvs7N1dUd972zgjgxymTZZhja6sruVaqr0uNcjmlqnM6bTidnY7BCWQ2w9tjJH3CChLAejHAxCSFNGzAwW3IHUyW2zZygLRriGL6LAsaSmeQ0F7FkLqPTW2RtVFObAm8yvGTTPbBp0rem8QuNEFpryUyO0Q6Dtd1L34eQtKazgmjK0ph0WjrsdyTg61VyV+Ks540LP9z1uo8yR2FNcSBsXLnK/f4dxCAYl6VaJ5JM1anAbcSqAQUfDc0/sY1AThrLbH8n6o7fPwrvKXRMGG8M6C8sU5cVTjIGgwHdzhKrPuNsf4GciA1gY2ovbYmgNmWXaAQx5DZnWAt+nHP5zRs7PuOn3vdTurI6ZnEhEuMGRgSsa6qqcU/vMURUlMjO75jd/95ITWbWcWadThH4kz/5nWOpCk+MEA7+9AdSfP7HtOMNw2GNiqUix2qq0p2FSe8hgzeCb2K9TRQMepvBLnMXtt2FMO11ax8oxjVS1RRiyDRHfcbaSk1ddKlDlbRdDFid3KuAmpQAK0KoLL3iDBrOcvniyo7PuNvv0+8tYJ0QQ5mSOIJplrwTN8jW9+TGuPX700/DONCYrLg7vCcb0c5/b2UA4RrdvOTSpd2LFB91TowQAixqThZzZGODURkJErGaOje52JR9JwmgN2nJakJToIhNX/7suxHZ8ft7/fl+31Hd9efgsQ6qymPqElNVdLKcQg1upKxevEl25gwmBCQYUhfeJMXafPRSBTRG1gY1C72CMLJcubhztEz0HkOND6Om7ZrBGdcEr+0sZGLsjt+fvIcwvu3PM5vt+nORGsEzGm/wtW/+22OpBeGECWG8uErXL3POCMEaxFkya6bWUZCUVyimyTIHq5MS8bsMIrn9ILrTz/f7fltNIgGxkUot4nPKOqfwOYUBLSG/mlFdFFxwEHOqODEBGKKkj95IoJMXjIZjXN1n5VLNS8+PdxzQeVaTd8cUnR4iBmstZTmeHnNXTXcnTTg1H936HmO5698bPKFWBn73BOSWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlh8h/n+3qk3uVSmEmgAAAABJRU5ErkJggg==" style="height:36px;width:auto"><div class="topbar-titulo">Portaria Digital</div></div><div class="topbar-info" id="home-usuario">—</div></div>
+    <div class="topbar-direita">
+      <div class="topbar-hora" id="relogio">--:--</div>
+      <button type="button" class="btn btn-gz btn-sm" id="btn-sair" style="margin-top:0">Sair</button>
+    </div>
+  </div>
+  <div class="pagina-conteudo" style="padding-top:16px">
+    <button type="button" class="contador" id="btn-contador">
+      <div><div class="contador-num" id="num-carros">0</div><div class="contador-txt">veículos dentro agora</div></div>
+      <div style="font-size:24px">›</div>
+    </button>
+    <div class="menu-grade">
+      <button type="button" class="menu-btn" id="mn-cadastro"><span class="menu-ic">🚗</span><span class="menu-nm">Cadastrar</span><span class="menu-sb">QR permanente</span></button>
+      <button type="button" class="menu-btn" id="mn-veiculos"><span class="menu-ic">📋</span><span class="menu-nm">Veículos</span><span class="menu-sb">Ver e imprimir QR</span></button>
+      <button type="button" class="menu-btn" id="mn-leitura"><span class="menu-ic">📷</span><span class="menu-nm">Portaria Entrada</span><span class="menu-sb">Ler QR e registrar</span></button>
+      <button type="button" class="menu-btn" id="mn-setor"><span class="menu-ic">🏭</span><span class="menu-nm">Painel Setor</span><span class="menu-sb">Assinar & liberar</span></button>
+      <button type="button" class="menu-btn" id="mn-saida"><span class="menu-ic">🚦</span><span class="menu-nm">Portaria Saída</span><span class="menu-sb">Liberar saída</span></button>
+      <button type="button" class="menu-btn" id="mn-painel"><span class="menu-ic">📊</span><span class="menu-nm">Painel do dia</span><span class="menu-sb">Resumo de hoje</span></button>
+      <button type="button" class="menu-btn" id="mn-historico"><span class="menu-ic">📅</span><span class="menu-nm">Histórico</span><span class="menu-sb">Todas as entradas</span></button>
+      <button type="button" class="menu-btn" id="mn-terceiros"><span class="menu-ic">🚙</span><span class="menu-nm">Terceiros</span><span class="menu-sb">Sem QR Code</span></button>
+      <button type="button" class="menu-btn menu-btn-largo" id="mn-admin"><span class="menu-ic">⚙️</span><span class="menu-nm">Administração</span><span class="menu-sb">Usuários e guardas</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- VEÍCULOS DENTRO -->
+<div id="tela-dentro" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Veículos dentro agora</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-dentro">← Voltar</button></div>
+  <div class="pagina-conteudo"><div id="lista-dentro"><div class="vazio">Nenhum veículo dentro</div></div></div>
+</div>
+
+<!-- CADASTRO -->
+<div id="tela-cadastro" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Cadastrar veículo</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-cadastro">← Voltar</button></div>
+  <div class="pagina-conteudo">
+
+    <!-- IMPORTAR EXCEL -->
+    <div class="card">
+      <div class="secao">📥 Importar Excel em massa</div>
+      <div style="font-size:13px;color:#555;margin-bottom:10px">Colunas: <strong>A=Placa · B=Frota · C=Categoria · D=Responsável</strong></div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <button type="button" class="btn btn-gz btn-sm" id="btn-baixar-modelo" style="flex:1">⬇ Baixar modelo</button>
+        <label style="flex:1">
+          <span class="btn btn-az btn-sm" style="display:block;text-align:center;cursor:pointer;margin-top:0">📂 Importar Excel</span>
+          <input type="file" id="input-excel" accept=".xlsx,.xls,.csv" style="display:none">
+        </label>
+      </div>
+      <div id="import-resultado" style="display:none"></div>
+    </div>
+
+    <div style="font-size:13px;font-weight:bold;color:#555;margin-bottom:8px;text-align:center">— ou cadastre um por um —</div>
+
+    <div class="card">
+      <div class="secao">Dados do veículo</div>
+      <div class="campo"><label>Placa</label><input type="text" id="c-placa" placeholder="Ex: ABC-1234" maxlength="8" autocomplete="off" oninput="this.value=this.value.toUpperCase()"></div>
+      <div class="campo"><label>Nº de frota</label><input type="text" id="c-frota" placeholder="Ex: 0042" autocomplete="off" oninput="this.value=this.value.toUpperCase()"></div>
+      <div class="campo"><label>Categoria *</label>
+        <select id="c-categoria">
+          <option value="">Selecione...</option>
+          <option>Próprio</option><option>Terceirizado</option><option>Fornecedor</option>
+          <option>Visitante</option><option>Funcionário</option><option>Prestador de serviço</option><option>Outro</option>
+        </select>
+      </div>
+      <div class="campo"><label>Responsável *</label><input type="text" id="c-nome" placeholder="Nome do responsável"></div>
+    </div>
+    <button type="button" class="btn btn-az" id="btn-gerar-qr">✦ Gerar QR Code permanente</button>
+    <div id="cad-resultado" style="display:none;margin-top:16px">
+      <div id="cad-vcard"></div>
+      <div class="card" style="text-align:center">
+        <div class="secao" style="text-align:center">QR Code permanente — cole no veículo</div>
+        <div class="qrw"><div id="qr-saida"></div><div style="font-size:12px;color:#888">Código único e permanente</div></div>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="btn btn-ci btn-sm" onclick="window.print()" style="flex:1">🖨 Imprimir</button>
+          <button type="button" class="btn btn-az btn-sm" id="btn-novo-veiculo" style="flex:1">+ Novo veículo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VEÍCULOS CADASTRADOS -->
+<div id="tela-veiculos" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Veículos cadastrados</div></div></div>
+  <div class="nav-topo">
+    <button type="button" class="btn btn-ci btn-sm" id="btn-volta-veiculos">← Voltar</button>
+    <button type="button" class="btn btn-gz btn-sm" id="btn-imprimir-todos" style="margin-top:0">🖨 Imprimir todos</button>
+  </div>
+  <div class="pagina-conteudo">
+    <div class="campo"><input type="text" id="busca-veiculo" placeholder="🔍 Buscar por placa, frota ou responsável..." autocomplete="off"></div>
+    <div id="lista-veiculos-cad"><div class="vazio">Carregando...</div></div>
+  </div>
+</div>
+
+<!-- DETALHE VEÍCULO + QR -->
+<div id="tela-detalhe" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Detalhes do veículo</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-detalhe">← Voltar</button></div>
+  <div class="pagina-conteudo">
+    <div id="detalhe-vcard"></div>
+    <div class="card" style="text-align:center">
+      <div class="secao" style="text-align:center">QR Code permanente</div>
+      <div class="qrw"><div id="detalhe-qr"></div><div style="font-size:12px;color:#888">Escaneie na portaria</div></div>
+      <button type="button" class="btn btn-ci" onclick="window.print()">🖨 Imprimir</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDITAR VEÍCULO -->
+<div id="tela-editar" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Editar veículo</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-editar">← Voltar</button></div>
+  <div class="pagina-conteudo">
+    <div class="card">
+      <div class="secao">Dados do veículo</div>
+      <div class="campo"><label>Placa</label><input type="text" id="ed-placa" maxlength="8" autocomplete="off" oninput="this.value=this.value.toUpperCase()"></div>
+      <div class="campo"><label>Nº de frota</label><input type="text" id="ed-frota" autocomplete="off" oninput="this.value=this.value.toUpperCase()"></div>
+      <div class="campo"><label>Categoria *</label>
+        <select id="ed-categoria">
+          <option value="">Selecione...</option>
+          <option>Próprio</option><option>Terceirizado</option><option>Fornecedor</option>
+          <option>Visitante</option><option>Funcionário</option><option>Prestador de serviço</option><option>Outro</option>
+        </select>
+      </div>
+      <div class="campo"><label>Responsável *</label><input type="text" id="ed-nome"></div>
+    </div>
+    <button type="button" class="btn btn-vd" id="btn-salvar-edicao">✓ Salvar alterações</button>
+  </div>
+</div>
+
+<!-- PORTARIA ENTRADA -->
+<div id="tela-leitura" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Portaria — Entrada</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-leitura">← Voltar</button></div>
+  <div class="pagina-conteudo">
+    <div id="lr-camera">
+      <div class="card" style="text-align:center;padding:12px">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:12px">📷 Aponte para o QR Code do veículo</div>
+        <div id="qr-reader-entrada"></div>
+      </div>
+      <button type="button" class="btn btn-gz" id="btn-abrir-manual" style="margin-top:0">
+        📋 Selecionar veículo manualmente
+      </button>
+      <div id="lr-manual-wrap" style="display:none" class="card">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:8px;color:var(--neon)">Selecione o veículo:</div>
+        <div class="campo" style="margin-bottom:8px">
+          <input type="text" id="lr-busca-manual" placeholder="🔍 Buscar por placa, frota ou nome..." autocomplete="off">
+        </div>
+        <div id="lr-lista-manual"></div>
+      </div>
+    </div>
+    <div id="lr-form" style="display:none">
+      <div id="lr-vcard"></div>
+      <div class="card">
+        <div class="secao">Dados da visita</div>
+        <div class="guarda-info" id="lr-guarda-box">👤 Guarda: —</div>
+        <div class="campo"><label>Nome do condutor *</label><input type="text" id="lr-cond" placeholder="Quem está conduzindo" autocomplete="off"></div>
+        <div class="campo"><label>Nº do crachá *</label><input type="text" id="lr-crac" placeholder="Ex: 00123" inputmode="numeric" autocomplete="off"></div>
+        <div class="campo"><label>Setor de destino *</label>
+          <div class="campo" id="lr-setor-wrap">
+            <label>Setor de destino *</label>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <input type="text" id="lr-setor-busca" placeholder="🔍 Buscar setor..." autocomplete="off" style="flex:1">
+              <button type="button" class="btn btn-gz btn-sm" id="btn-add-setor" style="flex-shrink:0;margin-top:0;white-space:nowrap">+ Novo</button>
+            </div>
+            <div id="lr-setor-lista" style="background:#000;border:1px solid var(--borda);border-radius:8px;max-height:200px;overflow-y:auto"></div>
+            <input type="hidden" id="lr-setor">
+            <div id="lr-setor-selecionado" style="display:none;margin-top:6px;padding:8px 12px;background:rgba(46,204,113,.1);border:1px solid var(--neon);border-radius:8px;font-size:14px;color:var(--neon);font-weight:bold"></div>
+          </div>
+          </div>
+        </div>
+        <div class="campo">
+          <label>Acompanhantes</label>
+          <div class="add-linha"><input type="text" id="lr-ac" placeholder="Nome" autocomplete="off" style="flex:1"><button type="button" class="btn btn-az btn-sm" id="btn-add-ac">+ Add</button></div>
+          <div id="lr-tags" class="tags-area"></div>
+        </div>
+        <div class="campo"><label>Observações</label><textarea id="lr-obs" placeholder="Anotações..."></textarea></div>
+
+        <!-- FOTO OPCIONAL -->
+        <div style="margin-bottom:14px">
+          <div id="foto-preview" style="display:none;margin-bottom:8px;position:relative">
+            <img id="foto-img" style="width:100%;border-radius:8px;border:1px solid var(--borda)">
+            <button type="button" id="btn-remover-foto" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:26px;height:26px;font-size:15px;cursor:pointer">×</button>
+          </div>
+          <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:transparent;border:1px solid var(--borda);border-radius:8px;padding:8px 14px;font-size:13px;color:var(--txt2)">
+            📷 <span>Tirar foto (opcional)</span>
+            <input type="file" id="foto-camera" accept="image/*" capture="environment" style="display:none">
+          </label>
+          <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:transparent;border:1px solid var(--borda);border-radius:8px;padding:8px 14px;font-size:13px;color:var(--txt2);margin-left:6px">
+            🖼 <span>Galeria</span>
+            <input type="file" id="foto-galeria" accept="image/*" style="display:none">
+          </label>
+        </div>
+      </div>
+      <button type="button" class="btn btn-vd" id="btn-dar-ok">✓ Liberar entrada</button>
+      <button type="button" class="btn btn-gz" id="btn-cancelar-lr">← Voltar</button>
+    </div>
+    <div id="lr-ok" style="display:none">
+      <div class="alerta alerta-vd">✓ Entrada registrada! Aguardando confirmação do setor.</div>
+      <div id="lr-ok-vcard"></div>
+      <button type="button" class="btn btn-az" id="btn-proximo-veiculo">Próximo veículo</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAINEL DO SETOR -->
+<div id="tela-setor" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Painel do Setor</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-setor">← Voltar</button></div>
+  <div class="pagina-conteudo">
+    <div id="setor-opcoes">
+      <div class="card" style="text-align:center;padding:12px">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:12px">📷 Ler QR Code do veículo</div>
+        <div id="qr-reader-setor"></div>
+      </div>
+      <div class="card">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:8px">Ou selecione da lista:</div>
+        <div class="campo" style="margin-bottom:8px"><label>Filtrar por setor</label>
+          <div style="position:relative">
+            <input type="text" id="filt-setor-busca" placeholder="🔍 Buscar setor..." autocomplete="off"
+              style="width:100%;padding:12px 14px;font-size:16px;border:2px solid #ddd;border-radius:8px 8px 0 0;background:#fafafa;color:#111;box-sizing:border-box">
+            <select id="filt-setor" size="5"
+              style="width:100%;padding:6px;font-size:15px;border:2px solid #1a56a0;border-top:none;border-radius:0 0 8px 8px;background:#fff;display:none;position:absolute;z-index:99;left:0;box-shadow:0 4px 12px rgba(0,0,0,.15)">
+              <option value="">Todos os setores</option>
+              <option>Produção</option>
+              <option>Almoxarifado</option>
+              <option>Manutenção</option>
+              <option>Administrativo</option>
+              <option>Refeitório</option>
+              <option>TI</option>
+              <option>Segurança</option>
+              <option>RH</option>
+              <option>Expedição</option>
+              <option>Logística</option>
+              <option>Qualidade</option>
+              <option>Engenharia</option>
+              <option>Compras</option>
+              <option>Financeiro</option>
+              <option>Jurídico</option>
+              <option>Marketing</option>
+              <option>Comercial</option>
+              <option>Diretoria</option>
+              <option>Portaria</option>
+              <option>Estoque</option>
+              <option>Laboratório</option>
+              <option>Treinamento</option>
+              <option>Limpeza</option>
+              <option>Facilities</option>
+            </select>
+            <div id="filt-setor-val" style="font-size:13px;color:#1a56a0;font-weight:bold;padding:4px 14px;display:none"></div>
+          </div>
+        </div>
+        <div id="setor-lista"><div class="vazio">Nenhum veículo pendente</div></div>
+      </div>
+    </div>
+    <div id="sig-wrap" style="display:none">
+      <div id="sig-vcard"></div>
+      <div class="card">
+        <div class="secao">Dados da visita</div>
+        <div id="sig-detalhes" style="font-size:13px;color:#555"></div>
+      </div>
+      <div class="card">
+        <div class="secao">✍ Assinatura do responsável</div>
+        <div id="sig-info" style="margin-bottom:10px;font-size:14px;font-weight:bold;color:#0d3570"></div>
+        <div style="font-size:13px;color:#666;margin-bottom:10px">Assine abaixo para confirmar e liberar</div>
+        <canvas id="sig-canvas" class="sig-canvas"></canvas>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button type="button" class="btn btn-gz btn-sm" id="btn-limpar-sig" style="flex:1">↺ Limpar</button>
+          <button type="button" class="btn btn-vd btn-sm" id="btn-confirmar-sig" style="flex:1">✓ Confirmar</button>
+        </div>
+        <button type="button" class="btn btn-gz" id="btn-cancelar-sig" style="margin-top:8px">← Voltar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PORTARIA SAÍDA -->
+<div id="tela-saida" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Portaria — Saída</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-saida">← Voltar</button></div>
+  <div class="pagina-conteudo">
+    <div id="sa-camera">
+      <div class="card" style="text-align:center;padding:12px">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:12px">📷 Ler QR Code do veículo</div>
+        <div id="qr-reader-saida"></div>
+      </div>
+      <div class="card">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:8px">Ou selecione da lista:</div>
+        <div id="sa-lista-manual"></div>
+      </div>
+    </div>
+    <div id="sa-dados" style="display:none"></div>
+  </div>
+</div>
+
+<!-- PAINEL DO DIA -->
+<div id="tela-painel" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">📊 Painel do dia</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-painel">← Voltar</button></div>
+  <div class="pagina-conteudo">
+    <div id="painel-data" style="font-size:13px;color:#666;margin-bottom:16px;text-align:center"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div class="card" style="text-align:center;padding:16px"><div style="font-size:32px;font-weight:bold;color:#1a56a0" id="pd-total">0</div><div style="font-size:12px;color:#666;margin-top:4px">Total entradas</div></div>
+      <div class="card" style="text-align:center;padding:16px"><div style="font-size:32px;font-weight:bold;color:#2e7d32" id="pd-saiu">0</div><div style="font-size:12px;color:#666;margin-top:4px">Já saíram</div></div>
+      <div class="card" style="text-align:center;padding:16px"><div style="font-size:32px;font-weight:bold;color:#c62828" id="pd-dentro">0</div><div style="font-size:12px;color:#666;margin-top:4px">Dentro agora</div></div>
+      <div class="card" style="text-align:center;padding:16px"><div style="font-size:32px;font-weight:bold;color:#e65100" id="pd-pendente">0</div><div style="font-size:12px;color:#666;margin-top:4px">Aguard. setor</div></div>
+    </div>
+    <div class="card"><div class="secao">Por setor hoje</div><div id="pd-setores"></div></div>
+    <div class="card"><div class="secao">Movimentação do dia</div><div id="pd-timeline"></div></div>
+  </div>
+</div>
+
+<!-- HISTÓRICO -->
+<div id="tela-historico" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">📅 Histórico</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-historico">← Voltar</button></div>
+  <div class="pagina-conteudo">
+    <div class="card">
+      <div class="dois-col">
+        <div class="campo"><label>Data</label><input type="date" id="hist-data"></div>
+        <div class="campo"><label>Setor</label>
+          <div style="position:relative">
+            <input type="text" id="hist-setor-busca" placeholder="🔍 Buscar setor..." autocomplete="off"
+              style="width:100%;padding:12px 14px;font-size:16px;border:2px solid #ddd;border-radius:8px 8px 0 0;background:#fafafa;color:#111;box-sizing:border-box">
+            <select id="hist-setor" size="5"
+              style="width:100%;padding:6px;font-size:15px;border:2px solid #1a56a0;border-top:none;border-radius:0 0 8px 8px;background:#fff;display:none;position:absolute;z-index:99;left:0;box-shadow:0 4px 12px rgba(0,0,0,.15)">
+              <option value="">Todos</option>
+              <option>Produção</option>
+              <option>Almoxarifado</option>
+              <option>Manutenção</option>
+              <option>Administrativo</option>
+              <option>Refeitório</option>
+              <option>TI</option>
+              <option>Segurança</option>
+              <option>RH</option>
+              <option>Expedição</option>
+              <option>Logística</option>
+              <option>Qualidade</option>
+              <option>Engenharia</option>
+              <option>Compras</option>
+              <option>Financeiro</option>
+              <option>Jurídico</option>
+              <option>Marketing</option>
+              <option>Comercial</option>
+              <option>Diretoria</option>
+              <option>Portaria</option>
+              <option>Estoque</option>
+              <option>Laboratório</option>
+              <option>Treinamento</option>
+              <option>Limpeza</option>
+              <option>Facilities</option>
+            </select>
+            <div id="hist-setor-val" style="font-size:13px;color:#1a56a0;font-weight:bold;padding:4px 14px;display:none"></div>
+          </div>
+        </div>
+      </div>
+      <div class="campo"><label>Buscar</label><input type="text" id="hist-busca" placeholder="Placa, frota ou condutor" autocomplete="off"></div>
+      <button type="button" class="btn btn-az" id="btn-filtrar-hist">🔍 Filtrar</button>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button type="button" class="btn btn-gz btn-sm" id="btn-limpar-filtrados" style="flex:1">🗑 Excluir filtrados</button>
+        <button type="button" class="btn btn-vm btn-sm" id="btn-limpar-tudo" style="flex:1">🗑 Excluir tudo</button>
+      </div>
+    </div>
+    <div id="hist-lista"><div class="vazio">Use os filtros acima</div></div>
+  </div>
+</div>
+
+<!-- TERCEIROS -->
+<div id="tela-terceiros" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">🚙 Entrada de Terceiros</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-terceiros">← Voltar</button></div>
+  <div class="pagina-conteudo">
+
+    <!-- PESQUISA -->
+    <div id="terc-pesquisa">
+      <div class="card">
+        <div class="secao">🔍 Buscar registro anterior</div>
+        <div class="campo"><label>Placa do veículo</label>
+          <input type="text" id="terc-busca-placa" placeholder="Ex: ABC-1234" autocomplete="off" oninput="this.value=this.value.toUpperCase()">
+        </div>
+        <button type="button" class="btn btn-az" id="btn-terc-buscar">🔍 Pesquisar</button>
+        <div id="terc-busca-resultado" style="margin-top:12px"></div>
+      </div>
+
+      <div class="card">
+        <div class="secao">➕ Registrar novo terceiro</div>
+        <div class="campo"><label>Placa *</label>
+          <input type="text" id="terc-placa" placeholder="Ex: ABC-1234" maxlength="8" autocomplete="off" oninput="this.value=this.value.toUpperCase()">
+        </div>
+        <div class="campo"><label>Nome do condutor *</label>
+          <input type="text" id="terc-cond" placeholder="Nome completo" autocomplete="off">
+        </div>
+        <div class="campo"><label>Empresa / Origem</label>
+          <input type="text" id="terc-empresa" placeholder="Ex: Transportes Silva" autocomplete="off">
+        </div>
+        <div class="campo"><label>Motivo da visita *</label>
+          <input type="text" id="terc-motivo" placeholder="Ex: Entrega de material" autocomplete="off">
+        </div>
+        <div class="campo"><label>Setor de destino *</label>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <input type="text" id="terc-setor-busca" placeholder="🔍 Buscar setor..." autocomplete="off" style="flex:1">
+            <button type="button" class="btn btn-gz btn-sm" id="btn-terc-add-setor" style="flex-shrink:0;margin-top:0">+ Novo</button>
+          </div>
+          <div id="terc-setor-lista" style="background:#000;border:1px solid var(--borda);border-radius:8px;max-height:180px;overflow-y:auto"></div>
+          <input type="hidden" id="terc-setor">
+          <div id="terc-setor-sel" style="display:none;margin-top:6px;padding:8px 12px;background:rgba(46,204,113,.1);border:1px solid var(--neon);border-radius:8px;font-size:14px;color:var(--neon);font-weight:bold"></div>
+        </div>
+        <div class="campo"><label>Documento (RG/CNH)</label>
+          <input type="text" id="terc-doc" placeholder="Nº do documento" autocomplete="off">
+        </div>
+        <div class="campo"><label>Observações</label>
+          <textarea id="terc-obs" placeholder="Anotações..."></textarea>
+        </div>
+        <!-- Foto opcional -->
+        <div style="margin-bottom:14px">
+          <div id="terc-foto-preview" style="display:none;margin-bottom:8px;position:relative">
+            <img id="terc-foto-img" style="width:100%;border-radius:8px;border:1px solid var(--borda)">
+            <button type="button" id="btn-terc-remover-foto" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:26px;height:26px;font-size:15px;cursor:pointer">×</button>
+          </div>
+          <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:transparent;border:1px solid var(--borda);border-radius:8px;padding:8px 14px;font-size:13px;color:var(--txt2)">
+            📷 <span>Foto (opcional)</span>
+            <input type="file" id="terc-foto-camera" accept="image/*" capture="environment" style="display:none">
+          </label>
+        </div>
+        <button type="button" class="btn btn-vd" id="btn-terc-registrar">✓ Registrar entrada</button>
+      </div>
+    </div>
+
+    <!-- CONFIRMAÇÃO -->
+    <div id="terc-ok" style="display:none">
+      <div class="alerta alerta-vd">✓ Terceiro registrado! Aguardando confirmação do setor.</div>
+      <div id="terc-ok-info"></div>
+      <button type="button" class="btn btn-az" id="btn-terc-novo">Registrar próximo</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="tela-admin" class="tela">
+  <div class="topbar"><div><div class="topbar-titulo">Administração</div></div></div>
+  <div class="nav-topo"><button type="button" class="btn btn-ci btn-sm" id="btn-volta-admin">← Voltar</button></div>
+  <div class="pagina-conteudo">
+    <div class="card">
+      <div class="secao">Criar usuário</div>
+      <div class="campo"><label>Nome *</label><input type="text" id="ad-nome" placeholder="Nome completo"></div>
+      <div class="dois-col">
+        <div class="campo"><label>Usuário *</label><input type="text" id="ad-user" autocorrect="off" autocapitalize="off" autocomplete="off"></div>
+        <div class="campo"><label>Senha *</label><input type="password" id="ad-senha" autocomplete="new-password"></div>
+      </div>
+      <div class="campo"><label>Perfil</label>
+        <select id="ad-perfil"><option value="guarda">Guarda</option><option value="setor">Resp. de setor</option><option value="admin">Administrador</option></select>
+      </div>
+      <button type="button" class="btn btn-az" id="btn-criar-user">+ Criar usuário</button>
+    </div>
+    <div class="card"><div class="secao">Usuários</div><div id="ad-lista"></div></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// ESTADO LOCAL (cache em memória para velocidade)
+// Os dados reais ficam no Firebase — nunca se perdem
+// ═══════════════════════════════════════════════════════
+var veiculos = [];   // cache local dos veículos do Firebase
+var visitas  = [];   // cache local das visitas do Firebase
+var usuarios = JSON.parse(localStorage.getItem('pd_usr') || 'null');
+if (!usuarios) {
+  usuarios = [{ id:'u0', nome:'Administrador', usuario:'admin', senha:'admin123', perfil:'admin' }];
+  localStorage.setItem('pd_usr', JSON.stringify(usuarios));
+}
+var userLogado = null;
+var acomps = [], vAtivo = null, viAtiva = null, vEditando = null;
+var sigDraw = false, sigCtx = null, sigEl = null;
+var scannerEntrada = null, scannerSaida = null, scannerSetor = null;
+var sigWrapHTML = '';
+var fbPronto = false;
+
+// ── FIREBASE ─────────────────────────────────────────────────
+document.addEventListener('firebase-ready', function(){
+  fbPronto = true;
+  carregarDadosFB();
+});
+
+function carregarDadosFB(){
+  if (!window._fbReady) return;
+  var db = window._fb.db;
+
+  // Escuta veículos em tempo real
+  window._fb.onValue(window._fb.ref(db,'veiculos'), function(snap){
+    veiculos = [];
+    snap.forEach(function(child){
+      veiculos.push(child.val());
+    });
+    if (document.getElementById('tela-veiculos').classList.contains('ativa')) renderVeiculosCad();
+    atualizarContador();
+  });
+
+  // Escuta visitas em tempo real
+  window._fb.onValue(window._fb.ref(db,'visitas'), function(snap){
+    visitas = [];
+    snap.forEach(function(child){
+      visitas.push(child.val());
+    });
+    atualizarContador();
+    if (document.getElementById('tela-setor').classList.contains('ativa')) renderSetor();
+  });
+}
+
+function salvarVeiculo(v){
+  if (!fbPronto) { alert('Firebase não conectado. Configure o Firebase primeiro.'); return false; }
+  window._fb.set(window._fb.ref(window._fb.db,'veiculos/'+v.id), v);
+  return true;
+}
+
+function salvarVisita(vi){
+  if (!fbPronto) return;
+  window._fb.set(window._fb.ref(window._fb.db,'visitas/'+vi.id), vi);
+}
+
+function salvarUsuarios(){
+  localStorage.setItem('pd_usr', JSON.stringify(usuarios));
+}
+
+// ── HELPERS ──────────────────────────────────────────────────
+function agora(){ return new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+function hoje() { return new Date().toLocaleDateString('pt-BR'); }
+function tempoPassado(h){
+  if (!h) return '—';
+  var p=h.split(':'); var agr=new Date(); var ent=new Date();
+  ent.setHours(parseInt(p[0]),parseInt(p[1]),0);
+  var d=Math.floor((agr-ent)/60000); if(d<0)d=0;
+  var hr=Math.floor(d/60); var mn=d%60;
+  return hr>0?hr+'h '+mn+'min':mn+'min';
+}
+
+setInterval(function(){
+  var r=document.getElementById('relogio'); if(r) r.textContent=agora();
+},1000);
+
+// Sessão persistente
+(function(){
+  var s=localStorage.getItem('pd_sessao');
+  if(s){ try{userLogado=JSON.parse(s);}catch(e){} }
+})();
+
+// ── TELAS ────────────────────────────────────────────────────
+function ir(id){
+  pararScanners();
+  document.querySelectorAll('.tela').forEach(function(t){ t.style.display='none'; t.classList.remove('ativa'); });
+  var t=document.getElementById(id); t.style.display='block'; t.classList.add('ativa');
+  window.scrollTo(0,0);
+}
+
+function pararScanners(){
+  [scannerEntrada,scannerSaida,scannerSetor].forEach(function(s){
+    if(s){ try{s.stop();}catch(e){} }
+  });
+  scannerEntrada=null; scannerSaida=null; scannerSetor=null;
+}
+
+// ── LOGIN ────────────────────────────────────────────────────
+function fazerLogin(){
+  var u=(document.getElementById('lg-user').value||'').trim().toLowerCase();
+  var s=(document.getElementById('lg-senha').value||'');
+  var found=null;
+  for(var i=0;i<usuarios.length;i++){
+    if(usuarios[i].usuario.toLowerCase()===u&&usuarios[i].senha===s){found=usuarios[i];break;}
+  }
+  if(!found){document.getElementById('erro-login').style.display='block';document.getElementById('lg-senha').value='';return;}
+  document.getElementById('erro-login').style.display='none';
+  userLogado=found;
+  localStorage.setItem('pd_sessao',JSON.stringify(found));
+  document.getElementById('home-usuario').textContent=found.nome+' — '+labelPerfil(found.perfil);
+  setTimeout(inicializarSetores, 100);
+  aplicarPermissoes();
+  document.getElementById('relogio').textContent=agora();
+  atualizarContador();
+  ir('tela-home');
+}
+function labelPerfil(p){ return p==='admin'?'Administrador':p==='setor'?'Resp. Setor':p==='guarda'?'Guarda':'Usuário'; }
+function sair(){ userLogado=null; localStorage.removeItem('pd_sessao'); document.getElementById('lg-user').value=''; document.getElementById('lg-senha').value=''; ir('tela-login'); }
+
+// ── CARTÃO VEÍCULO ───────────────────────────────────────────
+function vcHTML(v){
+  return '<div class="vcard">'
+    +(v.categoria?'<div class="vcard-cat">'+v.categoria+'</div>':'')
+    +(v.frota?'<div class="vcard-id">Frota '+v.frota+'</div>':'')
+    +(v.placa?'<div class="vcard-placa">'+(v.frota?'Placa: ':'')+v.placa+'</div>':'')
+    +'<div class="vcard-grade">'
+    +'<div style="grid-column:1/-1"><div class="vcard-lbl">Responsável</div><div class="vcard-val">'+v.nome+'</div></div>'
+    +'</div></div>';
+}
+function idLabel(v){
+  if(v.frota&&v.placa) return 'Frota '+v.frota+' / '+v.placa;
+  if(v.frota) return 'Frota '+v.frota;
+  return v.placa||'—';
+}
+
+// ── CONTADOR ─────────────────────────────────────────────────
+function atualizarContador(){
+  var d=visitas.filter(function(v){ return v.data===hoje()&&v.status!=='saiu'&&v.status!=='negado'; });
+  var el=document.getElementById('num-carros'); if(el) el.textContent=d.length;
+}
+function mostrarDentro(){
+  var d=visitas.filter(function(v){ return v.data===hoje()&&v.status!=='saiu'&&v.status!=='negado'; });
+  var el=document.getElementById('lista-dentro');
+  if(!d.length){el.innerHTML='<div class="vazio">Nenhum veículo dentro agora</div>';ir('tela-dentro');return;}
+  el.innerHTML=d.map(function(vi){
+    var v=veiculos.find(function(x){return x.id===vi.vid;})||{};
+    var sm={pendente_setor:'badge-am',liberado:'badge-az'};
+    var lm={pendente_setor:'⏳ Aguardando setor',liberado:'✓ Liberado'};
+    return '<div class="card" style="margin-bottom:10px">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+      +'<span class="plq">'+idLabel(v)+'</span>'
+      +'<span class="badge '+(sm[vi.status]||'badge-gz')+'">'+(lm[vi.status]||vi.status)+'</span></div>'
+      +'<div style="font-size:14px;font-weight:bold;margin-bottom:2px">'+v.categoria+' — '+v.nome+'</div>'
+      +'<div style="font-size:13px;color:#666">Condutor: '+vi.condutor+' • '+vi.setor+'</div>'
+      +'<div style="font-size:13px;color:#666">Entrou: '+vi.horaEntrada+'</div>'
+      +'<div style="font-size:13px;font-weight:bold;color:#c62828;margin-top:4px">⏱ '+tempoPassado(vi.horaEntrada)+'</div>'
+      +'</div>';
+  }).join('');
+  ir('tela-dentro');
+}
+
+// ── CADASTRO ─────────────────────────────────────────────────
+document.getElementById('btn-gerar-qr').addEventListener('click',function(){
+  var placa=(document.getElementById('c-placa').value||'').trim().toUpperCase();
+  var frota=(document.getElementById('c-frota').value||'').trim().toUpperCase();
+  var cat=(document.getElementById('c-categoria').value||'').trim();
+  var nome=(document.getElementById('c-nome').value||'').trim();
+  if(!placa&&!frota){alert('Informe a placa ou o número de frota.');return;}
+  if(!cat){alert('Selecione a categoria.');return;}
+  if(!nome){alert('Informe o nome do responsável.');return;}
+
+  // ID PERMANENTE baseado em placa+frota — nunca muda
+  var idBase = (frota||placa).replace(/[^A-Z0-9]/g,'');
+  var id = 'VH_'+idBase;
+
+  var dup=veiculos.find(function(v){ return v.id===id||(placa&&v.placa===placa)||(frota&&v.frota===frota); });
+  if(dup){if(!confirm('Já existe um veículo com esta placa/frota. Atualizar os dados?'))return; id=dup.id; }
+
+  var v={ id:id, tipo:frota?'frota':'placa', placa:placa, frota:frota, categoria:cat, nome:nome, empresa:'—', modelo:'—', cor:'—', ano:'—', tv:'—' };
+
+  if(salvarVeiculo(v)){
+    document.getElementById('cad-vcard').innerHTML=vcHTML(v);
+    var qDiv=document.getElementById('qr-saida'); qDiv.innerHTML='';
+    new QRCode(qDiv,{text:v.id,width:200,height:200,colorDark:'#1A2D6B',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+    document.getElementById('cad-resultado').style.display='block';
+    document.getElementById('cad-resultado').scrollIntoView({behavior:'smooth'});
+  }
+});
+
+document.getElementById('btn-novo-veiculo').addEventListener('click',function(){
+  ['c-placa','c-frota','c-nome'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('c-categoria').value='';
+  document.getElementById('cad-resultado').style.display='none';
+  document.getElementById('qr-saida').innerHTML='';
+  window.scrollTo(0,0);
+});
+
+// ── VEÍCULOS CADASTRADOS ─────────────────────────────────────
+function renderVeiculosCad(filtro){
+  var el=document.getElementById('lista-veiculos-cad');
+  var lista=veiculos.slice();
+  if(filtro){
+    var f=filtro.toLowerCase();
+    lista=lista.filter(function(v){
+      return (v.placa&&v.placa.toLowerCase().indexOf(f)>-1)
+          || (v.frota&&v.frota.toLowerCase().indexOf(f)>-1)
+          || (v.nome&&v.nome.toLowerCase().indexOf(f)>-1);
+    });
+  }
+  if(!lista.length){el.innerHTML='<div class="vazio">Nenhum veículo encontrado</div>';return;}
+  el.innerHTML=lista.map(function(v){
+    return '<div style="padding:12px 0;border-bottom:1px solid #eee">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
+      +'<span class="plq">'+idLabel(v)+'</span>'
+      +'<div style="flex:1"><div style="font-size:14px;font-weight:bold">'+v.nome+'</div>'
+      +'<div style="font-size:12px;color:#666">'+(v.categoria||'—')+'</div></div></div>'
+      +'<div style="display:flex;gap:8px">'
+      +'<button type="button" class="btn btn-az btn-sm" style="flex:1" data-acao="ver" data-vid="'+v.id+'">🔍 Ver QR</button>'
+      +'<button type="button" class="btn btn-gz btn-sm" style="flex:1" data-acao="editar" data-vid="'+v.id+'">✏️ Editar</button>'
+      +'<button type="button" class="btn btn-vm btn-sm" style="flex:1" data-acao="excluir" data-vid="'+v.id+'">🗑</button>'
+      +'</div></div>';
+  }).join('');
+  document.querySelectorAll('#lista-veiculos-cad [data-acao]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var acao=btn.getAttribute('data-acao');
+      var vid=btn.getAttribute('data-vid');
+      if(acao==='ver')     mostrarDetalhe(vid);
+      if(acao==='editar')  abrirEdicao(vid);
+      if(acao==='excluir') excluirVeiculo(vid);
+    });
+  });
+}
+
+function mostrarDetalhe(vid){
+  var v=veiculos.find(function(x){return x.id===vid;}); if(!v) return;
+  document.getElementById('detalhe-vcard').innerHTML=vcHTML(v);
+  var qDiv=document.getElementById('detalhe-qr'); qDiv.innerHTML='';
+  new QRCode(qDiv,{text:v.id,width:200,height:200,colorDark:'#1A2D6B',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+  ir('tela-detalhe');
+}
+
+function abrirEdicao(vid){
+  vEditando=veiculos.find(function(x){return x.id===vid;}); if(!vEditando) return;
+  document.getElementById('ed-placa').value=vEditando.placa||'';
+  document.getElementById('ed-frota').value=vEditando.frota||'';
+  document.getElementById('ed-categoria').value=vEditando.categoria||'';
+  document.getElementById('ed-nome').value=vEditando.nome||'';
+  ir('tela-editar');
+}
+
+function excluirVeiculo(vid){
+  if(!confirm('Excluir este veículo permanentemente?')) return;
+  if(!fbPronto){alert('Firebase não conectado.');return;}
+  // Remove do Firebase
+  window._fb.set(window._fb.ref(window._fb.db,'veiculos/'+vid),null);
+}
+
+document.getElementById('btn-salvar-edicao').addEventListener('click',function(){
+  if(!vEditando) return;
+  var placa=(document.getElementById('ed-placa').value||'').trim().toUpperCase();
+  var frota=(document.getElementById('ed-frota').value||'').trim().toUpperCase();
+  var cat=(document.getElementById('ed-categoria').value||'').trim();
+  var nome=(document.getElementById('ed-nome').value||'').trim();
+  if(!placa&&!frota){alert('Informe placa ou frota.');return;}
+  if(!cat){alert('Selecione a categoria.');return;}
+  if(!nome){alert('Informe o responsável.');return;}
+  vEditando.placa=placa; vEditando.frota=frota;
+  vEditando.tipo=frota?'frota':'placa';
+  vEditando.categoria=cat; vEditando.nome=nome;
+  if(salvarVeiculo(vEditando)){
+    alert('Veículo atualizado!');
+    ir('tela-veiculos');
+  }
+});
+
+// Busca veículos
+document.getElementById('busca-veiculo').addEventListener('input',function(){
+  renderVeiculosCad(this.value);
+});
+
+// Imprimir todos os QR
+document.getElementById('btn-imprimir-todos').addEventListener('click',function(){
+  var win=window.open('','_blank');
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>QR Codes</title>'
+    +'<style>body{font-family:Arial,sans-serif;margin:0;padding:10px}.grade{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.item{text-align:center;border:1px solid #ddd;padding:10px;border-radius:8px}.nm{font-size:12px;font-weight:bold;color:#0d3570;margin-bottom:4px}.sb{font-size:11px;color:#666;margin-top:4px}@media print{.no-print{display:none}}</style>'
+    +'<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script></head><body>'
+    +'<div style="text-align:center;margin-bottom:10px" class="no-print"><button onclick="window.print()">🖨 Imprimir</button></div>'
+    +'<div class="grade">';
+  veiculos.forEach(function(v,i){
+    html+='<div class="item"><div class="nm">'+idLabel(v)+'</div>'
+      +'<div id="qr'+i+'"></div>'
+      +'<div class="sb">'+v.nome+'<br>'+v.categoria+'</div></div>';
+  });
+  html+='</div><script>setTimeout(function(){';
+  veiculos.forEach(function(v,i){
+    html+='new QRCode(document.getElementById("qr'+i+'"),{text:"'+v.id+'",width:100,height:100,colorDark:"#0d3570",colorLight:"#ffffff"});';
+  });
+  html+='},200);<\/script></body></html>';
+  win.document.write(html);
+  win.document.close();
+});
+
+// ── EXCEL ────────────────────────────────────────────────────
+document.getElementById('btn-baixar-modelo').addEventListener('click',function(){
+  var ws_data=[
+    ['ABC-1234','0042','Próprio','João Silva'],
+    ['DEF-5678','0043','Terceirizado','Maria Santos'],
+    ['XYZ-9999','','Fornecedor','Carlos Lima'],
+  ];
+  var wb=XLSX.utils.book_new();
+  var ws=XLSX.utils.aoa_to_sheet(ws_data);
+  ws['!cols']=[{wch:14},{wch:12},{wch:22},{wch:26}];
+  XLSX.utils.book_append_sheet(wb,ws,'Veiculos');
+  XLSX.writeFile(wb,'modelo_veiculos.xlsx');
+});
+
+document.getElementById('input-excel').addEventListener('change',function(e){
+  var file=e.target.files[0]; if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      var data=new Uint8Array(ev.target.result);
+      var wb=XLSX.read(data,{type:'array'});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var allRows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      if(!allRows.length){mostrarImportResult('Planilha vazia.',false);return;}
+      var ok=0,erros=[],novos=[];
+      allRows.forEach(function(row,idx){
+        var colA=(row[0]||'').toString().trim().toUpperCase();
+        var colB=(row[1]||'').toString().trim().toUpperCase();
+        var colC=(row[2]||'').toString().trim();
+        var colD=(row[3]||'').toString().trim();
+        if(!colA&&!colB&&!colC&&!colD) return;
+        if(colA.toLowerCase()==='placa'||colA.toLowerCase()==='a') return;
+        var placa=colA, frota=colB, cat=colC||'—', nome=colD;
+        if(!placa&&!frota){erros.push('Linha '+(idx+1)+': sem placa/frota.');return;}
+        if(!nome){erros.push('Linha '+(idx+1)+': responsável vazio.');return;}
+
+        // ID permanente baseado na identificação
+        var idBase=(frota||placa).replace(/[^A-Z0-9]/g,'');
+        var id='VH_'+idBase;
+
+        var dup=veiculos.find(function(v){return v.id===id||(placa&&v.placa===placa)||(frota&&v.frota===frota);});
+        if(dup){erros.push('Linha '+(idx+1)+': '+(placa||frota)+' já existe.');return;}
+
+        var v={id:id,tipo:frota?'frota':'placa',placa:placa,frota:frota,categoria:cat,nome:nome,empresa:'—',modelo:'—',cor:'—',ano:'—',tv:'—'};
+        novos.push(v);
+        ok++;
+      });
+
+      // Salva todos no Firebase
+      novos.forEach(function(v){ salvarVeiculo(v); });
+
+      if(novos.length>0) mostrarQrsImportados(novos,erros);
+      else mostrarImportResult(ok===0?'Nenhum importado.':'✓ '+ok+' importado(s).'+(erros.length?'<br>'+erros.join('<br>'):'' ),ok>0);
+      e.target.value='';
+    }catch(err){ mostrarImportResult('Erro: '+err.message,false); }
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+function mostrarQrsImportados(novos,erros){
+  var el=document.getElementById('import-resultado');
+  el.style.display='block';
+  var html='<div class="alerta alerta-vd">✓ '+novos.length+' veículo(s) importado(s) e salvos!</div>';
+  if(erros.length) html+='<div class="alerta alerta-am" style="font-size:12px">⚠ '+erros.join('<br>')+'</div>';
+  html+='<div class="grade-qr" id="grade-qrs-imp">';
+  novos.forEach(function(v){
+    html+='<div class="qr-card-imp">'
+      +'<div class="qr-label">'+idLabel(v)+'</div>'
+      +'<div id="qrimp_'+v.id.replace(/[^a-zA-Z0-9]/g,'')+'"></div>'
+      +'<div class="qr-sub">'+v.nome+'<br>'+v.categoria+'</div>'
+      +'</div>';
+  });
+  html+='</div>';
+  html+='<button type="button" class="btn btn-ci" onclick="window.print()" style="margin-top:10px">🖨 Imprimir QR Codes</button>';
+  el.innerHTML=html;
+  setTimeout(function(){
+    novos.forEach(function(v){
+      var divId='qrimp_'+v.id.replace(/[^a-zA-Z0-9]/g,'');
+      var div=document.getElementById(divId);
+      if(div) new QRCode(div,{text:v.id,width:100,height:100,colorDark:'#1A2D6B',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+    });
+  },200);
+}
+
+function mostrarImportResult(msg,sucesso){
+  var el=document.getElementById('import-resultado');
+  el.style.display='block';
+  el.innerHTML='<div class="alerta '+(sucesso?'alerta-vd':'alerta-vm')+'">'+msg+'</div>';
+}
+
+// ── SCANNER ──────────────────────────────────────────────────
+function iniciarScanner(elementId,onSucesso){
+  var scanner=new Html5Qrcode(elementId);
+  scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:250,height:250}},
+    function(texto){ scanner.stop().then(function(){onSucesso(texto);}).catch(function(){onSucesso(texto);}); },
+    function(){}
+  ).catch(function(){});
+  return scanner;
+}
+
+// ── PORTARIA ENTRADA ─────────────────────────────────────────
+function resetLeitura(){
+  vAtivo=null; acomps=[];
+  document.getElementById('lr-camera').style.display='block';
+  document.getElementById('lr-form').style.display='none';
+  var mw=document.getElementById('lr-manual-wrap');if(mw)mw.style.display='none';
+  var bm=document.getElementById('btn-abrir-manual');if(bm)bm.textContent='📋 Selecionar veículo manualmente';
+  var bm2=document.getElementById('lr-busca-manual');if(bm2)bm2.value='';
+  document.getElementById('lr-ok').style.display='none';
+}
+
+function abrirTelaLeitura(){
+  resetLeitura(); ir('tela-leitura');
+  var lista=document.getElementById('lr-lista-manual');
+  lista.innerHTML=veiculos.map(function(v){
+    return '<button type="button" class="item-lista" data-vid="'+v.id+'">'
+      +'<span class="plq">'+idLabel(v)+'</span>'
+      +'<div class="il-info"><span class="il-nm">'+v.nome+'</span><span class="il-sb">'+v.categoria+'</span></div>'
+      +'<span style="font-size:20px;color:#ccc">›</span></button>';
+  }).join('');
+  lista.querySelectorAll('.item-lista').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var v=veiculos.find(function(x){return x.id===btn.getAttribute('data-vid');});
+      if(v) abrirFormEntrada(v);
+    });
+  });
+  setTimeout(function(){try{scannerEntrada=iniciarScanner('qr-reader-entrada',function(txt){
+    var v=veiculos.find(function(x){return x.id===txt;});
+    if(!v){alert('QR Code não reconhecido.');return;}
+    abrirFormEntrada(v);
+  });}catch(e){}},400);
+}
+
+function abrirFormEntrada(v){
+  setTimeout(inicializarSetorBusca, 100);
+  pararScanners(); vAtivo=v;
+  document.getElementById('lr-camera').style.display='none';
+  document.getElementById('lr-vcard').innerHTML=vcHTML(v);
+  document.getElementById('lr-guarda-box').textContent='👤 Guarda: '+userLogado.nome;
+  ['lr-cond','lr-crac','lr-obs'].forEach(function(id){document.getElementById(id).value='';});
+  fotoBase64 = null;
+  document.getElementById('foto-preview').style.display='none';
+  document.getElementById('foto-img').src='';
+  document.getElementById('foto-camera').value='';
+  document.getElementById('foto-galeria').value='';;
+  document.getElementById('lr-setor').value='';
+  var lrb=document.getElementById('lr-setor-busca');if(lrb)lrb.value='';
+  var lrv=document.getElementById('lr-setor-val');if(lrv){lrv.style.display='none';lrv.textContent='';};
+  document.getElementById('lr-tags').innerHTML='';
+  acomps=[];
+  document.getElementById('lr-form').style.display='block';
+}
+
+document.getElementById('btn-add-ac').addEventListener('click',function(){
+  var inp=document.getElementById('lr-ac');
+  var n=(inp.value||'').trim(); if(!n)return;
+  acomps.push(n); renderTags(); inp.value='';
+});
+document.getElementById('lr-ac').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('btn-add-ac').click();});
+function renderTags(){
+  document.getElementById('lr-tags').innerHTML=acomps.map(function(x,i){
+    return '<span class="tag">'+x+'<button type="button" data-i="'+i+'">×</button></span>';
+  }).join('');
+  document.querySelectorAll('#lr-tags .tag button').forEach(function(b){
+    b.addEventListener('click',function(){acomps.splice(parseInt(b.getAttribute('data-i')),1);renderTags();});
+  });
+}
+
+document.getElementById('btn-dar-ok').addEventListener('click',function(){
+  var cond=(document.getElementById('lr-cond').value||'').trim();
+  var crac=(document.getElementById('lr-crac').value||'').trim();
+  var setor=document.getElementById('lr-setor').value;
+  if(!cond||!crac||!setor){alert('Preencha condutor, crachá e setor.');return;}
+  var vi={
+    id:'VI'+Date.now(), vid:vAtivo.id,
+    condutor:cond, cracha:crac, setor:setor,
+    acompanhantes:acomps.slice(), status:'pendente_setor',
+    guardaId:userLogado.id, guardaNome:userLogado.nome,
+    obs:(document.getElementById('lr-obs').value||'').trim(),
+    foto: fotoBase64 || null,
+    assinatura:false, horaEntrada:agora(), horaSaida:null, data:hoje()
+  };
+  salvarVisita(vi); viAtiva=vi;
+  document.getElementById('lr-form').style.display='none';
+  document.getElementById('lr-ok-vcard').innerHTML=vcHTML(vAtivo)
+    +'<div class="card" style="margin-top:-8px;border-radius:0 0 10px 10px">'
+    +'<div style="font-size:13px;color:#555">Condutor: <strong>'+vi.condutor+'</strong> • Crachá: '+vi.cracha+'</div>'
+    +'<div style="font-size:13px;color:#555">Setor: '+vi.setor+' • Entrou: '+vi.horaEntrada+'</div>'
+    +(vi.obs?'<div style="font-size:13px;color:#e65100;margin-top:4px">📝 Obs: <strong>'+vi.obs+'</strong></div>':'')
+    +'</div>';
+  document.getElementById('lr-ok').style.display='block';
+});
+document.getElementById('btn-cancelar-lr').addEventListener('click',function(){abrirTelaLeitura();});
+document.getElementById('btn-proximo-veiculo').addEventListener('click',function(){abrirTelaLeitura();});
+
+// ── PAINEL DO SETOR ──────────────────────────────────────────
+function abrirTelaSetor(){
+  document.getElementById('setor-opcoes').style.display='block';
+  document.getElementById('sig-wrap').style.display='none';
+  renderSetor(); ir('tela-setor');
+  setTimeout(function(){try{scannerSetor=iniciarScanner('qr-reader-setor',function(txt){
+    var v=veiculos.find(function(x){return x.id===txt;});
+    if(!v){alert('QR não reconhecido.');return;}
+    var vi=visitas.filter(function(x){return x.vid===v.id&&x.data===hoje()&&x.status==='pendente_setor';}).slice(-1)[0];
+    if(!vi){alert('Nenhuma visita pendente para este veículo hoje.');return;}
+    abrirAssinatura(vi.id);
+  });}catch(e){}},400);
+}
+
+function renderSetor(){
+  var filt=document.getElementById('filt-setor').value;
+  var el=document.getElementById('setor-lista');
+  var lista=visitas.filter(function(vi){return vi.status==='pendente_setor'&&vi.data===hoje();});
+  if(filt) lista=lista.filter(function(vi){return vi.setor===filt;});
+  if(!lista.length){el.innerHTML='<div class="vazio">Nenhum veículo pendente</div>';return;}
+  el.innerHTML=lista.map(function(vi){
+    var v=veiculos.find(function(x){return x.id===vi.vid;})||{};
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #eee">'
+      +'<span class="plq">'+idLabel(v)+'</span>'
+      +'<div style="flex:1"><div style="font-size:14px;font-weight:bold">'+v.nome+'</div>'
+      +'<div style="font-size:12px;color:#666">'+vi.condutor+' • '+vi.setor+' • '+vi.horaEntrada+'</div></div>'
+      +'<button type="button" class="btn-pendente" data-viid="'+vi.id+'" style="width:auto;padding:10px 14px;font-size:13px;animation:none;box-shadow:none;border-radius:8px">🔴 Assinar</button>'
+      +'</div>';
+  }).join('');
+  document.querySelectorAll('#setor-lista .btn-pendente').forEach(function(btn){
+    btn.addEventListener('click',function(){abrirAssinatura(btn.getAttribute('data-viid'));});
+  });
+}
+document.getElementById('filt-setor').addEventListener('change',renderSetor);
+
+function abrirAssinatura(viId){
+  pararScanners();
+  viAtiva=visitas.find(function(vi){return vi.id===viId;});
+  var v=veiculos.find(function(x){return x.id===viAtiva.vid;})||{};
+  document.getElementById('setor-opcoes').style.display='none';
+  document.getElementById('sig-vcard').innerHTML= viAtiva.terceiro
+    ? '<div class="vcard"><div class="vcard-cat">Terceiro</div><div class="vcard-id">'+viAtiva.placa+'</div><div class="vcard-grade"><div style="grid-column:1/-1"><div class="vcard-lbl">Condutor</div><div class="vcard-val">'+viAtiva.condutor+'</div></div>'+(viAtiva.empresa?'<div style="grid-column:1/-1"><div class="vcard-lbl">Empresa</div><div class="vcard-val">'+viAtiva.empresa+'</div></div>':'')+'</div></div>'
+    : vcHTML(v);
+  document.getElementById('sig-detalhes').innerHTML=
+    'Condutor: <strong>'+viAtiva.condutor+'</strong> • Crachá: '+viAtiva.cracha+'<br>'
+    +'Setor: '+viAtiva.setor+' • Entrou: '+viAtiva.horaEntrada+' • Guarda: '+viAtiva.guardaNome
+    +(viAtiva.foto?'<div style="margin-top:8px"><img src="'+viAtiva.foto+'" style="width:100%;border-radius:8px;border:1px solid var(--borda)"></div>':'')
+    +'<div style="margin-top:8px;padding:8px 10px;background:#fff3e0;border-radius:8px;border-left:4px solid #e65100">'
+    +'<div style="font-size:11px;font-weight:bold;color:#e65100;margin-bottom:2px">📝 OBSERVAÇÕES</div>'
+    +'<div style="font-size:14px;color:#333;font-weight:bold">'+(viAtiva.obs&&viAtiva.obs.trim()!==''?viAtiva.obs:'Nenhuma observação')+'</div></div>';
+  document.getElementById('sig-info').textContent='Responsável: '+userLogado.nome;
+  document.getElementById('sig-wrap').style.display='block';
+  sigEl=document.getElementById('sig-canvas');
+  sigCtx=sigEl.getContext('2d');
+  sigEl.width=sigEl.offsetWidth||400; sigEl.height=160;
+  sigCtx.clearRect(0,0,sigEl.width,sigEl.height);
+  sigCtx.strokeStyle='#000000'; sigCtx.lineWidth=2.5; sigCtx.lineCap='round'; sigCtx.lineJoin='round'; sigDraw=false;
+  function gp(e){var r=sigEl.getBoundingClientRect();if(e.touches)return{x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top};return{x:e.offsetX,y:e.offsetY};}
+  sigEl.onmousedown=function(e){sigDraw=true;var p=gp(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);};
+  sigEl.onmousemove=function(e){if(!sigDraw)return;var p=gp(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();};
+  sigEl.onmouseup=sigEl.onmouseleave=function(){sigDraw=false;};
+  sigEl.ontouchstart=function(e){e.preventDefault();sigDraw=true;var p=gp(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);};
+  sigEl.ontouchmove=function(e){e.preventDefault();if(!sigDraw)return;var p=gp(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();};
+  sigEl.ontouchend=function(){sigDraw=false;};
+  document.getElementById('sig-wrap').scrollIntoView({behavior:'smooth'});
+}
+
+document.getElementById('btn-limpar-sig').addEventListener('click',function(){if(sigCtx&&sigEl)sigCtx.clearRect(0,0,sigEl.width,sigEl.height);});
+document.getElementById('btn-confirmar-sig').addEventListener('click',function(){
+  if(!viAtiva)return;
+  var b=document.createElement('canvas');b.width=sigEl.width;b.height=sigEl.height;
+  if(sigEl.toDataURL()===b.toDataURL()){alert('Faça a assinatura antes de confirmar.');return;}
+  viAtiva.status='liberado'; viAtiva.assinatura=true; viAtiva.horaSig=agora();
+  viAtiva.responsavelSetor=userLogado.nome; viAtiva.assinaturaImg=sigEl.toDataURL();
+  salvarVisita(viAtiva); atualizarContador();
+  var v=veiculos.find(function(x){return x.id===viAtiva.vid;})||{};
+  document.getElementById('sig-wrap').innerHTML=
+    '<div class="alerta alerta-vd" style="font-size:16px">✓ Assinatura coletada! '+idLabel(v)+' liberado para sair.</div>'
+    +vcHTML(v)
+    +'<button type="button" class="btn btn-az" id="btn-prox-ass">Próximo veículo</button>';
+  document.getElementById('btn-prox-ass').addEventListener('click',function(){abrirTelaSetor();});
+  viAtiva=null;
+});
+document.getElementById('btn-cancelar-sig').addEventListener('click',function(){
+  document.getElementById('sig-wrap').style.display='none';
+  document.getElementById('setor-opcoes').style.display='block';
+  abrirTelaSetor();
+});
+
+// ── PORTARIA SAÍDA ───────────────────────────────────────────
+function resetSaida(){
+  vAtivo=null; viAtiva=null;
+  document.getElementById('sa-camera').style.display='block';
+  var d=document.getElementById('sa-dados'); d.style.display='none'; d.innerHTML='';
+}
+
+function abrirTelaSaida(){
+  resetSaida(); ir('tela-saida');
+  var ids={};
+  visitas.filter(function(vi){return vi.data===hoje()&&vi.status!=='saiu'&&vi.status!=='negado';}).forEach(function(vi){ids[vi.vid]=true;});
+  var lista=veiculos.filter(function(v){return ids[v.id];});
+  var el=document.getElementById('sa-lista-manual');
+  var bm={pendente_setor:'badge-am',liberado:'badge-vd'};
+  var lm={pendente_setor:'⚠ Pendente','liberado':'✓ Liberado'};
+  el.innerHTML=lista.map(function(v){
+    var vi=visitas.filter(function(x){return x.vid===v.id&&x.data===hoje()&&x.status!=='negado';}).slice(-1)[0];
+    return '<button type="button" class="item-lista" data-vid="'+v.id+'">'
+      +'<span class="plq">'+idLabel(v)+'</span>'
+      +'<div class="il-info"><span class="il-nm">'+v.nome+'</span><span class="il-sb">'+(vi?vi.condutor:'—')+'</span></div>'
+      +'<span class="badge '+(vi?(bm[vi.status]||'badge-gz'):'badge-gz')+'">'+(vi?(lm[vi.status]||vi.status):'—')+'</span>'
+      +'</button>';
+  }).join('');
+  el.querySelectorAll('.item-lista').forEach(function(btn){
+    btn.addEventListener('click',function(){mostrarChecklist(btn.getAttribute('data-vid'));});
+  });
+  setTimeout(function(){try{scannerSaida=iniciarScanner('qr-reader-saida',function(txt){
+    var v=veiculos.find(function(x){return x.id===txt;});
+    if(!v){alert('QR não reconhecido.');return;}
+    mostrarChecklist(v.id);
+  });}catch(e){}},400);
+}
+
+function mostrarChecklist(vid){
+  pararScanners();
+  vAtivo=veiculos.find(function(v){return v.id===vid;});
+  var vi=visitas.filter(function(x){return x.vid===vid&&x.data===hoje()&&x.status!=='negado';}).slice(-1)[0];
+  viAtiva=vi;
+  document.getElementById('sa-camera').style.display='none';
+  var el=document.getElementById('sa-dados'); el.style.display='block';
+  if(!vi){
+    el.innerHTML='<div class="alerta alerta-vm">Nenhuma entrada registrada hoje para este veículo.</div>'
+      +'<button type="button" class="btn btn-gz" id="btn-fechar-sa">← Voltar</button>';
+    document.getElementById('btn-fechar-sa').addEventListener('click',function(){abrirTelaSaida();});
+    return;
+  }
+  var liberado=vi.status==='liberado';
+  var sigImg=vi.assinaturaImg?'<img src="'+vi.assinaturaImg+'" style="max-width:100%;border:1px solid #ddd;border-radius:8px;margin-top:8px">':'<div style="font-size:13px;color:#c62828;margin-top:6px">⚠ Sem assinatura</div>';
+  el.innerHTML=
+    vcHTML(vAtivo)
+    +'<div class="card"><div class="secao">Dados da visita</div>'
+    +'<div style="font-size:14px;margin-bottom:6px">Condutor: <strong>'+vi.condutor+'</strong></div>'
+    +'<div style="font-size:13px;color:#666;margin-bottom:4px">Crachá: '+vi.cracha+'</div>'
+    +'<div style="font-size:13px;color:#666;margin-bottom:4px">Setor: '+vi.setor+'</div>'
+    +'<div style="font-size:13px;color:#666;margin-bottom:4px">Entrou: '+vi.horaEntrada+'</div>'
+    +'<div style="font-size:13px;color:#666;margin-bottom:4px">Guarda: '+vi.guardaNome+'</div>'
+    +'<div style="margin-top:8px;padding:10px;background:#fff3e0;border-radius:8px;border-left:4px solid #e65100">'
+    +'<div style="font-size:11px;font-weight:bold;color:#e65100;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">📝 Observações do guarda</div>'
+    +'<div style="font-size:14px;color:#333;font-weight:bold">'+(vi.obs&&vi.obs.trim()!==''?vi.obs:'Nenhuma observação registrada')+'</div>'
+    +'</div>'
+    +'</div>'
+    +'<div class="card"><div class="secao">Assinatura do setor</div>'
+    +(liberado?'<div style="font-size:13px;color:#2e7d32;font-weight:bold;margin-bottom:8px">✓ Liberado por: '+vi.responsavelSetor+' às '+vi.horaSig+'</div>':'<div style="font-size:13px;color:#c62828;font-weight:bold;margin-bottom:8px">⏳ Aguardando assinatura</div>')
+    +sigImg+'</div>'
+    +(liberado
+      ?'<button type="button" class="btn btn-vd" id="btn-liberar-saida" style="font-size:18px;padding:18px">✓ LIBERAR SAÍDA</button>'
+      :'<div class="alerta alerta-am">⚠ O setor ainda não assinou.</div><button type="button" class="btn btn-gz" id="btn-fechar-sa">← Voltar</button>');
+  var bl=document.getElementById('btn-liberar-saida');
+  if(bl) bl.addEventListener('click',function(){
+    viAtiva.status='saiu'; viAtiva.horaSaida=agora(); viAtiva.guardaSaida=userLogado.nome;
+    salvarVisita(viAtiva); atualizarContador();
+    el.innerHTML='<div class="alerta alerta-vd" style="font-size:16px">✓ Saída de <strong>'+idLabel(vAtivo)+'</strong> registrada às '+viAtiva.horaSaida+'.</div>'
+      +'<button type="button" class="btn btn-az" id="btn-nova-saida">Próxima saída</button>';
+    document.getElementById('btn-nova-saida').addEventListener('click',function(){abrirTelaSaida();});
+    vAtivo=null; viAtiva=null;
+  });
+  var bf=document.getElementById('btn-fechar-sa');
+  if(bf) bf.addEventListener('click',function(){abrirTelaSaida();});
+}
+
+// ── PAINEL DO DIA ────────────────────────────────────────────
+function renderPainel(){
+  var hj=hoje();
+  document.getElementById('painel-data').textContent='Data: '+hj;
+  var vis=visitas.filter(function(v){return v.data===hj;});
+  document.getElementById('pd-total').textContent=vis.length;
+  document.getElementById('pd-saiu').textContent=vis.filter(function(v){return v.status==='saiu';}).length;
+  document.getElementById('pd-dentro').textContent=vis.filter(function(v){return v.status!=='saiu'&&v.status!=='negado';}).length;
+  document.getElementById('pd-pendente').textContent=vis.filter(function(v){return v.status==='pendente_setor';}).length;
+  var setores={};
+  vis.forEach(function(v){if(!v.setor)return;if(!setores[v.setor])setores[v.setor]=0;setores[v.setor]++;});
+  var elSet=document.getElementById('pd-setores');
+  var keys=Object.keys(setores);
+  if(!keys.length){elSet.innerHTML='<div class="vazio">Sem movimentação</div>';}
+  else{
+    var max=Math.max.apply(null,keys.map(function(k){return setores[k];}));
+    elSet.innerHTML=keys.sort(function(a,b){return setores[b]-setores[a];}).map(function(k){
+      var pct=Math.round((setores[k]/max)*100);
+      return '<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="font-weight:bold">'+k+'</span><span style="color:#666">'+setores[k]+'</span></div><div style="background:#f0f0f0;border-radius:6px;height:10px"><div style="background:#1a56a0;height:10px;border-radius:6px;width:'+pct+'%"></div></div></div>';
+    }).join('');
+  }
+  var elTL=document.getElementById('pd-timeline');
+  if(!vis.length){elTL.innerHTML='<div class="vazio">Sem movimentação</div>';return;}
+  var stL={pendente_setor:'⏳',liberado:'✅',saiu:'✔',negado:'❌'};
+  var stC={pendente_setor:'#e65100',liberado:'#1a56a0',saiu:'#2e7d32',negado:'#c62828'};
+  elTL.innerHTML=vis.slice().sort(function(a,b){return a.horaEntrada>b.horaEntrada?1:-1;}).map(function(vi){
+    var v=veiculos.find(function(x){return x.id===vi.vid;})||{};
+    var cor=stC[vi.status]||'#666';
+    return '<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #eee">'
+      +'<div style="font-family:monospace;font-size:13px;color:#666;white-space:nowrap">'+vi.horaEntrada+'</div>'
+      +'<div style="width:3px;background:'+cor+';border-radius:3px;flex-shrink:0"></div>'
+      +'<div><div style="font-size:14px;font-weight:bold">'+idLabel(v)+'</div>'
+      +'<div style="font-size:12px;color:#666">'+vi.condutor+' • '+vi.setor+'</div>'
+      +'<div style="font-size:12px;color:'+cor+';font-weight:bold">'+(stL[vi.status]||vi.status)+(vi.horaSaida?' • Saiu: '+vi.horaSaida:'')+'</div>'
+      +'</div></div>';
+  }).join('');
+}
+
+// ── HISTÓRICO ────────────────────────────────────────────────
+// Calcula tempo entre duas horas "HH:MM"
+function calcTempo(entrada, saida) {
+  if (!entrada) return '—';
+  var toMin = function(h){ var p=h.split(':'); return parseInt(p[0])*60+parseInt(p[1]); };
+  var fim = saida ? toMin(saida) : toMin(agora());
+  var diff = fim - toMin(entrada);
+  if (diff < 0) diff = 0;
+  var h = Math.floor(diff/60), m = diff%60;
+  return h>0 ? h+'h '+m+'min' : m+'min';
+}
+
+var listaFiltradaAtual = [];
+
+function renderHistorico(){
+  var data=document.getElementById('hist-data').value;
+  var setor=document.getElementById('hist-setor').value;
+  var busca=(document.getElementById('hist-busca').value||'').trim().toLowerCase();
+  var el=document.getElementById('hist-lista');
+  var lista=visitas.slice();
+  if(data){var dataBR=data.split('-').reverse().join('/');lista=lista.filter(function(v){return v.data===dataBR;});}
+  if(setor) lista=lista.filter(function(v){return v.setor===setor;});
+  if(busca){lista=lista.filter(function(vi){var v=veiculos.find(function(x){return x.id===vi.vid;})||{};return idLabel(v).toLowerCase().indexOf(busca)>-1||(vi.condutor||'').toLowerCase().indexOf(busca)>-1;});}
+  listaFiltradaAtual = lista.slice();
+  if(!lista.length){el.innerHTML='<div class="vazio">Nenhum registro encontrado</div>';return;}
+  lista=lista.sort(function(a,b){return a.data>b.data?-1:a.data<b.data?1:a.horaEntrada>b.horaEntrada?-1:1;});
+  var stC={pendente_setor:'#e65100',liberado:'#1a56a0',saiu:'#2e7d32',negado:'#c62828'};
+  var stL={pendente_setor:'⏳ Aguardando',liberado:'✅ Liberado',saiu:'✔ Saiu',negado:'❌ Negado'};
+  el.innerHTML=lista.map(function(vi){
+    var v=veiculos.find(function(x){return x.id===vi.vid;})||{};
+    var cor=stC[vi.status]||'#666';
+    var tempo = calcTempo(vi.horaEntrada, vi.horaSaida||null);
+    var tempoLabel = vi.horaSaida ? tempo+' (total)' : tempo+' (em curso)';
+    return '<div class="card" style="margin-bottom:10px;border-left:4px solid '+cor+'">'
+      // Header: placa + status + botão excluir
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+      +'<span class="plq">'+idLabel(v)+'</span>'
+      +'<div style="display:flex;align-items:center;gap:8px">'
+      +'<span style="font-size:11px;font-weight:bold;color:'+cor+'">'+(stL[vi.status]||vi.status)+'</span>'
+      +'<button type="button" class="btn btn-vm btn-sm" data-viid="'+vi.id+'" style="padding:4px 10px;font-size:12px;margin-top:0">🗑</button>'
+      +'</div></div>'
+      // Dados
+      +'<div style="font-size:14px;font-weight:bold;margin-bottom:4px">'+v.nome+' — '+(v.categoria||'—')+'</div>'
+      +'<div style="font-size:13px;color:#555;margin-bottom:2px">Condutor: <strong>'+vi.condutor+'</strong> • Crachá: '+vi.cracha+'</div>'
+      +'<div style="font-size:13px;color:#555;margin-bottom:2px">Setor: '+vi.setor+' • Data: '+vi.data+'</div>'
+      +'<div style="font-size:13px;color:#555;margin-bottom:4px">Entrada: '+vi.horaEntrada+' • Guarda: '+vi.guardaNome+'</div>'
+      // Tempo de permanência em destaque
+      +'<div style="background:#e3f2fd;border-radius:8px;padding:8px 12px;margin-bottom:4px;display:flex;align-items:center;gap:8px">'
+      +'<span style="font-size:16px">⏱</span>'
+      +'<div><div style="font-size:11px;color:#666;font-weight:bold;text-transform:uppercase;letter-spacing:.04em">Permanência</div>'
+      +'<div style="font-size:15px;font-weight:bold;color:#1a56a0">'+tempoLabel+'</div></div>'
+      +'</div>'
+      +(vi.horaSaida?'<div style="font-size:13px;color:#2e7d32;font-weight:bold">Saída: '+vi.horaSaida+(vi.guardaSaida?' • '+vi.guardaSaida:'')+'</div>':'')
+      +(vi.responsavelSetor?'<div style="font-size:13px;color:#1a56a0">Liberado: '+vi.responsavelSetor+' às '+vi.horaSig+'</div>':'')
+      +(vi.obs&&vi.obs.trim()?'<div style="font-size:13px;color:var(--am);margin-top:4px">📝 '+vi.obs+'</div>':'')
+      +(vi.foto?'<div style="margin-top:8px"><div style="font-size:11px;color:var(--txt2);font-weight:bold;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">📷 Foto</div><img src="'+vi.foto+'" style="width:100%;border-radius:8px;border:1px solid var(--borda)"></div>':'')
+      +'</div>';
+  }).join('');
+
+  // Botões excluir um a um
+  document.querySelectorAll('#hist-lista .btn-vm[data-viid]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      if(!confirm('Excluir este registro?')) return;
+      excluirVisita(btn.getAttribute('data-viid'));
+    });
+  });
+}
+
+function excluirVisita(viId) {
+  if(!fbPronto){alert('Firebase não conectado.');return;}
+  window._fb.set(window._fb.ref(window._fb.db,'visitas/'+viId), null);
+  visitas = visitas.filter(function(v){return v.id!==viId;});
+  atualizarContador();
+  renderHistorico();
+}
+
+// ── ADMIN ────────────────────────────────────────────────────
+function renderAdmin(){
+  var el=document.getElementById('ad-lista');
+  el.innerHTML=usuarios.map(function(u){
+    var isMe=u.id===userLogado.id;
+    return '<div class="item-lista" style="cursor:default">'
+      +'<div class="il-info"><span class="il-nm">'+u.nome+(isMe?' (você)':'')+'</span><span class="il-sb">@'+u.usuario+' • '+labelPerfil(u.perfil)+'</span></div>'
+      +(!isMe&&u.id!=='u0'?'<button type="button" class="btn btn-vm btn-sm" style="padding:6px 12px;font-size:12px" data-uid="'+u.id+'">Remover</button>':'')
+      +'</div>';
+  }).join('');
+  document.querySelectorAll('#ad-lista .btn-vm').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      if(!confirm('Remover?'))return;
+      usuarios=usuarios.filter(function(u){return u.id!==btn.getAttribute('data-uid');});
+      salvarUsuarios(); renderAdmin();
+    });
+  });
+}
+document.getElementById('btn-criar-user').addEventListener('click',function(){
+  var nome=(document.getElementById('ad-nome').value||'').trim();
+  var user=(document.getElementById('ad-user').value||'').trim().toLowerCase();
+  var senha=(document.getElementById('ad-senha').value||'');
+  var perfil=document.getElementById('ad-perfil').value;
+  if(!nome||!user||!senha){alert('Preencha nome, usuário e senha.');return;}
+  if(usuarios.find(function(u){return u.usuario===user;})){alert('Usuário já existe.');return;}
+  usuarios.push({id:'u'+Date.now(),nome:nome,usuario:user,senha:senha,perfil:perfil});
+  salvarUsuarios();
+  ['ad-nome','ad-user','ad-senha'].forEach(function(id){document.getElementById(id).value='';});
+  renderAdmin(); alert('Usuário criado!');
+});
+
+// ── SETOR COM PESQUISA ───────────────────────────────────────
+function setupSetorBusca(inputId, selectId, valId, onChange) {
+  var inp = document.getElementById(inputId);
+  var sel = document.getElementById(selectId);
+  var val = document.getElementById(valId);
+  if (!inp || !sel) return;
+
+  var todosOpts = Array.from(sel.options);
+
+  inp.addEventListener('focus', function() {
+    sel.style.display = 'block';
+    filtrarOpts('');
+  });
+
+  inp.addEventListener('input', function() {
+    sel.style.display = 'block';
+    filtrarOpts(this.value);
+  });
+
+  function filtrarOpts(termo) {
+    var t = termo.toLowerCase();
+    Array.from(sel.options).forEach(function(opt) {
+      opt.style.display = (!t || opt.text.toLowerCase().indexOf(t) > -1) ? '' : 'none';
+    });
+  }
+
+  sel.addEventListener('change', function() {
+    var txt = sel.options[sel.selectedIndex].text;
+    inp.value = sel.value ? txt : '';
+    sel.style.display = 'none';
+    if (val) {
+      val.style.display = sel.value ? 'block' : 'none';
+      val.textContent = sel.value ? '✓ ' + txt : '';
+    }
+    if (onChange) onChange(sel.value);
+  });
+
+  // Fechar ao clicar fora
+  document.addEventListener('click', function(e) {
+    if (e.target !== inp && e.target !== sel) {
+      sel.style.display = 'none';
+    }
+  });
+}
+
+// Inicializa todos os selects de setor após login
+function inicializarSetores() {
+  // lr-setor agora usa inicializarSetorBusca()
+  setupSetorBusca('filt-setor-busca', 'filt-setor', 'filt-setor-val', function(){ renderSetor(); });
+  setupSetorBusca('hist-setor-busca', 'hist-setor', 'hist-setor-val', null);
+}
+
+// ── FOTO DO VEÍCULO ──────────────────────────────────────────
+var fotoBase64 = null;
+
+function processarFoto(file) {
+  if (!file) return;
+  // Reduz tamanho para não pesar muito no Firebase
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      var MAX = 800;
+      var w = img.width, h = img.height;
+      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+      if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      fotoBase64 = canvas.toDataURL('image/jpeg', 0.7);
+      document.getElementById('foto-img').src = fotoBase64;
+      document.getElementById('foto-preview').style.display = 'block';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── GERENCIADOR DE SETORES ──────────────────────────────────
+var setoresLista = JSON.parse(localStorage.getItem('pd_setores') || 'null');
+if (!setoresLista) {
+  setoresLista = ['Produção', 'Almoxarifado', 'Manutenção', 'Administrativo', 'Refeitório', 'TI', 'Segurança', 'RH', 'Expedição', 'Logística', 'Qualidade', 'Engenharia', 'Compras', 'Financeiro', 'Jurídico', 'Marketing', 'Comercial', 'Diretoria', 'Portaria', 'Estoque', 'Laboratório', 'Treinamento', 'Limpeza', 'Facilities'];
+  localStorage.setItem('pd_setores', JSON.stringify(setoresLista));
+}
+
+function salvarSetores() {
+  localStorage.setItem('pd_setores', JSON.stringify(setoresLista));
+}
+
+function renderSetorLista(filtro) {
+  var el = document.getElementById('lr-setor-lista');
+  if (!el) return;
+  var lista = setoresLista.filter(function(s) {
+    return !filtro || s.toLowerCase().indexOf(filtro.toLowerCase()) > -1;
+  });
+  if (!lista.length) {
+    el.innerHTML = '<div style="padding:10px;font-size:13px;color:var(--txt2);text-align:center">Nenhum setor encontrado</div>';
+    return;
+  }
+  el.innerHTML = lista.map(function(s) {
+    return '<button type="button" data-setor="'+s+'" style="display:block;width:100%;text-align:left;padding:10px 14px;background:none;border:none;border-bottom:1px solid var(--borda);color:#fff;font-size:14px;cursor:pointer;font-family:Arial,sans-serif">'
+      + s + '</button>';
+  }).join('');
+  el.querySelectorAll('button[data-setor]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var s = btn.getAttribute('data-setor');
+      document.getElementById('lr-setor').value = s;
+      document.getElementById('lr-setor-busca').value = '';
+      document.getElementById('lr-setor-lista').innerHTML = '';
+      var sel = document.getElementById('lr-setor-selecionado');
+      sel.style.display = 'block';
+      sel.textContent = '✓ ' + s;
+    });
+    btn.addEventListener('mouseover', function() { this.style.background = 'rgba(46,204,113,.1)'; });
+    btn.addEventListener('mouseout',  function() { this.style.background = 'none'; });
+  });
+}
+
+function inicializarSetorBusca() {
+  var inp = document.getElementById('lr-setor-busca');
+  if (!inp) return;
+  renderSetorLista('');
+  inp.addEventListener('input', function() {
+    renderSetorLista(this.value);
+    document.getElementById('lr-setor').value = '';
+    document.getElementById('lr-setor-selecionado').style.display = 'none';
+  });
+  inp.addEventListener('focus', function() { renderSetorLista(this.value); });
+
+  var btnAdd = document.getElementById('btn-add-setor');
+  if (btnAdd) {
+    btnAdd.addEventListener('click', function() {
+      var novo = (inp.value || '').trim();
+      if (!novo) { alert('Digite o nome do novo setor.'); return; }
+      if (setoresLista.indexOf(novo) > -1) { alert('Setor já existe!'); return; }
+      setoresLista.push(novo);
+      salvarSetores();
+      // Seleciona automaticamente
+      document.getElementById('lr-setor').value = novo;
+      inp.value = '';
+      document.getElementById('lr-setor-lista').innerHTML = '';
+      var sel = document.getElementById('lr-setor-selecionado');
+      sel.style.display = 'block';
+      sel.textContent = '✓ ' + novo + ' (novo)';
+      alert('Setor "' + novo + '" adicionado!');
+    });
+  }
+}
+
+// ── PERMISSÕES POR PERFIL ────────────────────────────────────
+// admin    → tudo
+// guarda   → portaria entrada, saída, terceiros
+// setor    → somente painel setor
+function aplicarPermissoes() {
+  var p = userLogado.perfil;
+  var mapa = {
+    'mn-cadastro':   ['admin'],
+    'mn-veiculos':   ['admin'],
+    'mn-leitura':    ['admin','guarda'],
+    'mn-setor':      ['admin','setor','usuario'],
+    'mn-saida':      ['admin','guarda'],
+    'mn-painel':     ['admin'],
+    'mn-historico':  ['admin'],
+    'mn-terceiros':  ['admin','guarda'],
+    'mn-admin':      ['admin']
+  };
+  Object.keys(mapa).forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (mapa[id].indexOf(p) > -1) {
+      el.style.display = '';
+      el.disabled = false;
+      el.style.opacity = '1';
+    } else {
+      el.style.display = 'none';
+    }
+  });
+  // Se for setor, vai direto para o painel
+  if (p === 'setor' || p === 'usuario') {
+    setTimeout(function(){ abrirTelaSetor(); }, 300);
+  }
+}
+
+// ── TERCEIROS ─────────────────────────────────────────────────
+var tercFoto = null;
+
+function abrirTelaTerceiros() {
+  document.getElementById('terc-pesquisa').style.display = 'block';
+  document.getElementById('terc-ok').style.display = 'none';
+  resetTercForm();
+  ir('tela-terceiros');
+  setTimeout(function(){ inicializarSetorTerceiros(); renderTercBusca(''); }, 200);
+}
+
+function resetTercForm() {
+  ['terc-placa','terc-cond','terc-empresa','terc-motivo','terc-doc','terc-obs'].forEach(function(id){
+    var e = document.getElementById(id); if(e) e.value='';
+  });
+  document.getElementById('terc-setor').value = '';
+  document.getElementById('terc-setor-busca').value = '';
+  document.getElementById('terc-setor-lista').innerHTML = '';
+  document.getElementById('terc-setor-sel').style.display = 'none';
+  document.getElementById('terc-setor-sel').textContent = '';
+  document.getElementById('terc-foto-preview').style.display = 'none';
+  document.getElementById('terc-foto-img').src = '';
+  document.getElementById('terc-foto-camera').value = '';
+  tercFoto = null;
+  document.getElementById('terc-busca-resultado').innerHTML = '';
+  document.getElementById('terc-busca-placa').value = '';
+}
+
+function inicializarSetorTerceiros() {
+  var inp = document.getElementById('terc-setor-busca');
+  var el  = document.getElementById('terc-setor-lista');
+  if (!inp || !el) return;
+  renderSetorListaEl(el, '');
+  inp.addEventListener('input', function(){ renderSetorListaEl(el, this.value); });
+  inp.addEventListener('focus', function(){ renderSetorListaEl(el, this.value); });
+
+  document.getElementById('btn-terc-add-setor').addEventListener('click', function(){
+    var novo = (inp.value||'').trim();
+    if (!novo) { alert('Digite o nome do novo setor.'); return; }
+    if (setoresLista.indexOf(novo) === -1) { setoresLista.push(novo); salvarSetores(); }
+    document.getElementById('terc-setor').value = novo;
+    inp.value = ''; el.innerHTML = '';
+    var s = document.getElementById('terc-setor-sel');
+    s.style.display = 'block'; s.textContent = '✓ ' + novo;
+  });
+}
+
+function renderSetorListaEl(el, filtro) {
+  var lista = setoresLista.filter(function(s){ return !filtro || s.toLowerCase().indexOf(filtro.toLowerCase())>-1; });
+  el.innerHTML = lista.map(function(s){
+    return '<button type="button" data-s="'+s+'" style="display:block;width:100%;text-align:left;padding:10px 14px;background:none;border:none;border-bottom:1px solid var(--borda);color:#fff;font-size:14px;cursor:pointer;font-family:Arial,sans-serif">'+s+'</button>';
+  }).join('');
+  el.querySelectorAll('button[data-s]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var s = btn.getAttribute('data-s');
+      document.getElementById('terc-setor').value = s;
+      document.getElementById('terc-setor-busca').value = '';
+      el.innerHTML = '';
+      var sel = document.getElementById('terc-setor-sel');
+      sel.style.display='block'; sel.textContent='✓ '+s;
+    });
+    btn.addEventListener('mouseover', function(){ this.style.background='rgba(46,204,113,.1)'; });
+    btn.addEventListener('mouseout',  function(){ this.style.background='none'; });
+  });
+}
+
+// Foto terceiros
+document.getElementById('terc-foto-camera').addEventListener('change', function(e){
+  var file = e.target.files[0]; if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    var img = new Image();
+    img.onload = function(){
+      var canvas = document.createElement('canvas');
+      var MAX=800, w=img.width, h=img.height;
+      if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      tercFoto = canvas.toDataURL('image/jpeg',0.7);
+      document.getElementById('terc-foto-img').src = tercFoto;
+      document.getElementById('terc-foto-preview').style.display = 'block';
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+document.getElementById('btn-terc-remover-foto').addEventListener('click', function(){
+  tercFoto=null;
+  document.getElementById('terc-foto-preview').style.display='none';
+  document.getElementById('terc-foto-img').src='';
+  document.getElementById('terc-foto-camera').value='';
+});
+
+// Pesquisa de terceiros por placa
+document.getElementById('btn-terc-buscar').addEventListener('click', function(){
+  var placa = (document.getElementById('terc-busca-placa').value||'').trim().toUpperCase();
+  var el = document.getElementById('terc-busca-resultado');
+  if(!placa){el.innerHTML='<div style="font-size:13px;color:var(--vm)">Informe a placa.</div>';return;}
+  // Busca em visitas de terceiros
+  var lista = visitas.filter(function(v){ return v.terceiro && v.placa && v.placa.toUpperCase()===placa; });
+  if(!lista.length){
+    el.innerHTML='<div style="font-size:13px;color:var(--txt2);padding:10px 0">Nenhum registro encontrado para esta placa.</div>';
+    return;
+  }
+  var stC={pendente_setor:'var(--am)',liberado:'var(--azul)',saiu:'var(--neon)',negado:'var(--vm)'};
+  var stL={pendente_setor:'⏳ Aguardando',liberado:'✅ Liberado',saiu:'✔ Saiu',negado:'❌ Negado'};
+  el.innerHTML='<div style="font-size:12px;font-weight:bold;color:var(--neon);text-transform:uppercase;margin-bottom:8px">'+lista.length+' registro(s) encontrado(s)</div>'
+    +lista.slice(-5).reverse().map(function(vi){
+      return '<div class="card" style="margin-bottom:8px;border-left:3px solid var(--neon)">'
+        +'<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
+        +'<span class="plq">'+vi.placa+'</span>'
+        +'<span style="font-size:11px;font-weight:bold;color:'+(stC[vi.status]||'var(--txt2)')+'">'+(stL[vi.status]||vi.status)+'</span></div>'
+        +'<div style="font-size:13px;margin-bottom:2px">'+vi.condutor+' — '+(vi.empresa||'—')+'</div>'
+        +'<div style="font-size:12px;color:var(--txt2)">'+vi.data+' • '+vi.horaEntrada+' • '+vi.setor+'</div>'
+        +'<div style="font-size:12px;color:var(--txt2)">Motivo: '+(vi.motivo||'—')+'</div>'
+        +'</div>';
+    }).join('');
+});
+
+// Registrar terceiro
+document.getElementById('btn-terc-registrar').addEventListener('click', function(){
+  var placa  = (document.getElementById('terc-placa').value||'').trim().toUpperCase();
+  var cond   = (document.getElementById('terc-cond').value||'').trim();
+  var setor  = document.getElementById('terc-setor').value;
+  var motivo = (document.getElementById('terc-motivo').value||'').trim();
+  if(!placa){alert('Informe a placa do veículo.');return;}
+  if(!cond) {alert('Informe o nome do condutor.');return;}
+  if(!setor){alert('Selecione o setor de destino.');return;}
+  if(!motivo){alert('Informe o motivo da visita.');return;}
+  var vi = {
+    id: 'T'+Date.now(),
+    terceiro: true,
+    placa: placa,
+    condutor: cond,
+    empresa: (document.getElementById('terc-empresa').value||'').trim(),
+    motivo: motivo,
+    setor: setor,
+    doc: (document.getElementById('terc-doc').value||'').trim(),
+    obs: (document.getElementById('terc-obs').value||'').trim(),
+    foto: tercFoto || null,
+    status: 'pendente_setor',
+    guardaId: userLogado.id,
+    guardaNome: userLogado.nome,
+    assinatura: false,
+    horaEntrada: agora(), horaSaida: null, data: hoje(),
+    // sem vid pois não tem veículo cadastrado
+    vid: 'TERCEIRO'
+  };
+  salvarVisita(vi);
+  // Mostra confirmação
+  document.getElementById('terc-pesquisa').style.display='none';
+  document.getElementById('terc-ok-info').innerHTML=
+    '<div class="card">'
+    +'<div style="font-size:16px;font-weight:bold;margin-bottom:8px">'+placa+'</div>'
+    +'<div style="font-size:14px;margin-bottom:4px">'+cond+(vi.empresa?' — '+vi.empresa:'')+'</div>'
+    +'<div style="font-size:13px;color:var(--txt2)">Setor: '+setor+' • Motivo: '+motivo+'</div>'
+    +'<div style="font-size:13px;color:var(--txt2)">Entrou: '+vi.horaEntrada+'</div>'
+    +(vi.foto?'<img src="'+vi.foto+'" style="width:100%;border-radius:8px;margin-top:8px">':'')
+    +'</div>';
+  document.getElementById('terc-ok').style.display='block';
+  atualizarContador();
+});
+document.getElementById('btn-terc-novo').addEventListener('click', function(){ abrirTelaTerceiros(); });
+
+// ── LISTA MANUAL ENTRADA ────────────────────────────────────
+function renderListaManual(filtro) {
+  var lista = document.getElementById('lr-lista-manual');
+  if (!lista) return;
+  var f = (filtro||'').toLowerCase();
+  var itens = veiculos.filter(function(v){
+    return !f
+      || (v.placa&&v.placa.toLowerCase().indexOf(f)>-1)
+      || (v.frota&&v.frota.toLowerCase().indexOf(f)>-1)
+      || (v.nome&&v.nome.toLowerCase().indexOf(f)>-1);
+  });
+  if (!itens.length) {
+    lista.innerHTML = '<div class="vazio">Nenhum veículo encontrado</div>';
+    return;
+  }
+  lista.innerHTML = itens.map(function(v){
+    return '<button type="button" class="item-lista" data-vid="'+v.id+'">'
+      +'<span class="plq">'+idLabel(v)+'</span>'
+      +'<div class="il-info"><span class="il-nm">'+v.nome+'</span><span class="il-sb">'+(v.categoria||'')+'</span></div>'
+      +'<span style="font-size:20px;color:var(--txt3)">›</span></button>';
+  }).join('');
+  lista.querySelectorAll('.item-lista').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var v = veiculos.find(function(x){ return x.id===btn.getAttribute('data-vid'); });
+      if (v) abrirFormEntrada(v);
+    });
+  });
+}
+
+// ── NAVEGAÇÃO ────────────────────────────────────────────────
+// Foto
+document.getElementById('foto-camera').addEventListener('change', function(e){ processarFoto(e.target.files[0]); });
+document.getElementById('foto-galeria').addEventListener('change', function(e){ processarFoto(e.target.files[0]); });
+document.getElementById('btn-remover-foto').addEventListener('click', function(){
+  fotoBase64 = null;
+  document.getElementById('foto-preview').style.display = 'none';
+  document.getElementById('foto-img').src = '';
+  document.getElementById('foto-camera').value = '';
+  document.getElementById('foto-galeria').value = '';
+});
+
+// Toggle form criar conta
+document.getElementById('btn-toggle-criar').addEventListener('click', function(){
+  var form = document.getElementById('form-criar-conta');
+  var aberto = form.style.display !== 'none';
+  form.style.display = aberto ? 'none' : 'block';
+  this.textContent = aberto ? 'Criar nova conta' : 'Cancelar';
+});
+
+// Criar conta
+document.getElementById('btn-criar-conta').addEventListener('click', function(){
+  var nome  = (document.getElementById('novo-nome').value||'').trim();
+  var user  = (document.getElementById('novo-user').value||'').trim().toLowerCase();
+  var senha = (document.getElementById('novo-senha').value||'');
+  var perfil= document.getElementById('novo-perfil').value;
+  var erro  = document.getElementById('novo-erro');
+  erro.style.display='none';
+
+  if(!nome||!user||!senha){ erro.textContent='Preencha todos os campos.'; erro.style.display='block'; return; }
+  if(senha.length < 4){ erro.textContent='Senha precisa ter pelo menos 4 caracteres.'; erro.style.display='block'; return; }
+  if(usuarios.find(function(u){return u.usuario===user;})){
+    erro.textContent='Este usuário já existe.'; erro.style.display='block'; return;
+  }
+  // Perfil criado aqui NUNCA pode ser admin — apenas guarda ou setor
+  usuarios.push({id:'u'+Date.now(), nome:nome, usuario:user, senha:senha, perfil:perfil});
+  localStorage.setItem('pd_usr', JSON.stringify(usuarios));
+  // Limpa o form
+  ['novo-nome','novo-user','novo-senha'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('form-criar-conta').style.display='none';
+  document.getElementById('btn-toggle-criar').textContent='Criar nova conta';
+  alert('Conta criada com sucesso! Faça o login agora.');
+});
+
+// Manual button events
+document.getElementById('btn-abrir-manual').addEventListener('click', function(){
+  var wrap = document.getElementById('lr-manual-wrap');
+  var aberto = wrap.style.display !== 'none';
+  wrap.style.display = aberto ? 'none' : 'block';
+  this.textContent = aberto ? '📋 Selecionar veículo manualmente' : '✕ Fechar lista';
+  if (!aberto) renderListaManual('');
+});
+document.getElementById('lr-busca-manual').addEventListener('input', function(){
+  renderListaManual(this.value);
+});
+
+document.getElementById('btn-login').addEventListener('click',fazerLogin);
+document.getElementById('lg-senha').addEventListener('keydown',function(e){if(e.key==='Enter')fazerLogin();});
+document.getElementById('btn-sair').addEventListener('click',sair);
+document.getElementById('btn-contador').addEventListener('click',mostrarDentro);
+document.getElementById('btn-volta-dentro').addEventListener('click',function(){ir('tela-home');});
+document.getElementById('mn-cadastro').addEventListener('click',function(){ir('tela-cadastro');});
+document.getElementById('mn-veiculos').addEventListener('click',function(){renderVeiculosCad();ir('tela-veiculos');});
+document.getElementById('mn-leitura').addEventListener('click',function(){abrirTelaLeitura();});
+document.getElementById('mn-setor').addEventListener('click',function(){abrirTelaSetor();});
+document.getElementById('mn-saida').addEventListener('click',function(){abrirTelaSaida();});
+document.getElementById('mn-painel').addEventListener('click',function(){renderPainel();ir('tela-painel');});
+document.getElementById('mn-historico').addEventListener('click',function(){
+  var d=new Date();
+  document.getElementById('hist-data').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  renderHistorico(); ir('tela-historico');
+});
+document.getElementById('mn-terceiros').addEventListener('click',function(){abrirTelaTerceiros();});
+document.getElementById('btn-volta-terceiros').addEventListener('click',function(){ir('tela-home');});
+document.getElementById('mn-admin').addEventListener('click',function(){renderAdmin();ir('tela-admin');});
+document.getElementById('btn-volta-cadastro').addEventListener('click',function(){ir('tela-home');});
+document.getElementById('btn-volta-veiculos').addEventListener('click',function(){ir('tela-home');});
+document.getElementById('btn-volta-detalhe').addEventListener('click',function(){ir('tela-veiculos');renderVeiculosCad();});
+document.getElementById('btn-volta-editar').addEventListener('click',function(){ir('tela-veiculos');renderVeiculosCad();});
+document.getElementById('btn-volta-leitura').addEventListener('click',function(){ir('tela-home');});
+document.getElementById('btn-volta-setor').addEventListener('click',function(){ir('tela-home');});
+document.getElementById('btn-volta-saida').addEventListener('click',function(){ir('tela-home');});
+document.getElementById('btn-volta-painel').addEventListener('click',function(){ir('tela-home');});
+document.getElementById('btn-volta-historico').addEventListener('click',function(){ir('tela-home');});
+document.getElementById('btn-volta-admin').addEventListener('click',function(){ir('tela-home');});
+document.getElementById('btn-filtrar-hist').addEventListener('click',renderHistorico);
+
+document.getElementById('btn-limpar-filtrados').addEventListener('click',function(){
+  if(!listaFiltradaAtual.length){alert('Nenhum registro filtrado para excluir.');return;}
+  if(!confirm('Excluir '+listaFiltradaAtual.length+' registro(s) filtrado(s)?')) return;
+  listaFiltradaAtual.forEach(function(vi){ excluirVisita(vi.id); });
+  listaFiltradaAtual=[];
+  renderHistorico();
+});
+
+document.getElementById('btn-limpar-tudo').addEventListener('click',function(){
+  if(!visitas.length){alert('Nenhum registro no histórico.');return;}
+  if(!confirm('⚠ Excluir TODO o histórico? Esta ação não pode ser desfeita!')) return;
+  if(!fbPronto){alert('Firebase não conectado.');return;}
+  window._fb.set(window._fb.ref(window._fb.db,'visitas'), null);
+  visitas=[];
+  atualizarContador();
+  renderHistorico();
+});
+
+// Auto-login
+if(userLogado){
+  var uAtual=usuarios.find(function(u){return u.id===userLogado.id;});
+  if(uAtual){
+    userLogado=uAtual;
+    document.getElementById('home-usuario').textContent=uAtual.nome+' — '+labelPerfil(uAtual.perfil);
+    aplicarPermissoes();
+    ir('tela-home');
+  }else{localStorage.removeItem('pd_sessao');}
+}
+</script>
+</body>
+</html>
