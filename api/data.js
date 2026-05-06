@@ -3,14 +3,18 @@ const REPO = 'leandrinhosliva83-svg/produ-o';
 const BRANCH = 'main';
 
 async function getFile(path) {
-  const r = await fetch(`https://api.github.com/repos/${REPO}/contents/data/${path}.json`, {
-    headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
-  });
-  if (r.status === 404) return { content: null, sha: null };
-  const j = await r.json();
-  const decoded = decodeURIComponent(escape(atob(j.content.replace(/\n/g, ''))));
-  const content = JSON.parse(decoded);
-  return { content, sha: j.sha };
+  try {
+    const r = await fetch(`https://api.github.com/repos/${REPO}/contents/data/${path}.json`, {
+      headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (!r.ok) return { content: null, sha: null };
+    const j = await r.json();
+    if (!j.content) return { content: null, sha: null };
+    const decoded = decodeURIComponent(escape(atob(j.content.replace(/\n/g, ''))));
+    return { content: JSON.parse(decoded), sha: j.sha };
+  } catch(e) {
+    return { content: null, sha: null };
+  }
 }
 
 async function saveFile(path, data, sha) {
