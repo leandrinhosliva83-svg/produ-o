@@ -484,6 +484,7 @@ const SENHA_CADASTRO = 'cadastro123';
 const USUARIOS = [
   { nome:'Master', senha:'admin123', codigos:['todos'], isAdm:true }
 ];
+// Usuários cadastrados pelo painel de cadastro ficam aqui
 
 const db = {
   CEM:    { dia:[], d1:[] },
@@ -496,9 +497,9 @@ const updatedAt = {
   COPLASA:{ dia:'', d1:'' }
 };
 const periodoAtivo = { CEM:'dia', CEMMA:'dia', COPLASA:'dia' };
-let empAtual = null, usuarioLogado = null, empSelecionada = null, chartInst = null, empModalAtual = null;
+let empAtual = null, usuarioLogado = null, empSelecionada = null, chartInst = null;
 
-// TELA INICIAL
+// ── TELA INICIAL ──────────────────────────────────────
 function pedirSenha(emp) {
   empSelecionada = emp;
   document.getElementById('msTitulo').textContent = emp === 'ADM' ? 'Administrador' : emp;
@@ -526,7 +527,7 @@ function entrar(emp, user) {
   if (emp === 'ADM') {
     document.getElementById('view-adm').classList.add('active');
     document.getElementById('view-cliente').classList.remove('active');
-    atualizarFarois(); renderAdmTable();
+    if (initDone) { atualizarFarois(); renderAdmTable(); } else { pendingAdm = true; }
   } else {
     document.getElementById('view-cliente').classList.add('active');
     document.getElementById('view-adm').classList.remove('active');
@@ -543,7 +544,7 @@ function voltarInicio() {
   document.getElementById('view-adm').classList.remove('active');
 }
 
-// CADASTRO
+// ── CADASTRO ──────────────────────────────────────────
 function abrirCadastro() {
   document.getElementById('modalCadastro').classList.add('open');
   document.getElementById('cadastroStep1').style.display = 'block';
@@ -564,289 +565,412 @@ function addUsuario() {
   const nome = document.getElementById('newNome').value.trim();
   const senha = document.getElementById('newSenha').value.trim();
   const codsRaw = document.getElementById('newCodigos').value.trim();
-  if (!nome||!senha||!codsRaw) { toast('❌','Preencha todos os campos.'); return; }
-  const codigos = codsRaw === 'todos' ? ['todos'] : codsRaw.split(',').map(s=>s.trim()).filter(Boolean);
-  USUARIOS.push({ nome, senha, codigos, isAdm:false });
+  if (!nome || !senha || !codsRaw) { showToast('❌', 'Preencha todos os campos.'); return; }
+  const codigos = codsRaw === 'todos' ? ['todos'] : codsRaw.split(',').map(s => s.trim()).filter(Boolean);
+  USUARIOS.push({ nome, senha, codigos, isAdm: false });
   document.getElementById('newNome').value = '';
   document.getElementById('newSenha').value = '';
   document.getElementById('newCodigos').value = '';
   renderListaUsuarios();
-  toast('✅', nome + ' adicionado!');
+  salvarUsuarios();
+  showToast('✅', nome + ' adicionado!');
 }
 function removerUsuario(i) {
   if (USUARIOS[i].isAdm) return;
-  USUARIOS.splice(i, 1); renderListaUsuarios(); toast('✅','Usuário removido.');
+  if (!confirm('Excluir usuário ' + USUARIOS[i].nome + '?')) return;
+  USUARIOS.splice(i, 1); renderListaUsuarios(); salvarUsuarios(); showToast('✅', 'Usuário removido.');
+}
+
+function editarUsuario(i) {
+  const u = USUARIOS[i]; if (!u || u.isAdm) return;
+  document.getElementById('newNome').value = u.nome;
+  document.getElementById('newSenha').value = u.senha;
+  document.getElementById('newCodigos').value = u.codigos.join(', ');
+  // Mudar botão para salvar edição
+  const btn = document.querySelector('.mc-add-btn');
+  btn.textContent = 'Salvar Edição';
+  btn.style.background = '#f39c12';
+  btn.onclick = function() { salvarEdicao(i); };
+  document.getElementById('newNome').focus();
+}
+
+function salvarEdicao(i) {
+  const nome = document.getElementById('newNome').value.trim();
+  const senha = document.getElementById('newSenha').value.trim();
+  const codsRaw = document.getElementById('newCodigos').value.trim();
+  if (!nome || !senha || !codsRaw) { showToast('❌', 'Preencha todos os campos.'); return; }
+  const codigos = codsRaw === 'todos' ? ['todos'] : codsRaw.split(',').map(s => s.trim()).filter(Boolean);
+  USUARIOS[i] = { nome, senha, codigos, isAdm: false };
+  // Resetar botão
+  const btn = document.querySelector('.mc-add-btn');
+  btn.textContent = 'Adicionar';
+  btn.style.background = '#2ecc71';
+  btn.onclick = addUsuario;
+  document.getElementById('newNome').value = '';
+  document.getElementById('newSenha').value = '';
+  document.getElementById('newCodigos').value = '';
+  renderListaUsuarios();
+  salvarUsuarios();
+  showToast('✅', nome + ' atualizado!');
 }
 function renderListaUsuarios() {
   const el = document.getElementById('listaUsuarios'); if (!el) return;
-  if (!USUARIOS.length) { el.innerHTML = '<p style="color:var(--gray);padding:20px 0">Nenhum usuário.</p>'; return; }
-  el.innerHTML = '<table><thead><tr><th>Nome</th><th>Senha</th><th>Códigos</th><th></th></tr></thead><tbody>' +
-    USUARIOS.map((u,i) => '<tr><td>' + u.nome + (u.isAdm?' <span style="font-size:9px;color:var(--orange);">ADM</span>':'') + '</td><td style="font-family:monospace;color:var(--gray);">' + u.senha + '</td><td style="color:var(--teal);font-size:12px;">' + u.codigos.join(', ') + '</td><td style="text-align:right;">' + (u.isAdm?'':'<button onclick="removerUsuario('+i+')" style="background:none;border:1px solid var(--border);color:var(--gray);padding:4px 10px;font-size:10px;cursor:pointer;letter-spacing:1px;text-transform:uppercase;">✕</button>') + '</td></tr>').join('') +
-    '</tbody></table>';
+  const normais = USUARIOS.filter(u => !u.isAdm);
+  if (!normais.length) {
+    el.innerHTML = '<p style="color:#6b8a72;padding:20px 0;font-size:13px;">Nenhum usuário cadastrado ainda.</p>';
+    return;
+  }
+  let rows = '';
+  USUARIOS.forEach((u, i) => {
+    if (u.isAdm) return;
+    rows += `<tr>
+      <td style="font-weight:600;">${u.nome}</td>
+      <td style="font-family:monospace;color:#6b8a72;">${u.senha}</td>
+      <td style="color:#1abc9c;font-size:12px;">${u.codigos.join(', ')}</td>
+      <td style="text-align:right;display:flex;gap:6px;justify-content:flex-end;">
+        <button onclick="editarUsuario(${i})" style="background:none;border:1px solid rgba(46,204,113,0.3);color:#2ecc71;padding:4px 10px;font-size:10px;cursor:pointer;letter-spacing:1px;text-transform:uppercase;">✎ Editar</button>
+        <button onclick="removerUsuario(${i})" style="background:none;border:1px solid rgba(231,76,60,0.3);color:#e74c3c;padding:4px 10px;font-size:10px;cursor:pointer;letter-spacing:1px;text-transform:uppercase;">✕ Excluir</button>
+      </td>
+    </tr>`;
+  });
+  el.innerHTML = `<table><thead><tr><th>Nome</th><th>Senha</th><th>Códigos</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
-// ADM subtabs
+// ── ADM SUBTABS ───────────────────────────────────────
 function goStab(tab) {
-  document.getElementById('stab-planilhas').style.display = tab==='planilhas'?'block':'none';
+  document.getElementById('stab-planilhas').style.display = tab === 'planilhas' ? 'block' : 'none';
 }
 
-// DADOS
+// ── DADOS ─────────────────────────────────────────────
 async function carregarAba(emp, per) {
   try {
-    const r = await fetch(SHEETS_CSV + emp + '_' + per + '&t=' + Date.now());
-    const csv = await r.text();
-    const raw = csv.split('
-')[0].trim().replace(/^"|"$/g,'').replace(/""/g,'"');
-    if (!raw) return;
-    const j = JSON.parse(raw);
-    if (j.data && j.data.length) db[emp][per] = j.data;
-    if (j.updatedAt) updatedAt[emp][per] = j.updatedAt;
-  } catch(e) { console.error('['+emp+']['+per+']', e); }
+    const r = await fetch('/api/data?emp=' + emp + '&per=' + per + '&t=' + Date.now());
+    const j = await r.json();
+    if (j.data && j.data.length) {
+      db[emp][per] = j.data;
+      if (j.updatedAt) {
+        updatedAt[emp][per] = j.updatedAt;
+        setUploaStatus(emp, per, true, fmtDate(j.updatedAt));
+      }
+    }
+  } catch(e) { console.error('[' + emp + '][' + per + ']', e); }
 }
+function setUploaStatus(emp, per, hasData, dateStr) {
+  const el = document.getElementById('upd-' + emp + '-' + per);
+  if (!el) return;
+  el.style.color = hasData ? '#2ecc71' : '#6b8a72';
+  el.textContent = hasData ? '● ' + dateStr : '● Sem dados';
+}
+
+let initDone = false;
+let pendingAdm = false;
+
 async function init() {
-  const emps = ['CEM','CEMMA','COPLASA'];
-  await Promise.all(emps.flatMap(emp => ['dia','d1'].map(per => carregarAba(emp, per))));
-  emps.forEach(e => { renderGrid(e); updateToggle(e); }); setBarras();
+  const emps = ['CEM', 'CEMMA', 'COPLASA'];
+  await Promise.all([
+    carregarUsuarios(),
+    ...emps.flatMap(emp => ['dia', 'd1'].map(per => carregarAba(emp, per)))
+  ]);
+  emps.forEach(e => { renderGrid(e); updateToggle(e); });
+  setBarras();
+  initDone = true;
+  if (pendingAdm) { atualizarFarois(); renderAdmTable(); pendingAdm = false; }
+}
+
+async function carregarUsuarios() {
+  try {
+    const r = await fetch('/api/data?emp=USUARIOS&per=lista&t=' + Date.now());
+    const j = await r.json();
+    if (j.data && j.data.length) {
+      j.data.forEach(function(u) {
+        if (!USUARIOS.find(function(x) { return x.senha === u.senha; })) {
+          USUARIOS.push(u);
+        }
+      });
+    }
+  } catch(e) { console.error('Erro ao carregar usuarios:', e); }
+}
+
+async function salvarUsuarios() {
+  try {
+    const normais = USUARIOS.filter(function(u) { return !u.isAdm; });
+    const r = await fetch('/api/data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ emp: 'USUARIOS', per: 'lista', data: normais, updatedAt: new Date().toISOString() })
+    });
+    const j = await r.json();
+    if (j.error) console.error('Erro salvar usuarios:', j.error);
+  } catch(e) { console.error('Erro ao salvar usuarios:', e); }
 }
 function loadExcel(inp, emp, per) {
   const f = inp.files[0]; if (!f) return;
   const reader = new FileReader();
-  reader.onload = async e => {
-    const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+  reader.onload = async function(e) {
+    const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
     const ws = wb.Sheets[wb.SheetNames[0]];
-    db[emp][per] = parseRows(XLSX.utils.sheet_to_json(ws, {header:1, range:9}));
+    db[emp][per] = parseRows(XLSX.utils.sheet_to_json(ws, { header: 1, range: 9 }));
     const now = new Date().toISOString();
     updatedAt[emp][per] = now;
     renderGrid(emp); updateToggle(emp); setBarras();
-    const el = document.getElementById('upd-'+emp+'-'+per);
-    if (el) { el.style.color='var(--green)'; el.textContent='● '+fmtDate(now); }
+    const el = document.getElementById('upd-' + emp + '-' + per);
+    if (el) { el.style.color = '#2ecc71'; el.textContent = '● ' + fmtDate(now); }
     document.getElementById('pbar').classList.add('on');
     try {
-      const form = new FormData();
-      form.append('emp',emp); form.append('per',per);
-      form.append('updatedAt',now); form.append('data',JSON.stringify(db[emp][per]));
-      await fetch(SCRIPT_URL, {method:'POST', body:form, mode:'no-cors'});
-      toast('✅', emp+' '+(per==='dia'?'Dia':'D-1')+' salvo!');
-    } catch { toast('❌','Erro ao salvar.'); }
+      const r = await fetch('/api/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emp, per, data: db[emp][per], updatedAt: now })
+      });
+      const txt = await r.text();
+      let j = {};
+      try { j = JSON.parse(txt); } catch(e) { console.log('resp:', txt); }
+      if (j.error) throw new Error(j.error);
+      showToast('✅', emp + ' ' + (per === 'dia' ? 'Dia' : 'D-1') + ' salvo!');
+    } catch(err) { showToast('❌', 'Erro: ' + err.message); }
     finally { document.getElementById('pbar').classList.remove('on'); }
     atualizarFarois(); renderAdmTable();
   };
-  reader.readAsArrayBuffer(f); inp.value='';
+  reader.readAsArrayBuffer(f); inp.value = '';
 }
 function parseRows(raw) {
-  const nd=[], ignore=['total','média','código','cct','caminhões e dias','equipamentos','ponderada'];
-  let owner=null, code=null;
-  raw.forEach(row => {
-    const a = row[0]!=null ? String(row[0]).trim() : '';
-    if (!a || ignore.some(w=>a.toLowerCase().startsWith(w))) return;
-    if (/^\d+$/.test(a)) {
-      if (owner) nd.push({owner, ownerCode:code, truckCode:a, e:row[4]??'', f:row[5]??'', g:row[6]??'', h:row[7]??'', j:row[9]??''});
+  const nd = [];
+  const ignore = ['total', 'média', 'código', 'cct', 'caminhões e dias', 'equipamentos', 'ponderada'];
+  let owner = null, code = null;
+  raw.forEach(function(row) {
+    const a = row[0] != null ? String(row[0]).trim() : '';
+    if (!a || ignore.some(function(w) { return a.toLowerCase().startsWith(w); })) return;
+    const isNum = /^\d+$/.test(a);
+    if (isNum) {
+      if (owner) nd.push({ owner: owner, ownerCode: code, truckCode: a, e: row[4] !== undefined ? row[4] : '', f: row[5] !== undefined ? row[5] : '', g: row[6] !== undefined ? row[6] : '', h: row[7] !== undefined ? row[7] : '', j: row[9] !== undefined ? row[9] : '' });
     } else {
       const p = a.split(/\s+/);
-      if (p.length>=2 && /^\d+$/.test(p[0])) { code=p[0]; owner=p.slice(1).join(' '); }
+      if (p.length >= 2 && /^\d+$/.test(p[0])) { code = p[0]; owner = p.slice(1).join(' '); }
     }
   });
   return nd;
 }
 
-// RENDER
+// ── RENDER ────────────────────────────────────────────
 function grouped(emp) {
   const m = {};
   let rows = db[emp][periodoAtivo[emp]] || [];
   if (usuarioLogado && !usuarioLogado.codigos.includes('todos'))
-    rows = rows.filter(d => usuarioLogado.codigos.includes(d.ownerCode));
-  rows.forEach(d => {
-    const k = d.ownerCode+'||'+d.owner;
-    if (!m[k]) m[k] = {owner:d.owner, code:d.ownerCode, trucks:[]};
+    rows = rows.filter(function(d) { return usuarioLogado.codigos.includes(d.ownerCode); });
+  rows.forEach(function(d) {
+    const k = d.ownerCode + '||' + d.owner;
+    if (!m[k]) m[k] = { owner: d.owner, code: d.ownerCode, trucks: [] };
     m[k].trucks.push(d);
   });
   return Object.values(m);
 }
-function hasVal(v) { return v!==undefined&&v!==null&&v!==''&&v!=='—'; }
+function hasVal(v) { return v !== undefined && v !== null && v !== '' && v !== '—'; }
 function activeCols(emp) {
-  const c={e:false,f:false,g:false,h:false,j:false};
-  (db[emp][periodoAtivo[emp]]||[]).forEach(d=>{
-    if(hasVal(d.e))c.e=true; if(hasVal(d.f))c.f=true; if(hasVal(d.g))c.g=true;
-    if(hasVal(d.h))c.h=true; if(hasVal(d.j))c.j=true;
+  const c = { e: false, f: false, g: false, h: false, j: false };
+  (db[emp][periodoAtivo[emp]] || []).forEach(function(d) {
+    if (hasVal(d.e)) c.e = true; if (hasVal(d.f)) c.f = true; if (hasVal(d.g)) c.g = true;
+    if (hasVal(d.h)) c.h = true; if (hasVal(d.j)) c.j = true;
   });
   return c;
 }
 function renderGrid(emp) {
-  const g = document.getElementById('grid-'+emp); if (!g) return;
+  const g = document.getElementById('grid-' + emp); if (!g) return;
   const owners = grouped(emp);
-  if (!owners.length) { g.innerHTML='<div class="empty"><h3>Sem dados</h3><p>Nenhum dado disponível</p></div>'; return; }
-  const totals = owners.map(o=>({key:o.code+o.owner,ton:o.trucks.reduce((s,t)=>s+(parseFloat(t.e)||0)+(parseFloat(t.f)||0)+(parseFloat(t.g)||0),0)}));
-  totals.sort((a,b)=>b.ton-a.ton);
-  const rm={}; totals.forEach((x,i)=>rm[x.key]=i+1);
-  g.innerHTML = owners.map((o,idx)=>{
-    const totV=o.trucks.reduce((s,t)=>s+(parseFloat(t.h)||0),0);
-    const totT=o.trucks.reduce((s,t)=>s+(parseFloat(t.e)||0)+(parseFloat(t.f)||0)+(parseFloat(t.g)||0),0);
-    const distM=o.trucks.length?o.trucks.reduce((s,t)=>s+(parseFloat(t.j)||0),0)/o.trucks.length:0;
-    const rank=rm[o.code+o.owner];
-    return '<div class="owner-card" onclick="openModal(''+emp+'','+idx+')">'+
-      '<div class="card-stripe"></div><div class="card-body">'+
-      '<div class="card-top"><div class="card-icon">🏭</div><div class="card-rank">#'+rank+'</div></div>'+
-      '<div class="card-code">Cód. '+o.code+'</div>'+
-      '<div class="card-name">'+o.owner+'</div>'+
-      '<div class="card-pills"><div class="pill">🚛 <span>'+o.trucks.length+'</span> caminhões</div>'+
-      '<div class="pill">🔄 <span>'+fmt(totV)+'</span> viagens</div>'+
-      (distM?'<div class="pill">📍 <span>'+fmt(distM)+'</span> km</div>':'')+
-      '</div><div class="card-ton"><div class="ton-lbl">Produção</div>'+
-      '<div class="ton-val">'+fmtK(totT)+'<small>ton</small></div></div>'+
-      '</div><div class="card-arrow">→</div></div>';
+  if (!owners.length) {
+    g.innerHTML = '<div class="empty"><h3>Sem dados</h3><p>Nenhum dado disponível</p></div>';
+    return;
+  }
+  const totals = owners.map(function(o) {
+    return { key: o.code + o.owner, ton: o.trucks.reduce(function(s, t) { return s + (parseFloat(t.e) || 0) + (parseFloat(t.f) || 0) + (parseFloat(t.g) || 0); }, 0) };
+  });
+  totals.sort(function(a, b) { return b.ton - a.ton; });
+  const rm = {}; totals.forEach(function(x, i) { rm[x.key] = i + 1; });
+  g.innerHTML = owners.map(function(o, idx) {
+    const totV = o.trucks.reduce(function(s, t) { return s + (parseFloat(t.h) || 0); }, 0);
+    const totT = o.trucks.reduce(function(s, t) { return s + (parseFloat(t.e) || 0) + (parseFloat(t.f) || 0) + (parseFloat(t.g) || 0); }, 0);
+    const distM = o.trucks.length ? o.trucks.reduce(function(s, t) { return s + (parseFloat(t.j) || 0); }, 0) / o.trucks.length : 0;
+    const rank = rm[o.code + o.owner];
+    return `<div class="owner-card" data-emp="${emp}" data-idx="${idx}" onclick="openModal(this.dataset.emp, +this.dataset.idx)">
+      <div class="card-stripe"></div>
+      <div class="card-body">
+        <div class="card-top"><div class="card-icon">🏭</div><div class="card-rank">#${rank}</div></div>
+        <div class="card-code">Cód. ${o.code}</div>
+        <div class="card-name">${o.owner}</div>
+        <div class="card-pills">
+          <div class="pill">🚛 <span>${o.trucks.length}</span> caminhões</div>
+          <div class="pill">🔄 <span>${fmt(totV)}</span> viagens</div>
+          ${distM ? `<div class="pill">📍 <span>${fmt(distM)}</span> km</div>` : ''}
+        </div>
+        <div class="card-ton">
+          <div class="ton-lbl">Produção</div>
+          <div class="ton-val">${fmtK(totT)}<small>ton</small></div>
+        </div>
+      </div>
+      <div class="card-arrow">→</div>
+    </div>`;
   }).join('');
 }
 function updateToggle(emp) {
-  const t = document.getElementById('toggle-'+emp); if(!t) return;
-  const has = (db[emp].dia&&db[emp].dia.length)||(db[emp].d1&&db[emp].d1.length);
+  const t = document.getElementById('toggle-' + emp); if (!t) return;
+  const has = (db[emp].dia && db[emp].dia.length) || (db[emp].d1 && db[emp].d1.length);
   t.classList.toggle('show', !!has);
 }
 function setPeriodo(emp, per) {
   periodoAtivo[emp] = per;
-  const bd=document.getElementById('btn-dia-'+emp), b1=document.getElementById('btn-d1-'+emp);
-  if(per==='dia'){bd.className='pt-btn ativo-dia';b1.className='pt-btn';}
-  else{b1.className='pt-btn ativo-d1';bd.className='pt-btn';}
-  const g=document.getElementById('grid-'+emp); if(g) g.innerHTML='';
-  setTimeout(()=>renderGrid(emp),0); setBarras();
+  const bd = document.getElementById('btn-dia-' + emp), b1 = document.getElementById('btn-d1-' + emp);
+  if (per === 'dia') { bd.className = 'pt-btn ativo-dia'; b1.className = 'pt-btn'; }
+  else { b1.className = 'pt-btn ativo-d1'; bd.className = 'pt-btn'; }
+  const g = document.getElementById('grid-' + emp); if (g) g.innerHTML = '';
+  setTimeout(function() { renderGrid(emp); }, 0);
+  setBarras();
 }
 function setBarras() {
-  const hoje=new Date().toLocaleDateString('pt-BR');
-  ['CEM','CEMMA','COPLASA'].forEach(emp=>{
-    const per=periodoAtivo[emp];
-    const hasData=db[emp][per]&&db[emp][per].length>0;
-    const bar=document.getElementById('bar-'+emp);
-    if(bar) bar.classList.toggle('show', hasData);
-    const he=document.getElementById('hoje-'+emp); if(he) he.textContent=hoje;
-    const ue=document.getElementById('upd-cli-'+emp);
-    const le=document.getElementById('upd-lbl-'+emp);
-    if(ue){ ue.textContent=updatedAt[emp][per]?fmtDate(updatedAt[emp][per]):'—'; ue.style.color=per==='dia'?'var(--green)':'var(--orange)'; }
-    if(le) le.textContent=per==='dia'?'🔄 Atualiz. Dia':'🔄 Atualiz. D-1';
+  const hoje = new Date().toLocaleDateString('pt-BR');
+  ['CEM', 'CEMMA', 'COPLASA'].forEach(function(emp) {
+    const per = periodoAtivo[emp];
+    const hasData = db[emp][per] && db[emp][per].length > 0;
+    const bar = document.getElementById('bar-' + emp);
+    if (bar) bar.classList.toggle('show', hasData);
+    const he = document.getElementById('hoje-' + emp); if (he) he.textContent = hoje;
+    const ue = document.getElementById('upd-cli-' + emp);
+    const le = document.getElementById('upd-lbl-' + emp);
+    if (ue) { ue.textContent = updatedAt[emp][per] ? fmtDate(updatedAt[emp][per]) : '—'; ue.style.color = per === 'dia' ? '#2ecc71' : '#f39c12'; }
+    if (le) le.textContent = per === 'dia' ? '🔄 Atualiz. Dia' : '🔄 Atualiz. D-1';
   });
 }
 async function refreshEmp(emp) {
-  const btn=document.getElementById('rb-'+emp); if(btn) btn.classList.add('loading');
-  await Promise.all(['dia','d1'].map(per=>carregarAba(emp,per)));
+  const btn = document.getElementById('rb-' + emp); if (btn) btn.classList.add('loading');
+  await Promise.all(['dia', 'd1'].map(function(per) { return carregarAba(emp, per); }));
   renderGrid(emp); updateToggle(emp); setBarras();
-  toast('✅',emp+' atualizado!');
-  if(btn) btn.classList.remove('loading');
+  showToast('✅', emp + ' atualizado!');
+  if (btn) btn.classList.remove('loading');
 }
-setInterval(async()=>{
-  const emps=['CEM','CEMMA','COPLASA'];
-  await Promise.all(emps.flatMap(emp=>['dia','d1'].map(per=>carregarAba(emp,per))));
-  emps.forEach(e=>{renderGrid(e);updateToggle(e);}); setBarras();
-},120000);
+setInterval(function() {
+  const emps = ['CEM', 'CEMMA', 'COPLASA'];
+  Promise.all(emps.flatMap(function(emp) { return ['dia', 'd1'].map(function(per) { return carregarAba(emp, per); }); })).then(function() {
+    emps.forEach(function(e) { renderGrid(e); updateToggle(e); });
+    setBarras();
+  });
+}, 120000);
 
-// MODAL PROPRIETÁRIO
+// ── MODAL PROPRIETÁRIO ────────────────────────────────
 function openModal(emp, idx) {
-  empModalAtual=emp;
-  const o=grouped(emp)[idx]; if(!o) return;
-  const totT=o.trucks.reduce((s,t)=>s+(parseFloat(t.e)||0)+(parseFloat(t.f)||0)+(parseFloat(t.g)||0),0);
-  const totV=o.trucks.reduce((s,t)=>s+(parseFloat(t.h)||0),0);
-  const distM=o.trucks.length?o.trucks.reduce((s,t)=>s+(parseFloat(t.j)||0),0)/o.trucks.length:0;
-  const tonCam=o.trucks.length?totT/o.trucks.length:0;
-  const sorted=grouped(emp).map(x=>x.trucks.reduce((s,t)=>s+(parseFloat(t.e)||0)+(parseFloat(t.f)||0)+(parseFloat(t.g)||0),0)).sort((a,b)=>b-a);
-  const rank=sorted.indexOf(totT)+1;
-  document.getElementById('mCode').textContent='Cód. '+o.code;
-  document.getElementById('mName').textContent=o.owner;
-  document.getElementById('mSub').textContent=emp+' · '+o.trucks.length+' caminhões · Rank #'+rank;
-  const kpis=[];
-  if(totT) kpis.push({ico:'⚖️',lbl:'Produção Total',val:fmtNum(totT),unit:'ton',cls:'c-orange'});
-  if(totV) kpis.push({ico:'🔄',lbl:'Total Viagens',val:fmt(totV),unit:'',cls:'c-blue'});
-  if(o.trucks.length) kpis.push({ico:'🚛',lbl:'Caminhões',val:o.trucks.length,unit:'',cls:'c-green'});
-  if(distM) kpis.push({ico:'📍',lbl:'Dist. Média',val:fmt(distM),unit:'km',cls:'c-teal'});
-  kpis.push({ico:'🏆',lbl:'Rank '+emp,val:'#'+rank,unit:'',cls:'c-purple'});
-  if(tonCam) kpis.push({ico:'⛽',lbl:'Prod/Caminhão',val:fmtNum(tonCam),unit:'ton',cls:'c-red'});
-  document.getElementById('kpiRow').innerHTML=kpis.map(k=>'<div class="kpi"><div class="kpi-ico">'+k.ico+'</div><div class="kpi-lbl">'+k.lbl+'</div><div class="kpi-val '+k.cls+'">'+k.val+'<small>'+k.unit+'</small></div></div>').join('');
-  const pTot=calcProjecao(totT);
-  const pDiv=document.getElementById('projTotal');
-  if(pTot&&periodoAtivo[emp]==='dia'){
-    document.getElementById('projTotalVal').textContent=fmtNum(pTot.projecao)+' ton';
-    document.getElementById('projTotalReal').textContent=fmtNum(totT)+' ton';
-    document.getElementById('projTotalDetail').textContent='Média '+fmtNum(pTot.mediaPorMin)+'/h · '+pTot.hDecorridas+'h decorridas · '+pTot.hRestantes+'h restantes';
-    pDiv.style.display='flex';
-  } else { pDiv.style.display='none'; }
+  const o = grouped(emp)[idx]; if (!o) return;
+  const totT = o.trucks.reduce(function(s, t) { return s + (parseFloat(t.e) || 0) + (parseFloat(t.f) || 0) + (parseFloat(t.g) || 0); }, 0);
+  const totV = o.trucks.reduce(function(s, t) { return s + (parseFloat(t.h) || 0); }, 0);
+  const distM = o.trucks.length ? o.trucks.reduce(function(s, t) { return s + (parseFloat(t.j) || 0); }, 0) / o.trucks.length : 0;
+  const tonCam = o.trucks.length ? totT / o.trucks.length : 0;
+  const sorted = grouped(emp).map(function(x) { return x.trucks.reduce(function(s, t) { return s + (parseFloat(t.e) || 0) + (parseFloat(t.f) || 0) + (parseFloat(t.g) || 0); }, 0); }).sort(function(a, b) { return b - a; });
+  const rank = sorted.indexOf(totT) + 1;
+  document.getElementById('mCode').textContent = 'Cód. ' + o.code;
+  document.getElementById('mName').textContent = o.owner;
+  document.getElementById('mSub').textContent = emp + ' · ' + o.trucks.length + ' caminhões · Rank #' + rank;
+  const kpis = [];
+  if (totT) kpis.push({ ico: '⚖️', lbl: 'Produção Total', val: fmtNum(totT), unit: 'ton', cls: 'c-orange' });
+  if (totV) kpis.push({ ico: '🔄', lbl: 'Total Viagens', val: fmt(totV), unit: '', cls: 'c-blue' });
+  if (o.trucks.length) kpis.push({ ico: '🚛', lbl: 'Caminhões', val: o.trucks.length, unit: '', cls: 'c-green' });
+  if (distM) kpis.push({ ico: '📍', lbl: 'Dist. Média', val: fmt(distM), unit: 'km', cls: 'c-teal' });
+  kpis.push({ ico: '🏆', lbl: 'Rank ' + emp, val: '#' + rank, unit: '', cls: 'c-purple' });
+  if (tonCam) kpis.push({ ico: '⛽', lbl: 'Prod/Caminhão', val: fmtNum(tonCam), unit: 'ton', cls: 'c-red' });
+  document.getElementById('kpiRow').innerHTML = kpis.map(function(k) {
+    return `<div class="kpi"><div class="kpi-ico">${k.ico}</div><div class="kpi-lbl">${k.lbl}</div><div class="kpi-val ${k.cls}">${k.val}<small>${k.unit}</small></div></div>`;
+  }).join('');
+  const pTot = calcProjecao(totT);
+  const pDiv = document.getElementById('projTotal');
+  if (pTot && periodoAtivo[emp] === 'dia') {
+    document.getElementById('projTotalVal').textContent = fmtNum(pTot.projecao) + ' ton';
+    document.getElementById('projTotalReal').textContent = fmtNum(totT) + ' ton';
+    document.getElementById('projTotalDetail').textContent = 'Média ' + fmtNum(pTot.mediaPorMin) + '/h · ' + pTot.hDecorridas + 'h decorridas · ' + pTot.hRestantes + 'h restantes';
+    pDiv.style.display = 'flex';
+  } else { pDiv.style.display = 'none'; }
   buildChart(o.trucks);
-  const cols=activeCols(emp);
-  document.getElementById('mTrucks').innerHTML=o.trucks.map(t=>{
-    const m=[];
-    if(cols.e&&hasVal(t.e))m.push({v:fmt(t.e),l:'Ton. E'});
-    if(cols.f&&hasVal(t.f))m.push({v:fmt(t.f),l:'Ton. F'});
-    if(cols.g&&hasVal(t.g))m.push({v:fmt(t.g),l:'Ton. G'});
-    if(cols.h&&hasVal(t.h))m.push({v:fmt(t.h),l:'Viagens'});
-    if(cols.j&&hasVal(t.j))m.push({v:fmt(t.j),l:'Dist. km'});
-    if(!m.length) return '';
-    const rc=(parseFloat(t.e)||0)+(parseFloat(t.f)||0)+(parseFloat(t.g)||0);
-    const pc=calcProjecao(rc);
-    const ph=pc&&periodoAtivo[emp]==='dia'?'<div class="proj-box"><div><div class="proj-lbl">📈 Projeção 24h</div><div style="font-size:10px;color:var(--gray);">Média '+fmtNum(pc.mediaPorMin)+'/h · '+pc.hRestantes+'h restantes</div></div><div class="proj-val">'+fmtNum(pc.projecao)+'<small style="font-size:11px;color:var(--gray);"> ton</small></div></div>':'';
-    return '<div class="truck-card"><div class="truck-num">🚛 Caminhão '+t.truckCode+'</div><div class="truck-metrics">'+m.map(x=>'<div class="tm"><span class="tm-val">'+x.v+'</span><span class="tm-lbl">'+x.l+'</span></div>').join('')+'</div>'+ph+'</div>';
+  const cols = activeCols(emp);
+  document.getElementById('mTrucks').innerHTML = o.trucks.map(function(t) {
+    const m = [];
+    if (cols.e && hasVal(t.e)) m.push({ v: fmt(t.e), l: 'Ton. E' });
+    if (cols.f && hasVal(t.f)) m.push({ v: fmt(t.f), l: 'Ton. F' });
+    if (cols.g && hasVal(t.g)) m.push({ v: fmt(t.g), l: 'Ton. G' });
+    if (cols.h && hasVal(t.h)) m.push({ v: fmt(t.h), l: 'Viagens' });
+    if (cols.j && hasVal(t.j)) m.push({ v: fmt(t.j), l: 'Dist. km' });
+    if (!m.length) return '';
+    const rc = (parseFloat(t.e) || 0) + (parseFloat(t.f) || 0) + (parseFloat(t.g) || 0);
+    const pc = calcProjecao(rc);
+    const ph = pc && periodoAtivo[emp] === 'dia' ? `<div class="proj-box"><div><div class="proj-lbl">📈 Projeção 24h</div><div style="font-size:10px;color:#6b8a72;">Média ${fmtNum(pc.mediaPorMin)}/h · ${pc.hRestantes}h restantes</div></div><div class="proj-val">${fmtNum(pc.projecao)}<small style="font-size:11px;color:#6b8a72;"> ton</small></div></div>` : '';
+    return `<div class="truck-card"><div class="truck-num">🚛 Caminhão ${t.truckCode}</div><div class="truck-metrics">${m.map(function(x) { return `<div class="tm"><span class="tm-val">${x.v}</span><span class="tm-lbl">${x.l}</span></div>`; }).join('')}</div>${ph}</div>`;
   }).join('');
   document.getElementById('propModalBg').classList.add('open');
-  document.body.style.overflow='hidden';
+  document.body.style.overflow = 'hidden';
 }
 function buildChart(trucks) {
-  if(chartInst){chartInst.destroy();chartInst=null;}
-  const vals=trucks.map(t=>(parseFloat(t.e)||0)+(parseFloat(t.f)||0)+(parseFloat(t.g)||0));
-  const cl=document.getElementById('chartLabel'),cw=document.querySelector('.chart-wrap');
-  if(!vals.some(v=>v>0)){cw.style.display='none';cl.style.display='none';return;}
-  cw.style.display='block';cl.style.display='flex';
-  chartInst=new Chart(document.getElementById('chartCanvas').getContext('2d'),{
-    type:'bar',
-    data:{labels:trucks.map(t=>'Cam. '+t.truckCode),datasets:[{label:'Produção',data:vals,backgroundColor:vals.map((_,i)=>i%2===0?'rgba(46,204,113,0.7)':'rgba(26,53,143,0.7)'),borderColor:vals.map((_,i)=>i%2===0?'#2ecc71':'#2855c7'),borderWidth:1,borderRadius:2}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmtNum(c.parsed.y)+' ton'}}},scales:{x:{ticks:{color:'#6b8a72',font:{size:10}},grid:{color:'rgba(46,204,113,0.05)'}},y:{ticks:{color:'#6b8a72',font:{size:10}},grid:{color:'rgba(46,204,113,0.07)'}}}}
+  if (chartInst) { chartInst.destroy(); chartInst = null; }
+  const vals = trucks.map(function(t) { return (parseFloat(t.e) || 0) + (parseFloat(t.f) || 0) + (parseFloat(t.g) || 0); });
+  const cl = document.getElementById('chartLabel'), cw = document.querySelector('.chart-wrap');
+  if (!vals.some(function(v) { return v > 0; })) { cw.style.display = 'none'; cl.style.display = 'none'; return; }
+  cw.style.display = 'block'; cl.style.display = 'flex';
+  chartInst = new Chart(document.getElementById('chartCanvas').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: trucks.map(function(t) { return 'Cam. ' + t.truckCode; }),
+      datasets: [{ label: 'Produção', data: vals, backgroundColor: vals.map(function(_, i) { return i % 2 === 0 ? 'rgba(46,204,113,0.7)' : 'rgba(26,53,143,0.7)'; }), borderColor: vals.map(function(_, i) { return i % 2 === 0 ? '#2ecc71' : '#2855c7'; }), borderWidth: 1, borderRadius: 2 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(c) { return ' ' + fmtNum(c.parsed.y) + ' ton'; } } } }, scales: { x: { ticks: { color: '#6b8a72', font: { size: 10 } }, grid: { color: 'rgba(46,204,113,0.05)' } }, y: { ticks: { color: '#6b8a72', font: { size: 10 } }, grid: { color: 'rgba(46,204,113,0.07)' } } } }
   });
 }
-function closeModal(){document.getElementById('propModalBg').classList.remove('open');document.body.style.overflow='';}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+function closeModal() { document.getElementById('propModalBg').classList.remove('open'); document.body.style.overflow = ''; }
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
 
-// FAROL
+// ── FAROL ─────────────────────────────────────────────
 function atualizarFarois() {
-  const LIMITE=15*60*1000,agora=Date.now();
-  ['CEM','CEMMA','COPLASA'].forEach(emp=>{
-    const el=document.getElementById('farol-'+emp); if(!el) return;
-    const dtD=updatedAt[emp].dia?new Date(updatedAt[emp].dia).getTime():0;
-    const dtX=updatedAt[emp].d1?new Date(updatedAt[emp].d1).getTime():0;
-    const rec=Math.max(dtD,dtX);
-    if(!rec) el.innerHTML='<div class="farol-luz alerta"></div><span class="farol-txt">Sem dados</span>';
-    else if(agora-rec>LIMITE) el.innerHTML='<div class="farol-luz alerta"></div><span class="farol-txt">'+Math.floor((agora-rec)/60000)+'min</span>';
-    else el.innerHTML='<div class="farol-luz ok"></div>';
+  const LIMITE = 15 * 60 * 1000, agora = Date.now();
+  ['CEM', 'CEMMA', 'COPLASA'].forEach(function(emp) {
+    const el = document.getElementById('farol-' + emp); if (!el) return;
+    const dtD = updatedAt[emp].dia ? new Date(updatedAt[emp].dia).getTime() : 0;
+    const dtX = updatedAt[emp].d1 ? new Date(updatedAt[emp].d1).getTime() : 0;
+    const rec = Math.max(dtD, dtX);
+    if (!rec) el.innerHTML = '<div class="farol-luz alerta"></div><span class="farol-txt">Sem dados</span>';
+    else if (agora - rec > LIMITE) el.innerHTML = '<div class="farol-luz alerta"></div><span class="farol-txt">' + Math.floor((agora - rec) / 60000) + 'min</span>';
+    else el.innerHTML = '<div class="farol-luz ok"></div>';
   });
 }
-setInterval(atualizarFarois,30000);
+setInterval(atualizarFarois, 30000);
 
-// TABELA ADM
+// ── TABELA ADM ────────────────────────────────────────
 function renderAdmTable() {
-  const wrap=document.getElementById('admTableWrap'); if(!wrap) return;
-  let html='';
-  ['CEM','CEMMA','COPLASA'].forEach(emp=>{
-    ['dia','d1'].forEach(per=>{
-      const rows=db[emp][per]||[]; if(!rows.length) return;
-      const c={e:false,f:false,g:false,h:false,j:false};
-      rows.forEach(d=>{if(hasVal(d.e))c.e=true;if(hasVal(d.f))c.f=true;if(hasVal(d.g))c.g=true;if(hasVal(d.h))c.h=true;if(hasVal(d.j))c.j=true;});
-      const cd=[{k:'e',l:'Ton. E'},{k:'f',l:'Ton. F'},{k:'g',l:'Ton. G'},{k:'h',l:'Viagens'},{k:'j',l:'Dist. Média'}].filter(x=>c[x.k]);
-      html+='<div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--green);padding:16px 0 10px;border-bottom:1px solid var(--border);margin-bottom:0;">'+emp+' — '+(per==='dia'?'Dia Atual':'D-1')+'</div>'+
-        '<table style="margin-bottom:24px;"><thead><tr><th>Proprietário</th><th>Caminhão</th>'+cd.map(x=>'<th>'+x.l+'</th>').join('')+'</tr></thead><tbody>'+
-        rows.map(d=>'<tr><td>'+d.owner+'</td><td style="color:var(--green);font-size:11px;font-weight:600;">'+d.truckCode+'</td>'+cd.map(x=>'<td style="text-align:right;font-weight:600;">'+fmt(d[x.k])+'</td>').join('')+'</tr>').join('')+
+  const wrap = document.getElementById('admTableWrap'); if (!wrap) return;
+  let html = '';
+  ['CEM', 'CEMMA', 'COPLASA'].forEach(function(emp) {
+    ['dia', 'd1'].forEach(function(per) {
+      const rows = db[emp][per] || []; if (!rows.length) return;
+      const c = { e: false, f: false, g: false, h: false, j: false };
+      rows.forEach(function(d) { if (hasVal(d.e)) c.e = true; if (hasVal(d.f)) c.f = true; if (hasVal(d.g)) c.g = true; if (hasVal(d.h)) c.h = true; if (hasVal(d.j)) c.j = true; });
+      const cd = [{ k: 'e', l: 'Ton. E' }, { k: 'f', l: 'Ton. F' }, { k: 'g', l: 'Ton. G' }, { k: 'h', l: 'Viagens' }, { k: 'j', l: 'Dist. Média' }].filter(function(x) { return c[x.k]; });
+      html += '<div style="font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#2ecc71;padding:16px 0 10px;border-bottom:1px solid rgba(46,204,113,0.18);margin-bottom:0;">' + emp + ' — ' + (per === 'dia' ? 'Dia Atual' : 'D-1') + '</div>' +
+        '<table style="margin-bottom:24px;"><thead><tr><th>Proprietário</th><th>Caminhão</th>' + cd.map(function(x) { return '<th>' + x.l + '</th>'; }).join('') + '</tr></thead><tbody>' +
+        rows.map(function(d) { return '<tr><td>' + d.owner + '</td><td style="color:#2ecc71;font-size:11px;font-weight:600;">' + d.truckCode + '</td>' + cd.map(function(x) { return '<td style="text-align:right;font-weight:600;">' + fmt(d[x.k]) + '</td>'; }).join('') + '</tr>'; }).join('') +
         '</tbody></table>';
     });
   });
-  wrap.innerHTML=html||'<p style="color:var(--gray);padding:20px 0">Nenhum dado carregado ainda.</p>';
+  wrap.innerHTML = html || '<p style="color:#6b8a72;padding:20px 0">Nenhum dado carregado ainda.</p>';
 }
 
-// HELPERS
+// ── HELPERS ───────────────────────────────────────────
 function calcProjecao(realizado) {
-  const ag=new Date(); let minD=(ag.getHours()*60+ag.getMinutes())-360;
-  if(minD<0) minD+=1440; const minR=1440-minD;
-  if(minD<=0||realizado<=0) return null;
-  const med=realizado/minD;
-  return {projecao:realizado+(med*minR),mediaPorMin:med*60,hDecorridas:(minD/60).toFixed(1),hRestantes:(minR/60).toFixed(1)};
+  const ag = new Date();
+  let minD = (ag.getHours() * 60 + ag.getMinutes()) - 360;
+  if (minD < 0) minD += 1440;
+  const minR = 1440 - minD;
+  if (minD <= 0 || realizado <= 0) return null;
+  const med = realizado / minD;
+  return { projecao: realizado + (med * minR), mediaPorMin: med * 60, hDecorridas: (minD / 60).toFixed(1), hRestantes: (minR / 60).toFixed(1) };
 }
-function fmt(v){if(v===undefined||v===null||v===''||v==='—')return '—';const n=parseFloat(v);return isNaN(n)?v:n.toLocaleString('pt-BR',{maximumFractionDigits:2});}
-function fmtNum(v){if(!v)return '—';return Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function fmtK(v){if(!v)return '—';return v>=1000?(v/1000).toLocaleString('pt-BR',{maximumFractionDigits:1})+'k':v.toLocaleString('pt-BR',{maximumFractionDigits:0});}
-function fmtDate(iso){if(!iso)return '—';const d=new Date(iso);if(isNaN(d))return '—';return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}
-function toast(ico,msg){document.getElementById('tIco').textContent=ico;document.getElementById('tMsg').textContent=msg;const t=document.getElementById('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
+function fmt(v) { if (v === undefined || v === null || v === '' || v === '—') return '—'; const n = parseFloat(v); return isNaN(n) ? v : n.toLocaleString('pt-BR', { maximumFractionDigits: 2 }); }
+function fmtNum(v) { if (!v) return '—'; return Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function fmtK(v) { if (!v) return '—'; return v >= 1000 ? (v / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'k' : v.toLocaleString('pt-BR', { maximumFractionDigits: 0 }); }
+function fmtDate(iso) { if (!iso) return '—'; const d = new Date(iso); if (isNaN(d)) return '—'; return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+function showToast(ico, msg) { document.getElementById('tIco').textContent = ico; document.getElementById('tMsg').textContent = msg; const t = document.getElementById('toast'); t.classList.add('show'); setTimeout(function() { t.classList.remove('show'); }, 3500); }
 
 init();
+
 </script>
 </body>
 </html>
