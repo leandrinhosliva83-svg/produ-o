@@ -948,20 +948,14 @@ function renderGrid(emp) {
     card.setAttribute('data-emp', emp);
     card.setAttribute('data-idx', idx);
     card.onclick = function() { openModal(this.getAttribute('data-emp'), +this.getAttribute('data-idx')); };
-    card.style.cssText = "background:#111a14;border:1px solid rgba(46,204,113,0.18);padding:8px;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;width:80px;height:80px;position:relative;overflow:hidden;transition:border-color .2s;flex-shrink:0;";
+    card.style.cssText = "background:#111a14;border:1px solid rgba(46,204,113,0.18);border-radius:12px;padding:8px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;width:22vw;max-width:100px;height:22vw;max-height:100px;position:relative;overflow:hidden;transition:all .2s;flex-shrink:0;text-align:center;";
     card.onmouseover = function() { this.style.borderColor = "rgba(46,204,113,0.5)"; };
     card.onmouseout = function() { this.style.borderColor = "rgba(46,204,113,0.18)"; };
     card.innerHTML =
-      "<div style='height:2px;background:linear-gradient(90deg,#1a3a8f,#2ecc71);position:absolute;top:0;left:0;right:0;'></div>" +
-      "<div style='display:flex;justify-content:space-between;align-items:flex-start;margin-top:4px;'>" +
-        "<div style='font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#2ecc71;'>Cód. " + o.code + "</div>" +
-        "<div style='font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;color:#f39c12;'>#" + rank + "</div>" +
-      "</div>" +
-      "<div style='font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;color:#f4faf5;line-height:1.2;'>" + nome + "</div>" +
-      "<div style='border-top:1px solid rgba(46,204,113,0.15);padding-top:5px;margin-top:4px;'>" +
-        "<div style='font-size:7px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#6b8a72;'>PRODUÇÃO</div>" +
-        "<div style='font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;color:#f39c12;'>" + fmtK(totT) + "<span style='font-size:9px;color:#6b8a72;margin-left:2px;'>ton</span></div>" +
-      "</div>";
+      "<div style='font-size:18px;margin-bottom:4px;'>🏭</div>" +
+      "<div style='font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;color:#f4faf5;line-height:1.2;overflow:hidden;max-height:28px;width:100%;'>" + nome.substring(0,14) + "</div>" +
+      "<div style='font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;color:#f39c12;'>" + fmtK(totT) + "<span style='font-size:8px;color:#6b8a72;'> t</span></div>" +
+      "<div style='font-size:8px;color:#2ecc71;font-weight:700;'>#" + rank + "</div>";
     return card.outerHTML;
   }).join('');
 }
