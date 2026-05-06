@@ -683,36 +683,11 @@ async function init() {
 
 
 
-async function salvarUsuarios() {
+function salvarUsuarios() {
   try {
     const normais = USUARIOS.filter(function(u) { return !u.isAdm; });
-    // Salvar local imediatamente
     localStorage.setItem('frota_usuarios', JSON.stringify(normais));
-    // Salvar no servidor (Upstash)
-    await fetch('/api/data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ emp: 'USUARIOS', per: 'lista', data: normais, updatedAt: new Date().toISOString() })
-    });
   } catch(e) { console.error('Erro ao salvar usuarios:', e); }
-}
-
-async function carregarUsuariosServidor() {
-  try {
-    const r = await fetch('/api/data?emp=USUARIOS&per=lista&t=' + Date.now());
-    const txt = await r.text();
-    if (!txt || txt.trim().startsWith('<')) return;
-    const j = JSON.parse(txt);
-    if (j.data && j.data.length) {
-      // Limpar usuários não-ADM e recarregar do servidor
-      const admins = USUARIOS.filter(function(u) { return u.isAdm; });
-      USUARIOS.length = 0;
-      admins.forEach(function(u) { USUARIOS.push(u); });
-      j.data.forEach(function(u) { USUARIOS.push(u); });
-      // Atualizar localStorage
-      localStorage.setItem('frota_usuarios', JSON.stringify(j.data));
-    }
-  } catch(e) { console.error('Erro ao carregar usuarios servidor:', e); }
 }
 
 function carregarUsuariosLocal() {
@@ -726,7 +701,7 @@ function carregarUsuariosLocal() {
         }
       });
     }
-  } catch(e) { console.error('Erro ao carregar usuarios local:', e); }
+  } catch(e) { console.error('Erro ao carregar usuarios:', e); }
 }
 function loadExcel(inp, emp, per) {
   const f = inp.files[0]; if (!f) return;
@@ -995,22 +970,13 @@ function fmtDate(iso) { if (!iso) return '—'; const d = new Date(iso); if (isN
 function showToast(ico, msg) { document.getElementById('tIco').textContent = ico; document.getElementById('tMsg').textContent = msg; const t = document.getElementById('toast'); t.classList.add('show'); setTimeout(function() { t.classList.remove('show'); }, 3500); }
 
 carregarUsuariosLocal();
-Promise.all([
-  init(),
-  carregarUsuariosServidor()
-]).then(function() {
+init().then(function() {
   // Restaurar sessão se existir
   try {
     const sessao = sessionStorage.getItem('frota_sessao');
     if (sessao) {
       const s = JSON.parse(sessao);
-      // Revalidar usuário com dados atualizados do servidor
-      if (s.user) {
-        const userAtual = USUARIOS.find(function(u) { return u.senha === s.user.senha; });
-        entrar(s.emp, userAtual || s.user);
-      } else {
-        entrar(s.emp, null);
-      }
+      entrar(s.emp, s.user);
     }
   } catch(e) {}
 });
