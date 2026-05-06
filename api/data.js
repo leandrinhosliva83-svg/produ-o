@@ -1,6 +1,6 @@
 const GITHUB_TOKEN = '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';
 const REPO = 'leandrinhosliva83-svg/produ-o';
-const BRANCH = 'main';
+const BRANCH = 'main'; 
 
 async function getFile(path) {
   const r = await fetch(`https://api.github.com/repos/${REPO}/contents/data/${path}.json`, {
