@@ -218,42 +218,34 @@ td{padding:10px 12px;font-size:13px;color:var(--white);}
       <div class="ti-logo-sub">Sistema de Frota</div>
     </div>
   </div>
-  <div class="ti-grid" style="grid-template-columns:repeat(3,1fr);width:780px;">
-    <div class="ti-btn" onclick="acessar('CEM','caminhao')">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:16px;width:340px;">
+    <div class="ti-btn" style="width:100%;padding:32px 20px;" onclick="abrirMenu('caminhao')">
       <div class="ti-btn-icon">🚛</div>
-      <div class="ti-btn-nome">CEM</div>
-      <div class="ti-btn-sub">Caminhão</div>
+      <div class="ti-btn-nome">Caminhão</div>
+      <div class="ti-btn-sub">Produção por caminhão</div>
     </div>
-    <div class="ti-btn" onclick="acessar('CEMMA','caminhao')">
-      <div class="ti-btn-icon">🚛</div>
-      <div class="ti-btn-nome">CEMMA</div>
-      <div class="ti-btn-sub">Caminhão</div>
-    </div>
-    <div class="ti-btn" onclick="acessar('COPLASA','caminhao')">
-      <div class="ti-btn-icon">🚛</div>
-      <div class="ti-btn-nome">COPLASA</div>
-      <div class="ti-btn-sub">Caminhão</div>
-    </div>
-    <div class="ti-btn" style="border-color:rgba(26,188,156,0.3);" onclick="acessar('CEM','entrega')">
+    <div class="ti-btn" style="width:100%;padding:32px 20px;border-color:rgba(26,188,156,0.3);" onclick="abrirMenu('entrega')">
       <div class="ti-btn-icon">🌿</div>
-      <div class="ti-btn-nome" style="color:#1abc9c;">CEM</div>
-      <div class="ti-btn-sub">Entrega de Cana</div>
+      <div class="ti-btn-nome" style="color:#1abc9c;">Entrega de Cana</div>
+      <div class="ti-btn-sub">Produção por frente</div>
     </div>
-    <div class="ti-btn" style="border-color:rgba(26,188,156,0.3);" onclick="acessar('CEMMA','entrega')">
-      <div class="ti-btn-icon">🌿</div>
-      <div class="ti-btn-nome" style="color:#1abc9c;">CEMMA</div>
-      <div class="ti-btn-sub">Entrega de Cana</div>
-    </div>
-    <div class="ti-btn" style="border-color:rgba(26,188,156,0.3);" onclick="acessar('COPLASA','entrega')">
-      <div class="ti-btn-icon">🌿</div>
-      <div class="ti-btn-nome" style="color:#1abc9c;">COPLASA</div>
-      <div class="ti-btn-sub">Entrega de Cana</div>
-    </div>
-    <button onclick="pedirSenha('ADM')" style="grid-column:2;background:transparent;border:1px solid rgba(243,156,18,0.15);color:rgba(243,156,18,0.4);padding:10px 20px;font-family:'Barlow',sans-serif;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .3s;" onmouseover="this.style.borderColor='rgba(243,156,18,0.6)';this.style.color='#f39c12'" onmouseout="this.style.borderColor='rgba(243,156,18,0.15)';this.style.color='rgba(243,156,18,0.4)'">
-      🔒 ADM
-    </button>
   </div>
   <button class="ti-cadastro" onclick="abrirCadastro()">⚙ Cadastro</button>
+  <button onclick="pedirSenha('ADM')" style="position:absolute;bottom:20px;left:28px;background:transparent;border:none;color:rgba(243,156,18,0.3);font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:color .3s;" onmouseover="this.style.color='#f39c12'" onmouseout="this.style.color='rgba(243,156,18,0.3)'">🔒 adm</button>
+</div>
+
+<!-- MODAL EMPRESAS -->
+<div class="modal-overlay" id="modalEmpresas">
+  <div class="ms-box" style="width:320px;">
+    <div class="ms-title" id="empModalTitulo">Selecione a empresa</div>
+    <div class="ms-sub" id="empModalSub">Escolha uma empresa para continuar</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">
+      <button id="empBtn-CEM" onclick="selecionarEmpresa('CEM')" style="background:var(--bg3);border:1px solid var(--border);color:var(--white);padding:14px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'">🌿 CEM</button>
+      <button id="empBtn-CEMMA" onclick="selecionarEmpresa('CEMMA')" style="background:var(--bg3);border:1px solid var(--border);color:var(--white);padding:14px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'">🌿 CEMMA</button>
+      <button id="empBtn-COPLASA" onclick="selecionarEmpresa('COPLASA')" style="background:var(--bg3);border:1px solid var(--border);color:var(--white);padding:14px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'">🌿 COPLASA</button>
+    </div>
+    <button class="btn-cancel" onclick="fecharModalEmpresas()">Cancelar</button>
+  </div>
 </div>
 
 <!-- MODAL SENHA -->
@@ -588,8 +580,25 @@ const periodoAtivo = { CEM:'dia', CEMMA:'dia', COPLASA:'dia' };
 let empAtual = null, usuarioLogado = null, empSelecionada = null, chartInst = null;
 
 // ── TELA INICIAL ──────────────────────────────────────
+let tipoAtual = null;
+
+function abrirMenu(tipo) {
+  tipoAtual = tipo;
+  document.getElementById('empModalTitulo').textContent = tipo === 'caminhao' ? '🚛 Caminhão' : '🌿 Entrega de Cana';
+  document.getElementById('empModalSub').textContent = 'Selecione a empresa';
+  document.getElementById('modalEmpresas').classList.add('open');
+}
+
+function fecharModalEmpresas() {
+  document.getElementById('modalEmpresas').classList.remove('open');
+}
+
+function selecionarEmpresa(emp) {
+  fecharModalEmpresas();
+  acessar(emp, tipoAtual);
+}
+
 function acessar(emp, tipo) {
-  // Verificar sessão
   if (!senhaGeralOk && sessionStorage.getItem('frota_senha_geral')) senhaGeralOk = true;
   if (senhaGeralOk) {
     entrar(emp + '_' + tipo, null);
