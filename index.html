@@ -644,12 +644,8 @@ function goStab(tab) {
 // ── DADOS ─────────────────────────────────────────────
 async function carregarAba(emp, per) {
   try {
-    const r = await fetch(SHEETS_CSV + emp + '_' + per + '&t=' + Date.now());
-    const csv = await r.text();
-    const firstLine = csv.split('\n')[0];
-    const raw = firstLine.trim().replace(/^"|"$/g, '').replace(/""/g, '"');
-    if (!raw) return;
-    const j = JSON.parse(raw);
+    const r = await fetch('/api/data?emp=' + emp + '&per=' + per + '&t=' + Date.now());
+    const j = await r.json();
     if (j.data && j.data.length) db[emp][per] = j.data;
     if (j.updatedAt) updatedAt[emp][per] = j.updatedAt;
   } catch(e) { console.error('[' + emp + '][' + per + ']', e); }
