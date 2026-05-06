@@ -1,42 +1,39 @@
+const SHEET_ID = '1OzWhkGcYo5vIHvT5SLASQGnZxzJqyW_-hnecSh1WRo8';
 
-Copiar
-
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
- 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
- 
-  const SCRIPT = 'https://script.google.com/macros/s/AKfycbw5x5dnauRVhhjetQq-PoX4CRDp9ATA_iVEvjkQ2B3wZWOUzokke3svZc3YJc38YTwL/exec';
- 
+function doGet(e) {
   try {
-    if (req.method === 'POST') {
-      const { emp, per, data, updatedAt } = req.body;
-      const form = new URLSearchParams({
-        emp,
-        per,
-        data: JSON.stringify(data),
-        updatedAt
-      });
-      const r = await fetch(SCRIPT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: form.toString()
-      });
-      const j = await r.json();
-      return res.status(200).json(j);
+    const emp = e.parameter.emp || 'CEM';
+    const per = e.parameter.per || 'dia';
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const sheet = ss.getSheetByName(emp + '_' + per);
+    let result = {data:[], updatedAt:''};
+    if (sheet) {
+      const raw = sheet.getRange(1,1).getValue();
+      if (raw) result = JSON.parse(raw);
     }
- 
-    // GET
-    const { emp, per } = req.query;
-    const r = await fetch(`${SCRIPT}?emp=${emp}&per=${per}&t=${Date.now()}`);
-    const j = await r.json();
-    return res.status(200).json(j);
- 
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({error: err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doPost(e) {
+  try {
+    const emp = e.parameter.emp;
+    const per = e.parameter.per;
+    const updatedAt = e.parameter.updatedAt;
+    const data = JSON.parse(e.parameter.data);
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const sheetName = emp + '_' + per;
+    let sheet = ss.getSheetByName(sheetName);
+    if (!sheet) sheet = ss.insertSheet(sheetName);
+    sheet.getRange(1,1).setValue(JSON.stringify({data, updatedAt}));
+    return ContentService.createTextOutput(JSON.stringify({ok:true}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({error: err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
   }
 }
