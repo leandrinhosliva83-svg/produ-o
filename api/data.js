@@ -31,7 +31,9 @@ async function saveFile(path, data, sha) {
     },
     body: JSON.stringify(body)
   });
-  return r.ok;
+  const txt = await r.text();
+  if (!r.ok) throw new Error('GitHub ' + r.status + ': ' + txt.slice(0,200));
+  return true;
 }
 
 export default async function handler(req, res) {
@@ -48,8 +50,8 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
       const { data, updatedAt } = req.body;
       const { sha } = await getFile(path);
-      const ok = await saveFile(path, { data, updatedAt }, sha);
-      return res.status(200).json({ ok });
+      await saveFile(path, { data, updatedAt }, sha);
+      return res.status(200).json({ ok: true });
     }
 
     const { content } = await getFile(path);
