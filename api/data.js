@@ -1,6 +1,6 @@
 const GITHUB_TOKEN = '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';
 const REPO = 'leandrinhosliva83-svg/produ-o';
-const BRANCH = 'main'; 
+const BRANCH = 'main';
 
 async function getFile(path) {
   const r = await fetch(`https://api.github.com/repos/${REPO}/contents/data/${path}.json`, {
@@ -8,17 +8,23 @@ async function getFile(path) {
   });
   if (r.status === 404) return { content: null, sha: null };
   const j = await r.json();
-  const content = JSON.parse(Buffer.from(j.content, 'base64').toString('utf-8'));
+  const decoded = decodeURIComponent(escape(atob(j.content.replace(/\n/g, ''))));
+  const content = JSON.parse(decoded);
   return { content, sha: j.sha };
 }
 
 async function saveFile(path, data, sha) {
-  const content = Buffer.from(JSON.stringify(data)).toString('base64');
-  const body = { message: `update ${path}`, content, branch: BRANCH };
+  const str = JSON.stringify(data);
+  const encoded = btoa(unescape(encodeURIComponent(str)));
+  const body = { message: `update ${path}`, content: encoded, branch: BRANCH };
   if (sha) body.sha = sha;
   const r = await fetch(`https://api.github.com/repos/${REPO}/contents/data/${path}.json`, {
     method: 'PUT',
-    headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
+    headers: {
+      'Authorization': `token ${GITHUB_TOKEN}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/vnd.github.v3+json'
+    },
     body: JSON.stringify(body)
   });
   return r.ok;
@@ -38,8 +44,8 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
       const { data, updatedAt } = req.body;
       const { sha } = await getFile(path);
-      await saveFile(path, { data, updatedAt }, sha);
-      return res.status(200).json({ ok: true });
+      const ok = await saveFile(path, { data, updatedAt }, sha);
+      return res.status(200).json({ ok });
     }
 
     const { content } = await getFile(path);
