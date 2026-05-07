@@ -652,7 +652,16 @@ function loadExcel(inp, emp, per) {
   reader.onload = async function(e) {
     var wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
     var ws = wb.Sheets[wb.SheetNames[0]];
-    db[emp][per] = parseRows(XLSX.utils.sheet_to_json(ws, {header:1}));
+    var rawRows = XLSX.utils.sheet_to_json(ws, {header:1});
+    // Mostrar valores da primeira linha de caminhão para debug
+    for (var di=0; di<rawRows.length; di++) {
+      var ra = rawRows[di][0] != null ? String(rawRows[di][0]).trim() : '';
+      if (/^\d{6}$/.test(ra)) {
+        showToast('🔍', 'Col F:'+rawRows[di][5]+' G:'+rawRows[di][6]+' H:'+rawRows[di][7]+' J:'+rawRows[di][9]);
+        break;
+      }
+    }
+    db[emp][per] = parseRows(rawRows);
     var now = new Date().toISOString();
     updatedAt[emp][per] = now;
     renderGrid(emp); updateToggle(emp); setBarras();
@@ -753,17 +762,23 @@ function parseRows(raw) {
     if (!a || ignore.some(function(w) { return a.toLowerCase().startsWith(w); })) return;
     if (/^\d+$/.test(a)) {
       if (owner) {
-        // Pegar primeiro número >10 = tonelada, próximo inteiro = viagens, distância depois
-        var ton=0, viag=0, dist=0, tonIdx=-1;
-        for (var ci=1; ci<row.length; ci++) {
-          var v=parseFloat(row[ci]);
-          if (!isNaN(v) && v>10 && tonIdx<0) { ton=v; tonIdx=ci; }
+        // CEM/COPLASA: G(6)=prod, H(7)=viagens, J(9)=dist
+        // CEMMA:       F(5)=prod, G(6)=viagens, I(8)=dist
+        // Detectar: se col G > 10 usa CEM/COPLASA, senão testa col F
+        var ton=0, viag=0, dist=0;
+        var colG = parseFloat(row[6]);
+        var colF = parseFloat(row[5]);
+        if (!isNaN(colG) && colG > 10) {
+          ton  = colG;
+          viag = parseFloat(row[7]) || 0;
+          dist = parseFloat(row[9]) || 0;
+        } else if (!isNaN(colF) && colF > 10) {
+          ton  = colF;
+          viag = parseFloat(row[6]) || 0;
+          dist = parseFloat(row[8]) || 0;
         }
-        if (tonIdx>=0) {
-          viag = parseFloat(row[tonIdx+1]) || 0;
-          dist = parseFloat(row[tonIdx+3]) || 0;
-        }
-        if (ton>0) nd.push({ owner:owner, ownerCode:code, truckCode:a, e:ton, f:'', g:'', h:viag, j:dist });
+
+        if (ton > 0) nd.push({ owner:owner, ownerCode:code, truckCode:a, e:ton, f:'', g:'', h:viag, j:dist });
       }
     } else {
       var p = a.split(/\s+/);
