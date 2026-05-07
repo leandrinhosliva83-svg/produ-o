@@ -274,11 +274,11 @@ td{padding:8px 10px;font-size:12px;color:var(--white);}
     <div class="ms-title" id="empModalTitulo">Selecione a empresa</div>
     <button class="emp-btn" onclick="selecionarEmpresa('CEMMA')" style="display:flex;justify-content:space-between;align-items:center;">
       <span>🌿 CEMMA</span>
-      <span id="rpm-CEMMA" style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:rgba(46,204,113,0.3);cursor:pointer;" onclick="event.stopPropagation();editarRPM('CEMMA')">— RPM</span>
+      <span id="rpm-CEMMA" style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:rgba(46,204,113,0.3);cursor:pointer;">— RPM</span>
     </button>
     <button class="emp-btn" onclick="selecionarEmpresa('COPLASA')" style="display:flex;justify-content:space-between;align-items:center;">
       <span>🌿 COPLASA</span>
-      <span id="rpm-COPLASA" style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:rgba(46,204,113,0.3);cursor:pointer;" onclick="event.stopPropagation();editarRPM('COPLASA')">— RPM</span>
+      <span id="rpm-COPLASA" style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:rgba(46,204,113,0.3);cursor:pointer;">— RPM</span>
     </button>
     <button class="btn-cancel" onclick="fecharModalEmpresas()">Cancelar</button>
   </div>
@@ -542,7 +542,7 @@ function renderGrid(emp) {
   g.innerHTML=owners.map(function(o,idx){
     var totT=o.trucks.reduce(function(s,t){return s+(parseFloat(t.ton)||0);},0);
     var rank=rm[o.code+o.owner];
-    return '<div class="owner-card" data-emp="'+emp+'" data-idx="'+idx+'">'+'<div class="card-stripe"></div>'+'<div class="card-body">'+'<div class="card-top"><div class="card-icon">🏭</div><div class="card-rank">#'+rank+'</div></div>'+'<div class="card-code">Cód. '+o.code+'</div>'+'<div class="card-name">'+o.owner+'</div>'+'<div class="card-ton"><div class="ton-lbl">Produção</div><div class="ton-val">'+fmtK(totT)+'<small>ton</small></div></div>'+'</div></div>';
+    return '<div class="owner-card" data-emp="'+emp+'" data-idx="'+idx+'">'+'<div class="card-stripe"></div>'+'<div class="card-body">'+'<div class="card-top"><div class="card-icon">🏭</div><div class="card-rank">#'+rank+'</div></div>'+'<div class="card-code">Cód. '+o.code+'</div>'+'<div class="card-name">'+o.owner+'</div>'+'<div style="font-size:9px;color:var(--gray);margin:3px 0;">🚛 '+o.trucks.length+' caminhão'+(o.trucks.length>1?'s':'')+'</div>'+'<div class="card-ton"><div class="ton-lbl">Produção</div><div class="ton-val">'+fmtK(totT)+'<small>ton</small></div></div>'+'</div></div>';
   }).join('');
   g.querySelectorAll('.owner-card').forEach(function(el){
     el.addEventListener('click',function(){openModal(this.getAttribute('data-emp'),+this.getAttribute('data-idx'));});
@@ -636,7 +636,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal()
 // RPM
 var rpms=JSON.parse(localStorage.getItem('frota_rpms')||'{"CEM":"","CEMMA":"","COPLASA":""}');
 function atualizarRPMButtons(){EMPS.forEach(function(emp){var el=document.getElementById('rpm-'+emp);if(el){el.textContent=rpms[emp]?Number(rpms[emp]).toLocaleString('pt-BR')+' RPM':'— RPM';el.style.color=rpms[emp]?'#2ecc71':'rgba(46,204,113,0.3)';}});}
-function editarRPM(emp){var n=prompt('RPM — '+emp+':',rpms[emp]||'');if(n!==null){rpms[emp]=n.replace(/[^0-9]/g,'');localStorage.setItem('frota_rpms',JSON.stringify(rpms));atualizarRPMButtons();}}
+
 async function carregarRPMs(){var j=await kvGet('rpms');if(j){rpms=j;localStorage.setItem('frota_rpms',JSON.stringify(rpms));atualizarRPMButtons();}}
 carregarRPMs();
 
