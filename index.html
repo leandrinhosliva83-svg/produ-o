@@ -681,27 +681,30 @@ function renderGrid(emp) {
     return;
   }
   const totals = owners.map(function(o) {
-    return { key: o.code + o.owner, ton: o.trucks.reduce(function(s, t) { return s + (parseFloat(t.e)||0) + (parseFloat(t.f)||0) + (parseFloat(t.g)||0); }, 0) };
+    return { key: o.code + o.owner, ton: o.trucks.reduce(function(s, t) { return s + (parseFloat(t.e) || 0) + (parseFloat(t.f) || 0) + (parseFloat(t.g) || 0); }, 0) };
   });
   totals.sort(function(a, b) { return b.ton - a.ton; });
   const rm = {}; totals.forEach(function(x, i) { rm[x.key] = i + 1; });
-
-  g.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,80px);gap:8px;';
+  g.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;";
   g.innerHTML = owners.map(function(o, idx) {
     const totT = o.trucks.reduce(function(s, t) { return s + (parseFloat(t.e)||0) + (parseFloat(t.f)||0) + (parseFloat(t.g)||0); }, 0);
     const rank = rm[o.code + o.owner];
     const nome = o.owner.replace(/^-\s*/, '');
-    const empEsc = emp.replace(/'/g, "\\'");
-    return '<div onclick="openModal(\'' + empEsc + '\',' + idx + ')" style="background:#111a14;border:1px solid rgba(46,204,113,0.18);border-radius:10px;padding:8px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;width:80px;height:80px;position:relative;overflow:hidden;flex-shrink:0;text-align:center;-webkit-tap-highlight-color:rgba(0,0,0,0);">' +
-      '<div style="height:2px;background:linear-gradient(90deg,#1a3a8f,#2ecc71);position:absolute;top:0;left:0;right:0;"></div>' +
-      '<div style="font-size:16px;margin-bottom:2px;">🏭</div>' +
-      '<div style="font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;color:#f4faf5;line-height:1.2;width:100%;overflow:hidden;">' + nome.substring(0, 12) + '</div>' +
-      '<div style="font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;color:#f39c12;">' + fmtK(totT) + '<span style="font-size:8px;color:#6b8a72;"> t</span></div>' +
-      '<div style="font-size:8px;color:#2ecc71;font-weight:700;">#' + rank + '</div>' +
-      '</div>';
+    const card = document.createElement('div');
+    card.setAttribute('data-emp', emp);
+    card.setAttribute('data-idx', idx);
+    card.onclick = function() { openModal(this.getAttribute('data-emp'), +this.getAttribute('data-idx')); };
+    card.style.cssText = "background:#111a14;border:1px solid rgba(46,204,113,0.18);border-radius:12px;padding:8px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;width:22vw;max-width:100px;height:22vw;max-height:100px;position:relative;overflow:hidden;transition:all .2s;flex-shrink:0;text-align:center;";
+    card.onmouseover = function() { this.style.borderColor = "rgba(46,204,113,0.5)"; };
+    card.onmouseout = function() { this.style.borderColor = "rgba(46,204,113,0.18)"; };
+    card.innerHTML =
+      "<div style='font-size:18px;margin-bottom:4px;'>🏭</div>" +
+      "<div style='font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;color:#f4faf5;line-height:1.2;overflow:hidden;max-height:28px;width:100%;'>" + nome.substring(0,14) + "</div>" +
+      "<div style='font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;color:#f39c12;'>" + fmtK(totT) + "<span style='font-size:8px;color:#6b8a72;'> t</span></div>" +
+      "<div style='font-size:8px;color:#2ecc71;font-weight:700;'>#" + rank + "</div>";
+    return card.outerHTML;
   }).join('');
 }
-
 function updateToggle(emp) {
   const t = document.getElementById('toggle-' + emp); if (!t) return;
   const has = (db[emp].dia && db[emp].dia.length) || (db[emp].d1 && db[emp].d1.length);
