@@ -716,8 +716,8 @@ function loginCliente() {
     if (s) {
       var sess = JSON.parse(s);
       if (sess.tipo === 'cliente') {
-        window._filtroCam = sess.codigosCam || [];
-        window._filtroEnt = sess.codigosEnt || [];
+        window._filtroCam = (sess.codigosCam||[]).filter(function(x){return x&&x!=='Todos'&&x.trim()!=='';});
+        window._filtroEnt = (sess.codigosEnt||[]).filter(function(x){return x&&x!=='Todos'&&x.trim()!=='';});
         entrarComoCliente(sess);
         return;
       }
@@ -753,8 +753,11 @@ function fecharModalLogin() {
 function entrarComoCliente(perfil) {
   if (!perfil || Array.isArray(perfil)) perfil = { emps: ['CEM','CEMMA','COPLASA'], codigosCam: [], codigosEnt: [] };
   empsPermitidas = perfil.emps || ['CEM','CEMMA','COPLASA'];
-  window._filtroCam = perfil.codigosCam || [];
-  window._filtroEnt = perfil.codigosEnt || [];
+  // Filtrar valores inválidos como 'Todos', strings vazias etc
+  var rawCam = perfil.codigosCam || [];
+  var rawEnt = perfil.codigosEnt || [];
+  window._filtroCam = rawCam.filter(function(x){ return x && x !== 'Todos' && x.trim() !== ''; });
+  window._filtroEnt = rawEnt.filter(function(x){ return x && x !== 'Todos' && x.trim() !== ''; });
   ['CEM','CEMMA','COPLASA'].forEach(function(e) {
     var btn = document.getElementById('emp-btn-'+e);
     if (btn) btn.style.display = empsPermitidas.indexOf(e) >= 0 ? '' : 'none';
@@ -831,8 +834,8 @@ function voltarInicio() {
   document.getElementById('view-adm').style.display = 'none';
   // Se cliente, restaurar filtros e mostrar tela inicial com botões filtrados
   if (sess && sess.tipo === 'cliente') {
-    window._filtroCam = sess.codigosCam || [];
-    window._filtroEnt = sess.codigosEnt || [];
+    window._filtroCam = (sess.codigosCam||[]).filter(function(x){return x&&x!=='Todos'&&x.trim()!=='';});
+    window._filtroEnt = (sess.codigosEnt||[]).filter(function(x){return x&&x!=='Todos'&&x.trim()!=='';});
     ['CEM','CEMMA','COPLASA'].forEach(function(e) {
       var btn = document.getElementById('emp-btn-'+e);
       if (btn) btn.style.display = (sess.emps||[]).indexOf(e) >= 0 ? '' : 'none';
@@ -863,8 +866,8 @@ async function init() {
     if (s) {
       var sess = JSON.parse(s);
       if (sess.tipo === 'cliente' && sess.emps) {
-        window._filtroCam = sess.codigosCam || [];
-        window._filtroEnt = sess.codigosEnt || [];
+        window._filtroCam = (sess.codigosCam||[]).filter(function(x){return x&&x!=='Todos'&&x.trim()!=='';});
+        window._filtroEnt = (sess.codigosEnt||[]).filter(function(x){return x&&x!=='Todos'&&x.trim()!=='';});
       }
     }
   } catch(e) {}
@@ -1712,8 +1715,10 @@ async function renderSenhas() {
 function editarSenha(s) {
   var p = (window._senhasCarregadas || {})[s] || {};
   document.getElementById('nova-senha').value = s;
-  document.getElementById('nova-codigos-cam').value = (p.codigosCam||[]).join(', ');
-  document.getElementById('nova-codigos-ent').value = (p.codigosEnt||[]).join(', ');
+  var camVal = (p.codigosCam||[]).filter(function(x){return x && x!=='Todos';}).join(', ');
+  var entVal = (p.codigosEnt||[]).filter(function(x){return x && x!=='Todos';}).join(', ');
+  document.getElementById('nova-codigos-cam').value = camVal;
+  document.getElementById('nova-codigos-ent').value = entVal;
   window._editandoSenha = s;
   // Mudar botão para "Salvar alterações"
   var btn = document.getElementById('btn-salvar-senha');
@@ -1726,8 +1731,11 @@ function editarSenha(s) {
 function adicionarSenha() {
   var s = (document.getElementById('nova-senha').value||'').trim();
   if (!s) { showToast('⚠️','Digite uma senha'); return; }
-  var cam = (document.getElementById('nova-codigos-cam').value||'').split(',').map(function(x){return x.trim();}).filter(Boolean);
-  var ent = (document.getElementById('nova-codigos-ent').value||'').split(',').map(function(x){return x.trim();}).filter(Boolean);
+  var camRaw = (document.getElementById('nova-codigos-cam').value||'').trim();
+  var entRaw = (document.getElementById('nova-codigos-ent').value||'').trim();
+  // "Todos" ou vazio = sem filtro
+  var cam = (camRaw.toLowerCase()==='todos'||camRaw==='') ? [] : camRaw.split(',').map(function(x){return x.trim();}).filter(Boolean);
+  var ent = (entRaw.toLowerCase()==='todos'||entRaw==='') ? [] : entRaw.split(',').map(function(x){return x.trim();}).filter(Boolean);
   // Se editando, remover senha antiga
   var j = window._senhasCarregadas || {};
   if (window._editandoSenha && window._editandoSenha !== s) delete j[window._editandoSenha];
@@ -1741,11 +1749,12 @@ function adicionarSenha() {
   if (btn) btn.textContent = '✅ Adicionar';
 }
 
-function removerSenha(s) {
-  if (!confirm('Remover senha "'+s+'"?')) return;
-  var j = window._senhasCarregadas || {};
+async function removerSenha(s) {
+  var j = await kvGet('senhas_acesso') || {};
   delete j[s];
-  kvSet('senhas_acesso', j).then(function(){ showToast('🗑','Senha removida'); renderSenhas(); });
+  await kvSet('senhas_acesso', j);
+  showToast('🗑','Senha "'+s+'" removida!');
+  renderSenhas();
 }
 
 init();
