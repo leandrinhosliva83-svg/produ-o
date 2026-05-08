@@ -1669,7 +1669,8 @@ function parsePDFCaminhao(text) {
 async function renderSenhas() {
   var el = document.getElementById('lista-senhas'); if (!el) return;
   var j = await kvGet('senhas_acesso');
-  var senhas = j || {};
+  window._senhasCarregadas = j || {};
+  var senhas = window._senhasCarregadas;
   var keys = Object.keys(senhas);
   if (!keys.length) {
     el.innerHTML = '<div style="color:var(--gray);font-size:13px;padding:12px 0;">Nenhuma senha cadastrada ainda.</div>';
@@ -1678,17 +1679,48 @@ async function renderSenhas() {
   el.innerHTML = '<div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:10px;">Senhas cadastradas</div>' +
   keys.map(function(s) {
     var p = senhas[s];
-    var cam = (p.codigosCam||[]).join(', ') || 'Todos';
-    var ent = (p.codigosEnt||[]).join(', ') || 'Todos';
-    return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;">'+
+    var cam = (p.codigosCam||[]).join(', ') || '';
+    var ent = (p.codigosEnt||[]).join(', ') || '';
+    var sid = s.replace(/[^a-zA-Z0-9]/g, '_');
+    return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;" data-senha="'+s+'">'+
       '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'+
         '<span style="font-size:15px;font-family:monospace;color:var(--text);font-weight:700;">🔑 '+s+'</span>'+
-        '<button onclick="removerSenha(\"'+s+'\")" style="background:none;border:1px solid #e74c3c;color:#e74c3c;border-radius:6px;padding:4px 12px;cursor:pointer;font-size:12px;">🗑 Remover</button>'+
+        '<div style="display:flex;gap:6px;">'+
+          '<button data-action="editar" data-key="'+sid+'" style="background:none;border:1px solid var(--green);color:var(--green);border-radius:6px;padding:4px 12px;cursor:pointer;font-size:12px;">✏️ Editar</button>'+
+          '<button data-action="remover" data-key="'+sid+'" style="background:none;border:1px solid #e74c3c;color:#e74c3c;border-radius:6px;padding:4px 12px;cursor:pointer;font-size:12px;">🗑</button>'+
+        '</div>'+
       '</div>'+
-      '<div style="font-size:12px;color:#2ecc71;margin-bottom:3px;">🚛 Caminhão: '+cam+'</div>'+
-      '<div style="font-size:12px;color:#1abc9c;">🌿 Entrega de cana: '+ent+'</div>'+
+      '<div style="font-size:12px;color:#2ecc71;margin-bottom:3px;">🚛 Caminhão: '+(cam||'Todos')+'</div>'+
+      '<div style="font-size:12px;color:#1abc9c;">🌿 Entrega de cana: '+(ent||'Todos')+'</div>'+
     '</div>';
   }).join('');
+  // Mapear sid -> senha real
+  window._senhaKeys = {};
+  keys.forEach(function(s){ var sid = s.replace(/[^a-zA-Z0-9]/g,'_'); window._senhaKeys[sid] = s; });
+  // Delegação de eventos
+  el.onclick = function(ev) {
+    var btn = ev.target.closest('[data-action]');
+    if (!btn) return;
+    var sid = btn.getAttribute('data-key');
+    var s = window._senhaKeys[sid];
+    if (!s) return;
+    if (btn.getAttribute('data-action') === 'editar') editarSenha(s);
+    else removerSenha(s);
+  };
+}
+
+function editarSenha(s) {
+  var p = (window._senhasCarregadas || {})[s] || {};
+  document.getElementById('nova-senha').value = s;
+  document.getElementById('nova-codigos-cam').value = (p.codigosCam||[]).join(', ');
+  document.getElementById('nova-codigos-ent').value = (p.codigosEnt||[]).join(', ');
+  window._editandoSenha = s;
+  // Mudar botão para "Salvar alterações"
+  var btn = document.getElementById('btn-salvar-senha');
+  if (btn) btn.textContent = '💾 Salvar alterações';
+  // Scroll até o formulário
+  document.getElementById('nova-senha').scrollIntoView({behavior:'smooth'});
+  document.getElementById('nova-senha').focus();
 }
 
 function adicionarSenha() {
@@ -1696,18 +1728,24 @@ function adicionarSenha() {
   if (!s) { showToast('⚠️','Digite uma senha'); return; }
   var cam = (document.getElementById('nova-codigos-cam').value||'').split(',').map(function(x){return x.trim();}).filter(Boolean);
   var ent = (document.getElementById('nova-codigos-ent').value||'').split(',').map(function(x){return x.trim();}).filter(Boolean);
-  if (!cam.length && !ent.length) { showToast('⚠️','Digite ao menos um código'); return; }
-  SENHAS[s] = { emps: ['CEM','CEMMA','COPLASA'], adm: false, codigosCam: cam, codigosEnt: ent };
-  kvSet('senhas_acesso', SENHAS).then(function(){ showToast('✅','Senha "'+s+'" adicionada!'); renderSenhas(); });
+  // Se editando, remover senha antiga
+  var j = window._senhasCarregadas || {};
+  if (window._editandoSenha && window._editandoSenha !== s) delete j[window._editandoSenha];
+  window._editandoSenha = null;
+  j[s] = { emps: ['CEM','CEMMA','COPLASA'], adm: false, codigosCam: cam, codigosEnt: ent };
+  kvSet('senhas_acesso', j).then(function(){ showToast('✅','Senha "'+s+'" salva!'); renderSenhas(); });
   document.getElementById('nova-senha').value = '';
   document.getElementById('nova-codigos-cam').value = '';
   document.getElementById('nova-codigos-ent').value = '';
+  var btn = document.getElementById('btn-salvar-senha');
+  if (btn) btn.textContent = '✅ Adicionar';
 }
 
 function removerSenha(s) {
   if (!confirm('Remover senha "'+s+'"?')) return;
-  delete SENHAS[s];
-  kvSet('senhas_acesso', SENHAS).then(function(){ showToast('🗑','Senha removida'); renderSenhas(); });
+  var j = window._senhasCarregadas || {};
+  delete j[s];
+  kvSet('senhas_acesso', j).then(function(){ showToast('🗑','Senha removida'); renderSenhas(); });
 }
 
 init();
