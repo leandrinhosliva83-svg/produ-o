@@ -245,7 +245,7 @@ td{padding:8px 10px;font-size:12px;color:var(--white);}
       <div class="ti-logo-sub">Sistema de Frota · Tempo Real</div>
     </div>
     <div class="ti-btns">
-      <div class="ti-btn" onclick="loginCliente()">
+      <div id="btn-login-cliente" class="ti-btn" onclick="loginCliente()">
         <div class="ti-btn-sweep"></div>
         <div class="ti-btn-energy"></div>
         <span class="ti-btn-ico">👤</span>
@@ -255,7 +255,29 @@ td{padding:8px 10px;font-size:12px;color:var(--white);}
         </div>
         <div class="ti-btn-arr">›</div>
       </div>
-      <div class="ti-btn verde" onclick="abrirAdm()">
+      <div id="btns-cliente-logado" style="display:none;flex-direction:column;gap:14px;width:100%;">
+        <div class="ti-btn" onclick="abrirMenu('caminhao')">
+          <div class="ti-btn-sweep"></div>
+          <div class="ti-btn-energy"></div>
+          <span class="ti-btn-ico">🚛</span>
+          <div class="ti-btn-text">
+            <div class="ti-btn-nome">Caminhão</div>
+            <div class="ti-btn-sub">Produção por proprietário</div>
+          </div>
+          <div class="ti-btn-arr">›</div>
+        </div>
+        <div class="ti-btn verde" onclick="abrirMenu('entrega')">
+          <div class="ti-btn-sweep"></div>
+          <div class="ti-btn-energy"></div>
+          <span class="ti-btn-ico">🌿</span>
+          <div class="ti-btn-text">
+            <div class="ti-btn-nome" style="color:#1abc9c;">Entrega de Cana</div>
+            <div class="ti-btn-sub">Produção por frente</div>
+          </div>
+          <div class="ti-btn-arr" style="border-color:rgba(26,188,156,0.2);color:rgba(26,188,156,0.35);">›</div>
+        </div>
+      </div>
+      <div id="btn-adm-tela" class="ti-btn verde" onclick="abrirAdm()">
         <div class="ti-btn-sweep"></div>
         <div class="ti-btn-energy"></div>
         <span class="ti-btn-ico">⚙️</span>
@@ -269,6 +291,7 @@ td{padding:8px 10px;font-size:12px;color:var(--white);}
   </div>
   <div class="ti-footer">
     <span class="ti-version">Grupo Moreno · v2.0 · 2026</span>
+    <button id="btn-sair-conta" onclick="sairDaConta()" style="display:none;background:none;border:1px solid #e74c3c;color:#e74c3c;border-radius:6px;padding:4px 12px;cursor:pointer;font-size:11px;">🚪 Sair da conta</button>
     
   </div>
 </div>
@@ -472,13 +495,31 @@ td{padding:8px 10px;font-size:12px;color:var(--white);}
       <div style="overflow-x:auto;" id="admTableWrap"><p style="color:var(--gray);padding:20px 0;">Nenhum dado carregado ainda.</p></div>
     </div>
 
-    <div id="stab-senhas" style="display:none;padding:16px;">
-      <div id="lista-senhas" style="margin-bottom:16px;"></div>
-      <div style="background:var(--surface);border-radius:10px;padding:14px;border:1px solid var(--border);display:flex;flex-direction:column;gap:10px;">
-        <input id="nova-senha" placeholder="🔑 Senha" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;">
-        <input id="nova-codigos-cam" placeholder="🚛 Códigos caminhão (ex: 168378, 181595)" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;">
-        <input id="nova-codigos-ent" placeholder="🌿 Códigos entrega (ex: 1001, 1008)" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;">
-        <button class="uc-btn" onclick="adicionarSenha()" style="width:100%;">✅ Adicionar</button>
+    <div id="stab-senhas" style="display:none;padding:16px 12px;">
+
+      <!-- Lista de senhas cadastradas -->
+      <div id="lista-senhas" style="margin-bottom:20px;"></div>
+
+      <!-- Formulário de nova senha -->
+      <div style="background:var(--surface);border-radius:12px;padding:16px;border:1px solid var(--border);">
+        <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:14px;">➕ Nova senha de acesso</div>
+
+        <div style="margin-bottom:10px;">
+          <div style="font-size:11px;color:var(--gray);margin-bottom:4px;">Senha</div>
+          <input id="nova-senha" placeholder="Ex: moreno@2026" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;">
+        </div>
+
+        <div style="margin-bottom:10px;">
+          <div style="font-size:11px;color:var(--gray);margin-bottom:4px;">🚛 Códigos de proprietários (caminhão)</div>
+          <input id="nova-codigos-cam" placeholder="Ex: 168378, 181595, 392647" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;">
+        </div>
+
+        <div style="margin-bottom:14px;">
+          <div style="font-size:11px;color:var(--gray);margin-bottom:4px;">🌿 Códigos de frentes (entrega de cana)</div>
+          <input id="nova-codigos-ent" placeholder="Ex: 1001, 1008, 2003" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;">
+        </div>
+
+        <button class="uc-btn" onclick="adicionarSenha()" style="width:100%;padding:12px;font-size:14px;font-weight:700;">✅ Cadastrar Senha</button>
       </div>
     </div>
 
@@ -526,15 +567,11 @@ td{padding:8px 10px;font-size:12px;color:var(--white);}
 <script>
 const UPSTASH_URL = 'https://splendid-ray-99496.upstash.io';
 const UPSTASH_TOKEN = 'gQAAAAAAAYSoAAIgcDI0Mjk3MjcwYTJiYWQ0ZDExYTE3YTMzMzc1MzBhMTZmNw';
-const SENHA_ADM = 'admin123';
+const SENHA_ADM = 'Grupomoreno@2026+';
 
 // Tabela de senhas: senha -> empresas permitidas (null = todas)
 var SENHAS = {
-  'admin123': { emps: ['CEM','CEMMA','COPLASA'], adm: true },
-  'cem2024':  { emps: ['CEM'], adm: false },
-  'cemma2024':{ emps: ['CEMMA'], adm: false },
-  'cop2024':  { emps: ['COPLASA'], adm: false },
-  'moreno':   { emps: ['CEM','CEMMA','COPLASA'], adm: false }
+  'admin123': { emps: ['CEM','CEMMA','COPLASA'], adm: true }
 };
 var empsPermitidas = ['CEM','CEMMA','COPLASA'];
 
@@ -607,24 +644,63 @@ function selecionarEmpresa(emp) {
       renderGrid(emp); updateToggle(emp); setBarras();
     });
   }
-  localStorage.setItem('frota_sessao', JSON.stringify({ emp: emp, tipo: tipoAtual }));
+  // Preservar sessão de cliente ao navegar entre empresas
+  var _sessAtual = localStorage.getItem('frota_sessao');
+  var _sessObj = _sessAtual ? JSON.parse(_sessAtual) : {};
+  if (_sessObj.tipo === 'cliente') {
+    _sessObj.emp = emp; _sessObj.tipoView = tipoAtual;
+    localStorage.setItem('frota_sessao', JSON.stringify(_sessObj));
+  } else {
+    localStorage.setItem('frota_sessao', JSON.stringify({ emp: emp, tipo: tipoAtual }));
+  }
+}
+
+
+async function debugSenhas() {
+  var el = document.getElementById('debug-senhas-txt');
+  if (!el) return;
+  el.textContent = 'Buscando...';
+  var j = await kvGet('senhas_acesso');
+  if (!j) { el.textContent = 'Nenhuma senha cadastrada no servidor'; return; }
+  Object.assign(SENHAS, j);
+  var keys = Object.keys(j).filter(function(s){ return !j[s].adm; });
+  if (!keys.length) { el.textContent = 'Nenhuma senha cadastrada'; return; }
+  el.innerHTML = keys.map(function(s) {
+    var p = j[s];
+    return '<div style="padding:4px 0;border-bottom:1px solid var(--border);">'+
+      '<b>'+s+'</b> → 🚛 '+(p.codigosCam||[]).join(',')||'—'+' | 🌿 '+(p.codigosEnt||[]).join(',')||'—'+
+    '</div>';
+  }).join('');
 }
 
 async function loginCliente() {
+  // Se já tem sessão de cliente, entrar direto sem pedir senha
+  try {
+    var s = localStorage.getItem('frota_sessao') || sessionStorage.getItem('frota_sessao');
+    if (s) {
+      var sess = JSON.parse(s);
+      if (sess.tipo === 'cliente') {
+        window._filtroCam = sess.codigosCam || [];
+        window._filtroEnt = sess.codigosEnt || [];
+        entrarComoCliente(sess);
+        return;
+      }
+    }
+  } catch(e) {}
+  // Sem sessão — pedir senha
   var senha = prompt('Digite sua senha:');
   if (!senha) return;
-  // Carregar senhas do Upstash antes de verificar
+  senha = senha.trim();
   var senhasKv = await kvGet('senhas_acesso');
-  if (senhasKv) Object.assign(SENHAS, senhasKv);
-  var perfil = SENHAS[senha.trim()];
-  if (!perfil || perfil.adm) { alert('Senha incorreta.'); return; }
-  empsPermitidas = perfil.emps;
-  localStorage.setItem('frota_sessao', JSON.stringify({ tipo: 'cliente', senha: senha.trim(), emps: perfil.emps, codigosCam: perfil.codigosCam||[], codigosEnt: perfil.codigosEnt||[] }));
+  var todasSenhas = senhasKv || {};
+  var perfil = todasSenhas[senha];
+  if (!perfil) { alert('Senha incorreta.'); return; }
+  localStorage.setItem('frota_sessao', JSON.stringify({ tipo: 'cliente', senha: senha, emps: perfil.emps||['CEM','CEMMA','COPLASA'], codigosCam: perfil.codigosCam||[], codigosEnt: perfil.codigosEnt||[] }));
   entrarComoCliente(perfil);
 }
 
 function entrarComoCliente(perfil) {
-  if (Array.isArray(perfil)) perfil = { emps: perfil, codigosCam: [], codigosEnt: [] };
+  if (!perfil || Array.isArray(perfil)) perfil = { emps: ['CEM','CEMMA','COPLASA'], codigosCam: [], codigosEnt: [] };
   empsPermitidas = perfil.emps || ['CEM','CEMMA','COPLASA'];
   window._filtroCam = perfil.codigosCam || [];
   window._filtroEnt = perfil.codigosEnt || [];
@@ -632,6 +708,11 @@ function entrarComoCliente(perfil) {
     var btn = document.getElementById('emp-btn-'+e);
     if (btn) btn.style.display = empsPermitidas.indexOf(e) >= 0 ? '' : 'none';
   });
+  // Esconder botão de login, mostrar botões de navegação
+  document.getElementById('btn-login-cliente').style.display = 'none';
+  document.getElementById('btns-cliente-logado').style.display = 'flex';
+  document.getElementById('btn-sair-conta').style.display = 'block';
+  document.getElementById('btn-adm-tela').style.display = 'none';
 }
 
 function abrirAdm() {
@@ -644,15 +725,57 @@ function abrirAdm() {
   document.getElementById('view-cliente').style.display = 'none';
   document.getElementById('view-entrega').style.display = 'none';
   if (initDone) { atualizarFarois(); renderAdmTable(); } else { pendingAdm = true; }
+  // Limpar senhas padrão do Upstash
+  kvGet('senhas_acesso').then(function(j) {
+    if (!j) return;
+    var antigas = ['cem2024','cemma2024','cop2024','moreno'];
+    var mudou = false;
+    antigas.forEach(function(s){ if(j[s]){ delete j[s]; mudou=true; } });
+    if (mudou) kvSet('senhas_acesso', j).then(function(){ renderSenhas(); });
+    else renderSenhas();
+  });
 }
+function sairDaConta() {
+  if (!confirm('Sair da conta? Precisará digitar a senha novamente.')) return;
+  localStorage.removeItem('frota_sessao');
+  sessionStorage.removeItem('frota_sessao');
+  window._filtroCam = [];
+  window._filtroEnt = [];
+  document.getElementById('btn-sair-conta').style.display = 'none';
+  document.getElementById('btn-login-cliente').style.display = '';
+  document.getElementById('btns-cliente-logado').style.display = 'none';
+  document.getElementById('btn-adm-tela').style.display = '';
+  ['CEM','CEMMA','COPLASA'].forEach(function(e) {
+    var btn = document.getElementById('emp-btn-'+e);
+    if (btn) btn.style.display = '';
+  });
+  voltarInicio();
+}
+
 function voltarInicio() {
   empAtual = null;
-  localStorage.removeItem('frota_sessao');
+  // Verificar se é cliente — mantém sessão, só volta à tela inicial
+  var s = localStorage.getItem('frota_sessao');
+  var sess = s ? JSON.parse(s) : null;
+  if (!sess || sess.tipo !== 'cliente') {
+    localStorage.removeItem('frota_sessao');
+    window._filtroCam = [];
+    window._filtroEnt = [];
+  }
   document.getElementById('telaInicial').style.display = 'flex';
   document.getElementById('btnVoltar').style.display = 'none';
   document.getElementById('view-cliente').style.display = 'none';
   document.getElementById('view-entrega').style.display = 'none';
   document.getElementById('view-adm').style.display = 'none';
+  // Se cliente, restaurar filtros e mostrar tela inicial com botões filtrados
+  if (sess && sess.tipo === 'cliente') {
+    window._filtroCam = sess.codigosCam || [];
+    window._filtroEnt = sess.codigosEnt || [];
+    ['CEM','CEMMA','COPLASA'].forEach(function(e) {
+      var btn = document.getElementById('emp-btn-'+e);
+      if (btn) btn.style.display = (sess.emps||[]).indexOf(e) >= 0 ? '' : 'none';
+    });
+  }
 }
 
 // ── DADOS ─────────────────────────────────────────────
@@ -661,7 +784,11 @@ async function init() {
   const emps = ['CEM','CEMMA','COPLASA'];
   // Carregar senhas customizadas do Upstash
   var senhasKv = await kvGet('senhas_acesso');
-  if (senhasKv) Object.assign(SENHAS, senhasKv);
+  if (senhasKv) {
+    // Remover senhas padrão antigas se existirem
+    ['cem2024','cemma2024','cop2024','moreno'].forEach(function(s){ delete senhasKv[s]; });
+    Object.assign(SENHAS, senhasKv);
+  }
   await Promise.all([
     ...emps.flatMap(function(emp) { return ['dia','d1'].map(function(per) { return carregarAba(emp, per); }); }),
     ...emps.map(function(emp) { return carregarEntrega(emp); })
@@ -672,10 +799,15 @@ async function init() {
   if (pendingAdm) { atualizarFarois(); renderAdmTable(); pendingAdm = false; }
   // Restaurar sessão
   try {
-    var s = localStorage.getItem('frota_sessao');
+    var s = localStorage.getItem('frota_sessao') || sessionStorage.getItem('frota_sessao');
     if (s) {
       var sess = JSON.parse(s);
       if (sess.tipo === 'cliente' && sess.emps) {
+        window._filtroCam = sess.codigosCam || [];
+        window._filtroEnt = sess.codigosEnt || [];
+        // Mostrar botão sair da conta
+        var btnSair = document.getElementById('btn-sair-conta');
+        if (btnSair) btnSair.style.display = 'block';
         entrarComoCliente(sess);
       } else if (sess.emp) {
         tipoAtual = sess.tipo || 'caminhao';
@@ -891,8 +1023,17 @@ function parseRowsEntrega(raw) {
 // ── RENDER ────────────────────────────────────────────
 function grouped(emp) {
   var m = {};
+  var filtro = window._filtroCam || [];
   var rows = db[emp][periodoAtivo[emp]] || [];
   rows.forEach(function(d) {
+    // Aplicar filtro de códigos de proprietário
+    if (filtro.length) {
+      var match = filtro.some(function(cod) {
+        return String(d.ownerCode).trim() === String(cod).trim() ||
+               String(d.truckCode).trim() === String(cod).trim();
+      });
+      if (!match) return;
+    }
     var k = d.ownerCode + '||' + d.owner;
     if (!m[k]) m[k] = { owner:d.owner, code:d.ownerCode, trucks:[] };
     m[k].trucks.push(d);
@@ -999,9 +1140,12 @@ function renderEntrega(emp) {
     }
   }
   // Filtrar linha BAL e Total
+  var filtroEnt = window._filtroEnt || [];
   var rows = (dbEntrega[emp] || []).filter(function(r) {
     var a = String(r.codigo || '').toLowerCase();
-    return !a.startsWith('bal') && !a.startsWith('total');
+    if (a.startsWith('bal') || a.startsWith('total')) return false;
+    if (filtroEnt.length && filtroEnt.indexOf(r.codigo) < 0) return false;
+    return true;
   });
   var chartDiv = document.getElementById('chart-entrega-' + emp);
   if (!chartDiv) {
@@ -1226,7 +1370,7 @@ function goStab(tab){
   document.getElementById('admTableWrap').style.display = tab==='planilhas' ? 'block' : 'none';
   document.querySelectorAll('.adm-stab').forEach(function(b){ b.classList.remove('active'); });
   event.target.classList.add('active');
-  if(tab==='senhas') renderSenhas();
+  if(tab==='senhas') { renderSenhas(); debugSenhas(); }
 }
 
 // Partículas na tela inicial
@@ -1447,21 +1591,27 @@ function parsePDFCaminhao(text) {
   el.textContent = msg + ' — Grupo Moreno';
 })();
 
-function renderSenhas() {
+async function renderSenhas() {
   var el = document.getElementById('lista-senhas'); if (!el) return;
-  var keys = Object.keys(SENHAS).filter(function(s){ return !SENHAS[s].adm; });
-  if (!keys.length) { el.innerHTML = '<div style="color:var(--gray);font-size:12px;padding:8px 0;">Nenhuma senha cadastrada</div>'; return; }
-  el.innerHTML = keys.map(function(s) {
-    var p = SENHAS[s];
-    var cam = (p.codigosCam||[]).join(', ') || '—';
-    var ent = (p.codigosEnt||[]).join(', ') || '—';
-    return '<div style="padding:10px 0;border-bottom:1px solid var(--border);">'+
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">'+
-        '<span style="flex:1;font-size:14px;font-family:monospace;color:var(--text);font-weight:700;">'+s+'</span>'+
-        '<button onclick="removerSenha(\"'+s+'\")" style="background:none;border:1px solid #e74c3c;color:#e74c3c;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:12px;">🗑</button>'+
+  var j = await kvGet('senhas_acesso');
+  var senhas = j || {};
+  var keys = Object.keys(senhas);
+  if (!keys.length) {
+    el.innerHTML = '<div style="color:var(--gray);font-size:13px;padding:12px 0;">Nenhuma senha cadastrada ainda.</div>';
+    return;
+  }
+  el.innerHTML = '<div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:10px;">Senhas cadastradas</div>' +
+  keys.map(function(s) {
+    var p = senhas[s];
+    var cam = (p.codigosCam||[]).join(', ') || 'Todos';
+    var ent = (p.codigosEnt||[]).join(', ') || 'Todos';
+    return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'+
+        '<span style="font-size:15px;font-family:monospace;color:var(--text);font-weight:700;">🔑 '+s+'</span>'+
+        '<button onclick="removerSenha(\"'+s+'\")" style="background:none;border:1px solid #e74c3c;color:#e74c3c;border-radius:6px;padding:4px 12px;cursor:pointer;font-size:12px;">🗑 Remover</button>'+
       '</div>'+
-      '<div style="font-size:11px;color:var(--gray);">🚛 Caminhão: '+cam+'</div>'+
-      '<div style="font-size:11px;color:var(--gray);">🌿 Entrega: '+ent+'</div>'+
+      '<div style="font-size:12px;color:#2ecc71;margin-bottom:3px;">🚛 Caminhão: '+cam+'</div>'+
+      '<div style="font-size:12px;color:#1abc9c;">🌿 Entrega de cana: '+ent+'</div>'+
     '</div>';
   }).join('');
 }
