@@ -588,7 +588,10 @@ function selecionarEmpresa(emp) {
     document.querySelectorAll('#view-cliente .emp-content').forEach(function(e) { e.style.display = 'none'; });
     var el2 = document.getElementById('emp-' + emp);
     if (el2) el2.style.display = 'block';
-    renderGrid(emp); updateToggle(emp); setBarras();
+    // Recarregar dados frescos do Upstash
+    Promise.all(['dia','d1'].map(function(per){ return carregarAba(emp, per); })).then(function() {
+      renderGrid(emp); updateToggle(emp); setBarras();
+    });
   }
   localStorage.setItem('frota_sessao', JSON.stringify({ emp: emp, tipo: tipoAtual }));
 }
@@ -669,7 +672,8 @@ function loadExcel(inp, emp, per) {
     document.getElementById('pbar').classList.add('on');
     try {
       await kvSet(emp + '_' + per, { data: db[emp][per], updatedAt: now });
-      showToast('✅', emp + ' ' + (per==='dia'?'Dia':'D-1') + ' salvo!');
+      var primeiro = db[emp][per][0];
+    showToast('✅', emp + ' salvo! ex: ' + (primeiro ? primeiro.truckCode + ' e=' + primeiro.e : 'vazio'));
     } catch(err) { showToast('❌', 'Erro ao salvar.'); }
     finally { document.getElementById('pbar').classList.remove('on'); }
     atualizarFarois(); renderAdmTable();
@@ -756,58 +760,41 @@ function loadExcelEntrega(inp, emp) {
 }
 function parseRows(raw) {
   var nd = [], owner = null, code = null;
-  var ignore = ['total','média','código','cct','caminhões','equipamentos','ponderada','safra','início','modelo','toneladas','número','distância','dias','trab','disp'];
+  var ignore = ['total','média','código','cct','caminhões e dias','equipamentos','ponderada','número','distância','toneladas','modelo','safra','início'];
 
-  raw.forEach(function(row) {
-    // Checar col 0, 1 e 2 para encontrar o dado
+  function toN(v) {
+    if (v == null || v === '') return 0;
+    var n = typeof v === 'number' ? v : parseFloat(String(v).replace(',','.'));
+    return isNaN(n) ? 0 : n;
+  }
+
+  raw.forEach(function(row, ri) {
+    if (ri < 9) return;
+
     var a0 = row[0] != null ? String(row[0]).trim() : '';
-    var a1 = row[1] != null ? String(row[1]).trim() : '';
-    var a2 = row[2] != null ? String(row[2]).trim() : '';
+    if (!a0) return;
+    var lower = a0.toLowerCase();
+    if (ignore.some(function(w){ return lower.indexOf(w) >= 0; })) return;
 
-    // Ignorar linhas de cabeçalho
-    var allText = (a0 + ' ' + a1 + ' ' + a2).toLowerCase();
-    if (ignore.some(function(w){ return allText.indexOf(w) >= 0; })) return;
-
-    // Linha de proprietário: "123456 - NOME" pode estar em qualquer col
-    var propText = a0.length > 5 ? a0 : (a1.length > 5 ? a1 : (a2.length > 5 ? a2 : ''));
-    var mProp = propText.match(/^(\d{5,})\s*[-–]\s*(.+)/);
-    if (mProp && isNaN(Number(mProp[2].trim()))) {
-      code = mProp[1];
-      owner = mProp[2].trim().replace(/^[-–]\s*/,'');
-      return;
+    // Linha de proprietário: "1234 - NOME" ou "12345 - NOME" (4+ dígitos)
+    var mProp = a0.match(/^(\d{4,})\s*[-–]\s*(.+)/);
+    if (mProp && mProp[2] && !/^\d+$/.test(mProp[2].trim())) {
+      code = mProp[1]; owner = mProp[2].trim(); return;
     }
 
-    // Linha de caminhão: frota em col A ou col B
-    var frota = /^\d{4,6}$/.test(a0) ? a0 : (/^\d{4,6}$/.test(a1) ? a1 : '');
-    if (!frota || !owner) return;
+    // Linha de caminhão: número puro em col A
+    if (!/^\d+$/.test(a0) || !owner) return;
 
-    // Dados numéricos: pegar todos os números da linha a partir da col 2 ou 3
-    var startIdx = /^\d{4,6}$/.test(a0) ? 1 : 2;
-    var nums = [];
-    for (var ci = startIdx; ci < row.length; ci++) {
-      var v = row[ci];
-      if (v == null || v === '') continue;
-      var n = typeof v === 'number' ? v : parseFloat(String(v).replace(',','.'));
-      if (!isNaN(n) && n > 0) nums.push(n);
-    }
-    if (!nums.length) return;
+    // F(5) ou G(6) = tonelada, H(7) = viagens, J(9) = distância
+    var ton  = toN(row[5]) || toN(row[6]);
+    var viag = toN(row[7]);
+    var dist = toN(row[9]);
 
-    // Sequência: TON, VIAGENS (inteiro < 50), pular MEDIA_VIAGEM, DISTANCIA
-    var ton=0, viag=0, dist=0;
-    for (var i=0; i<nums.length; i++) {
-      if (!ton && nums[i] > 10) { ton = nums[i]; continue; }
-      if (ton && !viag && nums[i] === Math.round(nums[i]) && nums[i] < 50) { viag = nums[i]; continue; }
-      if (ton && viag && !dist) {
-        // Pular média/viagem (número similar à tonelada/viagens)
-        // Distância é o próximo número pequeno <= 200
-        if (nums[i] <= 200 && nums[i] !== Math.floor(ton/viag||1)) { dist = nums[i]; break; }
-      }
-    }
-
-    if (ton > 0) nd.push({ owner:owner, ownerCode:code, truckCode:frota, e:ton, f:'', g:'', h:viag, j:dist });
+    if (ton > 0) nd.push({ owner:owner, ownerCode:code, truckCode:a0, e:ton, f:'', g:'', h:viag, j:dist });
   });
   return nd;
 }
+
 function parseRowsEntrega(raw) {
   var nd = [];
   // Achar linha "Frente de Corte"
