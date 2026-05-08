@@ -524,6 +524,16 @@ const UPSTASH_URL = 'https://splendid-ray-99496.upstash.io';
 const UPSTASH_TOKEN = 'gQAAAAAAAYSoAAIgcDI0Mjk3MjcwYTJiYWQ0ZDExYTE3YTMzMzc1MzBhMTZmNw';
 const SENHA_ADM = 'admin123';
 
+// Tabela de senhas: senha -> empresas permitidas (null = todas)
+const SENHAS = {
+  'admin123': { emps: ['CEM','CEMMA','COPLASA'], adm: true },
+  'cem2024':  { emps: ['CEM'], adm: false },
+  'cemma2024':{ emps: ['CEMMA'], adm: false },
+  'cop2024':  { emps: ['COPLASA'], adm: false },
+  'moreno':   { emps: ['CEM','CEMMA','COPLASA'], adm: false }
+};
+var empsPermitidas = ['CEM','CEMMA','COPLASA'];
+
 const db = {
   CEM:    { dia:[], d1:[] },
   CEMMA:  { dia:[], d1:[] },
@@ -599,6 +609,7 @@ function abrirAdm() {
   var senha = prompt('Senha ADM:');
   if (senha !== SENHA_ADM) { alert('Senha incorreta.'); return; }
   empAtual = 'ADM';
+  renderSenhas();
   document.getElementById('telaInicial').style.display = 'none';
   document.getElementById('btnVoltar').style.display = 'flex';
   document.getElementById('view-adm').style.display = 'block';
@@ -620,6 +631,9 @@ function voltarInicio() {
 let initDone = false, pendingAdm = false;
 async function init() {
   const emps = ['CEM','CEMMA','COPLASA'];
+  // Carregar senhas customizadas do Upstash
+  var senhasKv = await kvGet('senhas_acesso');
+  if (senhasKv) Object.assign(SENHAS, senhasKv);
   await Promise.all([
     ...emps.flatMap(function(emp) { return ['dia','d1'].map(function(per) { return carregarAba(emp, per); }); }),
     ...emps.map(function(emp) { return carregarEntrega(emp); })
