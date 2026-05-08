@@ -432,7 +432,9 @@ function selecionarEmpresa(emp) {
     document.getElementById('view-adm').style.display='none';
     document.querySelectorAll('#view-cliente .emp-content').forEach(function(e){e.style.display='none';});
     var el2=document.getElementById('emp-'+emp); if(el2) el2.style.display='block';
-    renderGrid(emp); updateToggle(emp); setBarras();
+    Promise.all([carregarFiltros()].concat(['dia','d1'].map(function(per){ return carregarAba(emp, per); }))).then(function() {
+      renderGrid(emp); updateToggle(emp); setBarras();
+    });
   }
   localStorage.setItem('frota_v2_sessao', JSON.stringify({emp:emp,tipo:tipoAtual}));
 }
@@ -497,7 +499,13 @@ async function init() {
 }
 async function carregarAba(emp, per) {
   var j=await kvGet(emp+'_'+per);
-  if(j&&j.data&&j.data.length){db[emp][per]=j.data;if(j.updatedAt){updatedAt[emp][per]=j.updatedAt;setUploaStatus(emp,per,true,fmtDate(j.updatedAt));}}
+  if(j&&j.data&&j.data.length){
+    db[emp][per]=j.data;
+    if(j.updatedAt){updatedAt[emp][per]=j.updatedAt;setUploaStatus(emp,per,true,fmtDate(j.updatedAt));}
+    showToast('📦', emp+' '+per+': '+j.data.length+' registros carregados');
+  } else {
+    showToast('⚠️', emp+' '+per+': sem dados no Upstash');
+  }
 }
 async function carregarEntrega(emp) {
   var j=await kvGet('entrega_'+emp);
@@ -521,6 +529,18 @@ function grouped(emp) {
   var m = {};
   var rows = db[emp][periodoAtivo[emp]] || [];
   rows.forEach(function(d) {
+    // Filtro de proprietário/código (filtroCodigos)
+    if (filtroCodigos.length) {
+      var match = filtroCodigos.some(function(cod) {
+        return d.ownerCode === cod || d.truckCode === cod;
+      });
+      if (!match) return;
+    }
+    // Filtro rápido por texto
+    if (filtroRapido) {
+      var q = filtroRapido.toLowerCase();
+      if ((d.ownerCode||'').indexOf(q) < 0 && (d.owner||'').toLowerCase().indexOf(q) < 0 && (d.truckCode||'').indexOf(q) < 0) return;
+    }
     var k = d.ownerCode + '||' + d.owner;
     if (!m[k]) m[k] = { owner:d.owner, code:d.ownerCode, trucks:[] };
     m[k].trucks.push(d);
