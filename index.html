@@ -245,45 +245,23 @@ td{padding:8px 10px;font-size:12px;color:var(--white);}
       <div class="ti-logo-sub">Sistema de Frota · Tempo Real</div>
     </div>
     <div class="ti-btns">
-      <div id="btn-login-cliente" class="ti-btn" onclick="loginCliente()" role="button" style="cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;">
+      <div class="ti-btn" onclick="abrirMenu('caminhao')">
         <div class="ti-btn-sweep"></div>
         <div class="ti-btn-energy"></div>
-        <span class="ti-btn-ico">👤</span>
+        <span class="ti-btn-ico">🚛</span>
         <div class="ti-btn-text">
-          <div class="ti-btn-nome">Acesso Cliente</div>
-          <div class="ti-btn-sub">Digite sua senha para entrar</div>
+          <div class="ti-btn-nome">Caminhão</div>
+          <div class="ti-btn-sub">Produção por proprietário</div>
         </div>
         <div class="ti-btn-arr">›</div>
       </div>
-      <div id="btns-cliente-logado" style="display:none;flex-direction:column;gap:14px;width:100%;">
-        <div class="ti-btn" onclick="abrirMenu('caminhao')">
-          <div class="ti-btn-sweep"></div>
-          <div class="ti-btn-energy"></div>
-          <span class="ti-btn-ico">🚛</span>
-          <div class="ti-btn-text">
-            <div class="ti-btn-nome">Caminhão</div>
-            <div class="ti-btn-sub">Produção por proprietário</div>
-          </div>
-          <div class="ti-btn-arr">›</div>
-        </div>
-        <div class="ti-btn verde" onclick="abrirMenu('entrega')">
-          <div class="ti-btn-sweep"></div>
-          <div class="ti-btn-energy"></div>
-          <span class="ti-btn-ico">🌿</span>
-          <div class="ti-btn-text">
-            <div class="ti-btn-nome" style="color:#1abc9c;">Entrega de Cana</div>
-            <div class="ti-btn-sub">Produção por frente</div>
-          </div>
-          <div class="ti-btn-arr" style="border-color:rgba(26,188,156,0.2);color:rgba(26,188,156,0.35);">›</div>
-        </div>
-      </div>
-      <div id="btn-adm-tela" class="ti-btn verde" onclick="abrirAdm()" role="button" style="cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;">
+      <div class="ti-btn verde" onclick="abrirMenu('entrega')">
         <div class="ti-btn-sweep"></div>
         <div class="ti-btn-energy"></div>
-        <span class="ti-btn-ico">⚙️</span>
+        <span class="ti-btn-ico">🌿</span>
         <div class="ti-btn-text">
-          <div class="ti-btn-nome" style="color:#1abc9c;">Administrador</div>
-          <div class="ti-btn-sub">Acesso restrito</div>
+          <div class="ti-btn-nome" style="color:#1abc9c;">Entrega de Cana</div>
+          <div class="ti-btn-sub">Produção por frente</div>
         </div>
         <div class="ti-btn-arr" style="border-color:rgba(26,188,156,0.2);color:rgba(26,188,156,0.35);">›</div>
       </div>
@@ -291,32 +269,20 @@ td{padding:8px 10px;font-size:12px;color:var(--white);}
   </div>
   <div class="ti-footer">
     <span class="ti-version">Grupo Moreno · v2.0 · 2026</span>
-    <button id="btn-sair-conta" onclick="sairDaConta()" style="display:none;background:none;border:1px solid #e74c3c;color:#e74c3c;border-radius:6px;padding:4px 12px;cursor:pointer;font-size:11px;">🚪 Sair da conta</button>
-    
-  </div>
-</div>
-
-
-<!-- MODAL LOGIN CLIENTE -->
-<div id="modalLogin" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;">
-  <div style="background:#0d1f14;border:1px solid rgba(46,204,113,0.3);border-radius:16px;padding:32px 24px;width:90%;max-width:360px;">
-    <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:6px;">🔑 Acesso Cliente</div>
-    <div style="font-size:12px;color:#6b8a72;margin-bottom:20px;">Digite sua senha de acesso</div>
-    <div style="position:relative;margin-bottom:16px;">
-      <input id="input-senha-login" type="password" placeholder="Senha"
-        style="width:100%;box-sizing:border-box;padding:12px 48px 12px 16px;border-radius:10px;border:1px solid rgba(46,204,113,0.3);background:rgba(0,0,0,0.3);color:#fff;font-size:16px;"
-        onkeydown="if(event.key==='Enter') confirmarLogin()">
-      <span onclick="var i=document.getElementById('input-senha-login');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'👁':'🙈'"
-        style="position:absolute;right:14px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:18px;user-select:none;">👁</span>
+    <div style="display:flex;align-items:center;gap:8px;background:rgba(46,204,113,0.06);border:1px solid rgba(46,204,113,0.25);border-radius:8px;padding:6px 12px;">
+      <span style="font-size:13px;">🔑</span>
+      <input id="campo-senha-discreta" type="password" placeholder="Código de acesso"
+        style="background:transparent;border:none;color:#2ecc71;font-size:13px;width:130px;outline:none;letter-spacing:2px;font-family:'Barlow',sans-serif;"
+        onkeydown="if(event.key==='Enter') verificarSenhaDiscreta()">
+      <button onclick="verificarSenhaDiscreta()" style="background:rgba(46,204,113,0.15);border:1px solid rgba(46,204,113,0.3);color:#2ecc71;font-size:12px;cursor:pointer;padding:3px 10px;border-radius:5px;font-weight:700;">→</button>
     </div>
-    <button onclick="confirmarLogin()" style="width:100%;padding:14px;background:linear-gradient(135deg,#1a6b33,#0d4a22);border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">Entrar</button>
-    <button onclick="fecharModalLogin()" style="width:100%;padding:10px;background:none;border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#6b8a72;font-size:13px;cursor:pointer;">Cancelar</button>
-    <div id="login-erro" style="color:#e74c3c;font-size:12px;text-align:center;margin-top:10px;display:none;">Senha incorreta. Tente novamente.</div>
+    <button class="ti-adm" onclick="abrirAdm()">⚙ ADM</button>
   </div>
 </div>
+
 
 <!-- MODAL LOGIN ADM -->
-<div id="modalAdm" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;">
+<div id="modalAdm" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:9999;align-items:center;justify-content:center;">
   <div style="background:#0d1f14;border:1px solid rgba(26,188,156,0.3);border-radius:16px;padding:32px 24px;width:90%;max-width:360px;">
     <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:6px;">⚙️ Administrador</div>
     <div style="font-size:12px;color:#6b8a72;margin-bottom:20px;">Acesso restrito</div>
@@ -336,27 +302,14 @@ td{padding:8px 10px;font-size:12px;color:var(--white);}
 <div class="modal-overlay" id="modalEmpresas">
   <div class="ms-box">
     <div class="ms-title" id="empModalTitulo">Selecione a empresa</div>
-    <button id="emp-btn-CEM" class="emp-btn" onclick="selecionarEmpresa('CEM')" style="display:flex;justify-content:space-between;align-items:center;">
-      <span>🌿 CEM</span>
-      <span id="rpm-CEM" style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer;" onclick="event.stopPropagation();editarRPM('CEM')">— RPM</span>
-    </button>
-    <button id="emp-btn-CEMMA" class="emp-btn" onclick="selecionarEmpresa('CEMMA')" style="display:flex;justify-content:space-between;align-items:center;">
-      <span>🌿 CEMMA</span>
-      <span id="rpm-CEMMA" style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer;" onclick="event.stopPropagation();editarRPM('CEMMA')">— RPM</span>
-    </button>
-    <button id="emp-btn-COPLASA" class="emp-btn" onclick="selecionarEmpresa('COPLASA')" style="display:flex;justify-content:space-between;align-items:center;">
-      <span>🌿 COPLASA</span>
-      <span id="rpm-COPLASA" style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer;" onclick="event.stopPropagation();editarRPM('COPLASA')">— RPM</span>
-    </button>
+    
+    <button class="emp-btn" onclick="selecionarEmpresa('CEMMA')">🌿 CEMMA</button>
+    <button class="emp-btn" onclick="selecionarEmpresa('COPLASA')">🌿 COPLASA</button>
     <button class="btn-cancel" onclick="fecharModalEmpresas()">Cancelar</button>
   </div>
 </div>
 
-    <div style="font-size:9px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:rgba(46,204,113,0.6);">RPM</div>
-    <div id="rpmValor" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#2ecc71;letter-spacing:2px;min-width:80px;text-align:center;">—</div>
-    <button onclick="editarRPM()" style="background:transparent;border:none;color:rgba(46,204,113,0.4);cursor:pointer;font-size:14px;padding:0;">✎</button>
-  </div>
-</div>
+    
 
 <!-- HEADER -->
 <header class="header">
@@ -439,29 +392,36 @@ td{padding:8px 10px;font-size:12px;color:var(--white);}
   <div class="view" id="view-adm">
     <div class="adm-subtabs">
       <button class="adm-stab active" onclick="goStab('planilhas')">📊 Planilhas</button>
-      <button class="adm-stab" onclick="goStab('senhas')">🔐 Senhas</button>
+      <button class="adm-stab" onclick="goStab('acessos')">🔑 Acessos</button>
     </div>
-
     <div id="stab-planilhas">
       <div class="page-title">Painel <span>Administrativo</span></div>
       <div class="page-sub">Carregue o Excel de cada empresa separadamente</div>
+
+      <!-- RPM por empresa -->
       <div style="background:var(--bg2);border:1px solid var(--border);padding:16px 20px;margin-bottom:24px;position:relative;">
         <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--green));"></div>
         <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:14px;">⚡ RPM — Rotação Atual</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
           <div style="background:var(--bg3);border:1px solid var(--border);padding:14px;text-align:center;">
             <div style="font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:8px;">CEM</div>
-            <input id="rpm-input-CEM" type="number" value="" placeholder="0" style="width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);color:#2ecc71;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;text-align:center;outline:none;padding:4px 0;" onchange="salvarRPM('CEM',this.value)" oninput="salvarRPM('CEM',this.value)">
+            <input id="rpm-input-CEM" type="number" value="" placeholder="0" 
+              style="width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);color:#2ecc71;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;text-align:center;outline:none;padding:4px 0;"
+              onchange="salvarRPM('CEM',this.value)" oninput="salvarRPM('CEM',this.value)">
             <div style="font-size:9px;color:var(--gray);letter-spacing:1px;margin-top:4px;">RPM</div>
           </div>
           <div style="background:var(--bg3);border:1px solid var(--border);padding:14px;text-align:center;">
             <div style="font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:8px;">CEMMA</div>
-            <input id="rpm-input-CEMMA" type="number" value="" placeholder="0" style="width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);color:#2ecc71;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;text-align:center;outline:none;padding:4px 0;" onchange="salvarRPM('CEMMA',this.value)" oninput="salvarRPM('CEMMA',this.value)">
+            <input id="rpm-input-CEMMA" type="number" value="" placeholder="0"
+              style="width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);color:#2ecc71;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;text-align:center;outline:none;padding:4px 0;"
+              onchange="salvarRPM('CEMMA',this.value)" oninput="salvarRPM('CEMMA',this.value)">
             <div style="font-size:9px;color:var(--gray);letter-spacing:1px;margin-top:4px;">RPM</div>
           </div>
           <div style="background:var(--bg3);border:1px solid var(--border);padding:14px;text-align:center;">
             <div style="font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:8px;">COPLASA</div>
-            <input id="rpm-input-COPLASA" type="number" value="" placeholder="0" style="width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);color:#2ecc71;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;text-align:center;outline:none;padding:4px 0;" onchange="salvarRPM('COPLASA',this.value)" oninput="salvarRPM('COPLASA',this.value)">
+            <input id="rpm-input-COPLASA" type="number" value="" placeholder="0"
+              style="width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);color:#2ecc71;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;text-align:center;outline:none;padding:4px 0;"
+              onchange="salvarRPM('COPLASA',this.value)" oninput="salvarRPM('COPLASA',this.value)">
             <div style="font-size:9px;color:var(--gray);letter-spacing:1px;margin-top:4px;">RPM</div>
           </div>
         </div>
@@ -528,38 +488,30 @@ td{padding:8px 10px;font-size:12px;color:var(--white);}
           <input type="file" id="f-COPLASA-d1" accept=".xlsx,.xls" style="display:none" onchange="loadExcel(this,'COPLASA','d1')">
         </div>
       </div>
-      <div style="overflow-x:auto;" id="admTableWrap"><p style="color:var(--gray);padding:20px 0;">Nenhum dado carregado ainda.</p></div>
-    </div>
-
-    <div id="stab-senhas" style="display:none;padding:16px 12px;">
-
-      <!-- Lista de senhas cadastradas -->
-      <div id="lista-senhas" style="margin-bottom:20px;"></div>
-
-      <!-- Formulário de nova senha -->
-      <div style="background:var(--surface);border-radius:12px;padding:16px;border:1px solid var(--border);">
-        <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:14px;">➕ Nova senha de acesso</div>
-
+      
+    <div id="stab-acessos" style="display:none;padding:16px;">
+      <div id="lista-acessos" style="margin-bottom:20px;"></div>
+      <div style="background:var(--surface);border-radius:12px;padding:16px;border:1px solid rgba(46,204,113,0.25);">
+        <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:14px;">➕ Novo acesso</div>
         <div style="margin-bottom:10px;">
-          <div style="font-size:11px;color:var(--gray);margin-bottom:4px;">Senha</div>
-          <input id="nova-senha" placeholder="Ex: moreno@2026" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;">
+          <div style="font-size:11px;color:var(--gray);margin-bottom:4px;">Senha de acesso</div>
+          <input id="ac-codigo" placeholder="Ex: 3251" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:8px;border:1px solid rgba(46,204,113,0.3);background:var(--bg);color:#2ecc71;font-size:16px;letter-spacing:2px;">
         </div>
-
         <div style="margin-bottom:10px;">
-          <div style="font-size:11px;color:var(--gray);margin-bottom:4px;">🚛 Códigos de proprietários (caminhão)</div>
-          <input id="nova-codigos-cam" placeholder="Ex: 168378, 181595, 392647" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;">
+          <div style="font-size:11px;color:var(--gray);margin-bottom:4px;">🚛 Caminhão — códigos do proprietário (vazio = todos)</div>
+          <input id="ac-cam" placeholder="Ex: 168378, 392647 ou vazio para todos" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;">
         </div>
-
         <div style="margin-bottom:14px;">
-          <div style="font-size:11px;color:var(--gray);margin-bottom:4px;">🌿 Códigos de frentes (entrega de cana)</div>
-          <input id="nova-codigos-ent" placeholder="Ex: 1001, 1008, 2003" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;">
+          <div style="font-size:11px;color:var(--gray);margin-bottom:4px;">🌿 Entrega de cana — códigos da frente (vazio = todos)</div>
+          <input id="ac-ent" placeholder="Ex: 1001, 1008 ou vazio para todos" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;">
         </div>
-
-        <button class="uc-btn" onclick="adicionarSenha()" style="width:100%;padding:12px;font-size:14px;font-weight:700;">✅ Cadastrar Senha</button>
+        <button id="btn-salvar-acesso" class="uc-btn" onclick="salvarAcesso()" style="width:100%;padding:12px;font-size:14px;font-weight:700;">✅ Cadastrar</button>
       </div>
     </div>
-
+      <div style="overflow-x:auto;" id="admTableWrap"><p style="color:var(--gray);padding:20px 0;">Nenhum dado carregado ainda.</p></div>
+    </div>
   </div>
+
 </div>
 
 <!-- MODAL PROPRIETÁRIO -->
@@ -601,46 +553,40 @@ td{padding:8px 10px;font-size:12px;color:var(--white);}
 <div class="toast" id="toast"><span id="tIco">✅</span> <span id="tMsg"></span></div>
 
 <script>
-var UPSTASH_URL = 'https://splendid-ray-99496.upstash.io';
-var UPSTASH_TOKEN = 'gQAAAAAAAYSoAAIgcDI0Mjk3MjcwYTJiYWQ0ZDExYTE3YTMzMzc1MzBhMTZmNw';
+const UPSTASH_URL = 'https://splendid-ray-99496.upstash.io';
+const UPSTASH_TOKEN = 'gQAAAAAAAYSoAAIgcDI0Mjk3MjcwYTJiYWQ0ZDExYTE3YTMzMzc1MzBhMTZmNw';
 var SENHA_ADM = 'Grupomoreno@2026+';
 
-// Tabela de senhas: senha -> empresas permitidas (null = todas)
-var SENHAS = {
-  'admin123': { emps: ['CEM','CEMMA','COPLASA'], adm: true }
-};
-var empsPermitidas = ['CEM','CEMMA','COPLASA'];
-
-var db = {
+const db = {
   CEM:    { dia:[], d1:[] },
   CEMMA:  { dia:[], d1:[] },
   COPLASA:{ dia:[], d1:[] }
 };
-var dbEntrega = { CEM:[], CEMMA:[], COPLASA:[] };
-var updatedAtEntrega = { CEM:'', CEMMA:'', COPLASA:'' };
-var updatedAt  = { CEM:{dia:'',d1:''}, CEMMA:{dia:'',d1:''}, COPLASA:{dia:'',d1:''} };
-var periodoAtivo = { CEM:'dia', CEMMA:'dia', COPLASA:'dia' };
-var empAtual = null, tipoAtual = null, chartInst = null, chartEntrega = null;
+const dbEntrega = { CEM:[], CEMMA:[], COPLASA:[] };
+const updatedAtEntrega = { CEM:'', CEMMA:'', COPLASA:'' };
+const updatedAt  = { CEM:{dia:'',d1:''}, CEMMA:{dia:'',d1:''}, COPLASA:{dia:'',d1:''} };
+const periodoAtivo = { CEM:'dia', CEMMA:'dia', COPLASA:'dia' };
+let empAtual = null, tipoAtual = null, chartInst = null, chartEntrega = null;
 
 // ── KV ───────────────────────────────────────────────
 async function kvGet(key) {
   try {
-    var r = await fetch(UPSTASH_URL + '/get/' + encodeURIComponent(key), {
+    const r = await fetch(UPSTASH_URL + '/get/' + encodeURIComponent(key), {
       headers: { 'Authorization': 'Bearer ' + UPSTASH_TOKEN }
     });
-    var j = await r.json();
+    const j = await r.json();
     return j.result ? JSON.parse(j.result) : null;
   } catch(e) { return null; }
 }
 async function kvSet(key, value) {
   try {
-    var str = JSON.stringify(value);
-    var r = await fetch(UPSTASH_URL + '/pipeline', {
+    const str = JSON.stringify(value);
+    const r = await fetch(UPSTASH_URL + '/pipeline', {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + UPSTASH_TOKEN, 'Content-Type': 'application/json' },
       body: JSON.stringify([['SET', key, str]])
     });
-    var j = await r.json();
+    const j = await r.json();
     if (j && j[0] && j[0].result === 'OK') console.log('kvSet OK:', key);
     else console.error('kvSet fail:', key, j);
   } catch(e) { console.error('kvSet error', key, e); }
@@ -675,115 +621,13 @@ function selecionarEmpresa(emp) {
     document.querySelectorAll('#view-cliente .emp-content').forEach(function(e) { e.style.display = 'none'; });
     var el2 = document.getElementById('emp-' + emp);
     if (el2) el2.style.display = 'block';
-    // Recarregar dados frescos do Upstash
-    Promise.all(['dia','d1'].map(function(per){ return carregarAba(emp, per); })).then(function() {
-      renderGrid(emp); updateToggle(emp); setBarras();
-    });
+    renderGrid(emp); updateToggle(emp); setBarras();
   }
-  // Preservar sessão de cliente ao navegar entre empresas
-  var _sessAtual = localStorage.getItem('frota_sessao');
-  var _sessObj = _sessAtual ? JSON.parse(_sessAtual) : {};
-  if (_sessObj.tipo === 'cliente') {
-    _sessObj.emp = emp; _sessObj.tipoView = tipoAtual;
-    localStorage.setItem('frota_sessao', JSON.stringify(_sessObj));
-  } else {
-    localStorage.setItem('frota_sessao', JSON.stringify({ emp: emp, tipo: tipoAtual }));
-  }
+  localStorage.setItem('frota_sessao', JSON.stringify({ emp: emp, tipo: tipoAtual }));
 }
-
-
-async function debugSenhas() {
-  var el = document.getElementById('debug-senhas-txt');
-  if (!el) return;
-  el.textContent = 'Buscando...';
-  var j = await kvGet('senhas_acesso');
-  if (!j) { el.textContent = 'Nenhuma senha cadastrada no servidor'; return; }
-  Object.assign(SENHAS, j);
-  var keys = Object.keys(j).filter(function(s){ return !j[s].adm; });
-  if (!keys.length) { el.textContent = 'Nenhuma senha cadastrada'; return; }
-  el.innerHTML = keys.map(function(s) {
-    var p = j[s];
-    return '<div style="padding:4px 0;border-bottom:1px solid var(--border);">'+
-      '<b>'+s+'</b> → 🚛 '+(p.codigosCam||[]).join(',')||'—'+' | 🌿 '+(p.codigosEnt||[]).join(',')||'—'+
-    '</div>';
-  }).join('');
-}
-
-function loginCliente() {
-  // Se já tem sessão de cliente, entrar direto sem pedir senha
-  try {
-    var s = localStorage.getItem('frota_sessao');
-    if (s) {
-      var sess = JSON.parse(s);
-      if (sess.tipo === 'cliente') {
-        window._filtroCam = (sess.codigosCam||[]).filter(function(x){return x&&x!=='Todos'&&x.trim()!=='';});
-        window._filtroEnt = (sess.codigosEnt||[]).filter(function(x){return x&&x!=='Todos'&&x.trim()!=='';});
-        entrarComoCliente(sess);
-        return;
-      }
-    }
-  } catch(e) {}
-  // Sem sessão — abrir modal
-  document.getElementById('input-senha-login').value = '';
-  document.getElementById('login-erro').style.display = 'none';
-  document.getElementById('modalLogin').style.display = 'flex';
-  setTimeout(function(){ document.getElementById('input-senha-login').focus(); }, 100);
-}
-
-async function confirmarLogin() {
-  var senha = document.getElementById('input-senha-login').value.trim();
-  if (!senha) return;
-  var senhasKv = await kvGet('senhas_acesso');
-  var todasSenhas = senhasKv || {};
-  var perfil = todasSenhas[senha];
-  if (!perfil) {
-    document.getElementById('login-erro').style.display = 'block';
-    document.getElementById('input-senha-login').value = '';
-    return;
-  }
-  fecharModalLogin();
-  localStorage.setItem('frota_sessao', JSON.stringify({ tipo: 'cliente', senha: senha, emps: perfil.emps||['CEM','CEMMA','COPLASA'], codigosCam: perfil.codigosCam||[], codigosEnt: perfil.codigosEnt||[] }));
-  entrarComoCliente(perfil);
-}
-
-function fecharModalLogin() {
-  document.getElementById('modalLogin').style.display = 'none';
-}
-
-function entrarComoCliente(perfil) {
-  if (!perfil || Array.isArray(perfil)) perfil = { emps: ['CEM','CEMMA','COPLASA'], codigosCam: [], codigosEnt: [] };
-  empsPermitidas = perfil.emps || ['CEM','CEMMA','COPLASA'];
-  // Filtrar valores inválidos como 'Todos', strings vazias etc
-  var rawCam = perfil.codigosCam || [];
-  var rawEnt = perfil.codigosEnt || [];
-  window._filtroCam = rawCam.filter(function(x){ return x && x !== 'Todos' && x.trim() !== ''; });
-  window._filtroEnt = rawEnt.filter(function(x){ return x && x !== 'Todos' && x.trim() !== ''; });
-  ['CEM','CEMMA','COPLASA'].forEach(function(e) {
-    var btn = document.getElementById('emp-btn-'+e);
-    if (btn) btn.style.display = empsPermitidas.indexOf(e) >= 0 ? '' : 'none';
-  });
-  // Esconder botão de login, mostrar botões de navegação
-  document.getElementById('btn-login-cliente').style.display = 'none';
-  document.getElementById('btns-cliente-logado').style.display = 'flex';
-  document.getElementById('btn-sair-conta').style.display = 'block';
-  document.getElementById('btn-adm-tela').style.display = 'none';
-}
-
 function abrirAdm() {
-  document.getElementById('input-senha-adm').value = '';
-  document.getElementById('adm-erro').style.display = 'none';
-  document.getElementById('modalAdm').style.display = 'flex';
-  setTimeout(function(){ document.getElementById('input-senha-adm').focus(); }, 100);
-}
-
-function confirmarAdm() {
-  var senha = (document.getElementById('input-senha-adm').value || '').trim();
-  if (senha !== SENHA_ADM) {
-    document.getElementById('adm-erro').style.display = 'block';
-    document.getElementById('input-senha-adm').value = '';
-    return;
-  }
-  document.getElementById('modalAdm').style.display = 'none';
+  var senha = prompt('Senha ADM:');
+  if (senha !== SENHA_ADM) { alert('Senha incorreta.'); return; }
   empAtual = 'ADM';
   document.getElementById('telaInicial').style.display = 'none';
   document.getElementById('btnVoltar').style.display = 'flex';
@@ -791,103 +635,38 @@ function confirmarAdm() {
   document.getElementById('view-cliente').style.display = 'none';
   document.getElementById('view-entrega').style.display = 'none';
   if (initDone) { atualizarFarois(); renderAdmTable(); } else { pendingAdm = true; }
-  kvGet('senhas_acesso').then(function(j) {
-    if (!j) return;
-    var antigas = ['cem2024','cemma2024','cop2024','moreno'];
-    var mudou = false;
-    antigas.forEach(function(s){ if(j[s]){ delete j[s]; mudou=true; } });
-    if (mudou) kvSet('senhas_acesso', j).then(function(){ renderSenhas(); });
-    else renderSenhas();
-  });
 }
-function sairDaConta() {
-  if (!confirm('Sair da conta? Precisará digitar a senha novamente.')) return;
-  localStorage.removeItem('frota_sessao');
-  sessionStorage.removeItem('frota_sessao');
-  window._filtroCam = [];
-  window._filtroEnt = [];
-  document.getElementById('btn-sair-conta').style.display = 'none';
-  document.getElementById('btn-login-cliente').style.display = '';
-  document.getElementById('btns-cliente-logado').style.display = 'none';
-  document.getElementById('btn-adm-tela').style.display = '';
-  ['CEM','CEMMA','COPLASA'].forEach(function(e) {
-    var btn = document.getElementById('emp-btn-'+e);
-    if (btn) btn.style.display = '';
-  });
-  voltarInicio();
-}
-
 function voltarInicio() {
   empAtual = null;
-  // Verificar se é cliente — mantém sessão, só volta à tela inicial
-  var s = localStorage.getItem('frota_sessao');
-  var sess = s ? JSON.parse(s) : null;
-  if (!sess || sess.tipo !== 'cliente') {
-    localStorage.removeItem('frota_sessao');
-    window._filtroCam = [];
-    window._filtroEnt = [];
-  }
+  localStorage.removeItem('frota_sessao');
   document.getElementById('telaInicial').style.display = 'flex';
   document.getElementById('btnVoltar').style.display = 'none';
   document.getElementById('view-cliente').style.display = 'none';
   document.getElementById('view-entrega').style.display = 'none';
   document.getElementById('view-adm').style.display = 'none';
-  // Se cliente, restaurar filtros e mostrar tela inicial com botões filtrados
-  if (sess && sess.tipo === 'cliente') {
-    window._filtroCam = (sess.codigosCam||[]).filter(function(x){return x&&x!=='Todos'&&x.trim()!=='';});
-    window._filtroEnt = (sess.codigosEnt||[]).filter(function(x){return x&&x!=='Todos'&&x.trim()!=='';});
-    ['CEM','CEMMA','COPLASA'].forEach(function(e) {
-      var btn = document.getElementById('emp-btn-'+e);
-      if (btn) btn.style.display = (sess.emps||[]).indexOf(e) >= 0 ? '' : 'none';
-    });
-  }
 }
 
 // ── DADOS ─────────────────────────────────────────────
-var initDone = false, pendingAdm = false;
+let initDone = false, pendingAdm = false;
 async function init() {
-  var emps = ['CEM','CEMMA','COPLASA'];
-  // Carregar senhas customizadas do Upstash
-  var senhasKv = await kvGet('senhas_acesso');
-  if (senhasKv) {
-    // Remover senhas padrão antigas se existirem
-    ['cem2024','cemma2024','cop2024','moreno'].forEach(function(s){ delete senhasKv[s]; });
-    Object.assign(SENHAS, senhasKv);
-  }
-  var _promises = [];
-  emps.forEach(function(emp) {
-    ['dia','d1'].forEach(function(per) { _promises.push(carregarAba(emp, per)); });
-    _promises.push(carregarEntrega(emp));
-  });
-  await Promise.all(_promises);
-  // Restaurar sessão ANTES de renderizar para filtro funcionar
+  const emps = ['CEM','CEMMA','COPLASA'];
   try {
-    var s = localStorage.getItem('frota_sessao');
-    if (s) {
-      var sess = JSON.parse(s);
-      if (sess.tipo === 'cliente' && sess.emps) {
-        window._filtroCam = (sess.codigosCam||[]).filter(function(x){return x&&x!=='Todos'&&x.trim()!=='';});
-        window._filtroEnt = (sess.codigosEnt||[]).filter(function(x){return x&&x!=='Todos'&&x.trim()!=='';});
-      }
-    }
-  } catch(e) {}
+  await Promise.all([
+    ...emps.flatMap(function(emp) { return ['dia','d1'].map(function(per) { return carregarAba(emp, per); }); }),
+    ...emps.map(function(emp) { return carregarEntrega(emp); })
+  ]);
   emps.forEach(function(e) { renderGrid(e); updateToggle(e); });
   setBarras();
+  } catch(err) { alert('ERRO INIT: ' + err.message); return; }
   initDone = true;
   if (pendingAdm) { atualizarFarois(); renderAdmTable(); pendingAdm = false; }
-  // Restaurar UI da sessão
+  // Restaurar sessão
   try {
     var s = localStorage.getItem('frota_sessao');
     if (s) {
       var sess = JSON.parse(s);
-      if (sess.tipo === 'cliente' && sess.emps) {
-        var btnSair = document.getElementById('btn-sair-conta');
-        if (btnSair) btnSair.style.display = 'block';
-        entrarComoCliente(sess);
-      } else if (sess.emp) {
-        tipoAtual = sess.tipo || 'caminhao';
-        selecionarEmpresa(sess.emp);
-      }
+      tipoAtual = sess.tipo || 'caminhao';
+      selecionarEmpresa(sess.emp);
     }
   } catch(e) {}
 }
@@ -1098,18 +877,9 @@ function parseRowsEntrega(raw) {
 // ── RENDER ────────────────────────────────────────────
 function grouped(emp) {
   var m = {};
-  var filtro = window._filtroCam || [];
   var rows = db[emp][periodoAtivo[emp]] || [];
   rows.forEach(function(d) {
-    // Aplicar filtro de códigos de proprietário
-    if (filtro.length > 0) {
-      var match = filtro.some(function(cod) {
-        return String(d.ownerCode).trim() === String(cod).trim() ||
-               String(d.truckCode).trim() === String(cod).trim();
-      });
-      if (!match) return;
-    }
-    // Se filtro vazio = mostra tudo
+    if(filtroTexto && (d.ownerCode||'').toLowerCase().indexOf(filtroTexto)<0 && (d.owner||'').toLowerCase().indexOf(filtroTexto)<0) return;
     var k = d.ownerCode + '||' + d.owner;
     if (!m[k]) m[k] = { owner:d.owner, code:d.ownerCode, trucks:[] };
     m[k].trucks.push(d);
@@ -1196,9 +966,10 @@ async function refreshEmp(emp) {
 }
 setInterval(function() {
   var emps = ['CEM','CEMMA','COPLASA'];
-  var _p = [];
-  emps.forEach(function(emp){ ['dia','d1'].forEach(function(per){ _p.push(carregarAba(emp,per)); }); });
-  Promise.all(_p).then(function() {
+var filtroTexto = '';
+window._filtroCam = [];
+window._filtroEnt = [];;
+  Promise.all(emps.flatMap(function(emp){ return ['dia','d1'].map(function(per){ return carregarAba(emp,per); }); })).then(function() {
     emps.forEach(function(e){ renderGrid(e); updateToggle(e); }); setBarras();
   });
 }, 120000);
@@ -1218,12 +989,9 @@ function renderEntrega(emp) {
     }
   }
   // Filtrar linha BAL e Total
-  var filtroEnt = window._filtroEnt || [];
   var rows = (dbEntrega[emp] || []).filter(function(r) {
     var a = String(r.codigo || '').toLowerCase();
-    if (a.startsWith('bal') || a.startsWith('total')) return false;
-    if (filtroEnt.length > 0 && filtroEnt.indexOf(r.codigo) < 0) return false;
-    return true;
+    return !a.startsWith('bal') && !a.startsWith('total');
   });
   var chartDiv = document.getElementById('chart-entrega-' + emp);
   if (!chartDiv) {
@@ -1442,13 +1210,14 @@ async function apagarDados(emp, per) {
   await kvSet(emp + '_' + per, { data: [], updatedAt: '' });
   showToast('🗑', emp + ' ' + (per==='dia'?'Dia':'D-1') + ' apagado!');
 }
-function goStab(tab){
+function goStab(tab) {
   document.getElementById('stab-planilhas').style.display = tab==='planilhas' ? 'block' : 'none';
-  document.getElementById('stab-senhas').style.display = tab==='senhas' ? 'block' : 'none';
   document.getElementById('admTableWrap').style.display = tab==='planilhas' ? 'block' : 'none';
+  var ac = document.getElementById('stab-acessos');
+  if (ac) ac.style.display = tab==='acessos' ? 'block' : 'none';
   document.querySelectorAll('.adm-stab').forEach(function(b){ b.classList.remove('active'); });
   event.target.classList.add('active');
-  if(tab==='senhas') { renderSenhas(); debugSenhas(); }
+  if (tab==='acessos') carregarAcessos();
 }
 
 // Partículas na tela inicial
@@ -1669,92 +1438,146 @@ function parsePDFCaminhao(text) {
   el.textContent = msg + ' — Grupo Moreno';
 })();
 
-async function renderSenhas() {
-  var el = document.getElementById('lista-senhas'); if (!el) return;
-  var j = await kvGet('senhas_acesso');
-  window._senhasCarregadas = j || {};
-  var senhas = window._senhasCarregadas;
-  var keys = Object.keys(senhas);
-  if (!keys.length) {
-    el.innerHTML = '<div style="color:var(--gray);font-size:13px;padding:12px 0;">Nenhuma senha cadastrada ainda.</div>';
+// ADM
+function abrirAdm() {
+  document.getElementById('input-senha-adm').value = '';
+  document.getElementById('adm-erro').style.display = 'none';
+  document.getElementById('modalAdm').style.display = 'flex';
+  setTimeout(function(){ document.getElementById('input-senha-adm').focus(); }, 100);
+}
+function confirmarAdm() {
+  var senha = (document.getElementById('input-senha-adm').value||'').trim();
+  if (senha !== SENHA_ADM) {
+    document.getElementById('adm-erro').style.display = 'block';
+    document.getElementById('input-senha-adm').value = '';
     return;
   }
-  el.innerHTML = '<div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:10px;">Senhas cadastradas</div>' +
+  document.getElementById('modalAdm').style.display = 'none';
+  empAtual = 'ADM';
+  document.getElementById('telaInicial').style.display = 'none';
+  document.getElementById('btnVoltar').style.display = 'flex';
+  document.getElementById('view-adm').style.display = 'block';
+  document.getElementById('view-cliente').style.display = 'none';
+  document.getElementById('view-entrega').style.display = 'none';
+  if (initDone) { atualizarFarois(); renderAdmTable(); } else { pendingAdm = true; }
+}
+function voltarInicio() {
+  empAtual = null;
+  localStorage.removeItem('frota_sessao');
+  window._filtroCam = [];
+  window._filtroEnt = [];
+  document.getElementById('telaInicial').style.display = 'flex';
+  document.getElementById('btnVoltar').style.display = 'none';
+  document.getElementById('view-cliente').style.display = 'none';
+  document.getElementById('view-entrega').style.display = 'none';
+  document.getElementById('view-adm').style.display = 'none';
+}
+
+// SENHA DISCRETA
+var window_filtroCam = [];
+var window_filtroEnt = [];
+var filtroTexto = '';
+window._filtroCam = [];
+window._filtroEnt = [];
+async function verificarSenhaDiscreta() {
+  var campo = document.getElementById('campo-senha-discreta');
+  var senha = (campo.value||'').trim();
+  if (!senha) return;
+  campo.value = '';
+  if (senha === SENHA_ADM) { abrirAdm(); return; }
+  var j = await kvGet('senhas_acesso');
+  var perfil = (j||{})[senha];
+  if (!perfil) {
+    campo.style.borderColor = 'rgba(231,76,60,0.6)';
+    setTimeout(function(){ campo.style.borderColor = 'rgba(46,204,113,0.25)'; }, 1500);
+    return;
+  }
+  var limpa = function(arr){ return (arr||[]).filter(function(x){return x&&x.trim()!=='';});};
+  window._filtroCam = limpa(perfil.codigosCam);
+  window._filtroEnt = limpa(perfil.codigosEnt);
+  localStorage.setItem('frota_sessao', JSON.stringify({ tipo:'cliente', senha:senha, emps:perfil.emps||['CEM','CEMMA','COPLASA'], codigosCam:window._filtroCam, codigosEnt:window._filtroEnt }));
+  abrirMenu('caminhao');
+}
+
+// ACESSOS
+async function carregarAcessos() {
+  var el = document.getElementById('lista-acessos'); if (!el) return;
+  var j = await kvGet('senhas_acesso') || {};
+  window._acessos = j;
+  var keys = Object.keys(j);
+  if (!keys.length) { el.innerHTML = '<div style="color:var(--gray);font-size:13px;padding:8px 0;">Nenhum acesso cadastrado.</div>'; return; }
+  el.innerHTML = '<div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:10px;">Acessos cadastrados</div>' +
   keys.map(function(s) {
-    var p = senhas[s];
-    var cam = (p.codigosCam||[]).join(', ') || '';
-    var ent = (p.codigosEnt||[]).join(', ') || '';
-    var sid = s.replace(/[^a-zA-Z0-9]/g, '_');
-    return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;" data-senha="'+s+'">'+
-      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'+
-        '<span style="font-size:15px;font-family:monospace;color:var(--text);font-weight:700;">🔑 '+s+'</span>'+
+    var p = j[s];
+    var cam = (p.codigosCam||[]).join(', ') || 'Todos';
+    var ent = (p.codigosEnt||[]).join(', ') || 'Todos';
+    var sid = s.replace(/[^a-zA-Z0-9]/g,'_');
+    return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'+
+        '<span style="font-size:16px;font-family:monospace;color:#2ecc71;font-weight:700;letter-spacing:2px;">🔑 '+s+'</span>'+
         '<div style="display:flex;gap:6px;">'+
-          '<button data-action="editar" data-key="'+sid+'" style="background:none;border:1px solid var(--green);color:var(--green);border-radius:6px;padding:4px 12px;cursor:pointer;font-size:12px;">✏️ Editar</button>'+
-          '<button data-action="remover" data-key="'+sid+'" style="background:none;border:1px solid #e74c3c;color:#e74c3c;border-radius:6px;padding:4px 12px;cursor:pointer;font-size:12px;">🗑</button>'+
+          '<button data-action="editar" data-sid="'+sid+'" style="background:none;border:1px solid var(--green);color:var(--green);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;">✏️</button>'+
+          '<button data-action="remover" data-sid="'+sid+'" style="background:none;border:1px solid #e74c3c;color:#e74c3c;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;">🗑</button>'+
         '</div>'+
       '</div>'+
-      '<div style="font-size:12px;color:#2ecc71;margin-bottom:3px;">🚛 Caminhão: '+(cam||'Todos')+'</div>'+
-      '<div style="font-size:12px;color:#1abc9c;">🌿 Entrega de cana: '+(ent||'Todos')+'</div>'+
+      '<div style="font-size:12px;color:#2ecc71;">🚛 '+cam+'</div>'+
+      '<div style="font-size:12px;color:#1abc9c;">🌿 '+ent+'</div>'+
     '</div>';
   }).join('');
-  // Mapear sid -> senha real
-  window._senhaKeys = {};
-  keys.forEach(function(s){ var sid = s.replace(/[^a-zA-Z0-9]/g,'_'); window._senhaKeys[sid] = s; });
-  // Delegação de eventos
+  window._acessoKeys = {};
+  keys.forEach(function(s){ window._acessoKeys[s.replace(/[^a-zA-Z0-9]/g,'_')] = s; });
   el.onclick = function(ev) {
     var btn = ev.target.closest('[data-action]');
     if (!btn) return;
-    var sid = btn.getAttribute('data-key');
-    var s = window._senhaKeys[sid];
+    var s = window._acessoKeys[btn.getAttribute('data-sid')];
     if (!s) return;
-    if (btn.getAttribute('data-action') === 'editar') editarSenha(s);
-    else removerSenha(s);
+    if (btn.getAttribute('data-action') === 'editar') editarAcesso(s);
+    else removerAcesso(s);
   };
 }
-
-function editarSenha(s) {
-  var p = (window._senhasCarregadas || {})[s] || {};
-  document.getElementById('nova-senha').value = s;
-  var camVal = (p.codigosCam||[]).filter(function(x){return x && x!=='Todos';}).join(', ');
-  var entVal = (p.codigosEnt||[]).filter(function(x){return x && x!=='Todos';}).join(', ');
-  document.getElementById('nova-codigos-cam').value = camVal;
-  document.getElementById('nova-codigos-ent').value = entVal;
-  window._editandoSenha = s;
-  // Mudar botão para "Salvar alterações"
-  var btn = document.getElementById('btn-salvar-senha');
-  if (btn) btn.textContent = '💾 Salvar alterações';
-  // Scroll até o formulário
-  document.getElementById('nova-senha').scrollIntoView({behavior:'smooth'});
-  document.getElementById('nova-senha').focus();
+function editarAcesso(s) {
+  var p = (window._acessos||{})[s] || {};
+  document.getElementById('ac-codigo').value = s;
+  document.getElementById('ac-cam').value = (p.codigosCam||[]).join(', ');
+  document.getElementById('ac-ent').value = (p.codigosEnt||[]).join(', ');
+  window._editandoAcesso = s;
+  document.getElementById('btn-salvar-acesso').textContent = '💾 Salvar';
+  document.getElementById('ac-codigo').scrollIntoView({behavior:'smooth'});
 }
-
-function adicionarSenha() {
-  var s = (document.getElementById('nova-senha').value||'').trim();
-  if (!s) { showToast('⚠️','Digite uma senha'); return; }
-  var camRaw = (document.getElementById('nova-codigos-cam').value||'').trim();
-  var entRaw = (document.getElementById('nova-codigos-ent').value||'').trim();
-  // "Todos" ou vazio = sem filtro
-  var cam = (camRaw.toLowerCase()==='todos'||camRaw==='') ? [] : camRaw.split(',').map(function(x){return x.trim();}).filter(Boolean);
-  var ent = (entRaw.toLowerCase()==='todos'||entRaw==='') ? [] : entRaw.split(',').map(function(x){return x.trim();}).filter(Boolean);
-  // Se editando, remover senha antiga
-  var j = window._senhasCarregadas || {};
-  if (window._editandoSenha && window._editandoSenha !== s) delete j[window._editandoSenha];
-  window._editandoSenha = null;
-  j[s] = { emps: ['CEM','CEMMA','COPLASA'], adm: false, codigosCam: cam, codigosEnt: ent };
-  kvSet('senhas_acesso', j).then(function(){ showToast('✅','Senha "'+s+'" salva!'); renderSenhas(); });
-  document.getElementById('nova-senha').value = '';
-  document.getElementById('nova-codigos-cam').value = '';
-  document.getElementById('nova-codigos-ent').value = '';
-  var btn = document.getElementById('btn-salvar-senha');
-  if (btn) btn.textContent = '✅ Adicionar';
-}
-
-async function removerSenha(s) {
+async function removerAcesso(s) {
   var j = await kvGet('senhas_acesso') || {};
   delete j[s];
   await kvSet('senhas_acesso', j);
-  showToast('🗑','Senha "'+s+'" removida!');
-  renderSenhas();
+  showToast('🗑','Acesso "'+s+'" removido!');
+  carregarAcessos();
+}
+async function salvarAcesso() {
+  var codigo = (document.getElementById('ac-codigo').value||'').trim();
+  if (!codigo) { showToast('⚠️','Digite uma senha'); return; }
+  var camRaw = (document.getElementById('ac-cam').value||'').trim();
+  var entRaw = (document.getElementById('ac-ent').value||'').trim();
+  var cam = camRaw ? camRaw.split(',').map(function(x){return x.trim();}).filter(Boolean) : [];
+  var ent = entRaw ? entRaw.split(',').map(function(x){return x.trim();}).filter(Boolean) : [];
+  var j = await kvGet('senhas_acesso') || {};
+  if (window._editandoAcesso && window._editandoAcesso !== codigo) delete j[window._editandoAcesso];
+  window._editandoAcesso = null;
+  j[codigo] = { emps:['CEM','CEMMA','COPLASA'], adm:false, codigosCam:cam, codigosEnt:ent };
+  await kvSet('senhas_acesso', j);
+  showToast('✅','Acesso "'+codigo+'" salvo!');
+  document.getElementById('ac-codigo').value = '';
+  document.getElementById('ac-cam').value = '';
+  document.getElementById('ac-ent').value = '';
+  document.getElementById('btn-salvar-acesso').textContent = '✅ Cadastrar';
+  carregarAcessos();
+}
+function goStab(tab) {
+  document.getElementById('stab-planilhas').style.display = tab==='planilhas' ? 'block' : 'none';
+  document.getElementById('admTableWrap').style.display = tab==='planilhas' ? 'block' : 'none';
+  var ac = document.getElementById('stab-acessos');
+  if (ac) ac.style.display = tab==='acessos' ? 'block' : 'none';
+  document.querySelectorAll('.adm-stab').forEach(function(b){ b.classList.remove('active'); });
+  event.target.classList.add('active');
+  if (tab==='acessos') carregarAcessos();
 }
 
 init();
