@@ -1099,13 +1099,14 @@ function grouped(emp) {
   var rows = db[emp][periodoAtivo[emp]] || [];
   rows.forEach(function(d) {
     // Aplicar filtro de códigos de proprietário
-    if (filtro.length) {
+    if (filtro.length > 0) {
       var match = filtro.some(function(cod) {
         return String(d.ownerCode).trim() === String(cod).trim() ||
                String(d.truckCode).trim() === String(cod).trim();
       });
       if (!match) return;
     }
+    // Se filtro vazio = mostra tudo
     var k = d.ownerCode + '||' + d.owner;
     if (!m[k]) m[k] = { owner:d.owner, code:d.ownerCode, trucks:[] };
     m[k].trucks.push(d);
@@ -1218,7 +1219,7 @@ function renderEntrega(emp) {
   var rows = (dbEntrega[emp] || []).filter(function(r) {
     var a = String(r.codigo || '').toLowerCase();
     if (a.startsWith('bal') || a.startsWith('total')) return false;
-    if (filtroEnt.length && filtroEnt.indexOf(r.codigo) < 0) return false;
+    if (filtroEnt.length > 0 && filtroEnt.indexOf(r.codigo) < 0) return false;
     return true;
   });
   var chartDiv = document.getElementById('chart-entrega-' + emp);
