@@ -516,36 +516,58 @@ async function refreshEntrega(emp) {
 }
 
 // RENDER CAMINHÃO
+function fmtNum(v){if(!v)return '—';return Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function grouped(emp) {
-  var m={}, rows=db[emp][periodoAtivo[emp]]||[];
-  // Filtro salvo no ADM
-  if(filtroCodigos.length>0) rows=rows.filter(function(d){return filtroCodigos.indexOf(d.ownerCode)>=0;});
-  // Filtro rápido por código
-  if(filtroRapidoCodigos.length>0) rows=rows.filter(function(d){return filtroRapidoCodigos.some(function(f){return d.ownerCode.indexOf(f)>=0||d.truckCode.indexOf(f)>=0;});});
-  rows.forEach(function(d){var k=d.ownerCode+'||'+d.owner;if(!m[k])m[k]={owner:d.owner,code:d.ownerCode,trucks:[]};m[k].trucks.push(d);});
+  var m = {};
+  var rows = db[emp][periodoAtivo[emp]] || [];
+  rows.forEach(function(d) {
+    var k = d.ownerCode + '||' + d.owner;
+    if (!m[k]) m[k] = { owner:d.owner, code:d.ownerCode, trucks:[] };
+    m[k].trucks.push(d);
+  });
   return Object.values(m);
 }
-function hasVal(v){return v!==undefined&&v!==null&&v!==''&&v!=='—';}
-function activeCols(emp){
-  var c={e:false,f:false,g:false,h:false,j:false};
-  (db[emp][periodoAtivo[emp]]||[]).forEach(function(d){if(hasVal(d.ton))c.e=true;if(hasVal(d.viagens))c.h=true;if(hasVal(d.distancia))c.j=true;});
+function hasVal(v) { return v !== undefined && v !== null && v !== '' && v !== '—'; }
+function activeCols(emp) {
+  var c = {e:false,f:false,g:false,h:false,j:false};
+  (db[emp][periodoAtivo[emp]]||[]).forEach(function(d) {
+    if(hasVal(d.e))c.e=true; if(hasVal(d.f))c.f=true; if(hasVal(d.g))c.g=true;
+    if(hasVal(d.h))c.h=true; if(hasVal(d.j))c.j=true;
+  });
   return c;
 }
 function renderGrid(emp) {
-  var g=document.getElementById('grid-'+emp);if(!g)return;
-  var owners=grouped(emp);
-  if(!owners.length){g.innerHTML='<div class="empty"><h3>Sem dados</h3><p>Nenhum dado disponível</p></div>';return;}
-  var totals=owners.map(function(o){return{key:o.code+o.owner,ton:o.trucks.reduce(function(s,t){return s+(parseFloat(t.ton)||0);},0)};});
-  totals.sort(function(a,b){return b.ton-a.ton;});
-  var rm={};totals.forEach(function(x,i){rm[x.key]=i+1;});
-  g.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;';
-  g.innerHTML=owners.map(function(o,idx){
-    var totT=o.trucks.reduce(function(s,t){return s+(parseFloat(t.ton)||0);},0);
-    var rank=rm[o.code+o.owner];
-    return '<div class="owner-card" data-emp="'+emp+'" data-idx="'+idx+'">'+'<div class="card-stripe"></div>'+'<div class="card-body">'+'<div class="card-top"><div class="card-icon">🏭</div><div class="card-rank">#'+rank+'</div></div>'+'<div class="card-code">Cód. '+o.code+'</div>'+'<div class="card-name">'+o.owner+'</div>'+'<div style="font-size:9px;color:var(--gray);margin:3px 0;">🚛 '+o.trucks.length+' caminhão'+(o.trucks.length>1?'s':'')+'</div>'+'<div class="card-ton"><div class="ton-lbl">Produção</div><div class="ton-val">'+fmtK(totT)+'<small>ton</small></div></div>'+'</div></div>';
+  var g = document.getElementById('grid-' + emp); if (!g) return;
+  var owners = grouped(emp);
+  if (!owners.length) {
+    g.innerHTML = '<div class="empty"><h3>Sem dados</h3><p>Nenhum dado disponível</p></div>';
+    return;
+  }
+  var totals = owners.map(function(o) {
+    return { key: o.code+o.owner, ton: o.trucks.reduce(function(s,t){ return s+(parseFloat(t.e||t.ton)||0); }, 0) };
+  });
+  totals.sort(function(a,b){ return b.ton - a.ton; });
+  var rm = {}; totals.forEach(function(x,i){ rm[x.key] = i+1; });
+  g.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;';
+  var html = owners.map(function(o, idx) {
+    var totT = o.trucks.reduce(function(s,t){ return s+(parseFloat(t.e||t.ton)||0); }, 0);
+    var totV = o.trucks.reduce(function(s,t){ return s+(parseFloat(t.h||t.viagens)||0); }, 0);
+    var rank = rm[o.code+o.owner];
+    return '<div class="owner-card" data-emp="' + emp + '" data-idx="' + idx + '">' +
+      '<div class="card-stripe"></div>' +
+      '<div class="card-body">' +
+        '<div class="card-top"><div class="card-icon">🏭</div><div class="card-rank">#' + rank + '</div></div>' +
+        '<div class="card-code">Cód. ' + o.code + '</div>' +
+        '<div class="card-name">' + o.owner + '</div>' +
+        '<div class="card-ton"><div class="ton-lbl">Produção</div><div class="ton-val">' + fmtK(totT) + '<small>ton</small></div></div>' +
+      '</div>' +
+    '</div>';
   }).join('');
-  g.querySelectorAll('.owner-card').forEach(function(el){
-    el.addEventListener('click',function(){openModal(this.getAttribute('data-emp'),+this.getAttribute('data-idx'));});
+  g.innerHTML = html;
+  g.querySelectorAll('.owner-card').forEach(function(el) {
+    el.addEventListener('click', function() {
+      openModal(this.getAttribute('data-emp'), +this.getAttribute('data-idx'));
+    });
   });
 }
 function updateToggle(emp){var t=document.getElementById('toggle-'+emp);if(!t)return;t.classList.toggle('show',!!(db[emp].dia&&db[emp].dia.length)||(db[emp].d1&&db[emp].d1.length));}
@@ -599,36 +621,74 @@ function renderEntrega(emp) {
 }
 
 // MODAL PROPRIETÁRIO
-function openModal(emp,idx){
-  var o=grouped(emp)[idx];if(!o)return;
-  var totT=o.trucks.reduce(function(s,t){return s+(parseFloat(t.ton)||0);},0);
-  var totV=o.trucks.reduce(function(s,t){return s+(parseFloat(t.h)||0);},0);
-  var rank=grouped(emp).map(function(x){return x.trucks.reduce(function(s,t){return s+(parseFloat(t.e)||0)+(parseFloat(t.f)||0)+(parseFloat(t.g)||0);},0);}).sort(function(a,b){return b-a;}).indexOf(totT)+1;
-  document.getElementById('mCode').textContent='Cód. '+o.code;
-  document.getElementById('mName').textContent=o.owner;
-  document.getElementById('mSub').textContent=emp+' · '+o.trucks.length+' caminhões · Rank #'+rank;
-  var kpis=[];
-  if(totT)kpis.push({ico:'⚖️',lbl:'Produção Total',val:fmtK(totT),unit:'ton',cls:'c-orange'});
-  if(totV)kpis.push({ico:'🔄',lbl:'Viagens',val:Math.round(totV),unit:'',cls:'c-blue'});
-  kpis.push({ico:'🏆',lbl:'Rank',val:'#'+rank,unit:'',cls:'c-purple'});
-  document.getElementById('kpiRow').innerHTML=kpis.map(function(k){return '<div class="kpi"><div class="kpi-ico">'+k.ico+'</div><div class="kpi-lbl">'+k.lbl+'</div><div class="kpi-val '+k.cls+'">'+k.val+'<small>'+k.unit+'</small></div></div>';}).join('');
-  var pTot=calcProjecao(totT);
-  if(pTot&&periodoAtivo[emp]==='dia'){document.getElementById('projTotalVal').textContent=fmtK(pTot.projecao)+' ton';document.getElementById('projTotalReal').textContent=fmtK(totT)+' ton';document.getElementById('projTotalDetail').textContent='Média '+fmtK(pTot.mediaPorMin)+'/h · '+pTot.hRestantes+'h restantes';document.getElementById('projTotal').style.display='flex';}
-  else{document.getElementById('projTotal').style.display='none';}
-  var cols=activeCols(emp);
+function buildChart(trucks) {
   if(chartInst){chartInst.destroy();chartInst=null;}
-  var vals=o.trucks.map(function(t){return(parseFloat(t.e)||0)+(parseFloat(t.f)||0)+(parseFloat(t.g)||0);});
-  document.getElementById('chartLabel').style.display=vals.some(function(v){return v>0;})?'flex':'none';
-  document.querySelector('.chart-wrap').style.display=vals.some(function(v){return v>0;})?'block':'none';
-  if(vals.some(function(v){return v>0;})){
-    chartInst=new Chart(document.getElementById('chartCanvas').getContext('2d'),{type:'bar',data:{labels:o.trucks.map(function(t){return'Cam. '+t.truckCode;}),datasets:[{label:'Produção',data:vals,backgroundColor:vals.map(function(_,i){return i%2===0?'rgba(46,204,113,0.7)':'rgba(26,53,143,0.7)';}),borderWidth:1,borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6b8a72',font:{size:10}}},y:{ticks:{color:'#6b8a72',font:{size:10}}}}}});
-  }
-  document.getElementById('mTrucks').innerHTML=o.trucks.map(function(t){
-    var m=[];if(cols.e&&hasVal(t.e))m.push({v:fmtK(parseFloat(t.e)),l:'Ton. E'});if(cols.f&&hasVal(t.f))m.push({v:fmtK(parseFloat(t.f)),l:'Ton. F'});if(cols.g&&hasVal(t.g))m.push({v:fmtK(parseFloat(t.g)),l:'Ton. G'});if(cols.h&&hasVal(t.h))m.push({v:Math.round(t.h),l:'Viagens'});if(cols.j&&hasVal(t.j))m.push({v:Math.round(t.j),l:'Dist. km'});
-    if(!m.length)return'';
-    return'<div class="truck-card"><div class="truck-num">🚛 Caminhão '+t.truckCode+'</div><div class="truck-metrics">'+m.map(function(x){return'<div class="tm"><span class="tm-val">'+x.v+'</span><span class="tm-lbl">'+x.l+'</span></div>';}).join('')+'</div></div>';
+  var vals = trucks.map(function(t){return (parseFloat(t.e||t.ton)||0);});
+  var cl = document.getElementById('chartLabel'), cw = document.querySelector('.chart-wrap');
+  if(!vals.some(function(v){return v>0;})){cw.style.display='none';cl.style.display='none';return;}
+  cw.style.display='block';cl.style.display='flex';
+  chartInst = new Chart(document.getElementById('chartCanvas').getContext('2d'),{
+    type:'bar',
+    data:{labels:trucks.map(function(t){return 'Cam. '+t.truckCode;}),datasets:[{label:'Produção',data:vals,backgroundColor:vals.map(function(_,i){return i%2===0?'rgba(46,204,113,0.7)':'rgba(26,53,143,0.7)';}),borderColor:vals.map(function(_,i){return i%2===0?'#2ecc71':'#2855c7';}),borderWidth:1,borderRadius:2}]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:function(c){return ' '+fmtNum(c.parsed.y)+' ton';}}}
+      },
+      scales:{
+        x:{ticks:{color:'#6b8a72',font:{size:10}},grid:{color:'rgba(46,204,113,0.05)'}},
+        y:{ticks:{color:'#6b8a72',font:{size:10}},grid:{color:'rgba(46,204,113,0.07)'}}
+      }
+    }
+  });
+}
+function openModal(emp, idx) {
+  var o = grouped(emp)[idx]; if (!o) return;
+  var totT = o.trucks.reduce(function(s,t){return s+(parseFloat(t.e||t.ton)||0);},0);
+  var totV = o.trucks.reduce(function(s,t){return s+(parseFloat(t.h||t.viagens)||0);},0);
+  var distM = o.trucks.length ? o.trucks.reduce(function(s,t){return s+(parseFloat(t.j||t.distancia)||0);},0)/o.trucks.length : 0;
+  var tonCam = o.trucks.length ? totT/o.trucks.length : 0;
+  var sorted = grouped(emp).map(function(x){return x.trucks.reduce(function(s,t){return s+(parseFloat(t.e||t.ton)||0);},0);}).sort(function(a,b){return b-a;});
+  var rank = sorted.indexOf(totT)+1;
+  document.getElementById('mCode').textContent = 'Cód. '+o.code;
+  document.getElementById('mName').textContent = o.owner;
+  document.getElementById('mSub').textContent = emp+' · '+o.trucks.length+' caminhões · Rank #'+rank;
+  var kpis = [];
+  if(totT) kpis.push({ico:'⚖️',lbl:'Produção Total',val:fmtNum(totT),unit:'ton',cls:'c-orange'});
+  if(totV) kpis.push({ico:'🔄',lbl:'Total Viagens',val:fmt(totV),unit:'',cls:'c-blue'});
+  if(o.trucks.length) kpis.push({ico:'🚛',lbl:'Caminhões',val:o.trucks.length,unit:'',cls:'c-green'});
+  if(distM) kpis.push({ico:'📍',lbl:'Dist. Média',val:fmt(distM),unit:'km',cls:'c-teal'});
+  kpis.push({ico:'🏆',lbl:'Rank '+emp,val:'#'+rank,unit:'',cls:'c-purple'});
+  if(tonCam) kpis.push({ico:'⛽',lbl:'Prod/Caminhão',val:fmtNum(tonCam),unit:'ton',cls:'c-red'});
+  document.getElementById('kpiRow').innerHTML = kpis.map(function(k){
+    return '<div class="kpi"><div class="kpi-ico">'+k.ico+'</div><div class="kpi-lbl">'+k.lbl+'</div><div class="kpi-val '+k.cls+'">'+k.val+'<small>'+k.unit+'</small></div></div>';
   }).join('');
-  document.getElementById('propModalBg').style.display='block';
+  var pTot = calcProjecao(totT);
+  var pDiv = document.getElementById('projTotal');
+  if(pTot && periodoAtivo[emp]==='dia'){
+    document.getElementById('projTotalVal').textContent = fmtNum(pTot.projecao)+' ton';
+    document.getElementById('projTotalReal').textContent = fmtNum(totT)+' ton';
+    document.getElementById('projTotalDetail').textContent = 'Média '+fmtNum(pTot.mediaPorMin)+'/h · '+pTot.hDecorridas+'h decorridas · '+pTot.hRestantes+'h restantes';
+    pDiv.style.display = 'flex';
+  } else { pDiv.style.display = 'none'; }
+  buildChart(o.trucks);
+  var cols = activeCols(emp);
+  document.getElementById('mTrucks').innerHTML = o.trucks.map(function(t){
+    var ton  = t.e || t.ton || 0;
+    var viag = t.h || t.viagens || 0;
+    var dist = t.j || t.distancia || 0;
+    var m = [];
+    if(ton)  m.push({v:fmt(ton), l:'Toneladas'});
+    if(viag) m.push({v:fmt(viag),l:'Viagens'});
+    if(dist) m.push({v:fmt(dist),l:'Dist. km'});
+    if(!m.length) return '';
+    var rc = parseFloat(ton||t.e||t.ton)||0;
+    var pc = calcProjecao(rc);
+    var ph = pc && periodoAtivo[emp]==='dia' ? '<div class="proj-box"><div><div class="proj-lbl">📈 Projeção 24h</div><div style="font-size:10px;color:#6b8a72;">Média '+fmtNum(pc.mediaPorMin)+'/h · '+pc.hRestantes+'h restantes</div></div><div class="proj-val">'+fmtNum(pc.projecao)+'<small style="font-size:11px;color:#6b8a72;"> ton</small></div></div>' : '';
+    return '<div class="truck-card"><div class="truck-num">🚛 Caminhão '+t.truckCode+'</div><div class="truck-metrics">'+m.map(function(x){return '<div class="tm"><span class="tm-val">'+x.v+'</span><span class="tm-lbl">'+x.l+'</span></div>';}).join('')+'</div>'+ph+'</div>';
+  }).join('');
+  document.getElementById('propModalBg').style.display = 'block';
 }
 function closeModal(){document.getElementById('propModalBg').style.display='none';}
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal();});
@@ -641,7 +701,14 @@ async function carregarRPMs(){var j=await kvGet('rpms');if(j){rpms=j;localStorag
 carregarRPMs();
 
 // HELPERS
-function calcProjecao(realizado){var ag=new Date(),minD=(ag.getHours()*60+ag.getMinutes())-360;if(minD<0)minD+=1440;var minR=1440-minD;if(minD<=0||realizado<=0)return null;var med=realizado/minD;return{projecao:realizado+(med*minR),mediaPorMin:med*60,hDecorridas:(minD/60).toFixed(1),hRestantes:(minR/60).toFixed(1)};}
+function calcProjecao(realizado) {
+  var ag = new Date(), minD = (ag.getHours()*60+ag.getMinutes())-360;
+  if(minD<0) minD+=1440;
+  var minR = 1440-minD;
+  if(minD<=0||realizado<=0) return null;
+  var med = realizado/minD;
+  return {projecao:realizado+(med*minR), mediaPorMin:med*60, hDecorridas:(minD/60).toFixed(1), hRestantes:(minR/60).toFixed(1)};
+}
 function fmtK(v){if(!v)return '—';if(v>=1000){var k=Math.round(v/100)/10;return k.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'k';}return Math.round(v).toLocaleString('pt-BR');}
 function fmtDate(iso){if(!iso)return '—';var d=new Date(iso);if(isNaN(d))return '—';return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}
 function showToast(ico,msg){document.getElementById('tIco').textContent=ico;document.getElementById('tMsg').textContent=msg;var t=document.getElementById('toast');t.classList.add('show');setTimeout(function(){t.classList.remove('show');},3500);}
