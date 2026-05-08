@@ -380,35 +380,29 @@ td{padding:8px 10px;font-size:12px;color:var(--white);}
   <div class="view" id="view-adm">
     <div class="adm-subtabs">
       <button class="adm-stab active" onclick="goStab('planilhas')">📊 Planilhas</button>
+      <button class="adm-stab" onclick="goStab('senhas')">🔐 Senhas</button>
     </div>
+
     <div id="stab-planilhas">
       <div class="page-title">Painel <span>Administrativo</span></div>
       <div class="page-sub">Carregue o Excel de cada empresa separadamente</div>
-
-      <!-- RPM por empresa -->
       <div style="background:var(--bg2);border:1px solid var(--border);padding:16px 20px;margin-bottom:24px;position:relative;">
         <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--green));"></div>
         <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:14px;">⚡ RPM — Rotação Atual</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
           <div style="background:var(--bg3);border:1px solid var(--border);padding:14px;text-align:center;">
             <div style="font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:8px;">CEM</div>
-            <input id="rpm-input-CEM" type="number" value="" placeholder="0" 
-              style="width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);color:#2ecc71;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;text-align:center;outline:none;padding:4px 0;"
-              onchange="salvarRPM('CEM',this.value)" oninput="salvarRPM('CEM',this.value)">
+            <input id="rpm-input-CEM" type="number" value="" placeholder="0" style="width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);color:#2ecc71;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;text-align:center;outline:none;padding:4px 0;" onchange="salvarRPM('CEM',this.value)" oninput="salvarRPM('CEM',this.value)">
             <div style="font-size:9px;color:var(--gray);letter-spacing:1px;margin-top:4px;">RPM</div>
           </div>
           <div style="background:var(--bg3);border:1px solid var(--border);padding:14px;text-align:center;">
             <div style="font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:8px;">CEMMA</div>
-            <input id="rpm-input-CEMMA" type="number" value="" placeholder="0"
-              style="width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);color:#2ecc71;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;text-align:center;outline:none;padding:4px 0;"
-              onchange="salvarRPM('CEMMA',this.value)" oninput="salvarRPM('CEMMA',this.value)">
+            <input id="rpm-input-CEMMA" type="number" value="" placeholder="0" style="width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);color:#2ecc71;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;text-align:center;outline:none;padding:4px 0;" onchange="salvarRPM('CEMMA',this.value)" oninput="salvarRPM('CEMMA',this.value)">
             <div style="font-size:9px;color:var(--gray);letter-spacing:1px;margin-top:4px;">RPM</div>
           </div>
           <div style="background:var(--bg3);border:1px solid var(--border);padding:14px;text-align:center;">
             <div style="font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:8px;">COPLASA</div>
-            <input id="rpm-input-COPLASA" type="number" value="" placeholder="0"
-              style="width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);color:#2ecc71;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;text-align:center;outline:none;padding:4px 0;"
-              onchange="salvarRPM('COPLASA',this.value)" oninput="salvarRPM('COPLASA',this.value)">
+            <input id="rpm-input-COPLASA" type="number" value="" placeholder="0" style="width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);color:#2ecc71;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;text-align:center;outline:none;padding:4px 0;" onchange="salvarRPM('COPLASA',this.value)" oninput="salvarRPM('COPLASA',this.value)">
             <div style="font-size:9px;color:var(--gray);letter-spacing:1px;margin-top:4px;">RPM</div>
           </div>
         </div>
@@ -477,8 +471,18 @@ td{padding:8px 10px;font-size:12px;color:var(--white);}
       </div>
       <div style="overflow-x:auto;" id="admTableWrap"><p style="color:var(--gray);padding:20px 0;">Nenhum dado carregado ainda.</p></div>
     </div>
-  </div>
 
+    <div id="stab-senhas" style="display:none;padding:16px;">
+      <div id="lista-senhas" style="margin-bottom:16px;"></div>
+      <div style="background:var(--surface);border-radius:10px;padding:14px;border:1px solid var(--border);display:flex;flex-direction:column;gap:10px;">
+        <input id="nova-senha" placeholder="🔑 Senha" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;">
+        <input id="nova-codigos-cam" placeholder="🚛 Códigos caminhão (ex: 168378, 181595)" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;">
+        <input id="nova-codigos-ent" placeholder="🌿 Códigos entrega (ex: 1001, 1008)" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;">
+        <button class="uc-btn" onclick="adicionarSenha()" style="width:100%;">✅ Adicionar</button>
+      </div>
+    </div>
+
+  </div>
 </div>
 
 <!-- MODAL PROPRIETÁRIO -->
@@ -606,35 +610,34 @@ function selecionarEmpresa(emp) {
   localStorage.setItem('frota_sessao', JSON.stringify({ emp: emp, tipo: tipoAtual }));
 }
 
-function loginCliente() {
+async function loginCliente() {
   var senha = prompt('Digite sua senha:');
   if (!senha) return;
-  // Verificar nas senhas cadastradas
-  var perfil = SENHAS[senha];
+  // Carregar senhas do Upstash antes de verificar
+  var senhasKv = await kvGet('senhas_acesso');
+  if (senhasKv) Object.assign(SENHAS, senhasKv);
+  var perfil = SENHAS[senha.trim()];
   if (!perfil || perfil.adm) { alert('Senha incorreta.'); return; }
-  // Salvar sessão
   empsPermitidas = perfil.emps;
-  localStorage.setItem('frota_sessao', JSON.stringify({ tipo: 'cliente', senha: senha, emps: perfil.emps }));
-  entrarComoCliente(perfil.emps);
+  localStorage.setItem('frota_sessao', JSON.stringify({ tipo: 'cliente', senha: senha.trim(), emps: perfil.emps, codigosCam: perfil.codigosCam||[], codigosEnt: perfil.codigosEnt||[] }));
+  entrarComoCliente(perfil);
 }
 
-function entrarComoCliente(emps) {
-  empsPermitidas = emps;
-  // Esconder botão ADM
-  var btnAdm = document.getElementById('btnVoltar');
-  // Mostrar modal de seleção de empresa (filtrado)
+function entrarComoCliente(perfil) {
+  if (Array.isArray(perfil)) perfil = { emps: perfil, codigosCam: [], codigosEnt: [] };
+  empsPermitidas = perfil.emps || ['CEM','CEMMA','COPLASA'];
+  window._filtroCam = perfil.codigosCam || [];
+  window._filtroEnt = perfil.codigosEnt || [];
   ['CEM','CEMMA','COPLASA'].forEach(function(e) {
     var btn = document.getElementById('emp-btn-'+e);
     if (btn) btn.style.display = empsPermitidas.indexOf(e) >= 0 ? '' : 'none';
   });
-  abrirMenu('caminhao');
 }
 
 function abrirAdm() {
-  var senha = prompt('Senha ADM:');
+  var senha = (prompt('Senha ADM:')||'').trim();
   if (senha !== SENHA_ADM) { alert('Senha incorreta.'); return; }
   empAtual = 'ADM';
-  renderSenhas();
   document.getElementById('telaInicial').style.display = 'none';
   document.getElementById('btnVoltar').style.display = 'flex';
   document.getElementById('view-adm').style.display = 'block';
@@ -673,7 +676,7 @@ async function init() {
     if (s) {
       var sess = JSON.parse(s);
       if (sess.tipo === 'cliente' && sess.emps) {
-        entrarComoCliente(sess.emps);
+        entrarComoCliente(sess);
       } else if (sess.emp) {
         tipoAtual = sess.tipo || 'caminhao';
         selecionarEmpresa(sess.emp);
@@ -1217,7 +1220,14 @@ async function apagarDados(emp, per) {
   await kvSet(emp + '_' + per, { data: [], updatedAt: '' });
   showToast('🗑', emp + ' ' + (per==='dia'?'Dia':'D-1') + ' apagado!');
 }
-function goStab(tab){document.getElementById('stab-planilhas').style.display=tab==='planilhas'?'block':'none';}
+function goStab(tab){
+  document.getElementById('stab-planilhas').style.display = tab==='planilhas' ? 'block' : 'none';
+  document.getElementById('stab-senhas').style.display = tab==='senhas' ? 'block' : 'none';
+  document.getElementById('admTableWrap').style.display = tab==='planilhas' ? 'block' : 'none';
+  document.querySelectorAll('.adm-stab').forEach(function(b){ b.classList.remove('active'); });
+  event.target.classList.add('active');
+  if(tab==='senhas') renderSenhas();
+}
 
 // Partículas na tela inicial
 (function() {
@@ -1436,6 +1446,44 @@ function parsePDFCaminhao(text) {
   var msg = h >= 5 && h < 12 ? '☀️ Bom dia' : h >= 12 && h < 18 ? '🌤️ Boa tarde' : '🌙 Boa noite';
   el.textContent = msg + ' — Grupo Moreno';
 })();
+
+function renderSenhas() {
+  var el = document.getElementById('lista-senhas'); if (!el) return;
+  var keys = Object.keys(SENHAS).filter(function(s){ return !SENHAS[s].adm; });
+  if (!keys.length) { el.innerHTML = '<div style="color:var(--gray);font-size:12px;padding:8px 0;">Nenhuma senha cadastrada</div>'; return; }
+  el.innerHTML = keys.map(function(s) {
+    var p = SENHAS[s];
+    var cam = (p.codigosCam||[]).join(', ') || '—';
+    var ent = (p.codigosEnt||[]).join(', ') || '—';
+    return '<div style="padding:10px 0;border-bottom:1px solid var(--border);">'+
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">'+
+        '<span style="flex:1;font-size:14px;font-family:monospace;color:var(--text);font-weight:700;">'+s+'</span>'+
+        '<button onclick="removerSenha(\"'+s+'\")" style="background:none;border:1px solid #e74c3c;color:#e74c3c;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:12px;">🗑</button>'+
+      '</div>'+
+      '<div style="font-size:11px;color:var(--gray);">🚛 Caminhão: '+cam+'</div>'+
+      '<div style="font-size:11px;color:var(--gray);">🌿 Entrega: '+ent+'</div>'+
+    '</div>';
+  }).join('');
+}
+
+function adicionarSenha() {
+  var s = (document.getElementById('nova-senha').value||'').trim();
+  if (!s) { showToast('⚠️','Digite uma senha'); return; }
+  var cam = (document.getElementById('nova-codigos-cam').value||'').split(',').map(function(x){return x.trim();}).filter(Boolean);
+  var ent = (document.getElementById('nova-codigos-ent').value||'').split(',').map(function(x){return x.trim();}).filter(Boolean);
+  if (!cam.length && !ent.length) { showToast('⚠️','Digite ao menos um código'); return; }
+  SENHAS[s] = { emps: ['CEM','CEMMA','COPLASA'], adm: false, codigosCam: cam, codigosEnt: ent };
+  kvSet('senhas_acesso', SENHAS).then(function(){ showToast('✅','Senha "'+s+'" adicionada!'); renderSenhas(); });
+  document.getElementById('nova-senha').value = '';
+  document.getElementById('nova-codigos-cam').value = '';
+  document.getElementById('nova-codigos-ent').value = '';
+}
+
+function removerSenha(s) {
+  if (!confirm('Remover senha "'+s+'"?')) return;
+  delete SENHAS[s];
+  kvSet('senhas_acesso', SENHAS).then(function(){ showToast('🗑','Senha removida'); renderSenhas(); });
+}
 
 init();
 
