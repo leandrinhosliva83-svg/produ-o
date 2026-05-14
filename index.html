@@ -1014,6 +1014,29 @@ function iniciarFirebase() {
       if (typeof firebase === 'undefined') { reject('Firebase não carregado'); return; }
       if (!_fbApp) {
         _fbApp = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
+const messaging = getMessaging(app);
+
+async function ativarPush() {
+
+  const permissao = await Notification.requestPermission();
+
+  if (permissao === "granted") {
+
+    const token = await getToken(messaging, {
+
+      vapidKey: "BNvQYHTKiFxqtjZ5nxVxjPP7PL81lzxXhL1JbmXQ18RtTqfs2CzjAyRZ3K039FlPin-zcvpMT6Kf4eeQOQXeZZU"
+
+    });
+
+    console.log("TOKEN:");
+
+    console.log(token);
+
+  }
+
+}
+
+ativarPush();
       }
       _fbMsg = firebase.messaging(_fbApp);
 
@@ -1421,6 +1444,66 @@ atualizarRPMButtons();
 carregarMetas();
 
 init();
+</script>
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getAnalytics
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+
+import {
+  getMessaging,
+  getToken
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
+
+const firebaseConfig = {
+
+  apiKey: "AIzaSyAjjFMj0qbJlINPspy_mYslAwJtDI9jRWs",
+
+  authDomain: "frota-moreno.firebaseapp.com",
+
+  projectId: "frota-moreno",
+
+  storageBucket: "frota-moreno.firebasestorage.app",
+
+  messagingSenderId: "726316011876",
+
+  appId: "1:726316011876:web:45fd87f747603c417baa71",
+
+  measurementId: "G-PCVX31NFKN"
+
+};
+
+const app = initializeApp(firebaseConfig);
+
+const analytics = getAnalytics(app);
+
+const messaging = getMessaging(app);
+
+async function ativarPush() {
+
+  const permissao = await Notification.requestPermission();
+
+  if (permissao === "granted") {
+
+    const token = await getToken(messaging, {
+
+      vapidKey: "BNvQYHTKiFxqtjZ5nxVxjPP7PL81lzxXhL1JbmXQ18RtTqfs2CzjAyRZ3K039FlPin-zcvpMT6Kf4eeQOQXeZZU"
+
+    });
+
+    console.log("TOKEN DO CELULAR:");
+
+    console.log(token);
+
+  }
+
+}
+
+ativarPush();
+
 </script>
 </body>
 </html>
