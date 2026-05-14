@@ -13,6 +13,6 @@ const tk=[];
 try{const r=await fetch(U+'/keys/fcm_token_*',{headers:{Authorization:'Bearer '+T}});const j=await r.json();if(j.result&&j.result.length)for(const k of j.result){const t=await kg(k);if(t)tk.push(t);}}catch(e){}
 if(!tk.length)return res.json({ok:false,msg:'Sem token. Abra o site e toque no sino!'});
 const at=await gt();let ok=0;
-for(const token of tk){try{const r=await fetch('https://fcm.googleapis.com/v1/projects/'+P+'/messages:send',{method:'POST',headers:{Authorization:'Bearer '+at,'Content-Type':'application/json'},body:JSON.stringify({message:{token,notification:{title:'Teste Moreno',body:'CEM 65% da meta'},android:{priority:'high'},webpush:{headers:{Urgency:'high'}}}})});if(r.ok)ok++;else console.log(JSON.stringify(await r.json()));}catch(e){console.log(e.message);}}
+for(const token of tk){try{const r=await fetch('https://fcm.googleapis.com/v1/projects/'+P+'/messages:send',{method:'POST',headers:{Authorization:'Bearer '+at,'Content-Type':'application/json'},body:JSON.stringify({message:{token,notification:{title:'🚨 Grupo Moreno — Alerta de Meta',body:'Proprietario abaixo da meta! Verifique o dashboard.'},android:{priority:'high'},webpush:{headers:{Urgency:'high'}}}})});if(r.ok)ok++;else console.log(JSON.stringify(await r.json()));}catch(e){console.log(e.message);}}
 return res.json({ok:true,tokens:tk.length,enviados:ok,msg:ok>0?'Enviado para '+ok+' celular!':'Falhou'});
 }
