@@ -1,4 +1,3 @@
-// Firebase Messaging Service Worker — Grupo Moreno
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
 
@@ -13,29 +12,28 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Receber push com app fechado
 messaging.onBackgroundMessage(function(payload) {
-  var data = payload.notification || payload.data || {};
-  var title = data.title || '🚨 Alerta de Meta — Grupo Moreno';
-  var body  = data.body  || 'Proprietário abaixo da meta!';
+  var n = payload.notification || {};
+  var title = n.title || '🚨 Grupo Moreno — Alerta de Meta';
+  var body = n.body || 'Proprietario abaixo da meta! Verifique o dashboard.';
 
   self.registration.showNotification(title, {
     body: body,
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
-    vibrate: [300, 100, 300, 100, 500],
+    icon: 'https://moreno-o-chi.vercel.app/icon-192.png',
+    badge: 'https://moreno-o-chi.vercel.app/icon-192.png',
+    vibrate: [500, 200, 500, 200, 800],
     requireInteraction: true,
     tag: 'alerta-meta',
     renotify: true,
-    actions: [{ action: 'abrir', title: '📊 Ver Dashboard' }]
+    silent: false
   });
 });
 
 self.addEventListener('notificationclick', function(e) {
   e.notification.close();
   e.waitUntil(
-    clients.matchAll({ type: 'window' }).then(function(cs) {
-      if (cs.length) { cs[0].focus(); return; }
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(cs) {
+      if (cs.length > 0) { cs[0].focus(); return; }
       clients.openWindow('https://moreno-o-chi.vercel.app/');
     })
   );
