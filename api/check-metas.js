@@ -70,9 +70,7 @@ function calcProj(real) {
   const ag = new Date();
   let minD = (ag.getHours()*60+ag.getMinutes())-360;
   if (minD < 1) return null;
-  const med = real/minD;
-  const minR = 1440-minD;
-  return { proj: real+(med*minR) };
+  return { proj: real + (real/minD) * (1440-minD) };
 }
 
 async function sendPush(token, title, body, at) {
@@ -84,6 +82,31 @@ async function sendPush(token, title, body, at) {
     });
     return r.ok;
   } catch(e) { return false; }
+}
+
+async function getTokensAtivos() {
+  const tokens = [];
+  try {
+    const r1 = await fetch(UPSTASH_URL+'/keys/fcm_usr_*',{headers:{Authorization:'Bearer '+UPSTASH_TOKEN}});
+    const j1 = await r1.json();
+    if (j1.result?.length) {
+      for (const key of j1.result) {
+        const d = await kget(key);
+        if (d && d.ativo !== false && d.token) tokens.push(d.token);
+      }
+    }
+    if (!tokens.length) {
+      const r2 = await fetch(UPSTASH_URL+'/keys/fcm_token_*',{headers:{Authorization:'Bearer '+UPSTASH_TOKEN}});
+      const j2 = await r2.json();
+      if (j2.result?.length) {
+        for (const key of j2.result) {
+          const t = await kget(key);
+          if (t) tokens.push(t);
+        }
+      }
+    }
+  } catch(e) {}
+  return tokens;
 }
 
 export default async function handler(req, res) {
@@ -102,23 +125,19 @@ export default async function handler(req, res) {
   for (const emp of emps) {
     const data = await kget('entrega_'+emp);
     if (!data?.data?.length) continue;
-
     for (const r of data.data) {
       const cod = String(r.codigo||'').trim();
       const meta = metas['f_'+cod]
         || metas['f_'+parseInt(cod)]
         || metas['f_'+cod.padStart(4,'0')]
         || metas['f_'+cod.replace(/^0+/,'')];
-
       if (!meta || !(r.entrega > 0)) continue;
-
       const p = calcProj(r.entrega);
       if (!p) continue;
-
       const pct = Math.round((p.proj/meta)*100);
       if (pct < 100) {
         const nome = r.apelido || ('Frente '+cod);
-        alertas.push(emp+' | '+nome+'\nProj: '+Math.round(p.proj)+'t / Meta: '+meta+'t ('+pct+'%)');
+        alertas.push(`${emp} | ${nome}\nProj: ${Math.round(p.proj)}t / Meta: ${meta}t (${pct}%)`);
       }
     }
   }
@@ -127,24 +146,13 @@ export default async function handler(req, res) {
     return res.json({ok:true, msg:'Todas as frentes no prazo'});
   }
 
-  const tokens = [];
-  try {
-    const r = await fetch(UPSTASH_URL+'/keys/fcm_token_*',{headers:{Authorization:'Bearer '+UPSTASH_TOKEN}});
-    const j = await r.json();
-    if (j.result?.length) {
-      for (const key of j.result) {
-        const t = await kget(key);
-        if (t) tokens.push(t);
-      }
-    }
-  } catch(e) {}
-
+  const tokens = await getTokensAtivos();
   if (!tokens.length) {
-    return res.json({ok:false, alertas:alertas.length, msg:'Sem tokens FCM'});
+    return res.json({ok:false, alertas:alertas.length, msg:'Sem tokens ativos'});
   }
 
   const qtd = alertas.length;
-  const title = '🚨 Grupo Moreno — '+qtd+' frente'+(qtd>1?'s':'')+' abaixo da meta';
+  const title = `🚨 Grupo Moreno — ${qtd} frente${qtd>1?'s':''} abaixo da meta`;
   const body = alertas.slice(0,4).join('\n─────────\n');
 
   const at = await getFBToken();
