@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0a0f">
+<title>Usina Moreno — Velocidade</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+:root {
+  --bg: #0a0a0f;
+  --surface: #13141f;
+  --border: #1e2030;
+  --text: #f0f0f5;
+  --muted: #50546a;
+  --accent: #3b82f6;
+  --green: #22c55e;
+  --yellow: #eab308;
+  --red: #ef4444;
+  --purple: #8b5cf6;
+}
+
+body { font-family: -apple-system, 'SF Pro Display', 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+/* ── LOGIN ── */
+#tela-login {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 32px 24px;
+}
+.login-icon { width: 72px; height: 72px; background: var(--accent); border-radius: 20px;
+  display: flex; align-items: center; justify-content: center; font-size: 36px; margin-bottom: 20px;
+  box-shadow: 0 0 40px rgba(59,130,246,0.3); }
+.login-title { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 4px; }
+.login-sub { color: var(--muted); font-size: 14px; margin-bottom: 36px; }
+.login-form { width: 100%; max-width: 340px; }
+.input-group { margin-bottom: 14px; }
+.input-label { display: block; color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 6px; }
+.input-field {
+  width: 100%; background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 12px; color: var(--text); padding: 14px 16px; font-size: 16px; outline: none;
+  transition: border-color 0.2s;
+}
+.input-field:focus { border-color: var(--accent); }
+.btn-primary {
+  width: 100%; background: var(--accent); border: none; border-radius: 12px;
+  color: #fff; padding: 15px; font-size: 16px; font-weight: 700; cursor: pointer;
+  margin-top: 6px; transition: opacity 0.2s; letter-spacing: 0.3px;
+}
+.btn-primary:active { opacity: 0.8; }
+.login-error { color: var(--red); font-size: 13px; text-align: center; margin-top: 12px; display: none; }
+
+/* ── APP ── */
+#tela-app { display: none; flex-direction: column; min-height: 100vh; }
+
+/* Topbar */
+.topbar {
+  background: var(--surface); padding: 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+  backdrop-filter: blur(10px);
+}
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+.topbar-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.topbar-title { font-size: 16px; font-weight: 700; }
+.topbar-time { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.topbar-actions { display: flex; gap: 8px; }
+.icon-btn {
+  width: 34px; height: 34px; border: 1.5px solid var(--border); border-radius: 10px;
+  background: transparent; color: var(--text); font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.icon-btn.purple { border-color: var(--purple); color: var(--purple); }
+.icon-btn.red { border-color: #2a1515; color: var(--red); }
+
+/* Cards de resumo */
+.resumo-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  padding: 14px; background: var(--bg); border-bottom: 1px solid var(--border);
+}
+.resumo-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 12px; text-align: center;
+}
+.resumo-card.destaque { border-color: var(--red); background: rgba(239,68,68,0.05); }
+.resumo-num { font-size: 28px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+.resumo-label { font-size: 10px; color: var(--muted); font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; margin-top: 4px; }
+
+/* Barra de busca */
+.search-bar { padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--bg); }
+.search-input {
+  width: 100%; background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 12px; color: var(--text); padding: 10px 14px; font-size: 15px; outline: none;
+}
+.search-input:focus { border-color: var(--accent); }
+
+/* Filtros */
+.filtros-scroll {
+  display: flex; gap: 6px; padding: 10px 14px; overflow-x: auto;
+  border-bottom: 1px solid var(--border); scrollbar-width: none; background: var(--bg);
+}
+.filtros-scroll::-webkit-scrollbar { display: none; }
+.chip {
+  background: var(--surface); border: 1.5px solid var(--border); color: var(--muted);
+  border-radius: 20px; padding: 5px 14px; font-size: 12px; font-weight: 600;
+  white-space: nowrap; cursor: pointer; flex-shrink: 0; transition: all 0.15s;
+}
+.chip.ativo { background: rgba(59,130,246,0.1); border-color: var(--accent); color: var(--accent); }
+
+/* Lista */
+.lista-container { flex: 1; overflow-y: auto; }
+
+.grupo-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 10;
+}
+.grupo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.grupo-nome { font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--accent); flex: 1; }
+.grupo-badge {
+  background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2);
+  color: var(--accent); border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 700;
+}
+.limite-badge {
+  background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);
+  color: var(--red); border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 700;
+}
+
+.eq-card {
+  padding: 14px; border-bottom: 1px solid var(--border);
+  background: var(--bg); transition: background 0.15s;
+}
+.eq-card:active { background: var(--surface); }
+.eq-card.alerta { background: rgba(239,68,68,0.04); border-left: 3px solid var(--red); }
+
+.eq-row1 { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+.eq-left { flex: 1; min-width: 0; }
+.eq-cod { font-size: 17px; font-weight: 800; letter-spacing: -0.3px; }
+.eq-modelo { font-size: 12px; color: var(--muted); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.eq-vel-box { text-align: right; flex-shrink: 0; margin-left: 12px; }
+.eq-vel { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; line-height: 1; }
+.eq-vel-unit { font-size: 11px; color: var(--muted); font-weight: 600; }
+
+.eq-row2 { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.eq-tag {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 3px 8px; font-size: 11px; color: var(--muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 48%;
+}
+
+.barra-bg { background: var(--surface); border-radius: 4px; height: 5px; overflow: hidden; }
+.barra-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+
+.alerta-txt { color: var(--red); font-size: 11px; font-weight: 600; margin-top: 6px; }
+
+/* Animação alerta */
+@keyframes pulsar { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.pulsando { animation: pulsar 1.2s infinite; }
+
+/* Popups */
+.popups-wrap { position: fixed; bottom: 16px; left: 12px; right: 12px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+@keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+.popup {
+  background: #1a0808; border: 1.5px solid var(--red); border-radius: 16px;
+  padding: 14px 16px; animation: slideUp 0.3s ease;
+  box-shadow: 0 8px 30px rgba(239,68,68,0.25);
+}
+.popup-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.popup-tag { color: var(--red); font-size: 12px; font-weight: 700; }
+.popup-close { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; }
+.popup-cod { font-size: 18px; font-weight: 800; }
+.popup-nome { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.popup-bottom { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 10px; }
+.popup-vel { font-size: 32px; font-weight: 800; color: var(--red); letter-spacing: -1px; line-height: 1; }
+.popup-lim { color: var(--muted); font-size: 12px; }
+
+/* Config */
+#tela-config {
+  display: none; position: fixed; inset: 0; background: var(--bg);
+  z-index: 200; flex-direction: column;
+}
+.config-top {
+  background: var(--surface); padding: 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.config-title { font-size: 16px; font-weight: 700; color: var(--purple); }
+.config-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; flex: 1; }
+.config-row { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+.config-classe { flex: 1; font-size: 13px; font-weight: 600; }
+.config-inp {
+  background: var(--bg); border: 1.5px solid var(--border); border-radius: 8px;
+  color: var(--text); padding: 8px 12px; font-size: 15px; width: 90px;
+  outline: none; text-align: center; font-weight: 700;
+}
+.config-inp:focus { border-color: var(--purple); }
+
+.empty { color: var(--muted); text-align: center; padding: 48px 24px; font-size: 15px; }
+
+/* Seção ocultar */
+.ocultar-btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px; border-bottom: 1px solid var(--border); background: var(--bg);
+  cursor: pointer; color: var(--muted); font-size: 12px; font-weight: 600;
+}
+#secao-lista { transition: all 0.3s; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="tela-login">
+  <div class="login-icon">🚜</div>
+  <div class="login-title">Usina Moreno</div>
+  <div class="login-sub">Monitoramento de Velocidade</div>
+  <div class="login-form">
+    <div class="input-group">
+      <label class="input-label">Email</label>
+      <input class="input-field" id="inp-email" type="email" placeholder="seu@email.com">
+    </div>
+    <div class="input-group">
+      <label class="input-label">Senha</label>
+      <div style="position:relative">
+        <input class="input-field" id="inp-senha" type="password" placeholder="••••••••" style="padding-right:48px">
+        <button onclick="toggleSenha()" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:#50546a;font-size:20px;cursor:pointer;padding:0" id="btn-olho">👁</button>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="fazerLogin()">Entrar</button>
+    <div class="login-error" id="login-erro">Email ou senha incorretos</div>
+  </div>
+</div>
+
+<!-- CONFIG -->
+<div id="tela-config">
+  <div class="config-top">
+    <span class="config-title">⚙ Alertas por Classe</span>
+    <button class="icon-btn" onclick="fecharConfig()">✕</button>
+  </div>
+  <div class="config-body" id="config-body"></div>
+</div>
+
+<!-- APP -->
+<div id="tela-app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-icon">🚜</div>
+      <div>
+        <div class="topbar-title">Velocidade</div>
+        <div class="topbar-time" id="app-time">Carregando...</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn purple" onclick="abrirConfig()" title="Alertas">⚙</button>
+      <button class="icon-btn" onclick="buscarDados()" title="Atualizar">↻</button>
+      <button class="icon-btn red" onclick="sair()" title="Sair">⏻</button>
+    </div>
+  </div>
+
+  <div class="resumo-grid">
+    <div class="resumo-card">
+      <div class="resumo-num" id="r-total" style="color:var(--text)">-</div>
+      <div class="resumo-label">Total</div>
+    </div>
+    <div class="resumo-card">
+      <div class="resumo-num" id="r-normais" style="color:var(--green)">-</div>
+      <div class="resumo-label">Normal</div>
+    </div>
+    <div class="resumo-card destaque">
+      <div class="resumo-num" id="r-alertas" style="color:var(--red)">-</div>
+      <div class="resumo-label">Alertas</div>
+    </div>
+    <div class="resumo-card">
+      <div class="resumo-num" id="r-parados" style="color:var(--red)">-</div>
+      <div class="resumo-label">Parados</div>
+    </div>
+    <div class="resumo-card">
+      <div class="resumo-num" id="r-lentos" style="color:var(--yellow)">-</div>
+      <div class="resumo-label">Lentos</div>
+    </div>
+    <div class="resumo-card">
+      <div class="resumo-num" id="r-media" style="color:var(--accent)">-</div>
+      <div class="resumo-label">Méd km/h</div>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <input class="search-input" id="busca" placeholder="🔍  Buscar equipamento..." oninput="renderizar()">
+  </div>
+
+  <div class="filtros-scroll" id="filtros"></div>
+
+  <div class="ocultar-btn" onclick="toggleLista()" id="btn-ocultar">
+    <span id="ocultar-icon">▲</span> <span id="ocultar-txt">Ocultar lista</span>
+  </div>
+
+  <div id="secao-lista">
+    <div class="lista-container" id="lista">
+      <div class="empty">Carregando equipamentos...</div>
+    </div>
+  </div>
+</div>
+
+<div class="popups-wrap" id="popups"></div>
+
+<script>
+const API = 'https://produ-o-production.up.railway.app';
+let token = localStorage.getItem('mv-token');
+let equipamentos = [];
+let filtroClasse = 'todos';
+let limites = JSON.parse(localStorage.getItem('mv-limites') || '{}');
+let popupsAtivos = new Set();
+let listaVisivel = true;
+
+if (token) mostrarApp();
+
+function toggleSenha() {
+  const inp = document.getElementById('inp-senha');
+  const btn = document.getElementById('btn-olho');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    inp.type = 'password';
+    btn.textContent = '👁';
+  }
+}
+
+async function fazerLogin() {
+  const btn = document.querySelector('.btn-primary');
+  const erro = document.getElementById('login-erro');
+  btn.textContent = 'Entrando...'; btn.disabled = true;
+  erro.style.display = 'none';
+  try {
+    const r = await fetch(API + '/sessions', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ email: document.getElementById('inp-email').value, password: document.getElementById('inp-senha').value })
+    });
+    const data = await r.json();
+    if (data.token) { token = data.token; localStorage.setItem('mv-token', token); mostrarApp(); }
+    else { erro.style.display = 'block'; }
+  } catch(e) { erro.textContent = 'Erro: ' + e.message; erro.style.display = 'block'; }
+  btn.textContent = 'Entrar'; btn.disabled = false;
+}
+
+function mostrarApp() {
+  document.getElementById('tela-login').style.display = 'none';
+  document.getElementById('tela-app').style.display = 'flex';
+  buscarDados();
+}
+
+function sair() {
+  localStorage.removeItem('mv-token'); token = null; equipamentos = [];
+  document.getElementById('tela-app').style.display = 'none';
+  document.getElementById('tela-login').style.display = 'flex';
+}
+
+function toggleLista() {
+  listaVisivel = !listaVisivel;
+  document.getElementById('secao-lista').style.display = listaVisivel ? '' : 'none';
+  document.getElementById('ocultar-icon').textContent = listaVisivel ? '▲' : '▼';
+  document.getElementById('ocultar-txt').textContent = listaVisivel ? 'Ocultar lista' : 'Mostrar lista';
+}
+
+function getStatus(vel) {
+  if (vel <= 0.1) return { cor: 'var(--red)', tipo: 'parado' };
+  if (vel < 3)   return { cor: 'var(--yellow)', tipo: 'lento' };
+  return              { cor: 'var(--green)', tipo: 'normal' };
+}
+
+function emAlerta(eq) { const l = limites[eq.classe]; return l && eq.vel > l; }
+
+function tocarAlerta() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.3, 0.6].forEach(t => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = 880; o.type = 'square';
+      g.gain.setValueAtTime(0.3, ctx.currentTime + t);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.2);
+      o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.2);
+    });
+  } catch(e) {}
+}
+
+function mostrarPopup(eq) {
+  const id = 'pop' + eq.cod;
+  if (popupsAtivos.has(id)) return;
+  popupsAtivos.add(id);
+  const d = document.createElement('div');
+  d.className = 'popup'; d.id = id;
+  d.innerHTML = `
+    <div class="popup-top">
+      <span class="popup-tag">🚨 ALERTA DE VELOCIDADE</span>
+      <button class="popup-close" onclick="document.getElementById('${id}').remove()">✕</button>
+    </div>
+    <div class="popup-cod">${eq.cod} — ${eq.modelo}</div>
+    <div class="popup-nome">👤 ${eq.nome}</div>
+    <div class="popup-bottom">
+      <div class="popup-vel">${eq.vel.toFixed(1)}<span style="font-size:16px;color:var(--muted)"> km/h</span></div>
+      <div class="popup-lim">Limite: ${limites[eq.classe]} km/h</div>
+    </div>`;
+  document.getElementById('popups').prepend(d);
+  setTimeout(() => { d.remove(); popupsAtivos.delete(id); }, 12000);
+}
+
+async function buscarDados() {
+  if (!token) return;
+  document.getElementById('app-time').textContent = 'Atualizando...';
+  try {
+    const url = API + '/dashboard?tipo[]=0&tipo[]=51&tipo[]=52&tipo[]=53&tipo[]=61&tipo[]=101&tipo[]=102&tipo[]=104&tipo[]=106&tipo[]=107&tipo[]=109&tipo[]=1010&tipo[]=1011&tipo[]=1013&tipo[]=1014&tipo[]=1025&tipo[]=1026&tipo[]=141&tipo[]=2323&tipo[]=273&tipo[]=54&tipo[]=11&tipo[]=12&tipo[]=123&tipo[]=126&tipo[]=31&tipo[]=3131&atividades[]=0&eqpto=';
+    const r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+    if (r.status === 401) { sair(); return; }
+    const data = await r.json();
+
+    equipamentos = (data.alocacao || []).map(eq => {
+      const t = eq.trajetos && eq.trajetos.length > 0 ? eq.trajetos[0] : null;
+      return { cod: eq.cod_equipamento, modelo: eq.dsc_modelo || '-', nome: eq.nome || '-', fazenda: eq.dsc_fazenda || '-', vel: t ? (t.num_velocidade_gps || 0) : 0, classe: eq.dsc_tipo_utilizacao || 'SEM CLASSE' };
+    });
+
+    let novos = false;
+    equipamentos.forEach(eq => { if (emAlerta(eq)) { mostrarPopup(eq); novos = true; } });
+    if (novos) tocarAlerta();
+
+    const p = equipamentos.filter(e => getStatus(e.vel).tipo === 'parado').length;
+    const l = equipamentos.filter(e => getStatus(e.vel).tipo === 'lento').length;
+    const n = equipamentos.filter(e => getStatus(e.vel).tipo === 'normal').length;
+    const a = equipamentos.filter(e => emAlerta(e)).length;
+    const m = equipamentos.length > 0 ? (equipamentos.reduce((s,e) => s+e.vel,0)/equipamentos.length).toFixed(1) : '0';
+
+    document.getElementById('r-total').textContent = equipamentos.length;
+    document.getElementById('r-parados').textContent = p;
+    document.getElementById('r-lentos').textContent = l;
+    document.getElementById('r-normais').textContent = n;
+    document.getElementById('r-alertas').textContent = a;
+    document.getElementById('r-media').textContent = m;
+    document.getElementById('app-time').textContent = new Date().toLocaleTimeString('pt-BR');
+
+    const classes = [...new Set(equipamentos.map(e => e.classe))];
+    document.getElementById('filtros').innerHTML = ['todos', ...classes.sort()].map(c =>
+      `<div class="chip ${filtroClasse===c?'ativo':''}" onclick="setFiltro('${c}')">${c==='todos'?'Todos':c}</div>`
+    ).join('');
+
+    renderizar();
+  } catch(e) {
+    document.getElementById('lista').innerHTML = `<div class="empty">❌ ${e.message}</div>`;
+    document.getElementById('app-time').textContent = 'Erro';
+  }
+}
+
+function setFiltro(c) {
+  filtroClasse = c;
+  document.querySelectorAll('.chip').forEach(b => b.classList.toggle('ativo', b.textContent.trim() === (c==='todos'?'Todos':c)));
+  renderizar();
+}
+
+function renderizar() {
+  const busca = document.getElementById('busca').value.toLowerCase();
+  const lista = document.getElementById('lista');
+  let filtrados = equipamentos.filter(eq => {
+    const pc = filtroClasse === 'todos' || eq.classe === filtroClasse;
+    const pb = !busca || eq.nome.toLowerCase().includes(busca) || eq.cod.toString().includes(busca);
+    return pc && pb;
+  });
+  if (!filtrados.length) { lista.innerHTML = '<div class="empty">Nenhum equipamento encontrado</div>'; return; }
+  const grupos = {};
+  filtrados.forEach(eq => { if (!grupos[eq.classe]) grupos[eq.classe] = []; grupos[eq.classe].push(eq); });
+  Object.keys(grupos).forEach(c => grupos[c].sort((a,b) => b.vel - a.vel));
+
+  lista.innerHTML = Object.keys(grupos).sort().map(classe => {
+    const itens = grupos[classe];
+    const cards = itens.map(eq => {
+      const st = getStatus(eq.vel);
+      const al = emAlerta(eq);
+      const cor = al ? 'var(--red)' : st.cor;
+      const larg = Math.min(100, (eq.vel / (limites[eq.classe] || 15)) * 100);
+      return `
+        <div class="eq-card ${al ? 'alerta pulsando' : ''}">
+          <div class="eq-row1">
+            <div class="eq-left">
+              <div class="eq-cod">${al ? '🚨 ' : ''}${eq.cod}</div>
+              <div class="eq-modelo">${eq.modelo}</div>
+            </div>
+            <div class="eq-vel-box">
+              <div class="eq-vel" style="color:${cor}">${eq.vel.toFixed(1)}</div>
+              <div class="eq-vel-unit">km/h</div>
+            </div>
+          </div>
+          <div class="eq-row2">
+            <span class="eq-tag">👤 ${eq.nome}</span>
+            <span class="eq-tag">🌾 ${eq.fazenda}</span>
+          </div>
+          <div class="barra-bg"><div class="barra-fill" style="background:${cor};width:${larg}%"></div></div>
+          ${al ? `<div class="alerta-txt">⚠ Acima do limite de ${limites[eq.classe]} km/h</div>` : ''}
+        </div>`;
+    }).join('');
+    return `
+      <div class="grupo-header">
+        <div class="grupo-dot"></div>
+        <span class="grupo-nome">${classe}</span>
+        <span class="grupo-badge">${itens.length}</span>
+        ${limites[classe] ? `<span class="limite-badge">Limite ${limites[classe]} km/h</span>` : ''}
+      </div>${cards}`;
+  }).join('');
+}
+
+function abrirConfig() {
+  const classes = [...new Set(equipamentos.map(e => e.classe))].sort();
+  document.getElementById('config-body').innerHTML = classes.map(c => `
+    <div class="config-row">
+      <span class="config-classe">${c}</span>
+      <input class="config-inp" type="number" placeholder="km/h" value="${limites[c]||''}" onchange="salvarLimite('${c}',this.value)">
+    </div>`).join('');
+  document.getElementById('tela-config').style.display = 'flex';
+}
+
+function fecharConfig() { document.getElementById('tela-config').style.display = 'none'; renderizar(); }
+
+function salvarLimite(c, v) {
+  const n = parseFloat(v);
+  if (n > 0) limites[c] = n; else delete limites[c];
+  localStorage.setItem('mv-limites', JSON.stringify(limites));
+}
+
+setInterval(() => { if (token) buscarDados(); }, 30000);
+</script>
+</body>
+</html>
