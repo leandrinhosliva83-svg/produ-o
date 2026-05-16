@@ -1,0 +1,373 @@
+(function() {
+  const anterior = document.getElementById('painel-velocidade');
+  if (anterior) { anterior.remove(); return; }
+
+  // ─── Estilos de animação ───
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes pv-pulsar { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    @keyframes pv-popup-in { from{transform:translateX(120%);opacity:0} to{transform:translateX(0);opacity:1} }
+    @keyframes pv-popup-out { from{transform:translateX(0);opacity:1} to{transform:translateX(120%);opacity:0} }
+    .pv-alerta-card { animation: pv-pulsar 1s infinite; }
+    .pv-popup { animation: pv-popup-in 0.4s ease; }
+    .pv-popup.saindo { animation: pv-popup-out 0.4s ease forwards; }
+  `;
+  document.head.appendChild(style);
+
+  // ─── Painel principal ───
+  const painel = document.createElement('div');
+  painel.id = 'painel-velocidade';
+  painel.style.cssText = `
+    position:fixed;top:20px;right:20px;width:430px;max-height:85vh;
+    background:#0f1117;border:1px solid #2a2d3a;border-radius:12px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.6);z-index:999999;
+    font-family:'Segoe UI',sans-serif;overflow:hidden;display:flex;flex-direction:column;
+  `;
+
+  painel.innerHTML = `
+    <div style="background:linear-gradient(135deg,#1a1d2e,#0f1117);padding:14px 16px;
+      display:flex;align-items:center;justify-content:space-between;
+      border-bottom:1px solid #2a2d3a;cursor:move;user-select:none" id="pv-header">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:18px">🚜</span>
+        <div>
+          <div style="color:#fff;font-weight:700;font-size:14px;letter-spacing:0.5px">VELOCIDADE DOS EQUIPAMENTOS</div>
+          <div style="color:#4a5568;font-size:11px" id="pv-atualizado">Carregando...</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button id="pv-btn-config" style="background:#2d1f4e;border:none;border-radius:6px;color:#a78bfa;padding:5px 10px;cursor:pointer;font-size:12px">⚙ Alertas</button>
+        <button id="pv-refresh" style="background:#1e3a5f;border:none;border-radius:6px;color:#60a5fa;padding:5px 10px;cursor:pointer;font-size:12px">↻</button>
+        <button id="pv-fechar" style="background:#2a1a1a;border:none;border-radius:6px;color:#f87171;padding:5px 10px;cursor:pointer;font-size:12px">✕</button>
+      </div>
+    </div>
+
+    <!-- Painel de configuração de alertas -->
+    <div id="pv-config" style="display:none;padding:12px 14px;border-bottom:1px solid #2a2d3a;background:#0d0f1a">
+      <div style="color:#a78bfa;font-weight:700;font-size:11px;letter-spacing:1px;margin-bottom:8px">⚙ CONFIGURAR ALERTAS POR CLASSE</div>
+      <div style="color:#4a5568;font-size:10px;margin-bottom:8px">Defina a velocidade máxima para cada classe. Deixe vazio para desativar.</div>
+      <div id="pv-config-lista" style="display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto"></div>
+    </div>
+
+    <div style="padding:8px 14px;border-bottom:1px solid #2a2d3a">
+      <input id="pv-busca" placeholder="🔍 Buscar por nome ou código..." style="
+        background:#1a1d2e;border:1px solid #2a2d3a;border-radius:20px;
+        color:#fff;padding:5px 14px;font-size:11px;outline:none;width:100%;box-sizing:border-box;">
+    </div>
+
+    <div style="padding:8px 14px;border-bottom:1px solid #2a2d3a;display:flex;gap:6px;flex-wrap:wrap;max-height:72px;overflow-y:auto" id="pv-filtros"></div>
+
+    <div style="padding:8px 14px;background:#0d1117;display:flex;gap:16px;border-bottom:1px solid #2a2d3a">
+      <div style="text-align:center">
+        <div style="color:#fff;font-weight:700;font-size:18px" id="pv-total">-</div>
+        <div style="color:#4a5568;font-size:10px">TOTAL</div>
+      </div>
+      <div style="text-align:center">
+        <div style="color:#f87171;font-weight:700;font-size:18px" id="pv-parados">-</div>
+        <div style="color:#4a5568;font-size:10px">PARADOS</div>
+      </div>
+      <div style="text-align:center">
+        <div style="color:#fbbf24;font-weight:700;font-size:18px" id="pv-lentos">-</div>
+        <div style="color:#4a5568;font-size:10px">LENTOS</div>
+      </div>
+      <div style="text-align:center">
+        <div style="color:#34d399;font-weight:700;font-size:18px" id="pv-normais">-</div>
+        <div style="color:#4a5568;font-size:10px">NORMAIS</div>
+      </div>
+      <div style="text-align:center">
+        <div style="color:#f87171;font-weight:700;font-size:18px" id="pv-alertas-count">-</div>
+        <div style="color:#4a5568;font-size:10px">ALERTAS</div>
+      </div>
+      <div style="text-align:center">
+        <div style="color:#60a5fa;font-weight:700;font-size:18px" id="pv-media">-</div>
+        <div style="color:#4a5568;font-size:10px">MED km/h</div>
+      </div>
+    </div>
+
+    <div style="overflow-y:auto;flex:1" id="pv-lista">
+      <div style="color:#4a5568;text-align:center;padding:30px;font-size:13px">Carregando dados...</div>
+    </div>
+  `;
+
+  document.body.appendChild(painel);
+
+  // ─── Container de popups ───
+  const popupContainer = document.createElement('div');
+  popupContainer.id = 'pv-popups';
+  popupContainer.style.cssText = `position:fixed;bottom:20px;right:20px;z-index:1000000;display:flex;flex-direction:column;gap:8px;`;
+  document.body.appendChild(popupContainer);
+
+  document.getElementById('pv-fechar').onclick = () => { painel.remove(); popupContainer.remove(); style.remove(); };
+
+  // Arrastar
+  const header = document.getElementById('pv-header');
+  let arrastando = false, ox = 0, oy = 0;
+  header.onmousedown = e => { arrastando = true; ox = e.clientX - painel.offsetLeft; oy = e.clientY - painel.offsetTop; };
+  document.onmousemove = e => { if (!arrastando) return; painel.style.left = (e.clientX-ox)+'px'; painel.style.top = (e.clientY-oy)+'px'; painel.style.right='auto'; };
+  document.onmouseup = () => arrastando = false;
+
+  // Config toggle
+  document.getElementById('pv-btn-config').onclick = () => {
+    const cfg = document.getElementById('pv-config');
+    cfg.style.display = cfg.style.display === 'none' ? 'block' : 'none';
+  };
+
+  let todosEquipamentos = [];
+  let filtroClasse = 'todos';
+  let limites = JSON.parse(localStorage.getItem('pv-limites') || '{}'); // { "CAVALO MECANICO": 80 }
+  let popupsAtivos = new Set();
+
+  function getStatus(vel) {
+    if (vel <= 0.1) return { cor: '#f87171', tipo: 'parado' };
+    if (vel < 3)   return { cor: '#fbbf24', tipo: 'lento' };
+    return              { cor: '#34d399', tipo: 'normal' };
+  }
+
+  function emAlerta(eq) {
+    const lim = limites[eq.classe];
+    return lim && eq.vel > lim;
+  }
+
+  // ─── Som de alerta ───
+  function tocarAlerta() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [0, 0.3, 0.6].forEach(t => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = 880;
+        osc.type = 'square';
+        gain.gain.setValueAtTime(0.3, ctx.currentTime + t);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.2);
+        osc.start(ctx.currentTime + t);
+        osc.stop(ctx.currentTime + t + 0.2);
+      });
+    } catch(e) {}
+  }
+
+  // ─── Popup de alerta ───
+  function mostrarPopup(eq) {
+    const id = 'popup-' + eq.cod;
+    if (popupsAtivos.has(id)) return;
+    popupsAtivos.add(id);
+
+    const popup = document.createElement('div');
+    popup.id = id;
+    popup.className = 'pv-popup';
+    popup.style.cssText = `
+      background:#1a0a0a;border:2px solid #f87171;border-radius:10px;
+      padding:12px 16px;min-width:280px;box-shadow:0 4px 20px rgba(248,113,113,0.4);
+    `;
+    popup.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="color:#f87171;font-weight:700;font-size:13px">🚨 ALERTA DE VELOCIDADE</span>
+        <button onclick="this.closest('div[id]').remove()" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:14px">✕</button>
+      </div>
+      <div style="color:#fff;font-size:12px;margin-top:6px">
+        <b>${eq.cod}</b> — ${eq.modelo}
+      </div>
+      <div style="color:#9ca3af;font-size:11px">${eq.classe}</div>
+      <div style="color:#9ca3af;font-size:11px">👤 ${eq.nome}</div>
+      <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+        <span style="color:#f87171;font-size:22px;font-weight:700">${eq.vel.toFixed(1)} km/h</span>
+        <span style="color:#4a5568;font-size:11px">Limite: ${limites[eq.classe]} km/h</span>
+      </div>
+    `;
+    popupContainer.prepend(popup);
+
+    // Remove após 10 segundos
+    setTimeout(() => {
+      popup.classList.add('saindo');
+      setTimeout(() => { popup.remove(); popupsAtivos.delete(id); }, 400);
+    }, 10000);
+  }
+
+  // ─── Config por classe ───
+  function atualizarConfigLista(classes) {
+    const lista = document.getElementById('pv-config-lista');
+    lista.innerHTML = classes.sort().map(c => `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <span style="color:#e2e8f0;font-size:11px;flex:1">${c}</span>
+        <input type="number" placeholder="km/h max" data-classe="${c}"
+          value="${limites[c] || ''}"
+          style="background:#1a1d2e;border:1px solid #2a2d3a;border-radius:6px;
+            color:#fff;padding:3px 8px;font-size:11px;width:90px;outline:none;text-align:center">
+      </div>
+    `).join('');
+
+    lista.querySelectorAll('input').forEach(inp => {
+      inp.oninput = () => {
+        const val = parseFloat(inp.value);
+        if (val > 0) limites[inp.dataset.classe] = val;
+        else delete limites[inp.dataset.classe];
+        localStorage.setItem('pv-limites', JSON.stringify(limites));
+      };
+    });
+  }
+
+  // ─── Filtros por classe ───
+  function atualizarBotoesFiltro(classes) {
+    const container = document.getElementById('pv-filtros');
+    const botoes = ['todos', ...classes.sort()];
+    container.innerHTML = botoes.map(c => {
+      const ativo = filtroClasse === c;
+      return `<button class="pv-filtro" data-filtro="${c}" style="
+        background:${ativo ? '#1e3a5f' : '#1a1d2e'};
+        border:1px solid ${ativo ? '#2563eb' : '#2a2d3a'};
+        color:${ativo ? '#60a5fa' : '#9ca3af'};
+        border-radius:20px;padding:3px 10px;cursor:pointer;font-size:10px;white-space:nowrap">
+        ${c === 'todos' ? 'Todos' : c}
+      </button>`;
+    }).join('');
+
+    container.querySelectorAll('.pv-filtro').forEach(btn => {
+      btn.onclick = () => {
+        filtroClasse = btn.dataset.filtro;
+        container.querySelectorAll('.pv-filtro').forEach(b => {
+          b.style.background='#1a1d2e'; b.style.borderColor='#2a2d3a'; b.style.color='#9ca3af';
+        });
+        btn.style.background='#1e3a5f'; btn.style.borderColor='#2563eb'; btn.style.color='#60a5fa';
+        renderizar(todosEquipamentos);
+      };
+    });
+  }
+
+  // ─── Renderizar lista ───
+  function renderizar(equipamentos) {
+    const busca = document.getElementById('pv-busca').value.toLowerCase();
+    const lista = document.getElementById('pv-lista');
+
+    let filtrados = equipamentos.filter(eq => {
+      const passaClasse = filtroClasse === 'todos' || eq.classe === filtroClasse;
+      const passaBusca = !busca || eq.nome.toLowerCase().includes(busca) || eq.cod.toString().includes(busca);
+      return passaClasse && passaBusca;
+    });
+
+    if (filtrados.length === 0) {
+      lista.innerHTML = `<div style="color:#4a5568;text-align:center;padding:30px;font-size:13px">Nenhum equipamento encontrado</div>`;
+      return;
+    }
+
+    const grupos = {};
+    filtrados.forEach(eq => {
+      if (!grupos[eq.classe]) grupos[eq.classe] = [];
+      grupos[eq.classe].push(eq);
+    });
+    Object.keys(grupos).forEach(c => grupos[c].sort((a, b) => b.vel - a.vel));
+
+    lista.innerHTML = Object.keys(grupos).sort().map(classe => {
+      const itens = grupos[classe];
+      const cards = itens.map(eq => {
+        const st = getStatus(eq.vel);
+        const alerta = emAlerta(eq);
+        const cor = alerta ? '#f87171' : st.cor;
+        const largura = Math.min(100, (eq.vel / (limites[eq.classe] || 15)) * 100);
+        return `
+          <div class="${alerta ? 'pv-alerta-card' : ''}" style="
+            padding:10px 14px;border-bottom:1px solid #1a1d2e;
+            ${alerta ? 'background:#1a0505;border-left:3px solid #f87171;' : ''}
+            transition:background 0.2s;"
+            onmouseover="if(!${alerta})this.style.background='#1a1d2e'"
+            onmouseout="this.style.background='${alerta ? '#1a0505' : 'transparent'}'">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <div>
+                ${alerta ? '<span style="color:#f87171;font-size:10px;margin-right:4px">🚨</span>' : ''}
+                <span style="color:#e2e8f0;font-size:12px;font-weight:600">${eq.cod}</span>
+                <span style="color:#4a5568;font-size:11px;margin-left:6px">${eq.modelo}</span>
+              </div>
+              <span style="color:${cor};font-weight:700;font-size:14px">${eq.vel.toFixed(2)} km/h</span>
+            </div>
+            <div style="color:#6b7280;font-size:10px;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              👤 ${eq.nome} &nbsp;|&nbsp; 🌾 ${eq.fazenda}
+            </div>
+            <div style="background:#1a1d2e;border-radius:4px;height:4px;overflow:hidden">
+              <div style="background:${cor};width:${Math.min(largura,100)}%;height:100%;border-radius:4px;transition:width 0.5s"></div>
+            </div>
+            ${alerta ? `<div style="color:#f87171;font-size:10px;margin-top:4px">⚠ Acima do limite de ${limites[eq.classe]} km/h</div>` : ''}
+          </div>`;
+      }).join('');
+
+      return `
+        <div style="background:#13161f;padding:8px 14px;border-bottom:2px solid #2a2d3a;position:sticky;top:0;z-index:1">
+          <span style="color:#60a5fa;font-weight:700;font-size:11px;letter-spacing:1px">${classe}</span>
+          <span style="color:#4a5568;font-size:11px;margin-left:8px">(${itens.length})</span>
+          ${limites[classe] ? `<span style="color:#f87171;font-size:10px;margin-left:8px">Limite: ${limites[classe]} km/h</span>` : ''}
+        </div>
+        ${cards}`;
+    }).join('');
+  }
+
+  // ─── Buscar dados ───
+  async function buscarDados() {
+    const lista = document.getElementById('pv-lista');
+    try {
+      const url = 'http://52.7.202.88:3333/dashboard?tipo[]=0&tipo[]=51&tipo[]=52&tipo[]=53&tipo[]=61&tipo[]=101&tipo[]=102&tipo[]=104&tipo[]=106&tipo[]=107&tipo[]=109&tipo[]=1010&tipo[]=1011&tipo[]=1013&tipo[]=1014&tipo[]=1025&tipo[]=1026&tipo[]=141&tipo[]=2323&tipo[]=273&tipo[]=54&tipo[]=11&tipo[]=12&tipo[]=123&tipo[]=126&tipo[]=31&tipo[]=3131&atividades[]=0&eqpto=';
+      const token = localStorage.getItem('accessToken');
+      const data = await new Promise((resolve, reject) => {
+        const x = new XMLHttpRequest();
+        x.open('GET', url);
+        x.setRequestHeader('Authorization', 'Bearer ' + token);
+        x.onload = () => resolve(JSON.parse(x.responseText));
+        x.onerror = () => reject(new Error('Erro de rede'));
+        x.send();
+      });
+
+      todosEquipamentos = (data.alocacao || []).map(eq => {
+        const t = eq.trajetos && eq.trajetos.length > 0 ? eq.trajetos[0] : null;
+        return {
+          cod: eq.cod_equipamento,
+          modelo: eq.dsc_modelo || eq.dsc_equipamento || '-',
+          nome: eq.nome || '-',
+          fazenda: eq.dsc_fazenda || '-',
+          vel: t ? (t.num_velocidade_gps || 0) : 0,
+          classe: eq.dsc_tipo_utilizacao || 'SEM CLASSE'
+        };
+      });
+
+      const classes = [...new Set(todosEquipamentos.map(e => e.classe))];
+      atualizarBotoesFiltro(classes);
+      atualizarConfigLista(classes);
+
+      // Verificar alertas
+      let novosAlertas = false;
+      todosEquipamentos.forEach(eq => {
+        if (emAlerta(eq)) {
+          mostrarPopup(eq);
+          novosAlertas = true;
+        }
+      });
+      if (novosAlertas) tocarAlerta();
+
+      const parados  = todosEquipamentos.filter(e => getStatus(e.vel).tipo === 'parado').length;
+      const lentos   = todosEquipamentos.filter(e => getStatus(e.vel).tipo === 'lento').length;
+      const normais  = todosEquipamentos.filter(e => getStatus(e.vel).tipo === 'normal').length;
+      const alertas  = todosEquipamentos.filter(e => emAlerta(e)).length;
+      const media    = todosEquipamentos.length > 0
+        ? (todosEquipamentos.reduce((s, e) => s + e.vel, 0) / todosEquipamentos.length).toFixed(1) : '0';
+
+      document.getElementById('pv-total').textContent         = todosEquipamentos.length;
+      document.getElementById('pv-parados').textContent       = parados;
+      document.getElementById('pv-lentos').textContent        = lentos;
+      document.getElementById('pv-normais').textContent       = normais;
+      document.getElementById('pv-alertas-count').textContent = alertas;
+      document.getElementById('pv-media').textContent         = media;
+      document.getElementById('pv-atualizado').textContent    = `Atualizado as ${new Date().toLocaleTimeString('pt-BR')}`;
+
+      renderizar(todosEquipamentos);
+
+    } catch (e) {
+      lista.innerHTML = `<div style="color:#f87171;text-align:center;padding:30px;font-size:13px">Erro: ${e.message}</div>`;
+    }
+  }
+
+  document.getElementById('pv-busca').oninput = () => renderizar(todosEquipamentos);
+  document.getElementById('pv-refresh').onclick = buscarDados;
+  buscarDados();
+
+  const intervalo = setInterval(() => {
+    if (!document.getElementById('painel-velocidade')) { clearInterval(intervalo); return; }
+    buscarDados();
+  }, 30000);
+
+})();
