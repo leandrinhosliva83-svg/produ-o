@@ -1,7 +1,7 @@
 const http = require('http');
 const https = require('https');
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 const API = '52.7.202.88';
 const API_PORT = 3333;
 
