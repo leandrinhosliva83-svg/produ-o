@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0a0f">
+<title>Usina Moreno</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --bg: #0a0a0f; --surface: #13141f; --border: #1e2030;
+  --text: #f0f0f5; --muted: #50546a; --accent: #3b82f6;
+  --green: #22c55e; --yellow: #eab308; --red: #ef4444; --purple: #8b5cf6;
+}
+body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* LOGIN */
+#tela-login { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 32px 24px; }
+.login-icon { width: 72px; height: 72px; background: var(--accent); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 36px; margin-bottom: 20px; box-shadow: 0 0 40px rgba(59,130,246,0.3); }
+.login-title { font-size: 26px; font-weight: 800; margin-bottom: 4px; }
+.login-sub { color: var(--muted); font-size: 14px; margin-bottom: 36px; }
+.login-form { width: 100%; max-width: 340px; }
+.input-group { margin-bottom: 14px; }
+.input-label { display: block; color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 6px; }
+.input-wrap { position: relative; }
+.input-field { width: 100%; background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px; color: var(--text); padding: 14px 16px; font-size: 16px; outline: none; }
+.input-field:focus { border-color: var(--accent); }
+.eye-btn { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; }
+.btn-login { width: 100%; background: var(--accent); border: none; border-radius: 12px; color: #fff; padding: 15px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 6px; }
+.btn-login:active { opacity: 0.8; }
+.login-error { color: var(--red); font-size: 13px; text-align: center; margin-top: 12px; display: none; }
+
+/* APP */
+#tela-app { display: none; flex-direction: column; height: 100vh; }
+
+/* Topbar */
+.topbar { background: var(--surface); padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.topbar-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.topbar-title { font-size: 16px; font-weight: 700; }
+.topbar-time { font-size: 11px; color: var(--muted); }
+.icon-btn { width: 34px; height: 34px; border: 1.5px solid var(--border); border-radius: 10px; background: transparent; color: var(--text); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.icon-btn.purple { border-color: var(--purple); color: var(--purple); }
+.icon-btn.red { border-color: #2a1515; color: var(--red); }
+
+/* Tabs */
+.tab-bar { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.tab-btn { flex: 1; padding: 10px; text-align: center; font-size: 11px; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; }
+.tab-btn.ativo { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-content { display: none; flex: 1; overflow-y: auto; flex-direction: column; }
+.tab-content.ativo { display: flex; }
+
+/* Resumo */
+.resumo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 12px; flex-shrink: 0; }
+.resumo-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px; padding: 12px; text-align: center; cursor: pointer; }
+.resumo-card.ativo { border-color: var(--accent); }
+.resumo-num { font-size: 24px; font-weight: 800; line-height: 1; }
+.resumo-label { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; margin-top: 4px; }
+
+/* Busca e filtros */
+.search-bar { padding: 10px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.search-input { width: 100%; background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px; color: var(--text); padding: 10px 14px; font-size: 15px; outline: none; }
+.filtros-scroll { display: flex; gap: 6px; padding: 8px 14px; overflow-x: auto; border-bottom: 1px solid var(--border); scrollbar-width: none; flex-shrink: 0; }
+.filtros-scroll::-webkit-scrollbar { display: none; }
+.chip { background: var(--surface); border: 1.5px solid var(--border); color: var(--muted); border-radius: 20px; padding: 5px 14px; font-size: 12px; font-weight: 600; white-space: nowrap; cursor: pointer; flex-shrink: 0; }
+.chip.ativo { background: rgba(59,130,246,0.1); border-color: var(--accent); color: var(--accent); }
+.ocultar-btn { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border-bottom: 1px solid var(--border); cursor: pointer; color: var(--muted); font-size: 12px; font-weight: 600; flex-shrink: 0; }
+
+/* Cards */
+.lista-container { flex: 1; overflow-y: auto; }
+.grupo-header { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--bg); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+.grupo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.grupo-nome { font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--accent); flex: 1; }
+.grupo-badge { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); color: var(--accent); border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 700; }
+.limite-badge { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: var(--red); border-radius: 20px; padding: 2px 10px; font-size: 11px; }
+.eq-card { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+.eq-card.alerta { background: rgba(239,68,68,0.05); border-left: 3px solid var(--red); }
+.eq-card.parado-card { background: rgba(239,68,68,0.02); border-left: 3px solid rgba(239,68,68,0.3); }
+.eq-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
+.eq-tag { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; font-size: 11px; color: var(--muted); white-space: nowrap; }
+.parada-tag { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; padding: 3px 8px; font-size: 11px; color: var(--red); white-space: nowrap; }
+.ativ-tag { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 6px; padding: 3px 8px; font-size: 11px; color: var(--green); white-space: nowrap; }
+.tempo-tag { background: rgba(234,179,8,0.1); border: 1px solid rgba(234,179,8,0.3); border-radius: 6px; padding: 3px 8px; font-size: 11px; color: var(--yellow); white-space: nowrap; }
+.barra-bg { background: var(--surface); border-radius: 4px; height: 4px; overflow: hidden; margin-top: 4px; }
+.barra-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+@keyframes pulsar { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.pulsando { animation: pulsar 1.2s infinite; }
+
+/* Relatório */
+.rel-header { padding: 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.rel-titulo { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+.rel-select { width: 100%; background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; color: var(--text); padding: 10px 12px; font-size: 13px; outline: none; margin-bottom: 8px; }
+.rel-busca { width: 100%; background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; color: var(--text); padding: 10px 14px; font-size: 13px; outline: none; margin-bottom: 8px; }
+.btn-gerar { width: 100%; background: var(--green); border: none; border-radius: 10px; color: #fff; padding: 13px; font-size: 15px; font-weight: 700; cursor: pointer; }
+.btn-gerar:active { opacity: 0.8; }
+.rel-body { flex: 1; overflow-y: auto; padding: 12px; }
+.rel-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
+.empty { color: var(--muted); text-align: center; padding: 40px 24px; font-size: 14px; }
+
+/* Config */
+#tela-config { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 200; flex-direction: column; }
+.config-top { background: var(--surface); padding: 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.config-title { font-size: 16px; font-weight: 700; color: var(--purple); }
+.config-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; flex: 1; }
+.config-row { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; flex-direction: column; }
+.config-inp { background: var(--bg); border: 1.5px solid var(--border); border-radius: 8px; color: var(--text); padding: 8px 10px; font-size: 14px; width: 100%; outline: none; text-align: center; font-weight: 700; }
+.config-inp:focus { border-color: var(--purple); }
+
+/* Popups */
+.popups-wrap { position: fixed; bottom: 16px; left: 12px; right: 12px; z-index: 999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.popups-wrap > * { pointer-events: all; }
+@keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+.popup { background: #1a0808; border: 1.5px solid var(--red); border-radius: 16px; padding: 14px 16px; animation: slideUp 0.3s ease; box-shadow: 0 8px 30px rgba(239,68,68,0.25); }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="tela-login">
+  <div class="login-icon">🚜</div>
+  <div class="login-title">Usina Moreno</div>
+  <div class="login-sub">Monitoramento de Velocidade</div>
+  <div class="login-form">
+    <div class="input-group">
+      <label class="input-label">Email</label>
+      <div class="input-wrap">
+        <input class="input-field" id="inp-email" type="email" placeholder="seu@email.com">
+      </div>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Senha</label>
+      <div class="input-wrap">
+        <input class="input-field" id="inp-senha" type="password" placeholder="••••••••" style="padding-right:48px">
+        <button class="eye-btn" onclick="toggleSenha()" id="btn-olho">👁</button>
+      </div>
+    </div>
+    <button class="btn-login" onclick="fazerLogin()">Entrar</button>
+    <div class="login-error" id="login-erro">Email ou senha incorretos</div>
+  </div>
+</div>
+
+<!-- CONFIG -->
+<div id="tela-config">
+  <div class="config-top">
+    <span class="config-title">⚙ Alertas por Classe</span>
+    <button class="icon-btn" onclick="fecharConfig()">✕</button>
+  </div>
+  <div class="config-body" id="config-body"></div>
+</div>
+
+<!-- APP -->
+<div id="tela-app">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="topbar-icon">🚜</div>
+      <div>
+        <div class="topbar-title">Usina Moreno</div>
+        <div class="topbar-time" id="app-time">Carregando...</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="icon-btn purple" onclick="abrirConfig()">⚙</button>
+      <button class="icon-btn" onclick="buscarDados()">↻</button>
+      <button class="icon-btn red" onclick="sair()">⏻</button>
+    </div>
+  </div>
+
+  <!-- Semáforo de Transporte Carregado -->
+  <div style="display:flex;gap:6px;padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);align-items:center">
+    <span style="font-size:11px;color:var(--muted);font-weight:600;margin-right:4px">🚛 Carregado:</span>
+    <button onclick="setFiltroStatus('verde')" id="sem-verde" style="display:flex;align-items:center;gap:4px;background:rgba(34,197,94,0.1);border:1.5px solid rgba(34,197,94,0.3);border-radius:20px;padding:4px 10px;cursor:pointer;color:#22c55e;font-size:12px;font-weight:700">
+      <span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block"></span>
+      <span id="sem-verde-num">-</span> ≤30min
+    </button>
+    <button onclick="setFiltroStatus('amarelo')" id="sem-amarelo" style="display:flex;align-items:center;gap:4px;background:rgba(234,179,8,0.1);border:1.5px solid rgba(234,179,8,0.3);border-radius:20px;padding:4px 10px;cursor:pointer;color:#eab308;font-size:12px;font-weight:700">
+      <span style="width:8px;height:8px;border-radius:50%;background:#eab308;display:inline-block"></span>
+      <span id="sem-amarelo-num">-</span> 30-60
+    </button>
+    <button onclick="setFiltroStatus('vermelho')" id="sem-vermelho" style="display:flex;align-items:center;gap:4px;background:rgba(239,68,68,0.1);border:1.5px solid rgba(239,68,68,0.3);border-radius:20px;padding:4px 10px;cursor:pointer;color:#ef4444;font-size:12px;font-weight:700">
+      <span style="width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block"></span>
+      <span id="sem-vermelho-num">-</span> +60
+    </button>
+  </div>
+
+  <div class="tab-bar">
+    <div class="tab-btn ativo" onclick="setTab('monitor')">📡 Monitor</div>
+    <div class="tab-btn" onclick="setTab('relatorio')">📊 Relatório</div>
+  </div>
+
+  <!-- MONITOR -->
+  <div class="tab-content ativo" id="tab-monitor">
+    <div class="resumo-grid">
+      <div class="resumo-card ativo" id="card-todos" onclick="setFiltroStatus('todos')">
+        <div class="resumo-num" id="r-total" style="color:var(--text)">-</div>
+        <div class="resumo-label">Total</div>
+      </div>
+      <div class="resumo-card" id="card-normal" onclick="setFiltroStatus('normal')">
+        <div class="resumo-num" id="r-normais" style="color:var(--green)">-</div>
+        <div class="resumo-label">Normal</div>
+      </div>
+      <div class="resumo-card" id="card-alerta" onclick="setFiltroStatus('alerta')">
+        <div class="resumo-num" id="r-alertas" style="color:var(--red)">-</div>
+        <div class="resumo-label">Alertas</div>
+      </div>
+      <div class="resumo-card" id="card-parado" onclick="setFiltroStatus('parado')">
+        <div class="resumo-num" id="r-parados" style="color:var(--red)">-</div>
+        <div class="resumo-label">Parados</div>
+      </div>
+      <div class="resumo-card" id="card-lento" onclick="setFiltroStatus('lento')">
+        <div class="resumo-num" id="r-lentos" style="color:var(--yellow)">-</div>
+        <div class="resumo-label">Lentos</div>
+      </div>
+      <div class="resumo-card" id="card-sem-apontamento" onclick="setFiltroStatus('sem-apontamento')">
+        <div class="resumo-num" id="r-sem-apontamento" style="color:var(--orange)">-</div>
+        <div class="resumo-label">Sem Apont.</div>
+      </div>
+      <div class="resumo-card" style="cursor:default">
+        <div class="resumo-num" id="r-media" style="color:var(--accent)">-</div>
+        <div class="resumo-label">Méd km/h</div>
+      </div>
+    </div>
+    <div class="search-bar">
+      <input class="search-input" id="busca" placeholder="🔍 Buscar equipamento..." oninput="renderizar()">
+    </div>
+    <div class="filtros-scroll" id="filtros"></div>
+    <div class="ocultar-btn" onclick="toggleLista()">
+      <span id="ocultar-icon">▲</span> <span id="ocultar-txt">Ocultar lista</span>
+    </div>
+    <div id="secao-lista" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+      <div class="lista-container" id="lista">
+        <div class="empty">Carregando equipamentos...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RELATÓRIO -->
+  <div class="tab-content" id="tab-relatorio">
+    <div class="rel-header">
+      <div class="rel-titulo">📊 Relatório de Paradas — D-1</div>
+      <select class="rel-select" id="rel-filtro-classe">
+        <option value="">Todas as classes</option>
+      </select>
+      <input class="rel-busca" id="rel-filtro-eq" placeholder="🔍 Buscar equipamento...">
+      <button class="btn-gerar" onclick="gerarRelatorio()">📅 Gerar Relatório D-1</button>
+    </div>
+    <div class="rel-body" id="rel-body">
+      <div class="empty">Clique em Gerar Relatório D-1</div>
+    </div>
+  </div>
+</div>
+
+<div class="popups-wrap" id="popups"></div>
+
+<script>
+const API = 'https://produ-o-production.up.railway.app';
+let token = localStorage.getItem('mv-token');
+let equipamentos = [];
+let filtroClasse = 'todos';
+let filtroStatus = 'todos';
+let limites = JSON.parse(localStorage.getItem('mv-limites') || '{}');
+let caminhoesCanal = JSON.parse(localStorage.getItem('mv-caminhoes-cana') || '[]');
+let historicoVel = {}; // {cod: [vel1, vel2, vel3]} ultimas 3 leituras
+let popupsAtivos = new Set();
+let listaVisivel = true;
+
+if (token) mostrarApp();
+
+function toggleSenha() {
+  const inp = document.getElementById('inp-senha');
+  const btn = document.getElementById('btn-olho');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+
+async function fazerLogin() {
+  const btn = document.querySelector('.btn-login');
+  const erro = document.getElementById('login-erro');
+  btn.textContent = 'Entrando...'; btn.disabled = true;
+  erro.style.display = 'none';
+  try {
+    const r = await fetch(API + '/sessions', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ email: document.getElementById('inp-email').value, password: document.getElementById('inp-senha').value })
+    });
+    const data = await r.json();
+    if (data.token) { token = data.token; localStorage.setItem('mv-token', token); mostrarApp(); }
+    else { erro.style.display = 'block'; }
+  } catch(e) { erro.textContent = 'Erro: ' + e.message; erro.style.display = 'block'; }
+  btn.textContent = 'Entrar'; btn.disabled = false;
+}
+
+function mostrarApp() {
+  document.getElementById('tela-login').style.display = 'none';
+  document.getElementById('tela-app').style.display = 'flex';
+  buscarDados();
+}
+
+function sair() {
+  localStorage.removeItem('mv-token'); token = null; equipamentos = [];
+  document.getElementById('tela-app').style.display = 'none';
+  document.getElementById('tela-login').style.display = 'flex';
+}
+
+function setTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('ativo', (i===0&&tab==='monitor')||(i===1&&tab==='relatorio')));
+  document.getElementById('tab-monitor').classList.toggle('ativo', tab==='monitor');
+  document.getElementById('tab-relatorio').classList.toggle('ativo', tab==='relatorio');
+}
+
+function toggleLista() {
+  listaVisivel = !listaVisivel;
+  document.getElementById('secao-lista').style.display = listaVisivel ? 'flex' : 'none';
+  document.getElementById('ocultar-icon').textContent = listaVisivel ? '▲' : '▼';
+  document.getElementById('ocultar-txt').textContent = listaVisivel ? 'Ocultar lista' : 'Mostrar lista';
+}
+
+function tempoParado(dta) {
+  if (!dta) return '';
+  const diff = Math.floor((new Date() - new Date(dta)) / 1000);
+  if (diff < 60) return diff + 's';
+  const min = Math.floor(diff / 60);
+  if (min < 60) return min + 'min';
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return h + 'h' + (m > 0 ? m + 'min' : '');
+}
+
+function formatarTempo(seg) {
+  if (seg < 60) return seg + 's';
+  const min = Math.floor(seg / 60);
+  if (min < 60) return min + 'min';
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return h + 'h' + (m > 0 ? m + 'min' : '');
+}
+
+function distanciaKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2-lat1) * Math.PI/180;
+  const dLon = (lon2-lon1) * Math.PI/180;
+  const a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+    Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*
+    Math.sin(dLon/2)*Math.sin(dLon/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function minutosParaUsina(eq) {
+  // Regra: cadastrado + tipo TRANSPORTE CARREGADO + atividade TRANSPORTE CANA PICADA
+  if (caminhoesCanal.length > 0 && !caminhoesCanal.includes(eq.cod)) return null;
+  if (eq.classe !== 'TRANSPORTE CARREGADO') return null;
+  if (!eq.atividade || !eq.atividade.toUpperCase().includes('CANA')) return null;
+  if (!eq.lat || !eq.lng) return null;
+  const vel = eq.velMedia > 1 ? eq.velMedia : eq.vel;
+  if (vel < 1) return null;
+  const USINA_LAT = -21.483369;
+  const USINA_LNG = -47.770755;
+  const dist = distanciaKm(eq.lat, eq.lng, USINA_LAT, USINA_LNG);
+  return (dist / vel) * 60;
+}
+
+function formatarTempoChegada(mins) {
+  if (mins === null) return null;
+  const h = Math.floor(mins / 60);
+  const m = Math.round(mins % 60);
+  if (h === 0) return m + 'min';
+  return h + 'h' + (m > 0 ? m + 'min' : '');
+}
+
+function getStatus(vel) {
+  if (vel <= 0.1) return { cor: 'var(--red)', tipo: 'parado' };
+  if (vel < 3)   return { cor: 'var(--yellow)', tipo: 'lento' };
+  return              { cor: 'var(--green)', tipo: 'normal' };
+}
+
+function emAlerta(eq) {
+  const l = limites[eq.classe];
+  if (!l) return false;
+  const emOp = getStatus(eq.vel).tipo !== 'parado';
+  if (l.max && eq.vel > l.max) return 'acima';
+  if (l.min && emOp && eq.vel < l.min) return 'abaixo';
+  return false;
+}
+
+function tocarAlerta() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.3, 0.6].forEach(t => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = 880; o.type = 'square';
+      g.gain.setValueAtTime(0.3, ctx.currentTime + t);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.2);
+      o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.2);
+    });
+  } catch(e) {}
+}
+
+function mostrarPopup(eq) {
+  const id = 'pop' + eq.cod;
+  if (popupsAtivos.has(id)) return;
+  popupsAtivos.add(id);
+  const d = document.createElement('div');
+  d.className = 'popup'; d.id = id;
+  const al = emAlerta(eq);
+  d.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="color:var(--red);font-size:12px;font-weight:700">🚨 ALERTA DE VELOCIDADE</span>
+      <button style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer" onclick="document.getElementById('${id}').remove()">✕</button>
+    </div>
+    <div style="font-size:18px;font-weight:800">${eq.cod} — ${eq.modelo}</div>
+    <div style="color:var(--muted);font-size:12px;margin-top:2px">👤 ${eq.nome} | 🚩 ${eq.frente}</div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:10px">
+      <div style="font-size:32px;font-weight:800;color:var(--red)">${eq.vel.toFixed(1)}<span style="font-size:16px;color:var(--muted)"> km/h</span></div>
+      <div style="color:var(--muted);font-size:12px">${al==='acima'?'Máx: '+limites[eq.classe]?.max:'Mín: '+limites[eq.classe]?.min} km/h</div>
+    </div>`;
+  document.getElementById('popups').prepend(d);
+  setTimeout(() => { d.remove(); popupsAtivos.delete(id); }, 12000);
+}
+
+function setFiltroStatus(s) {
+  filtroStatus = s;
+  ['todos','normal','alerta','parado','lento','sem-apontamento','carregado','proximo','verde','amarelo','vermelho'].forEach(k => {
+    const el = document.getElementById('card-' + (k === 'sem-apontamento' ? 'sem-apontamento' : k));
+    if (el) el.classList.toggle('ativo', k === s);
+  });
+  renderizar();
+}
+
+async function buscarDados() {
+  if (!token) return;
+  if(document.getElementById('app-time')) document.getElementById('app-time').textContent = 'Atualizando...';
+  try {
+    const url = API + '/dashboard?tipo[]=0&tipo[]=51&tipo[]=52&tipo[]=53&tipo[]=61&tipo[]=101&tipo[]=102&tipo[]=104&tipo[]=106&tipo[]=107&tipo[]=109&tipo[]=1010&tipo[]=1011&tipo[]=1013&tipo[]=1014&tipo[]=1025&tipo[]=1026&tipo[]=141&tipo[]=2323&tipo[]=273&tipo[]=54&tipo[]=11&tipo[]=12&tipo[]=123&tipo[]=126&tipo[]=31&tipo[]=3131&atividades[]=0&eqpto=';
+    const r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+    if (r.status === 401) { sair(); return; }
+    const data = await r.json();
+
+    equipamentos = (data.alocacao || []).map(eq => {
+      const t = eq.trajetos && eq.trajetos.length > 0 ? eq.trajetos[0] : null;
+      const velAtual = t ? (t.num_velocidade_gps || 0) : 0;
+      // Acumular histórico de velocidade (máx 5 leituras)
+      if (!historicoVel[eq.cod_equipamento]) historicoVel[eq.cod_equipamento] = [];
+      if (velAtual > 0) historicoVel[eq.cod_equipamento].push(velAtual);
+      if (historicoVel[eq.cod_equipamento].length > 5) historicoVel[eq.cod_equipamento].shift();
+      // Média das últimas leituras
+      const hist = historicoVel[eq.cod_equipamento];
+      const velMedia = hist.length > 0 ? hist.reduce((a,b) => a+b, 0) / hist.length : velAtual;
+      return {
+        cod: eq.cod_equipamento,
+        modelo: eq.dsc_modelo || eq.dsc_equipamento || '-',
+        nome: eq.nome || '-',
+        fazenda: eq.dsc_fazenda || '-',
+        vel: velAtual,
+        velMedia: velMedia,
+        classe: eq.dsc_tipo_utilizacao || 'SEM CLASSE',
+        frente: eq.num_frente ? 'Fr.' + eq.num_frente : '-',
+        parada: eq.dsc_motivo_parada || null,
+        sem_apontamento: !eq.dsc_motivo_parada && !eq.dsc_atividade,
+        tipo_utilizacao: eq.cod_tipo_utilizacao || 0,
+        atividade: eq.dsc_atividade || null,
+        dta_inicial: eq.dta_inicial || null,
+        lat: eq.LATITUDE || null,
+        lng: eq.LONGITUDE || null,
+        rpm: t ? (t.num_rpm || 0) : 0
+      };
+    });
+
+    let novos = false;
+    equipamentos.forEach(eq => { if (emAlerta(eq)) { mostrarPopup(eq); novos = true; } });
+    if (novos) tocarAlerta();
+
+    const p = equipamentos.filter(e => getStatus(e.vel).tipo === 'parado').length;
+    const l = equipamentos.filter(e => getStatus(e.vel).tipo === 'lento').length;
+    const n = equipamentos.filter(e => getStatus(e.vel).tipo === 'normal').length;
+    const a = equipamentos.filter(e => emAlerta(e)).length;
+    const m = equipamentos.length > 0 ? (equipamentos.reduce((s,e) => s+e.vel,0)/equipamentos.length).toFixed(1) : '0';
+
+    if(document.getElementById('r-total')) document.getElementById('r-total').textContent = equipamentos.length;
+    if(document.getElementById('r-parados')) document.getElementById('r-parados').textContent = p;
+    if(document.getElementById('r-lentos')) document.getElementById('r-lentos').textContent = l;
+    if(document.getElementById('r-normais')) document.getElementById('r-normais').textContent = n;
+    if(document.getElementById('r-alertas')) document.getElementById('r-alertas').textContent = a;
+    const sa = equipamentos.filter(e => e.sem_apontamento).length;
+    // Transporte carregado: cod_tipo_utilizacao = 102 (PLATAFORMA) ou atividade de transporte
+    const carregados = equipamentos.filter(e => (caminhoesCanal.length > 0 ? caminhoesCanal.includes(e.cod) : ['TRANSPORTE CARREGADO','CAMINHAO CANAVIEIRO','PLATAFORMA'].includes(e.classe))).length;
+    // Próximo da usina: até 30 minutos
+    const proximos = equipamentos.filter(e => {
+      const mins = minutosParaUsina(e);
+      return (caminhoesCanal.length > 0 ? caminhoesCanal.includes(e.cod) : ['TRANSPORTE CARREGADO','CAMINHAO CANAVIEIRO','PLATAFORMA'].includes(e.classe)) && mins !== null && mins <= 30;
+    }).length;
+    // Semáforo
+    const semVerde = equipamentos.filter(e => { const m = minutosParaUsina(e); return m!==null && m<=30; }).length;
+    const semAmarelo = equipamentos.filter(e => { const m = minutosParaUsina(e); return m!==null && m>30 && m<=60; }).length;
+    const semVermelho = equipamentos.filter(e => { const m = minutosParaUsina(e); return m!==null && m>60; }).length;
+    if(document.getElementById('sem-verde-num')) document.getElementById('sem-verde-num').textContent = semVerde;
+    if(document.getElementById('sem-amarelo-num')) document.getElementById('sem-amarelo-num').textContent = semAmarelo;
+    if(document.getElementById('sem-vermelho-num')) document.getElementById('sem-vermelho-num').textContent = semVermelho;
+    if(document.getElementById('r-sem-apontamento')) document.getElementById('r-sem-apontamento').textContent = sa;
+    if(document.getElementById('r-carregado')) document.getElementById('r-carregado').textContent = carregados;
+    if(document.getElementById('r-proximo')) document.getElementById('r-proximo').textContent = proximos;
+    if(document.getElementById('r-media')) document.getElementById('r-media').textContent = m;
+    if(document.getElementById('app-time')) document.getElementById('app-time').textContent = new Date().toLocaleTimeString('pt-BR');
+
+    const classes = [...new Set(equipamentos.map(e => e.classe))].sort();
+    document.getElementById('filtros').innerHTML = ['todos', ...classes].map(c =>
+      `<div class="chip ${filtroClasse===c?'ativo':''}" onclick="setFiltro('${c}')">${c==='todos'?'Todos':c}</div>`
+    ).join('');
+
+    // Atualizar select do relatório
+    const sel = document.getElementById('rel-filtro-classe');
+    if (sel) {
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">Todas as classes</option>' + classes.map(c =>
+        `<option value="${c}" ${cur===c?'selected':''}>${c}</option>`
+      ).join('');
+    }
+
+    // Buscar TRANSPORTE CARREGADO separado para semáforo
+    try {
+      const urlTC = API + '/dashboard?tipo[]=0&tipo[]=51&tipo[]=52&tipo[]=53&tipo[]=61&tipo[]=101&tipo[]=102&tipo[]=104&tipo[]=106&tipo[]=107&tipo[]=109&tipo[]=1010&tipo[]=1011&tipo[]=1013&tipo[]=1014&tipo[]=1025&tipo[]=1026&tipo[]=141&tipo[]=2323&tipo[]=273&tipo[]=54&tipo[]=11&tipo[]=12&tipo[]=123&tipo[]=126&tipo[]=31&tipo[]=3131&atividades[]=0&eqpto=';
+      const rTC = await fetch(urlTC, { headers: { 'Authorization': 'Bearer ' + token } });
+      const dataTC = await rTC.json();
+      const caminhoesTC = (dataTC.alocacao || []).filter(e => (caminhoesCanal.length > 0 ? caminhoesCanal.includes(e.cod_equipamento) : ['TRANSPORTE CARREGADO','CAMINHAO CANAVIEIRO','PLATAFORMA'].includes(e.dsc_tipo_utilizacao)));
+
+      // Atualizar equipamentos com dados de TRANSPORTE CARREGADO
+      caminhoesTC.forEach(eq => {
+        const t = eq.trajetos && eq.trajetos.length > 0 ? eq.trajetos[0] : null;
+        const idx = equipamentos.findIndex(e => e.cod === eq.cod_equipamento);
+        if (idx >= 0) {
+          equipamentos[idx].classe = 'TRANSPORTE CARREGADO';
+          equipamentos[idx].vel = t ? (t.num_velocidade_gps || 0) : 0;
+          equipamentos[idx].lat = eq.LATITUDE || null;
+          equipamentos[idx].lng = eq.LONGITUDE || null;
+        } else {
+          equipamentos.push({
+            cod: eq.cod_equipamento,
+            modelo: eq.dsc_modelo || eq.dsc_equipamento || '-',
+            nome: eq.nome || '-',
+            fazenda: eq.dsc_fazenda || '-',
+            vel: t ? (t.num_velocidade_gps || 0) : 0,
+            classe: 'TRANSPORTE CARREGADO',
+            frente: eq.num_frente ? 'Fr.' + eq.num_frente : '-',
+            parada: eq.dsc_motivo_parada || null,
+            atividade: eq.dsc_atividade || null,
+            dta_inicial: eq.dta_inicial || null,
+            lat: eq.LATITUDE || null,
+            lng: eq.LONGITUDE || null,
+            rpm: t ? (t.num_rpm || 0) : 0,
+            sem_apontamento: !eq.dsc_motivo_parada && !eq.dsc_atividade,
+            tipo_utilizacao: eq.cod_tipo_utilizacao || 0
+          });
+        }
+      });
+
+      // Recalcular semáforo
+      const semVerde = equipamentos.filter(e => { const m = minutosParaUsina(e); return e.classe==='TRANSPORTE CARREGADO' && m!==null && m<=30; }).length;
+      const semAmarelo = equipamentos.filter(e => { const m = minutosParaUsina(e); return e.classe==='TRANSPORTE CARREGADO' && m!==null && m>30 && m<=60; }).length;
+      const semVermelho = equipamentos.filter(e => { const m = minutosParaUsina(e); return e.classe==='TRANSPORTE CARREGADO' && m!==null && m>60; }).length;
+      if(document.getElementById('sem-verde-num')) document.getElementById('sem-verde-num').textContent = semVerde;
+      if(document.getElementById('sem-amarelo-num')) document.getElementById('sem-amarelo-num').textContent = semAmarelo;
+      if(document.getElementById('sem-vermelho-num')) document.getElementById('sem-vermelho-num').textContent = semVermelho;
+    } catch(eTC) { console.warn('Erro TC:', eTC.message); }
+
+    renderizar();
+  } catch(e) {
+    document.getElementById('lista').innerHTML = `<div class="empty">❌ ${e.message}</div>`;
+    if(document.getElementById('app-time')) document.getElementById('app-time').textContent = 'Erro';
+  }
+}
+
+function setFiltro(c) {
+  filtroClasse = c;
+  document.querySelectorAll('#filtros .chip').forEach(b => b.classList.toggle('ativo', b.textContent.trim() === (c==='todos'?'Todos':c)));
+  renderizar();
+}
+
+function renderizar() {
+  const busca = document.getElementById('busca').value.toLowerCase();
+  const lista = document.getElementById('lista');
+  let filtrados = equipamentos.filter(eq => {
+    const pc = filtroClasse === 'todos' || eq.classe === filtroClasse;
+    const pb = !busca || eq.nome.toLowerCase().includes(busca) || eq.cod.toString().includes(busca);
+    const st = getStatus(eq.vel).tipo;
+    const al = emAlerta(eq);
+    let ps = true;
+    if (filtroStatus === 'normal') ps = st === 'normal' && !al;
+    else if (filtroStatus === 'parado') ps = st === 'parado';
+    else if (filtroStatus === 'lento') ps = st === 'lento';
+    else if (filtroStatus === 'alerta') ps = al;
+    else if (filtroStatus === 'sem-apontamento') ps = eq.sem_apontamento;
+    else if (filtroStatus === 'carregado') ps = (caminhoesCanal.length > 0 ? caminhoesCanal.includes(eq.cod) : ['TRANSPORTE CARREGADO','CAMINHAO CANAVIEIRO','PLATAFORMA'].includes(eq.classe));
+    else if (filtroStatus === 'proximo') { const mins = minutosParaUsina(eq); ps = (caminhoesCanal.length > 0 ? caminhoesCanal.includes(eq.cod) : ['TRANSPORTE CARREGADO','CAMINHAO CANAVIEIRO','PLATAFORMA'].includes(eq.classe)) && mins !== null && mins <= 30; }
+      else if (filtroStatus === 'verde') { const mins = minutosParaUsina(eq); ps = mins !== null && mins <= 30; }
+    else if (filtroStatus === 'amarelo') { const mins = minutosParaUsina(eq); ps = mins !== null && mins > 30 && mins <= 60; }
+    else if (filtroStatus === 'vermelho') { const mins = minutosParaUsina(eq); ps = mins !== null && mins > 60; }
+    return pc && pb && ps;
+  });
+
+  if (!filtrados.length) { lista.innerHTML = '<div class="empty">Nenhum equipamento encontrado</div>';
+    if(document.getElementById('r-media')) document.getElementById('r-media').textContent = '0';
+    return;
+  }
+
+  const mediaFiltrada = filtrados.length > 0
+    ? (filtrados.reduce((s,e) => s+e.vel, 0) / filtrados.length).toFixed(1) : '0';
+  if(document.getElementById('r-media')) document.getElementById('r-media').textContent = mediaFiltrada;
+
+  const grupos = {};
+  filtrados.forEach(eq => { if (!grupos[eq.classe]) grupos[eq.classe] = []; grupos[eq.classe].push(eq); });
+  Object.keys(grupos).forEach(c => grupos[c].sort((a,b) => b.vel - a.vel));
+
+  lista.innerHTML = Object.keys(grupos).sort().map(classe => {
+    const itens = grupos[classe];
+    const l = limites[classe];
+    const cards = itens.map(eq => {
+      const st = getStatus(eq.vel);
+      const al = emAlerta(eq);
+      const corAlerta = al === 'abaixo' ? 'var(--accent)' : 'var(--red)';
+      const cor = al ? corAlerta : st.cor;
+      const larg = Math.min(100, (eq.vel / (l?.max || 15)) * 100);
+      const isParado = st.tipo === 'parado';
+      const tempoChegada = (() => { const mins = minutosParaUsina(eq); if(!mins) return ''; const cor2 = mins <= 30 ? '#22c55e' : mins <= 60 ? '#eab308' : '#ef4444'; return '<span style="background:rgba(0,0,0,0.15);border:1px solid ' + cor2 + ';border-radius:4px;padding:1px 6px;font-size:10px;color:' + cor2 + ';font-weight:700">🏭 ' + formatarTempoChegada(mins) + '</span>'; })();
+      return `<div style="padding:10px 14px;border-bottom:1px solid var(--border);${al?'background:rgba(239,68,68,0.05);border-left:3px solid var(--red);':isParado?'background:rgba(239,68,68,0.02);border-left:3px solid rgba(239,68,68,0.3);':''}">
+
+        <div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;margin-bottom:4px">
+          <div style="display:flex;align-items:center;gap:8px;min-width:0">
+            <span style="font-size:14px;font-weight:800;white-space:nowrap">${al?'🚨 ':isParado?'⛔ ':''}${eq.cod}</span>
+            <span style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eq.modelo}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+            ${eq.lat && eq.lng ? `<button onclick="event.stopPropagation();navegarAte(${eq.lat},${eq.lng})" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:6px;color:var(--accent);width:26px;height:26px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">📍</button>` : ''}
+            <div style="text-align:right;flex-shrink:0">
+              <span style="font-size:17px;font-weight:800;color:${cor}">${eq.vel.toFixed(1)}</span>
+              <span style="font-size:10px;color:var(--muted)"> km/h</span>
+              ${eq.rpm ? `<div style="font-size:10px;color:var(--purple);font-weight:600">${eq.rpm} rpm</div>` : ''}
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:4px">
+          <div style="background:var(--surface);border-radius:4px;padding:3px 6px;font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">👤 ${eq.nome}</div>
+          <div style="background:var(--surface);border-radius:4px;padding:3px 6px;font-size:10px;color:var(--muted);text-align:center">🚩 ${eq.frente}</div>
+          <div style="background:var(--surface);border-radius:4px;padding:3px 6px;font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right">🌾 ${eq.fazenda}</div>
+        </div>
+
+        <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-bottom:5px">
+          ${eq.parada ? `<span style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:4px;padding:1px 6px;font-size:10px;color:var(--red);font-weight:600">⛔ ${eq.parada}</span>` : eq.atividade ? `<span style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:4px;padding:1px 6px;font-size:10px;color:var(--green);font-weight:600">✅ ${eq.atividade}</span>` : ''}
+          ${isParado && eq.dta_inicial ? `<span style="background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.3);border-radius:4px;padding:1px 6px;font-size:10px;color:var(--yellow);font-weight:600">⏱ ${tempoParado(eq.dta_inicial)}</span>` : ''}
+          ${tempoChegada}
+        </div>
+
+        <div style="background:var(--border);border-radius:3px;height:3px;overflow:hidden">
+          <div style="background:${cor};width:${larg}%;height:100%;border-radius:3px;transition:width 0.5s"></div>
+        </div>
+        ${al === 'acima' ? `<div style="color:var(--red);font-size:10px;font-weight:600;margin-top:3px">⚠ Acima do máximo: ${l?.max} km/h</div>` : al === 'abaixo' ? `<div style="color:var(--accent);font-size:10px;font-weight:600;margin-top:3px">⚠ Abaixo do mínimo: ${l?.min} km/h</div>` : ''}
+      </div>`;
+    }).join('');
+    return `<div class="grupo-header">
+      <div class="grupo-dot"></div>
+      <span class="grupo-nome">${classe}</span>
+      <span class="grupo-badge">${itens.length}</span>
+      ${l ? `<span class="limite-badge">${l.min||'?'}–${l.max||'?'} km/h</span>` : ''}
+    </div>${cards}`;
+  }).join('');
+}
+
+function navegarAte(lat, lng) {
+  window.open('https://www.google.com/maps/dir/?api=1&destination=' + lat + ',' + lng + '&travelmode=driving', '_blank');
+}
+
+async function gerarRelatorio() {
+  const agora = new Date();
+  const fim = new Date(agora);
+  fim.setHours(6, 0, 0, 0);
+  if (agora.getHours() < 6) fim.setDate(fim.getDate() - 1);
+  const inicio = new Date(fim);
+  inicio.setDate(inicio.getDate() - 1);
+  const inicioTs = inicio.getTime();
+  const fimTs = fim.getTime();
+  const durTotal = (fimTs - inicioTs) / 1000;
+  const filtroRelClasse = document.getElementById('rel-filtro-classe').value;
+  const filtroRelEq = document.getElementById('rel-filtro-eq').value.toLowerCase();
+  const body = document.getElementById('rel-body');
+  body.innerHTML = '<div class="empty">⏳ Buscando dados...</div>';
+  try {
+    const r = await fetch(API + '/eventos?flgLido=S&tipo[]=0&tipo[]=11&tipo[]=12&tipo[]=123&tipo[]=126&tipo[]=31&tipo[]=51&tipo[]=52&tipo[]=53&tipo[]=54&tipo[]=61&tipo[]=101&tipo[]=102&tipo[]=104&tipo[]=106&tipo[]=107&tipo[]=109&tipo[]=1010&tipo[]=1011&tipo[]=1013&tipo[]=1014&tipo[]=1024&tipo[]=1025&tipo[]=1026&tipo[]=141&tipo[]=169&tipo[]=2323&tipo[]=273&tipo[]=281&tipo[]=3131&atividades[]=0',
+      { headers: { 'Authorization': 'Bearer ' + token } });
+    const eventos = await r.json();
+    const filtrados = eventos.filter(e => {
+      const ts = new Date(e.dta_evento).getTime();
+      const eq = equipamentos.find(eq => eq.cod === e.cod_equipamento);
+      const pc = !filtroRelClasse || eq?.classe === filtroRelClasse;
+      const pe = !filtroRelEq || e.dsc_equipamento?.toLowerCase().includes(filtroRelEq) || e.cod_equipamento?.toString().includes(filtroRelEq) || e.nome?.toLowerCase().includes(filtroRelEq);
+      return ts >= inicioTs && ts <= fimTs && pc && pe;
+    });
+    const porEq = {};
+    filtrados.forEach(e => {
+      const k = e.cod_equipamento;
+      if (!porEq[k]) porEq[k] = { info: e, paradas: {}, total: 0 };
+      porEq[k].total++;
+      if (e.cod_motivo_parada && e.dsc_evento) porEq[k].paradas[e.dsc_evento] = (porEq[k].paradas[e.dsc_evento] || 0) + 1;
+    });
+    const eqsComParada = Object.values(porEq).filter(d => Object.keys(d.paradas).length > 0);
+    if (!eqsComParada.length) { body.innerHTML = `<div class="empty">Nenhuma parada encontrada<br>${inicio.toLocaleDateString('pt-BR')} 06h → ${fim.toLocaleDateString('pt-BR')} 06h</div>`; return; }
+    const cards = eqsComParada.sort((a,b) => Object.values(b.paradas).reduce((s,v)=>s+v,0) - Object.values(a.paradas).reduce((s,v)=>s+v,0)).map(data => {
+      const paradas = Object.entries(data.paradas).sort((a,b) => b[1]-a[1]);
+      const totalParadas = paradas.reduce((s,[,v]) => s+v, 0);
+      const pctParado = data.total > 0 ? Math.round((totalParadas/data.total)*100) : 0;
+      const tempoParadoSeg = Math.round((totalParadas/Math.max(data.total,1)) * durTotal);
+      return `<div class="rel-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+          <div><div style="font-size:15px;font-weight:800">${data.info.cod_equipamento}</div><div style="font-size:11px;color:var(--muted)">${data.info.dsc_equipamento||'-'}</div></div>
+          <div style="text-align:right"><div style="font-size:22px;font-weight:800;color:var(--red)">${formatarTempo(tempoParadoSeg)}</div><div style="font-size:11px;color:var(--muted)">${pctParado}% do turno</div></div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">👤 ${data.info.nome} | 🌾 ${data.info.dsc_fazenda} | Fr.${data.info.num_frente}</div>
+        <div style="background:var(--bg);border-radius:8px;height:8px;overflow:hidden;margin-bottom:12px"><div style="background:var(--red);width:${pctParado}%;height:100%;border-radius:8px"></div></div>
+        <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px">Motivos</div>
+        ${paradas.map(([motivo, qtd]) => { const pct=Math.round((qtd/data.total)*100); const tempo=Math.round((qtd/data.total)*durTotal); return `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:12px;font-weight:600;color:var(--text);flex:1;margin-right:8px">${motivo}</span><div style="text-align:right;flex-shrink:0"><span style="font-size:13px;font-weight:800;color:var(--yellow)">${formatarTempo(tempo)}</span><span style="font-size:11px;color:var(--muted);margin-left:4px">${pct}%</span></div></div><div style="background:var(--bg);border-radius:6px;height:6px;overflow:hidden"><div style="background:var(--yellow);width:${pct}%;height:100%;border-radius:6px"></div></div></div>`; }).join('')}
+      </div>`;
+    });
+    body.innerHTML = `<div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:10px">${inicio.toLocaleDateString('pt-BR')} 06h → ${fim.toLocaleDateString('pt-BR')} 06h</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center"><div style="font-size:24px;font-weight:800;color:var(--text)">${eqsComParada.length}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Equipamentos</div></div>
+        <div style="background:var(--surface);border:1px solid rgba(239,68,68,0.3);border-radius:12px;padding:12px;text-align:center"><div style="font-size:24px;font-weight:800;color:var(--red)">${filtrados.filter(e=>e.cod_motivo_parada).length}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Eventos</div></div>
+      </div>${cards.join('')}`;
+  } catch(e) { body.innerHTML = `<div class="empty">❌ Erro: ${e.message}</div>`; }
+}
+
+function abrirConfig() {
+  const classes = [...new Set(equipamentos.map(e => e.classe))].sort();
+  document.getElementById('config-body').innerHTML = classes.map(c => `
+    <div class="config-row">
+      <div style="font-size:13px;font-weight:700;width:100%">${c}</div>
+      <div style="display:flex;gap:8px;width:100%">
+        <div style="flex:1;text-align:center">
+          <input class="config-inp" type="number" placeholder="Mín" value="${limites[c]?.min||''}" onchange="salvarLimite('${c}','min',this.value)">
+          <div style="font-size:10px;color:var(--muted);margin-top:4px">MÍN km/h</div>
+        </div>
+        <div style="flex:1;text-align:center">
+          <input class="config-inp" type="number" placeholder="Máx" value="${limites[c]?.max||''}" onchange="salvarLimite('${c}','max',this.value)">
+          <div style="font-size:10px;color:var(--muted);margin-top:4px">MÁX km/h</div>
+        </div>
+      </div>
+    </div>`).join('');
+
+  const secCana = document.createElement('div');
+  secCana.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-top:14px';
+  secCana.innerHTML = `
+    <div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px">🚛 Caminhões de Cana (Semáforo)</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Cole os códigos separados por vírgula ou quebra de linha</div>
+    <textarea id="inp-caminhoes-cana" style="width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;color:var(--text);padding:10px;font-size:13px;outline:none;min-height:80px;resize:vertical" placeholder="Ex: 110123, 110456, 110789...">${caminhoesCanal.join(', ')}</textarea>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button onclick="salvarCaminhoesCana()" style="flex:1;background:var(--accent);border:none;border-radius:8px;color:#fff;padding:10px;font-size:13px;font-weight:700;cursor:pointer">💾 Salvar</button>
+      <button onclick="limparCaminhoesCana()" style="background:#2a1515;border:none;border-radius:8px;color:var(--red);padding:10px 14px;font-size:13px;cursor:pointer">🗑</button>
+    </div>
+    <div id="lista-caminhoes-cana" style="margin-top:10px;font-size:12px;color:var(--muted)">
+      ${caminhoesCanal.length > 0 ? caminhoesCanal.length + ' caminhões cadastrados: ' + caminhoesCanal.slice(0,5).join(', ') + (caminhoesCanal.length > 5 ? '...' : '') : 'Nenhum cadastrado'}
+    </div>`;
+  document.getElementById('config-body').appendChild(secCana);
+  document.getElementById('tela-config').style.display = 'flex';
+}
+
+function fecharConfig() { document.getElementById('tela-config').style.display = 'none'; renderizar(); }
+
+function salvarLimite(c, tipo, v) {
+  const n = parseFloat(v);
+  if (!limites[c]) limites[c] = {};
+  if (n >= 0) limites[c][tipo] = n; else delete limites[c][tipo];
+  if (!limites[c].min && !limites[c].max) delete limites[c];
+  localStorage.setItem('mv-limites', JSON.stringify(limites));
+}
+
+function salvarCaminhoesCana() {
+  const txt = document.getElementById('inp-caminhoes-cana').value;
+  caminhoesCanal = txt.replace(/[\n\r]/g,",").split(",").map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+  localStorage.setItem('mv-caminhoes-cana', JSON.stringify(caminhoesCanal));
+  document.getElementById('lista-caminhoes-cana').textContent = caminhoesCanal.length + ' caminhões salvos: ' + caminhoesCanal.slice(0,5).join(', ') + (caminhoesCanal.length > 5 ? '...' : '');
+  alert('✅ ' + caminhoesCanal.length + ' caminhões salvos!');
+}
+
+function limparCaminhoesCana() {
+  if (!confirm('Limpar lista?')) return;
+  caminhoesCanal = [];
+  localStorage.removeItem('mv-caminhoes-cana');
+  document.getElementById('inp-caminhoes-cana').value = '';
+  document.getElementById('lista-caminhoes-cana').textContent = 'Nenhum cadastrado';
+}
+
+setInterval(() => { if (token) buscarDados(); }, 30000);
+</script>
+</body>
+</html>
