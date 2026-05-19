@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transbordo - Solinftec</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f5f5f5; color: #222; }
+  header { background: #1a5c2a; color: white; padding: 14px 24px; display: flex; align-items: center; gap: 12px; }
+  header h1 { font-size: 18px; font-weight: 600; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+  .card { background: white; border-radius: 8px; border: 1px solid #e0e0e0; padding: 16px 20px; margin-bottom: 16px; }
+  .card h3 { font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group label { font-size: 13px; color: #555; }
+  .form-group input, .form-group select { padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+  .form-group input:focus, .form-group select:focus { outline: none; border-color: #1a5c2a; }
+  .token-row { display: flex; gap: 8px; }
+  .token-row input { flex: 1; font-size: 12px; }
+  .btn { padding: 9px 18px; border-radius: 6px; border: none; cursor: pointer; font-size: 14px; font-weight: 500; }
+  .btn-green { background: #1a5c2a; color: white; }
+  .btn-green:hover { background: #154d22; }
+  .btn-gray { background: #f0f0f0; color: #333; border: 1px solid #ddd; }
+  .btn-gray:hover { background: #e5e5e5; }
+  .btn-export { background: #2563eb; color: white; }
+  .btn-export:hover { background: #1d4ed8; }
+  .status { font-size: 13px; padding: 6px 0; min-height: 22px; }
+  .status.ok { color: #16a34a; }
+  .status.err { color: #dc2626; }
+  .status.loading { color: #f59e0b; }
+  .frentes-box { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; min-height: 38px; }
+  .tag { display: inline-block; padding: 4px 12px; border-radius: 99px; font-size: 12px; cursor: pointer; border: 1px solid #ddd; background: #f5f5f5; color: #555; }
+  .tag.on { background: #dcfce7; color: #166534; border-color: #86efac; font-weight: 500; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead tr { background: #f8f8f8; }
+  th { padding: 10px 12px; text-align: left; font-weight: 600; color: #555; border-bottom: 2px solid #e0e0e0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+  th.r, td.r { text-align: right; }
+  td { padding: 9px 12px; border-bottom: 1px solid #f0f0f0; color: #222; }
+  tr:hover td { background: #f9fef9; }
+  tr.total td { font-weight: 600; background: #f0fdf4; color: #166534; }
+  tr.subtotal td { font-weight: 600; color: #555; background: #fafafa; }
+  .empty { text-align: center; color: #aaa; padding: 2rem; font-size: 14px; }
+  .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .hint { font-size: 11px; color: #aaa; margin-top: 3px; }
+  .token-hint { font-size: 11px; color: #f59e0b; margin-top: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <svg width="24" height="24" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+  <h1>Transbordo — Solinftec</h1>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <h3>Token Power BI</h3>
+    <div class="form-group">
+      <div class="token-row">
+        <input type="password" id="token" placeholder="Cole o token MWCToken eyJ... aqui" />
+        <button class="btn btn-green" onclick="salvarToken()">Salvar</button>
+        <button class="btn btn-gray" onclick="mostrarToken()">Ver</button>
+      </div>
+      <span class="hint">Token capturado no Network do F12 → chamada pbidedicated → campo Authorization</span>
+      <span class="token-hint" id="token-info">Nenhum token salvo</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Filtros</h3>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Data início</label>
+        <input type="date" id="dt-inicio" />
+      </div>
+      <div class="form-group">
+        <label>Data fim</label>
+        <input type="date" id="dt-fim" />
+      </div>
+      <div class="form-group">
+        <label>Unidade (buId)</label>
+        <select id="unidade">
+          <option value="101">CEMMA (101)</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-top: 12px;">
+      <label style="font-size:13px;color:#555;">Frentes <span style="font-size:11px;color:#aaa;">(clique para selecionar — vazio = todas)</span></label>
+      <div class="frentes-box" id="frentes-box">
+        <span class="tag on" data-id="2843" onclick="toggleFrente(this)">1003-F3</span>
+        <span class="tag on" data-id="2841" onclick="toggleFrente(this)">1006-F6</span>
+        <span class="tag on" data-id="2846" onclick="toggleFrente(this)">1009-F9</span>
+        <span class="tag on" data-id="2874" onclick="toggleFrente(this)">F4</span>
+      </div>
+      <span class="hint">Códigos das frentes conforme capturado na plataforma. Edite no código se necessário.</span>
+    </div>
+    <div style="margin-top: 12px;">
+      <button class="btn btn-green" onclick="buscar()">&#128269; Buscar dados</button>
+    </div>
+    <div id="status" class="status"></div>
+  </div>
+
+  <div class="card">
+    <div class="toolbar">
+      <span style="font-size:13px;color:#555;" id="count-info">Nenhum dado carregado</span>
+      <button class="btn btn-export" onclick="exportarCSV()">&#8595; Exportar CSV</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Corporativo</th>
+            <th>Unidade</th>
+            <th>Frente</th>
+            <th class="r">Desloc. Vazio (min)</th>
+            <th class="r">Enchimento (min)</th>
+            <th class="r">Desloc. Carregado (min)</th>
+            <th class="r">Basculamento (min)</th>
+            <th class="r">Demanda (Qtde.)</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="8" class="empty">Configure os filtros e clique em Buscar dados</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const PBI_URL = 'https://0a5b357e3f5c470888c1606b76c406c0.pbidedicated.windows.net/webapi/capacities/0A5B357E-3F5C-4708-88C1-606B76C406C0/workloads/QES/QueryExecutionService/automatic/public/query';
+const MODEL_ID = 2384963;
+const CLIENT_ID = '144';
+
+let dadosAtuais = [];
+
+const hoje = new Date().toISOString().split('T')[0];
+document.getElementById('dt-fim').value = hoje;
+const ontem = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+document.getElementById('dt-inicio').value = ontem;
+
+const tokenSalvo = localStorage.getItem('pbi_token_solinftec');
+if(tokenSalvo) {
+  document.getElementById('token').value = tokenSalvo;
+  document.getElementById('token-info').textContent = '✓ Token carregado';
+  document.getElementById('token-info').style.color = '#16a34a';
+}
+
+function salvarToken() {
+  const t = document.getElementById('token').value.trim();
+  if(!t) return;
+  localStorage.setItem('pbi_token_solinftec', t);
+  document.getElementById('token-info').textContent = '✓ Token salvo!';
+  document.getElementById('token-info').style.color = '#16a34a';
+}
+
+function mostrarToken() {
+  const el = document.getElementById('token');
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+function toggleFrente(tag) {
+  tag.classList.toggle('on');
+}
+
+function setStatus(msg, tipo) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status ' + (tipo || '');
+}
+
+function getFrentesSelecionadas() {
+  return [...document.querySelectorAll('#frentes-box .tag.on')].map(t => parseInt(t.dataset.id));
+}
+
+function buildQuery(dtInicio, dtFim, frenteCods) {
+  const frentes = frenteCods.map(id => [{"Literal":{"Value": id + "L"}}]);
+  return {
+    version: "1.0.0",
+    queries: [{
+      Query: {
+        Commands: [{
+          SemanticQueryDataShapeCommand: {
+            Query: {
+              Version: 2,
+              From: [
+                {"Name":"d1","Entity":"dFrente","Type":0},
+                {"Name":"d2","Entity":"dCliente","Type":0},
+                {"Name":"f","Entity":"FilterClienteFrente","Type":0},
+                {"Name":"d3","Entity":"dTempo","Type":0},
+                {"Name":"m","Entity":"mTransbordo","Type":0}
+              ],
+              Select: [
+                {"Column":{"Expression":{"SourceRef":{"Source":"d2"}},"Property":"Cliente Nome"},"Name":"dCliente.Cliente Nome"},
+                {"Column":{"Expression":{"SourceRef":{"Source":"d1"}},"Property":"Unidade Nome"},"Name":"dFrente.Unidade Nome"},
+                {"Column":{"Expression":{"SourceRef":{"Source":"d1"}},"Property":"Frente Nome"},"Name":"dFrente.Frente Nome"},
+                {"Measure":{"Expression":{"SourceRef":{"Source":"m"}},"Property":"Deslocamento Vazio"},"Name":"mTransbordo.Deslocamento Vazio"},
+                {"Measure":{"Expression":{"SourceRef":{"Source":"m"}},"Property":"Enchimento"},"Name":"mTransbordo.Enchimento"},
+                {"Measure":{"Expression":{"SourceRef":{"Source":"m"}},"Property":"Deslocamento Carregado"},"Name":"mTransbordo.Deslocamento Carregado"},
+                {"Measure":{"Expression":{"SourceRef":{"Source":"m"}},"Property":"Basculamento"},"Name":"mTransbordo.Basculamento"},
+                {"Measure":{"Expression":{"SourceRef":{"Source":"m"}},"Property":"Demanda Transbordo"},"Name":"mTransbordo.Demanda Transbordo"}
+              ],
+              Where: [
+                {"Condition":{"In":{"Expressions":[{"Column":{"Expression":{"SourceRef":{"Source":"d1"}},"Property":"Unidade Cod"}}],"Values":[[{"Literal":{"Value":"101L"}}]]}}},
+                {"Condition":{"In":{"Expressions":[{"Column":{"Expression":{"SourceRef":{"Source":"d1"}},"Property":"Frente Cod"}}],"Values": frentes}}},
+                {"Condition":{"In":{"Expressions":[{"Column":{"Expression":{"SourceRef":{"Source":"d2"}},"Property":"Cliente ID"}}],"Values":[[{"Literal":{"Value": CLIENT_ID + "L"}}]]}}},
+                {"Condition":{"In":{"Expressions":[{"Column":{"Expression":{"SourceRef":{"Source":"f"}},"Property":"Cliente ID Frente"}}],"Values":[[{"Literal":{"Value": CLIENT_ID + "L"}}]]}}},
+                {"Condition":{"And":{"Left":{"Comparison":{"ComparisonKind":3,"Left":{"Column":{"Expression":{"SourceRef":{"Source":"d3"}},"Property":"Data"}},"Right":{"DateSpan":{"Expression":{"Literal":{"Value":"datetime'" + dtInicio + "T00:00:00'"}},"TimeUnit":8}}}},"Right":{"Comparison":{"ComparisonKind":2,"Left":{"Column":{"Expression":{"SourceRef":{"Source":"d3"}},"Property":"Data"}},"Right":{"DateSpan":{"Expression":{"Literal":{"Value":"datetime'" + dtFim + "T00:00:00'"}},"TimeUnit":8}}}}}}}
+              ],
+              OrderBy: [{"Direction":1,"Expression":{"Column":{"Expression":{"SourceRef":{"Source":"d1"}},"Property":"Frente Nome"}}}]
+            },
+            Binding: {
+              Primary: {"Groupings":[{"Projections":[0,1,2,3,4,5,6,7]}]},
+              DataReduction: {"DataVolume":3,"Primary":{"Window":{"Count":500}}},
+              Version: 1
+            },
+            ExecutionMetricsKind: 1
+          }
+        }]
+      },
+      CacheKey: JSON.stringify({dtInicio, dtFim}),
+      QueryId: "",
+      ApplicationContext: {DatasetId:"transbordo", Sources:[{ReportId:"moreno-transbordo"}]}
+    }],
+    cancelQueries: [],
+    modelId: MODEL_ID
+  };
+}
+
+async function buscar() {
+  const token = document.getElementById('token').value.trim();
+  if(!token) { setStatus('⚠ Cole o token primeiro.', 'err'); return; }
+  const dtInicio = document.getElementById('dt-inicio').value;
+  const dtFim = document.getElementById('dt-fim').value;
+  if(!dtInicio || !dtFim) { setStatus('⚠ Informe o período.', 'err'); return; }
+  const frentes = getFrentesSelecionadas();
+  if(!frentes.length) { setStatus('⚠ Selecione ao menos uma frente.', 'err'); return; }
+
+  setStatus('Buscando dados...', 'loading');
+  document.getElementById('tbody').innerHTML = '<tr><td colspan="8" class="empty">Carregando...</td></tr>';
+
+  const authToken = token.startsWith('MWCToken') ? token : 'MWCToken ' + token;
+
+  try {
+    const res = await fetch(PBI_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': authToken,
+        'activityid': crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random()*16|0; return (c=='x'?r:(r&0x3|0x8)).toString(16); }),
+        'requestid': crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random()*16|0; return (c=='x'?r:(r&0x3|0x8)).toString(16); }),
+        'Origin': 'https://app.powerbi.com',
+        'Referer': 'https://app.powerbi.com/'
+      },
+      body: JSON.stringify(buildQuery(dtInicio, dtFim, frentes))
+    });
+
+    if(res.status === 401) {
+      setStatus('✗ Token expirado. Capture um novo token no F12 e cole aqui.', 'err');
+      return;
+    }
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+
+    const data = await res.json();
+    processarResposta(data);
+    setStatus('', '');
+
+  } catch(e) {
+    setStatus('✗ Erro: ' + e.message, 'err');
+    document.getElementById('tbody').innerHTML = '<tr><td colspan="8" class="empty">Erro ao buscar dados</td></tr>';
+  }
+}
+
+function processarResposta(data) {
+  const tbody = document.getElementById('tbody');
+  try {
+    const result = data.results[0].result.data.dsr;
+    const ds = result.DS[0];
+    const rows = ds.PH[0].DM0 || [];
+
+    if(!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="8" class="empty">Nenhum dado encontrado para o período.</td></tr>';
+      document.getElementById('count-info').textContent = 'Sem dados';
+      return;
+    }
+
+    dadosAtuais = [];
+    let vals = new Array(8).fill(null);
+
+    tbody.innerHTML = '';
+    rows.forEach(row => {
+      if(row.C) {
+        row.C.forEach((v, i) => { if(v !== null && v !== undefined) vals[i] = v; });
+      }
+      if(row.R) {
+        const mask = row.R;
+        for(let i = 0; i < 8; i++) {
+          if(mask & (1 << i)) { /* mantém valor anterior */ }
+        }
+      }
+
+      const linha = [...vals];
+      dadosAtuais.push(linha);
+
+      const tr = document.createElement('tr');
+      const isTotal = !linha[2] || String(linha[2]).toLowerCase().includes('total');
+      tr.className = isTotal ? 'subtotal' : '';
+      tr.innerHTML = `
+        <td>${linha[0] || 'GERAL'}</td>
+        <td>${linha[1] || '—'}</td>
+        <td>${linha[2] || 'Total'}</td>
+        <td class="r">${fmt(linha[3])}</td>
+        <td class="r">${fmt(linha[4])}</td>
+        <td class="r">${fmt(linha[5])}</td>
+        <td class="r">${fmt(linha[6])}</td>
+        <td class="r">${fmt(linha[7])}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById('count-info').textContent = rows.length + ' linha(s) carregada(s)';
+
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">Erro ao processar resposta. Verifique o token.</td></tr>';
+    document.getElementById('count-info').textContent = 'Erro ao processar';
+    console.error('Erro parsing:', e, data);
+  }
+}
+
+function fmt(val) {
+  if(val === null || val === undefined) return '—';
+  if(typeof val === 'number') return val.toFixed(1).replace('.', ',');
+  return val;
+}
+
+function exportarCSV() {
+  if(!dadosAtuais.length) return;
+  const header = ['Corporativo','Unidade','Frente','Desloc. Vazio (min)','Enchimento (min)','Desloc. Carregado (min)','Basculamento (min)','Demanda (Qtde.)'];
+  const csv = [header, ...dadosAtuais].map(r => r.map(v => '"'+(v||'')+ '"').join(';')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'transbordo_' + document.getElementById('dt-inicio').value + '_' + document.getElementById('dt-fim').value + '.csv';
+  a.click();
+}
+</script>
+</body>
+</html>
