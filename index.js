@@ -1,14 +1,23 @@
 const http = require('http');
 const https = require('https');
+const fs = require('fs');
+const path = require('path');
+
 const PORT = process.env.PORT || 3000;
 const API = '52.7.202.88';
 const API_PORT = 3333;
+const DATA_FILE = path.join('/tmp', 'caminhoes-cana.json');
 
-// Armazenamento em memória (persiste enquanto o servidor estiver rodando)
+// Carregar caminhões do arquivo ao iniciar
 let caminhoesCanaSalvos = [];
+try {
+  if (fs.existsSync(DATA_FILE)) {
+    caminhoesCanaSalvos = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+    console.log('Caminhões carregados:', caminhoesCanaSalvos.length);
+  }
+} catch(e) { console.log('Sem arquivo de caminhões'); }
 
 const server = http.createServer((req, res) => {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -18,11 +27,12 @@ const server = http.createServer((req, res) => {
   req.on('data', chunk => body += chunk);
   req.on('end', () => {
 
-    // Rota para salvar caminhões de cana
+    // Salvar caminhões
     if (req.url === '/caminhoes-cana' && req.method === 'POST') {
       try {
         const data = JSON.parse(body);
         caminhoesCanaSalvos = data.caminhoes || [];
+        fs.writeFileSync(DATA_FILE, JSON.stringify(caminhoesCanaSalvos));
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: true, total: caminhoesCanaSalvos.length }));
       } catch(e) {
@@ -32,7 +42,7 @@ const server = http.createServer((req, res) => {
       return;
     }
 
-    // Rota para carregar caminhões de cana
+    // Carregar caminhões
     if (req.url === '/caminhoes-cana' && req.method === 'GET') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ caminhoes: caminhoesCanaSalvos, total: caminhoesCanaSalvos.length }));
@@ -40,11 +50,10 @@ const server = http.createServer((req, res) => {
     }
 
     // Proxy normal para a API
-    const targetPath = req.url;
     const options = {
       hostname: API,
       port: API_PORT,
-      path: targetPath,
+      path: req.url,
       method: req.method,
       headers: {
         'Content-Type': req.headers['content-type'] || 'application/json',
