@@ -364,13 +364,8 @@ if (typeof pdfjsLib !== 'undefined') {
 
     <div style="display:flex;gap:10px;align-items:center;justify-content:space-between;width:100%;max-width:460px;">
       <button class="ti-adm" onclick="logout()" style="color:rgba(231,76,60,0.5);">⏻ SAIR</button>
-      <button class="ti-adm" onclick="testarBanner()" style="color:rgba(241,196,15,0.5);">🔔 Teste</button>
-      <div style="display:flex;gap:10px;">
-        <button class="ti-adm" onclick="toggleChuvaPanel()" style="color:rgba(52,152,219,0.5);">🌧 Chuva</button>
-        <button class="ti-adm" id="btn-notif" onclick="pedirPermissaoNotif()" style="color:rgba(52,152,219,0.3);">🔔 Alertas</button>
-        <button class="ti-adm" onclick="abrirCadastroRapido()" style="color:rgba(46,204,113,0.5);">➕ Cadastro</button>
-        <button class="ti-adm" onclick="abrirAdm()">⚙ ADM</button>
-      </div>
+      <button id="btn-alerta-ti" onclick="toggleAlertaTI()" style="background:transparent;border:2px solid rgba(231,76,60,0.6);color:rgba(231,76,60,0.8);padding:10px 24px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:4px;transition:all .3s;">🔕 ALERTAS OFF</button>
+      <button class="ti-adm" onclick="abrirAdm()">⚙ ADM</button>
 
     </div>
   </div>
@@ -794,9 +789,9 @@ async function init() {
   emps.forEach(function(e){renderGrid(e);updateToggle(e);});
   setBarras(); initDone=true;
   // Verificar metas imediatamente após carregar dados
-  setTimeout(function(){ verificarMetasEMostrarBanner(); }, 2000);
+  setTimeout(function(){ if(typeof _alertaTIAtivo !== "undefined" && _alertaTIAtivo) verificarMetasEMostrarBanner(); }, 2000);
   // Garantir que o timer do banner está rodando (padrão 3 min)
-  if (!_timerBanner) iniciarTimerBanner(3);
+  if (!_timerBanner && typeof _alertaTIAtivo !== "undefined" && _alertaTIAtivo) iniciarTimerBanner(3);
   if(pendingAdm){atualizarFarois();renderAdmTable();pendingAdm=false;}
   try {
     var s = localStorage.getItem('frota_sessao');
@@ -2335,6 +2330,7 @@ function toggleChuvaPanel() {
 }
 
 function tocarAlerta() {
+  if (typeof _alertaTIAtivo !== "undefined" && !_alertaTIAtivo) return;
   try {
     var ctx = new (window.AudioContext || window.webkitAudioContext)();
     function beep(freq, start, dur, vol) {
@@ -2357,6 +2353,7 @@ function tocarAlerta() {
 }
 
 function mostrarBannerAlertas(alertas) {
+  if (typeof _alertaTIAtivo !== "undefined" && !_alertaTIAtivo) return;
   var el = document.getElementById('banner-alertas');
   if (!el) return;
   if (!alertas.length) { el.style.display = 'none'; el.innerHTML = ''; return; }
@@ -2598,6 +2595,31 @@ carregarUsuariosUpstash();
   } catch(e) {}
   init(); // Se não tem login, inicia normalmente (tela de login aparece por cima)
 })();
+
+var _alertaTIAtivo = false;
+function toggleAlertaTI() {
+  _alertaTIAtivo = !_alertaTIAtivo;
+  var btn = document.getElementById('btn-alerta-ti');
+  if (_alertaTIAtivo) {
+    btn.textContent = '🔔 ALERTAS ON';
+    btn.style.borderColor = 'rgba(46,204,113,0.8)';
+    btn.style.color = 'rgba(46,204,113,0.9)';
+    tocarAlerta();
+    verificarMetasEMostrarBanner();
+    var el = document.getElementById('banner-alertas');
+    setTimeout(function() {
+      if (!el || el.style.display === 'none' || !el.children.length) {
+        el.style.display = 'flex';
+        el.innerHTML = '<div class="banner-item"><div style="flex:1;min-width:0;"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#2ecc71;margin-bottom:2px;">ALERTAS ATIVOS</div><div style="font-size:12px;font-weight:600;color:#fff;">Monitorando projeções da frota</div></div><button class="banner-fechar" onclick="fecharBanner(this)">✕</button></div>';
+      }
+    }, 300);
+  } else {
+    btn.textContent = '🔕 ALERTAS OFF';
+    btn.style.borderColor = 'rgba(231,76,60,0.6)';
+    btn.style.color = 'rgba(231,76,60,0.8)';
+    fecharBanner();
+  }
+}
 </script>
 </body>
 </html>
