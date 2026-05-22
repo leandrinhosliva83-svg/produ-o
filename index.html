@@ -10,7 +10,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <script>Chart.register(ChartDataLabels);</script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <style>
 :root{
   --bg:#0a0f0d;--bg2:#111a14;--bg3:#162019;
@@ -202,7 +201,7 @@ thead tr{border-bottom:1px solid var(--green);}
 th{padding:8px 10px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--green);text-align:left;}
 tbody tr{border-bottom:1px solid rgba(46,204,113,.07);}
 td{padding:8px 10px;font-size:12px;color:var(--white);}
-#tela-login{position:fixed;inset:0;z-index:99999;background:#010603;display:flex;align-items:center;justify-content:center;}
+#tela-login{position:fixed;inset:0;z-index:99999;background:#010603;display:none;align-items:center;justify-content:center;}
 .lbox{width:300px;max-width:90vw;background:rgba(10,20,14,0.97);border:1px solid rgba(46,204,113,0.2);border-radius:8px;padding:32px 24px;text-align:center;}
 .lbox img{height:55px;margin-bottom:12px;}
 .ltit{font-size:10px;font-weight:700;letter-spacing:3px;color:rgba(46,204,113,0.4);margin-bottom:20px;}
@@ -2648,8 +2647,10 @@ async function loadAcumPDF(n,input){
   lbl.style.borderColor='rgba(241,196,15,0.6)';
   lbl.style.color='rgba(241,196,15,0.8)';
   try{
+    if(typeof pdfjsLib==='undefined'){fn.textContent='❌ pdf.js não carregou';return;}
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     var ab=await input.files[0].arrayBuffer();
-    var doc=await pdfjsLib.getDocument({data:ab}).promise;
+    var doc=await pdfjsLib.getDocument({data:new Uint8Array(ab)}).promise;
     var text='';
     for(var i=1;i<=doc.numPages;i++){
       fn.textContent='Lendo pág '+i+'/'+doc.numPages+'...';
