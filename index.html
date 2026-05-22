@@ -485,6 +485,24 @@ if (typeof pdfjsLib !== 'undefined') {
         </div>
       </div>
 
+
+      <div style="background:var(--bg2);border:1px solid var(--border);padding:16px 20px;margin-bottom:24px;position:relative;">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--orange),var(--green));"></div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--orange);margin-bottom:14px;">📊 ACUMULADO PDF</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div>
+            <div style="font-size:9px;color:var(--gray);letter-spacing:1px;margin-bottom:6px;">PDF 1</div>
+            <label style="display:block;border:1px dashed rgba(46,204,113,0.3);border-radius:4px;padding:10px;text-align:center;cursor:pointer;font-size:11px;color:var(--gray);" id="lbl1">↑ Selecionar PDF<input type="file" id="acumPdf1" accept=".pdf" style="display:none" onchange="loadAcumPDF(1,this)"></label>
+            <div id="acumFn1" style="font-size:10px;color:rgba(46,204,113,0.8);margin-top:4px;min-height:14px;"></div>
+          </div>
+          <div>
+            <div style="font-size:9px;color:var(--gray);letter-spacing:1px;margin-bottom:6px;">PDF 2</div>
+            <label style="display:block;border:1px dashed rgba(46,204,113,0.3);border-radius:4px;padding:10px;text-align:center;cursor:pointer;font-size:11px;color:var(--gray);" id="lbl2">↑ Selecionar PDF<input type="file" id="acumPdf2" accept=".pdf" style="display:none" onchange="loadAcumPDF(2,this)"></label>
+            <div id="acumFn2" style="font-size:10px;color:rgba(46,204,113,0.8);margin-top:4px;min-height:14px;"></div>
+          </div>
+        </div>
+        <button onclick="aplicarAcumulado()" id="btnAplicar" disabled style="width:100%;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.4);color:rgba(46,204,113,0.9);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:10px;cursor:pointer;border-radius:4px;opacity:0.5;">Calcular acumulado</button>
+      </div>
       <!-- METAS por codigo -->
       <div class="upload-cards">
         <div class="upload-card">
@@ -698,26 +716,9 @@ if (typeof pdfjsLib !== 'undefined') {
         <div><div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--orange);">📈 Projeção 24h</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--orange);" id="projTotalVal">—</div><div style="font-size:11px;color:var(--gray);margin-top:2px;" id="projTotalDetail">—</div></div>
         <div style="text-align:right;"><div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--orange);">Realizado</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;" id="projTotalReal">—</div></div>
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-        <div class="sec-label" id="chartLabel" style="margin-bottom:0">Produção por caminhão (ton)</div>
-        <button onclick="toggleAcumulado()" id="btnAcum" style="background:transparent;border:1px solid rgba(46,204,113,0.4);color:rgba(46,204,113,0.8);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;cursor:pointer;border-radius:4px;">+ Acumulado PDF</button>
-      </div>
-      <div id="acumArea" style="display:none;background:rgba(0,0,0,0.2);border-radius:6px;padding:10px;margin-bottom:10px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-          <div>
-            <div style="font-size:10px;color:#6b8a72;margin-bottom:4px;">PDF 1</div>
-            <label style="display:block;border:1px dashed rgba(46,204,113,0.3);border-radius:4px;padding:8px;text-align:center;cursor:pointer;font-size:11px;color:#6b8a72;" id="lbl1">Selecionar PDF<input type="file" id="acumPdf1" accept=".pdf" style="display:none" onchange="loadAcumPDF(1,this)"></label>
-            <div id="acumFn1" style="font-size:10px;color:rgba(46,204,113,0.8);margin-top:3px;"></div>
-          </div>
-          <div>
-            <div style="font-size:10px;color:#6b8a72;margin-bottom:4px;">PDF 2</div>
-            <label style="display:block;border:1px dashed rgba(46,204,113,0.3);border-radius:4px;padding:8px;text-align:center;cursor:pointer;font-size:11px;color:#6b8a72;" id="lbl2">Selecionar PDF<input type="file" id="acumPdf2" accept=".pdf" style="display:none" onchange="loadAcumPDF(2,this)"></label>
-            <div id="acumFn2" style="font-size:10px;color:rgba(46,204,113,0.8);margin-top:3px;"></div>
-          </div>
-        </div>
-        <button onclick="aplicarAcumulado()" id="btnAplicar" disabled style="width:100%;background:rgba(46,204,113,0.15);border:1px solid rgba(46,204,113,0.4);color:rgba(46,204,113,0.9);font-size:11px;font-weight:700;padding:6px;cursor:pointer;border-radius:4px;opacity:0.5;">Calcular acumulado</button>
-      </div>
+      <div class="sec-label" id="chartLabel">Produção por caminhão (ton)</div>
       <div class="chart-wrap"><canvas id="chartCanvas"></canvas></div>
+      <button onclick="toggleAcumChart()" id="btnVerAcum" style="width:100%;margin-top:16px;padding:12px;background:rgba(241,196,15,0.1);border:1px solid rgba(241,196,15,0.4);color:rgba(241,196,15,0.9);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:4px;transition:all .3s;">📊 VER ACUMULADO PDF</button>
       <div id="acumChartWrap" style="display:none;margin-top:16px;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
           <div class="sec-label" style="margin-bottom:0;font-size:10px;opacity:0.7;">Acumulado PDF (ton)</div>
@@ -2687,6 +2688,40 @@ function parseAcumLinhas(text){
 }
 
 var _acumChartInst=null;
+var _acumLabels=null, _acumVals=null;
+function toggleAcumChart(){
+  var wrap=document.getElementById('acumChartWrap');
+  var btn=document.getElementById('btnVerAcum');
+  if(wrap.style.display==='none'||wrap.style.display===''){
+    if(!_acumLabels||!_acumVals){
+      btn.textContent='⚠️ CARREGUE OS PDFs NO ADM';
+      setTimeout(function(){btn.textContent='📊 VER ACUMULADO PDF';},2000);
+      return;
+    }
+    wrap.style.display='block';
+    btn.textContent='✕ FECHAR ACUMULADO';
+    btn.style.background='rgba(231,76,60,0.1)';
+    btn.style.borderColor='rgba(231,76,60,0.4)';
+    btn.style.color='rgba(231,76,60,0.9)';
+    desenharAcumChart();
+  } else {
+    wrap.style.display='none';
+    btn.textContent='📊 VER ACUMULADO ✅';
+    btn.style.background='rgba(241,196,15,0.1)';
+    btn.style.borderColor='rgba(241,196,15,0.4)';
+    btn.style.color='rgba(241,196,15,0.9)';
+  }
+}
+function desenharAcumChart(){
+  if(_acumChartInst){_acumChartInst.destroy();_acumChartInst=null;}
+  var ctx=document.getElementById('chartAcum');
+  if(!ctx)return;
+  _acumChartInst=new Chart(ctx.getContext('2d'),{
+    type:'bar',
+    data:{labels:_acumLabels,datasets:[{label:'Acumulado',data:_acumVals,backgroundColor:_acumVals.map(function(_,i){return i===_acumVals.length-1?'rgba(241,196,15,0.95)':i%2===0?'rgba(241,196,15,0.7)':'rgba(230,126,34,0.7)';}),borderWidth:1,borderRadius:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'top',offset:4,color:'#fff',font:{size:11,weight:'600'},backgroundColor:'rgba(0,0,0,0.5)',borderRadius:3,padding:{top:2,bottom:2,left:4,right:4},formatter:function(v){return v>0?(Math.round(v*10)/10)+' t':''}}},scales:{x:{ticks:{color:'#6b8a72',font:{size:9}}},y:{ticks:{color:'#6b8a72',font:{size:9}},grace:'15%'}}}
+  });
+}
 function aplicarAcumulado(){
   var d1=parseAcumLinhas(_acumPDFs[1]);
   var d2=parseAcumLinhas(_acumPDFs[2]);
@@ -2702,7 +2737,8 @@ function aplicarAcumulado(){
   labels.push('TOTAL');
   vals.push(totalAcum);
   document.getElementById('acumArea').style.display='none';
-  document.getElementById('acumChartWrap').style.display='block';
+  document.getElementById('acumChartWrap').style.display='none';
+  var btn=document.getElementById('btnVerAcum');if(btn){btn.textContent='📊 VER ACUMULADO PDF';btn.style.background='rgba(241,196,15,0.1)';btn.style.borderColor='rgba(241,196,15,0.4)';btn.style.color='rgba(241,196,15,0.9)';}
   if(_acumChartInst){_acumChartInst.destroy();_acumChartInst=null;}
   _acumChartInst=new Chart(document.getElementById('chartAcum').getContext('2d'),{
     type:'bar',
@@ -2713,6 +2749,7 @@ function aplicarAcumulado(){
 function limparAcumulado(){
   if(_acumChartInst){_acumChartInst.destroy();_acumChartInst=null;}
   document.getElementById('acumChartWrap').style.display='none';
+  var btn=document.getElementById('btnVerAcum');if(btn){btn.textContent='📊 VER ACUMULADO PDF';btn.style.background='rgba(241,196,15,0.1)';btn.style.borderColor='rgba(241,196,15,0.4)';btn.style.color='rgba(241,196,15,0.9)';}
   _acumPDFs={1:null,2:null};
   document.getElementById('acumFn1').textContent='';
   document.getElementById('acumFn2').textContent='';
