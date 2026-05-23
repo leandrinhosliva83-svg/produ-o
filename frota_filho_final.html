@@ -9,10 +9,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-<script>Chart.register(ChartDataLabels);</script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-<script>Chart.register(ChartDataLabels);</script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <style>
 :root{
   --bg:#0a0f0d;--bg2:#111a14;--bg3:#162019;
@@ -480,24 +476,6 @@ if (typeof pdfjsLib !== 'undefined') {
         </div>
       </div>
 
-
-      <div style="background:var(--bg2);border:1px solid var(--border);padding:16px 20px;margin-bottom:24px;position:relative;">
-        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--orange),var(--green));"></div>
-        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--orange);margin-bottom:14px;">📊 ACUMULADO PDF</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-          <div>
-            <div style="font-size:9px;color:var(--gray);letter-spacing:1px;margin-bottom:6px;">PDF 1</div>
-            <label style="display:block;border:1px dashed rgba(46,204,113,0.3);border-radius:4px;padding:10px;text-align:center;cursor:pointer;font-size:11px;color:var(--gray);" id="lbl1">↑ Selecionar PDF<input type="file" id="acumPdf1" accept=".pdf" style="display:none" onchange="loadAcumPDF(1,this)"></label>
-            <div id="acumFn1" style="font-size:10px;color:rgba(46,204,113,0.8);margin-top:4px;min-height:14px;"></div>
-          </div>
-          <div>
-            <div style="font-size:9px;color:var(--gray);letter-spacing:1px;margin-bottom:6px;">PDF 2</div>
-            <label style="display:block;border:1px dashed rgba(46,204,113,0.3);border-radius:4px;padding:10px;text-align:center;cursor:pointer;font-size:11px;color:var(--gray);" id="lbl2">↑ Selecionar PDF<input type="file" id="acumPdf2" accept=".pdf" style="display:none" onchange="loadAcumPDF(2,this)"></label>
-            <div id="acumFn2" style="font-size:10px;color:rgba(46,204,113,0.8);margin-top:4px;min-height:14px;"></div>
-          </div>
-        </div>
-        <button onclick="aplicarAcumulado()" id="btnAplicar" disabled style="width:100%;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.4);color:rgba(46,204,113,0.9);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:10px;cursor:pointer;border-radius:4px;opacity:0.5;">Calcular acumulado</button>
-      </div>
       <!-- METAS por codigo -->
       <div class="upload-cards">
         <div class="upload-card">
@@ -713,13 +691,6 @@ if (typeof pdfjsLib !== 'undefined') {
       </div>
       <div class="sec-label" id="chartLabel">Produção por caminhão (ton)</div>
       <div class="chart-wrap"><canvas id="chartCanvas"></canvas></div>
-      <div id="acumChartWrap" style="display:none;margin-top:16px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <div class="sec-label" style="margin-bottom:0;font-size:10px;opacity:0.7;">Acumulado PDF (ton)</div>
-          <button onclick="limparAcumulado()" style="background:transparent;border:none;color:rgba(231,76,60,0.6);font-size:10px;cursor:pointer;padding:0;">✕ limpar</button>
-        </div>
-        <div style="height:130px;"><canvas id="chartAcum"></canvas></div>
-      </div>
       <div class="sec-label">Detalhamento dos caminhões</div>
       <div class="trucks-grid" id="mTrucks"></div>
     </div>
@@ -1163,24 +1134,1278 @@ function getTruckVelHTML(emp, truckCode) {
 }
 
 function buildChart(trucks) {
-  _currentTrucks=trucks;
   if(chartInst){chartInst.destroy();chartInst=null;}
-  trucks=trucks.slice().sort(function(a,b){return (parseFloat(b.e||b.ton)||0)-(parseFloat(a.e||a.ton)||0);});
-  trucks=trucks.slice().sort(function(a,b){return (parseFloat(b.e||b.ton)||0)-(parseFloat(a.e||a.ton)||0);});
   var vals=trucks.map(function(t){return(parseFloat(t.e||t.ton)||0);});
-  var total=vals.reduce(function(s,v){return s+v;},0);
-  vals.push(total);
-  trucks.push({truckCode:'TOTAL'});
   var cl=document.getElementById('chartLabel'),cw=document.querySelector('.chart-wrap');
   if(!vals.some(function(v){return v>0;})){cw.style.display='none';cl.style.display='none';return;}
   cw.style.display='block';cl.style.display='flex';
-  (function(){
-  var n=trucks.length;
-  var fs=n<=6?12:n<=10?10:n<=15?8:7;
-  var pad=n<=6?{top:3,bottom:3,left:6,right:6}:{top:2,bottom:2,left:3,right:3};
-  var off=n<=6?6:4;
-  chartInst=new Chart(document.getElementById('chartCanvas').getContext('2d'),{type:'bar',data:{labels:trucks.map(function(t){return 'Cam. '+t.truckCode;}),datasets:[{label:'Producao',data:vals,backgroundColor:vals.map(function(_,i){return i%2===0?'rgba(46,204,113,0.7)':'rgba(26,53,143,0.7)';}),borderWidth:1,borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'top',offset:off,color:'#e8f5e9',font:{size:fs,weight:'600'},backgroundColor:'rgba(0,0,0,0.55)',borderRadius:4,padding:pad,formatter:function(v){return v>0?(Math.round(v*10)/10):''}}},scales:{x:{ticks:{color:'#6b8a72',font:{size:10}}},y:{ticks:{color:'#6b8a72',font:{size:10}},grace:'15%'}}}});
-})();
+  chartInst=new Chart(document.getElementById('chartCanvas').getContext('2d'),{type:'bar',data:{labels:trucks.map(function(t){return 'Cam. '+t.truckCode;}),datasets:[{label:'Produção',data:vals,backgroundColor:vals.map(function(_,i){return i%2===0?'rgba(46,204,113,0.7)':'rgba(26,53,143,0.7)';}),borderWidth:1,borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6b8a72',font:{size:10}}},y:{ticks:{color:'#6b8a72',font:{size:10}}}}}});
+}
+function closeModal(){document.getElementById('propModalBg').style.display='none';}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal();});
+
+function atualizarFarois() {
+  var LIMITE=15*60*1000,agora=Date.now();
+  ['CEM','CEMMA','COPLASA'].forEach(function(emp){
+    var el=document.getElementById('farol-'+emp);if(!el)return;
+    var dtD=updatedAt[emp].dia?new Date(updatedAt[emp].dia).getTime():0;
+    var dtX=updatedAt[emp].d1?new Date(updatedAt[emp].d1).getTime():0;
+    var rec=Math.max(dtD,dtX);
+    if(!rec)el.innerHTML='<div class="farol-luz alerta"></div><span class="farol-txt">Sem dados</span>';
+    else if(agora-rec>LIMITE)el.innerHTML='<div class="farol-luz alerta"></div><span class="farol-txt">'+Math.floor((agora-rec)/60000)+'min</span>';
+    else el.innerHTML='<div class="farol-luz ok"></div>';
+  });
+}
+setInterval(atualizarFarois,30000);
+
+function renderAdmTable() {
+  var wrap=document.getElementById('admTableWrap');if(!wrap)return;
+  var html='';
+  ['CEM','CEMMA','COPLASA'].forEach(function(emp){
+    ['dia','d1'].forEach(function(per){
+      var rows=db[emp][per]||[];if(!rows.length)return;
+      html+='<div style="font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#2ecc71;padding:16px 0 10px;border-bottom:1px solid rgba(46,204,113,0.18);">'+emp+' — '+(per==='dia'?'Dia Atual':'D-1')+'</div>'+
+        '<table style="margin-bottom:24px;"><thead><tr><th>Proprietário</th><th>Caminhão</th><th>Ton.</th><th>Viagens</th><th>Dist.</th></tr></thead><tbody>'+
+        rows.map(function(d){return '<tr><td>'+d.owner+'</td><td style="color:#2ecc71;font-size:11px;font-weight:600;">'+d.truckCode+'</td><td style="text-align:right;font-weight:600;">'+fmt(d.e)+'</td><td style="text-align:right;font-weight:600;">'+fmt(d.h)+'</td><td style="text-align:right;font-weight:600;">'+fmt(d.j)+'</td></tr>';}).join('')+
+        '</tbody></table>';
+    });
+  });
+  wrap.innerHTML=html||'<p style="color:#6b8a72;padding:20px 0">Nenhum dado carregado ainda.</p>';
+}
+function setUploaStatus(emp,per,hasData,dateStr){var el=document.getElementById('upd-'+emp+'-'+per);if(!el)return;el.style.color=hasData?'#2ecc71':'#6b8a72';el.textContent=hasData?'● '+dateStr:'● Sem dados';}
+
+function calcProjecao(realizado){var ag=new Date(),minD=(ag.getHours()*60+ag.getMinutes())-360;if(minD<0)minD+=1440;var minR=1440-minD;if(minD<=0||realizado<=0)return null;var med=realizado/minD;return{projecao:realizado+(med*minR),mediaPorMin:med*60,hDecorridas:(minD/60).toFixed(1),hRestantes:(minR/60).toFixed(1)};}
+function fmt(v){if(v===undefined||v===null||v===''||v==='—')return '—';var n=parseFloat(v);return isNaN(n)?v:n.toLocaleString('pt-BR',{maximumFractionDigits:2});}
+function fmtNum(v){if(!v)return '—';return Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtK(v){if(!v)return '—';if(v>=1000){var k=Math.round(v/100)/10;return k.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'k';}return Math.round(v).toLocaleString('pt-BR');}
+function fmtDate(iso){if(!iso)return '—';var d=new Date(iso);if(isNaN(d))return '—';return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}
+function showToast(ico,msg){document.getElementById('tIco').textContent=ico;document.getElementById('tMsg').textContent=msg;var t=document.getElementById('toast');t.classList.add('show');setTimeout(function(){t.classList.remove('show');},3500);}
+async function apagarDados(emp,per){if(!confirm('Apagar dados de '+emp+' '+(per==='dia'?'Dia':'D-1')+'?'))return;db[emp][per]=[];updatedAt[emp][per]='';renderGrid(emp);updateToggle(emp);setBarras();setUploaStatus(emp,per,false,'');await kvSet(emp+'_'+per,{data:[],updatedAt:''});showToast('🗑',emp+' '+(per==='dia'?'Dia':'D-1')+' apagado!');}
+function goStab(tab){document.getElementById('stab-planilhas').style.display=tab==='planilhas'?'block':'none';}
+
+(function(){var canvas=document.getElementById('ti-canvas');if(!canvas)return;var ctx=canvas.getContext('2d');var particles=[];function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}resize();window.addEventListener('resize',resize);for(var i=0;i<60;i++){particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.5+0.3,vx:(Math.random()-0.5)*0.3,vy:(Math.random()-0.5)*0.3,a:Math.random()*0.4+0.1});}function drawParticles(){if(!document.getElementById('telaInicial')||document.getElementById('telaInicial').style.display==='none')return;ctx.clearRect(0,0,canvas.width,canvas.height);particles.forEach(function(p){p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=canvas.width;if(p.x>canvas.width)p.x=0;if(p.y<0)p.y=canvas.height;if(p.y>canvas.height)p.y=0;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='rgba(46,204,113,'+p.a+')';ctx.fill();});requestAnimationFrame(drawParticles);}drawParticles();})();
+
+var rpms=JSON.parse(localStorage.getItem('frota_rpms')||'{"CEM":"","CEMMA":"","COPLASA":""}');
+function salvarRPM(emp,val){rpms[emp]=val?String(val).replace(/[^0-9]/g,''):'';localStorage.setItem('frota_rpms',JSON.stringify(rpms));atualizarRPMButtons();kvSet('rpms',rpms);}
+function atualizarRPMButtons(){['CEM','CEMMA','COPLASA'].forEach(function(emp){
+  // Modal de empresas
+  var el=document.getElementById('rpm-'+emp);
+  if(el){el.textContent=rpms[emp]?Number(rpms[emp]).toLocaleString('pt-BR')+' RPM':'— RPM';el.style.color=rpms[emp]?'#2ecc71':'rgba(46,204,113,0.3)';}
+  // Tela inicial
+  var ti=document.getElementById('rpm-ti-'+emp);
+  if(ti){ti.textContent=rpms[emp]?Number(rpms[emp]).toLocaleString('pt-BR')+' RPM':'— RPM';}
+  // Input ADM
+  var inp=document.getElementById('rpm-input-'+emp);
+  if(inp&&rpms[emp])inp.value=rpms[emp];
+});}
+async function carregarRPMs(){var j=await kvGet('rpms');if(j){rpms=j;localStorage.setItem('frota_rpms',JSON.stringify(rpms));atualizarRPMButtons();}}
+
+
+
+
+function fecharBanner() {
+  var el = document.getElementById('banner-alertas');
+  if (el) { el.style.display = 'none'; el.style.flexDirection = 'column'; el.innerHTML = ''; }
+}
+
+
+// ── SERVICE WORKER + NOTIFICAÇÃO PUSH ────────────────────────────────
+function registrarSW() {
+  if (!('serviceWorker' in navigator)) return;
+  // Inline SW como blob URL para funcionar no Vercel sem arquivo extra
+  var swCode = `
+self.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'AGENDAR_NOTIF') {
+    var alertas = e.data.alertas;
+    var delay = e.data.delay || 0;
+    setTimeout(function() {
+      if (alertas && alertas.length > 0) {
+        self.registration.showNotification('🚨 ALERTA DE META — Grupo Moreno', {
+          body: alertas.map(function(a){ return a.emp + ': ' + a.nome + ' — ' + a.pct + '% da meta'; }).join('\n'),
+          icon: 'https://moreno-o-chi.vercel.app/icon.png',
+          badge: 'https://moreno-o-chi.vercel.app/icon.png',
+          vibrate: [300, 100, 300, 100, 500],
+          requireInteraction: true,
+          tag: 'alerta-meta',
+          renotify: true,
+          silent: false
+        });
+      }
+    }, delay);
+  }
+});
+self.addEventListener('notificationclick', function(e) {
+  e.notification.close();
+  e.waitUntil(clients.openWindow('/'));
+});
+  `;
+  var blob = new Blob([swCode], {type: 'application/javascript'});
+  var swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl, {scope: '/'})
+    .then(function(reg) {
+      window._swReg = reg;
+      console.log('SW registrado');
+    }).catch(function(e){ console.log('SW erro:', e); });
+}
+
+
+// ── FIREBASE FCM ──────────────────────────────────────────────────────
+var firebaseConfig = {
+  apiKey: "AIzaSyAjjFMj0qbJlINPspy_mYslAwJtDI9jRWs",
+  authDomain: "frota-moreno.firebaseapp.com",
+  projectId: "frota-moreno",
+  storageBucket: "frota-moreno.firebasestorage.app",
+  messagingSenderId: "726316011876",
+  appId: "1:726316011876:web:45fd87f747603c417baa71"
+};
+var VAPID_KEY = "BNvQYHTKiFxqtjZ5nxVxjPP7PL81lzxXhL1JbmXQ18RtTqfs2CzjAyRZ3K039FlPin-zcvpMT6Kf4eeQOQXeZZU";
+var _fbApp = null, _fbMsg = null, _fcmToken = null;
+
+function iniciarFirebase() {
+  return new Promise(function(resolve, reject) {
+    try {
+      if (typeof firebase === 'undefined') { reject('Firebase SDK não carregado'); return; }
+      if (!_fbApp) {
+        _fbApp = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
+      }
+      _fbMsg = firebase.messaging(_fbApp);
+      resolve(_fbMsg); // SW é registrado no getToken diretamente
+      _fbMsg.onMessage(function(payload) {
+        var d = payload.notification || {};
+        showToast('🚨', d.title || 'Alerta de Meta');
+        tocarAlerta();
+      });
+    } catch(e) { reject(e); }
+  });
+}
+
+function obterTokenFCM() {
+  iniciarFirebase()
+    .then(function(msg) { return msg.getToken({ vapidKey: VAPID_KEY }); })
+    .then(function(token) {
+      if (token) {
+        _fcmToken = token;
+        var deviceKey = 'fcm_token_' + btoa(token.substring(0,20)).replace(/[^a-z0-9]/gi,'').substring(0,10);
+        kvSet(deviceKey, token);
+        showToast('🔔', 'Notificações push ativadas!');
+      }
+    })
+    .catch(function(e) { console.log('Token FCM erro:', e); });
+}
+
+function pedirPermissaoNotif() {
+  if (!('Notification' in window)) {
+    showToast('📵', 'Use Chrome no Android ou Safari iOS (adicione à tela de início).');
+    return;
+  }
+  if (Notification.permission === 'granted') {
+    notifAtivas = !notifAtivas;
+    atualizarBtnNotif();
+    showToast(notifAtivas ? '🔔' : '🔕', notifAtivas ? 'Ativando...' : 'Alertas desativados.');
+    if (notifAtivas) obterTokenFCM();
+    return;
+  }
+  Notification.requestPermission().then(function(perm) {
+    if (perm === 'granted') {
+      notifAtivas = true;
+      atualizarBtnNotif();
+      obterTokenFCM();
+    } else {
+      showToast('🔕', 'Permissão negada. Ative nas configurações do navegador.');
+    }
+  });
+}
+
+function enviarNotifPush(alertas) {
+  if (!notifAtivas || Notification.permission !== 'granted') return;
+  if (!alertas || !alertas.length) return;
+  // Tentar via SW (funciona com app fechado no Android Chrome)
+  if (window._swReg && window._swReg.active) {
+    window._swReg.active.postMessage({ type: 'AGENDAR_NOTIF', alertas: alertas, delay: 0 });
+    return;
+  }
+  // Fallback: notificação direta (só funciona com app aberto)
+  try {
+    new Notification('🚨 ALERTA DE META — Grupo Moreno', {
+      body: alertas.map(function(a){ return a.emp + ': ' + a.nome + ' — ' + a.pct + '% da meta'; }).join('\n'),
+      vibrate: [300,100,300,100,500],
+      requireInteraction: true,
+      tag: 'alerta-meta',
+      renotify: true
+    });
+  } catch(e) {}
+}
+
+// ── USUÁRIOS — localStorage ───────────────────────────────────────────
+
+// ── LOGIN ─────────────────────────────────────────────────────────────
+function toggleSenha() {
+  var inp = document.getElementById('l-senha');
+  var btn = document.getElementById('btn-olho');
+  if (!inp) return;
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    inp.type = 'password';
+    btn.textContent = '👁';
+  }
+}
+
+function login() {
+  var s = (document.getElementById('l-senha')||{value:''}).value.trim();
+  var err = document.getElementById('l-err');
+  if (err) err.style.display = 'none';
+  if (!s) return;
+
+  // ADM
+  if (s === 'admin123') {
+    usuarioAtual = { nome:'ADM', isAdm:true, verTudo:true };
+    sessionStorage.setItem('usrSessao', JSON.stringify(usuarioAtual));
+    document.getElementById('tela-login').style.display = 'none';
+    init();
+    return;
+  }
+
+  // Tentar local primeiro, depois Upstash
+  var base = lerUsuarios();
+  var u = base[s];
+  if (u) {
+    entrarComUsuario(u);
+    return;
+  }
+
+  // Buscar do Upstash (outro dispositivo pode ter cadastrado)
+  var btn = document.querySelector('.lbtn');
+  if (btn) btn.textContent = '...';
+  kvGet('usuarios').then(function(remoto) {
+    if (btn) btn.textContent = 'ENTRAR';
+    if (remoto && remoto[s]) {
+      // Sincronizar localmente
+      var local = lerUsuarios();
+      local[s] = remoto[s];
+      salvarUsuarios(local);
+      entrarComUsuario(remoto[s]);
+    } else {
+      if (err) err.style.display = 'block';
+      if (document.getElementById('l-senha')) document.getElementById('l-senha').value = '';
+    }
+  }).catch(function() {
+    if (btn) btn.textContent = 'ENTRAR';
+    if (err) err.style.display = 'block';
+    if (document.getElementById('l-senha')) document.getElementById('l-senha').value = '';
+  });
+}
+
+function entrarComUsuario(u) {
+  var temCod = u.codigos && u.codigos.length > 0;
+  var temFrt = u.frentes && u.frentes.length > 0;
+  usuarioAtual = {
+    nome: u.nome, isAdm: false, tipo: u.tipo||'tudo',
+    codigos: u.codigos||[], frentes: u.frentes||[],
+    verTudo: u.tipo==='tudo' || (!temCod && !temFrt)
+  };
+  sessionStorage.setItem('usrSessao', JSON.stringify(usuarioAtual));
+  document.getElementById('tela-login').style.display = 'none';
+  // Registrar token FCM vinculado ao usuário
+  registrarTokenUsuario(u.nome);
+  init();
+}
+
+function logout() {
+  sessionStorage.removeItem('usrSessao');
+  usuarioAtual = null;
+  voltarInicio();
+  document.getElementById('tela-login').style.display = 'flex';
+  if (document.getElementById('l-senha')) document.getElementById('l-senha').value = '';
+  if (document.getElementById('l-err')) document.getElementById('l-err').style.display = 'none';
+}
+
+// ── ABAS USUÁRIOS ─────────────────────────────────────────────────────
+function uTab(n) {
+  [0,1].forEach(function(i) {
+    var p = document.getElementById('up'+i);
+    var t = document.getElementById('ut'+i);
+    if (!p || !t) return;
+    if (i === n) {
+      p.style.display = 'block';
+      t.style.background = 'rgba(52,152,219,0.2)';
+      t.style.border = '1px solid rgba(52,152,219,0.4)';
+      t.style.color = '#3498db';
+    } else {
+      p.style.display = 'none';
+      t.style.background = 'none';
+      t.style.border = '1px solid rgba(255,255,255,0.1)';
+      t.style.color = 'rgba(255,255,255,0.4)';
+    }
+  });
+  if (n === 1) renderUsr();
+}
+
+function mudaTipoUsr() {
+  var tipo  = document.getElementById('u-tipo').value;
+  var wrap  = document.getElementById('u-cod-wrap');
+  var label = document.getElementById('u-cod-label');
+  var hint  = document.getElementById('u-cod-hint');
+  var frtW  = document.getElementById('u-frt-wrap');
+  if (!wrap) return;
+
+  if (tipo === 'tudo') {
+    wrap.style.display = 'none';
+  } else if (tipo === 'transporte') {
+    wrap.style.display = 'block';
+    if (frtW) frtW.style.display = 'none';
+    if (label) label.textContent = 'CÓD. PROPRIETÁRIO';
+    if (hint) hint.textContent = '⚠️ Separe por vírgula. Vazio = vê todos';
+  } else if (tipo === 'entrega') {
+    wrap.style.display = 'block';
+    if (frtW) frtW.style.display = 'none';
+    if (label) label.textContent = 'CÓD. FRENTE';
+    if (hint) hint.textContent = '⚠️ Separe por vírgula. Vazio = vê todos';
+  } else if (tipo === 'completo') {
+    wrap.style.display = 'block';
+    if (frtW) frtW.style.display = 'block';
+    if (label) label.textContent = 'CÓD. PROPRIETÁRIO (Transporte)';
+    if (hint) hint.textContent = '⚠️ Vazio = vê todos';
+  }
+}
+
+
+
+
+// ── FILTROS POR USUÁRIO ───────────────────────────────────────────────
+function filtrarPorUsuario(owners) {
+  if (!usuarioAtual || usuarioAtual.verTudo || usuarioAtual.isAdm) return owners;
+  // Tipo entrega não vê caminhões
+  if (usuarioAtual.tipo === 'entrega') return [];
+  if (!usuarioAtual.codigos || !usuarioAtual.codigos.length) return owners;
+  return owners.filter(function(o) {
+    return usuarioAtual.codigos.some(function(c) { return String(c).trim() === String(o.code).trim(); });
+  });
+}
+function filtrarFrentesPorUsuario(fr) {
+  if (!usuarioAtual || usuarioAtual.verTudo || usuarioAtual.isAdm) return fr;
+  // Tipo transporte não vê frentes
+  if (usuarioAtual.tipo === 'transporte') return [];
+  if (!usuarioAtual.frentes || !usuarioAtual.frentes.length) return fr;
+  return fr.filter(function(f) {
+    return usuarioAtual.frentes.some(function(c) { return String(c).trim() === String(f.codigo).trim(); });
+  });
+}
+
+// ── INIT: verificar sessão ────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  var inp = document.getElementById('l-senha');
+  if (inp) inp.addEventListener('keydown', function(e) { if (e.key === 'Enter') login(); });
+  try {
+    var s = sessionStorage.getItem('usrSessao');
+    if (s) {
+      usuarioAtual = JSON.parse(s);
+      document.getElementById('tela-login').style.display = 'none';
+      init();
+    }
+  } catch(e) {}
+});
+
+// ── VELOCIDADE ────────────────────────────────────────────────────────
+var dbVelocidade = { CEM:[], CEMMA:[], COPLASA:[] };
+
+function renderVelocidade(emp) {
+  // Re-renderiza o grid após carregar velocidade
+  if (empAtual === emp && tipoAtual === 'caminhao') {
+    renderGrid(emp);
+  }
+}
+
+function loadPDFVelocidade(inp, emp) {
+  var f = inp.files[0]; if (!f) return;
+  var reader = new FileReader();
+  reader.onload = async function(e) {
+    try {
+      // Ler PDF como texto usando FileReader
+      var typedArray = new Uint8Array(e.target.result);
+      // Usar pdfjsLib se disponível, senão tentar extrair texto direto
+      var texto = '';
+      try {
+        var pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
+        for (var pg = 1; pg <= pdf.numPages; pg++) {
+          var page = await pdf.getPage(pg);
+          var content = await page.getTextContent();
+          texto += content.items.map(function(i){ return i.str; }).join(' ') + '\n';
+        }
+      } catch(e2) {
+        // Tentar como texto binário
+        texto = new TextDecoder('latin1').decode(typedArray);
+      }
+      dbVelocidade[emp] = parsePDFVelocidade(texto);
+      var now = new Date().toISOString();
+      document.getElementById('pbar').classList.add('on');
+      await kvSet('vel_' + emp, { data: dbVelocidade[emp], updatedAt: now });
+      var el = document.getElementById('upd-' + emp + '-vel');
+      if (el) el.innerHTML = '● ' + fmtDate(now);
+      showToast('✅', emp + ' Velocidade: ' + dbVelocidade[emp].length + ' equipamentos');
+      renderVelocidade(emp);
+    } catch(err) {
+      console.log('Erro PDF vel:', err);
+      showToast('❌', 'Erro ao ler PDF.');
+    } finally {
+      document.getElementById('pbar').classList.remove('on');
+    }
+  };
+  reader.readAsArrayBuffer(f); inp.value = '';
+}
+
+function parsePDFVelocidade(texto) {
+  var resultado = [];
+
+  // Estratégia principal: buscar pares "Resumo do Equipamento: X ... Velocidade máxima: Y"
+  // e associar ao operador que aparece antes de cada resumo
+  var reResumo = /Resumo do Equipamento:\s*(\d+)[\s\S]*?Velocidade\s+m[a\u00e1]xima:\s*([\d.,]+)/gi;
+  var reQtd   = /Quantidade de registros:\s*(\d+)/i;
+  var m;
+
+  while ((m = reResumo.exec(texto)) !== null) {
+    var codEquip = m[1].trim();
+    var vel      = parseFloat(m[2].replace(',', '.'));
+    if (isNaN(vel) || vel <= 0) continue;
+
+    // Buscar o trecho antes deste resumo para achar o operador
+    var inicio = texto.lastIndexOf('Regional:', m.index);
+    if (inicio < 0) inicio = 0;
+    var trecho = texto.substring(inicio, m.index);
+
+    // Operador: número - NOME (não é CAVALO)
+    var reOper = /(\d{5,6})\s*-\s*(?!CAVALO)([A-Z][A-Z\s\u00c0-\u00ff]+?)(?=\s+\d{4}\s*-|\s*\n)/gi;
+    var mOper, codOper = codEquip, nomeOper = 'Equip. ' + codEquip;
+    while ((mOper = reOper.exec(trecho)) !== null) {
+      codOper  = mOper[1].trim();
+      nomeOper = mOper[2].trim();
+    }
+
+    // Quantidade de ocorrências
+    var qtdM = reQtd.exec(trecho + texto.substring(m.index, m.index + 200));
+    var ocorr = qtdM ? parseInt(qtdM[1]) : 1;
+
+    resultado.push({
+      codigo:      codOper,   // código do operador (para match com ownerCode)
+      frota:       codEquip,  // código do caminhão (para match com truckCode)
+      nome:        nomeOper,
+      velocidade:  vel,
+      ocorrencias: ocorr
+    });
+  }
+
+  return resultado;
+}
+
+async function apagarVelocidade(emp) {
+  dbVelocidade[emp] = [];
+  await kvSet('vel_' + emp, null);
+  var el = document.getElementById('upd-' + emp + '-vel');
+  if (el) el.innerHTML = '● Sem dados';
+  renderVelocidade(emp);
+  showToast('🗑', emp + ' velocidade apagada');
+}
+
+async function carregarVelocidade(emp) {
+  var j = await kvGet('vel_' + emp);
+  if (j && j.data && j.data.length) {
+    // Filtrar dados inválidos (velocidade acima de 250 = código de caminhão salvo errado)
+    var dados = j.data.filter(function(v) {
+      return v.velocidade && v.velocidade > 0 && v.velocidade <= 250;
+    });
+    dbVelocidade[emp] = dados;
+    var el = document.getElementById('upd-' + emp + '-vel');
+    if (el && j.updatedAt) el.innerHTML = '● ' + fmtDate(j.updatedAt) + (dados.length ? ' · ' + dados.length + ' reg.' : ' · dados inválidos, recarregue');
+  }
+}
+
+// ── INTERVALOS DE ALERTA ──────────────────────────────────────────────
+var _timerBanner = null;
+var _timerPush   = null;
+
+async function carregarIntervalos() {
+  var pi = await kvGet('intervalo_push')   || 5;
+  var bi = await kvGet('intervalo_banner') || 3;
+  var inp1 = document.getElementById('inp-intervalo-push');
+  var inp2 = document.getElementById('inp-intervalo-banner');
+  var lbl1 = document.getElementById('label-push');
+  var lbl2 = document.getElementById('label-banner');
+  if (inp1) inp1.value = pi;
+  if (inp2) inp2.value = bi;
+  if (lbl1) lbl1.textContent = 'Atual: a cada ' + pi + ' min';
+  if (lbl2) lbl2.textContent = 'Atual: a cada ' + bi + ' min';
+  iniciarTimerBanner(bi);
+  iniciarTimerPush(pi);
+}
+
+async function salvarIntervaloPush() {
+  var v = parseInt(document.getElementById('inp-intervalo-push').value) || 5;
+  await kvSet('intervalo_push', v);
+  var lbl = document.getElementById('label-push');
+  if (lbl) lbl.textContent = 'Atual: a cada ' + v + ' min';
+  iniciarTimerPush(v);
+  showToast('✅', 'Push: a cada ' + v + ' min');
+}
+
+async function salvarIntervaloBanner() {
+  var v = parseInt(document.getElementById('inp-intervalo-banner').value) || 3;
+  await kvSet('intervalo_banner', v);
+  var lbl = document.getElementById('label-banner');
+  if (lbl) lbl.textContent = 'Atual: a cada ' + v + ' min';
+  iniciarTimerBanner(v);
+  showToast('✅', 'Banner: a cada ' + v + ' min');
+}
+
+// Timer do banner na tela — verifica metas localmente
+function iniciarTimerBanner(minutos) {
+  if (_timerBanner) clearInterval(_timerBanner);
+  var ms = (minutos || 3) * 60 * 1000;
+  _timerBanner = setInterval(function() {
+    verificarMetasEMostrarBanner();
+  }, ms);
+}
+
+// Timer do push — chama o endpoint do Vercel
+function iniciarTimerPush(minutos) {
+  if (_timerPush) clearInterval(_timerPush);
+  var ms = (minutos || 5) * 60 * 1000;
+  _timerPush = setInterval(function() {
+    // Só envia se o usuário tiver permissão de notificação
+    if (notifAtivas && Notification.permission === 'granted') {
+      fetch('/api/check-metas').then(function(r) {
+        return r.json();
+      }).then(function(d) {
+        console.log('Push check:', d);
+      }).catch(function(e) {
+        console.log('Push erro:', e);
+      });
+    }
+  }, ms);
+}
+
+// ── TOKEN FCM POR USUÁRIO ─────────────────────────────────────────────
+function registrarTokenUsuario(nomeUsuario) {
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'granted') {
+    // Pedir permissão silenciosamente
+    Notification.requestPermission().then(function(perm) {
+      if (perm === 'granted') _salvarTokenUsuario(nomeUsuario);
+    });
+    return;
+  }
+  _salvarTokenUsuario(nomeUsuario);
+}
+
+function _salvarTokenUsuario(nomeUsuario) {
+  if (typeof firebase === 'undefined') { console.log('Firebase não carregado'); return; }
+
+  // Registrar SW primeiro, depois pegar token com a registration
+  navigator.serviceWorker.register('/firebase-messaging-sw.js')
+    .then(function(swReg) {
+      if (!_fbApp) {
+        _fbApp = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
+      }
+      _fbMsg = firebase.messaging(_fbApp);
+
+      // Passar swReg diretamente no getToken — forma correta no v10+
+      return _fbMsg.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: swReg });
+    })
+    .then(function(token) {
+      if (!token) { console.log('Token vazio — permissão negada?'); return; }
+      _fcmToken = token;
+      var chave = 'fcm_usr_' + nomeUsuario.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30);
+      kvSet(chave, { token: token, nome: nomeUsuario, ativo: true, updatedAt: new Date().toISOString() });
+      showToast('🔔', 'Push ativado para ' + nomeUsuario);
+      console.log('Token FCM salvo:', token.substring(0,20) + '...');
+    })
+    .catch(function(e) {
+      console.log('Token FCM erro:', e.message || e);
+      showToast('⚠️', 'Erro ao ativar push: ' + (e.message || e));
+    });
+}
+
+// Listar usuários com push ativo (para o ADM)
+async function listarTokensUsuarios() {
+  try {
+    var r = await fetch('https://splendid-ray-99496.upstash.io/keys/fcm_usr_*', {
+      headers: { Authorization: 'Bearer gQAAAAAAAYSoAAIgcDI0Mjk3MjcwYTJiYWQ0ZDExYTE3YTMzMzc1MzBhMTZmNw' }
+    });
+    var j = await r.json();
+    var lista = [];
+    if (j.result && j.result.length) {
+      for (var key of j.result) {
+        var d = await kvGet(key);
+        if (d) lista.push({ chave: key, nome: d.nome, ativo: d.ativo !== false, data: d.updatedAt });
+      }
+    }
+    return lista;
+  } catch(e) { return []; }
+}
+
+async function toggleTokenUsuario(chave, ativo) {
+  var d = await kvGet(chave);
+  if (d) { d.ativo = ativo; await kvSet(chave, d); }
+  renderTokensAdm();
+}
+
+async function renderTokensAdm() {
+  var el = document.getElementById('lista-tokens-adm');
+  if (!el) return;
+  el.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,0.3);">Carregando...</div>';
+  var lista = await listarTokensUsuarios();
+  if (!lista.length) {
+    el.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,0.3);">Nenhum celular cadastrado ainda.<br>Faça login no celular para registrar.</div>';
+    return;
+  }
+  el.innerHTML = lista.map(function(u) {
+    var cor = u.ativo ? '#2ecc71' : 'rgba(255,255,255,0.3)';
+    var data = u.data ? new Date(u.data).toLocaleDateString('pt-BR') : '—';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:4px;margin-bottom:6px;">'
+      + '<div>'
+        + '<div style="font-size:13px;font-weight:600;color:#fff;">' + u.nome + '</div>'
+        + '<div style="font-size:10px;color:rgba(255,255,255,0.35);">Último acesso: ' + data + '</div>'
+      + '</div>'
+      + '<div style="display:flex;align-items:center;gap:8px;">'
+        + '<span style="font-size:10px;color:' + cor + ';">' + (u.ativo ? '● Ativo' : '○ Inativo') + '</span>'
+        + '<button data-chave="' + u.chave + '" data-ativo="' + u.ativo + '" class="btn-toggle-push" style="background:rgba(255,255,255,0.06);border:1px solid var(--border);color:rgba(255,255,255,0.5);padding:4px 10px;font-size:11px;cursor:pointer;border-radius:3px;">'
+          + (u.ativo ? 'Desativar' : 'Ativar')
+        + '</button>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+}
+
+function toggleCelulares() {
+  var lista = document.getElementById('lista-tokens-adm');
+  var btn = document.getElementById('btn-cel-toggle');
+  var btnAtualizar = document.getElementById('btn-cel-atualizar');
+  if (!lista) return;
+  if (lista.style.display === 'none') {
+    lista.style.display = 'block';
+    btnAtualizar.style.display = 'block';
+    btn.textContent = '▲ Ocultar';
+    renderTokensAdm();
+  } else {
+    lista.style.display = 'none';
+    btnAtualizar.style.display = 'none';
+    btn.textContent = '▼ Ver';
+  }
+}
+
+function toggleUsuariosList() {
+  var el = document.getElementById('up1');
+  if (!el) return;
+  if (el.style.display === 'none') {
+    el.style.display = 'block';
+    document.getElementById('up0').style.display = 'none';
+  } else {
+    el.style.display = 'none';
+    document.getElementById('up0').style.display = 'block';
+  }
+}
+
+function verificarMetasEMostrarBanner() {
+  var alertas = [];
+  var emps = ['CEM', 'CEMMA', 'COPLASA'];
+  emps.forEach(function(emp) {
+    var rows = db[emp] && db[emp][periodoAtivo[emp]] ? db[emp][periodoAtivo[emp]] : [];
+    if (!rows.length) return;
+    // Agrupar por proprietário
+    var grouped2 = {};
+    rows.forEach(function(d) {
+      var k = d.ownerCode;
+      if (!k) return;
+      if (!grouped2[k]) grouped2[k] = { nome: d.owner, code: k, total: 0 };
+      grouped2[k].total += parseFloat(d.e || 0) || 0;
+    });
+    Object.values(grouped2).forEach(function(o) {
+      var meta = getMetaForOwner(o.code);
+      if (!meta || o.total <= 0) return;
+      var proj = calcProjecao(o.total);
+      if (!proj) return;
+      var pct = Math.min(Math.round((proj.projecao / meta) * 100), 150);
+      if (pct < 100) {
+        alertas.push({ emp: emp, nome: o.nome, pct: pct, proj: proj.projecao, meta: meta });
+      }
+    });
+    // Frentes
+    var frRows = dbEntrega[emp] || [];
+    frRows.forEach(function(r) {
+      var meta = getMetaForFrente(r.codigo);
+      if (!meta || !r.entrega || r.entrega <= 0) return;
+      var proj = calcProjecao(r.entrega);
+      if (!proj) return;
+      var pct = Math.min(Math.round((proj.projecao / meta) * 100), 150);
+      if (pct < 100) {
+        alertas.push({ emp: emp, nome: r.apelido || ('Frente ' + r.codigo), pct: pct, proj: proj.projecao, meta: meta });
+      }
+    });
+  });
+  if (alertas.length) mostrarBannerAlertas(alertas);
+}
+
+
+
+function toggleAdmBloco(id, header) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var arrow = header ? header.querySelector('span') : null;
+  if (el.style.display === 'none') {
+    el.style.display = 'block';
+    if (arrow) arrow.textContent = '▲';
+  } else {
+    el.style.display = 'none';
+    if (arrow) arrow.textContent = '▼';
+  }
+}
+
+// ══════════════════════════════════════════
+// USUÁRIOS — fonte única: Upstash
+// Fallback: localStorage chave frota_usr_v2
+// ══════════════════════════════════════════
+
+function lerUsuarios() {
+  try { var s = localStorage.getItem('frota_usr_v2'); return s ? JSON.parse(s) : {}; }
+  catch(e) { return {}; }
+}
+
+function salvarUsuarios(obj) {
+  localStorage.setItem('frota_usr_v2', JSON.stringify(obj));
+  usuarios = obj;
+  kvSet('usuarios', obj);
+}
+
+// ── Carregar do Upstash ao iniciar ────────────────────────────────────
+async function carregarUsuariosUpstash() {
+  try {
+    var remoto = await kvGet('usuarios');
+    if (remoto && typeof remoto === 'object' && Object.keys(remoto).length) {
+      localStorage.setItem('frota_usr_v2', JSON.stringify(remoto));
+      usuarios = remoto;
+    } else {
+      usuarios = lerUsuarios();
+    }
+  } catch(e) { usuarios = lerUsuarios(); }
+}
+
+// ── Salvar usuário ────────────────────────────────────────────────────
+function salvarUsr() {
+  var nome  = (document.getElementById('u-nome')  || {}).value || '';
+  var senha = (document.getElementById('u-senha') || {}).value || '';
+  var tipo  = (document.getElementById('u-tipo')  || {value:'tudo'}).value;
+  var cod   = (document.getElementById('u-cod')   || {}).value || '';
+  var frt   = (document.getElementById('u-frt')   || {}).value || '';
+
+  nome  = nome.trim();
+  senha = senha.trim();
+  cod   = cod.trim();
+  frt   = frt.trim();
+
+  if (!nome || !senha) { showToast('⚠️', 'Informe nome e senha.'); return; }
+  if (senha === 'admin123') { showToast('⚠️', 'Senha reservada para ADM.'); return; }
+
+  var listaCod = cod ? cod.split(',').map(function(c){return c.trim();}).filter(Boolean) : [];
+  var listaFrt = frt ? frt.split(',').map(function(c){return c.trim();}).filter(Boolean) : [];
+
+  var base = Object.assign({}, lerUsuarios(), usuarios || {});
+  // Se está editando, remover a senha antiga
+  if (_editandoChave && _editandoChave !== senha) {
+    delete base[_editandoChave];
+  }
+  _editandoChave = null;
+  base[senha] = {
+    nome:    nome,
+    tipo:    tipo,
+    codigos: (tipo === 'transporte' || tipo === 'completo') ? listaCod : [],
+    frentes: (tipo === 'entrega'    || tipo === 'completo') ? listaFrt : [],
+    verTudo: tipo === 'tudo' || (listaCod.length === 0 && listaFrt.length === 0)
+  };
+
+  salvarUsuarios(base);
+
+  // Limpar campos
+  ['u-nome','u-senha','u-cod','u-frt'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('u-tipo').value = 'tudo';
+  mudaTipoUsr();
+
+  showToast('✅', nome + ' salvo!');
+
+  // Atualizar lista se estiver aberta
+  var upLista = document.getElementById('up-lista');
+  if (upLista && upLista.style.display !== 'none') renderUsr();
+}
+
+// ── Renderizar lista ──────────────────────────────────────────────────
+function renderUsr() {
+  renderUsrNaLista('up-lista');
+}
+
+function _montarListaUsr(base, el) {
+  var keys = Object.keys(base);
+  if (!keys.length) {
+    el.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,0.35);padding:8px 0;">Nenhum usuário cadastrado.</div>';
+    return;
+  }
+
+  var corTipo = { tudo:'#2ecc71', transporte:'#3498db', entrega:'#1abc9c', completo:'#f39c12' };
+  var lblTipo = { tudo:'🔓 Total', transporte:'🚛 Transporte', entrega:'🌿 Entrega', completo:'🚛🌿 Completo' };
+
+  el.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:12px;">'
+    + '<tr style="border-bottom:1px solid var(--border);">'
+    + '<th style="text-align:left;padding:6px 8px;font-size:10px;color:rgba(255,255,255,0.4);font-weight:600;">NOME</th>'
+    + '<th style="text-align:left;padding:6px 8px;font-size:10px;color:rgba(255,255,255,0.4);font-weight:600;">TIPO</th>'
+    + '<th style="text-align:left;padding:6px 8px;font-size:10px;color:rgba(255,255,255,0.4);font-weight:600;">CÓDIGO</th>'
+    + '<th style="padding:6px 4px;"></th>'
+    + '</tr>'
+    + keys.map(function(senha) {
+        var u = base[senha];
+        var cor = corTipo[u.tipo] || '#2ecc71';
+        var lbl = lblTipo[u.tipo] || '🔓 Total';
+        var cods = (u.codigos||[]).concat(u.frentes||[]).join(', ') || '—';
+        return '<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">'
+          + '<td style="padding:8px;color:#fff;font-weight:500;">' + u.nome + '</td>'
+          + '<td style="padding:8px;"><span style="font-size:10px;color:' + cor + ';">' + lbl + '</span></td>'
+          + '<td style="padding:8px;color:rgba(255,255,255,0.4);font-size:11px;">' + cods + '</td>'
+          + '<td style="padding:8px;white-space:nowrap;">'
+            + '<button data-k="' + senha + '" class="eUsr" style="background:rgba(52,152,219,0.15);border:1px solid rgba(52,152,219,0.25);color:#3498db;padding:4px 8px;font-size:11px;cursor:pointer;border-radius:3px;margin-right:4px;">✏️</button>'
+            + '<button data-k="' + senha + '" class="xUsr" style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.2);color:#e74c3c;padding:4px 8px;font-size:11px;cursor:pointer;border-radius:3px;">✕</button>'
+          + '</td>'
+          + '</tr>';
+      }).join('')
+    + '</table>';
+
+  // Editar
+  el.querySelectorAll('.eUsr').forEach(function(b) {
+    b.onclick = function() {
+      var k = b.getAttribute('data-k');
+      var d = Object.assign({}, lerUsuarios(), usuarios || {});
+      var u = d[k]; if (!u) return;
+      document.getElementById('u-nome').value  = u.nome  || '';
+      document.getElementById('u-senha').value = k;
+      document.getElementById('u-tipo').value  = u.tipo  || 'tudo';
+      mudaTipoUsr();
+      if (document.getElementById('u-cod')) document.getElementById('u-cod').value = (u.codigos||[]).join(',');
+      if (document.getElementById('u-frt')) document.getElementById('u-frt').value = (u.frentes||[]).join(',');
+      _editandoChave = k; // guardar chave — só apaga ao salvar
+      // Fechar lista
+      var upL = document.getElementById('up-lista');
+      if (upL) upL.style.display = 'none';
+      var ubL = document.getElementById('ubtn-lista');
+      if (ubL) { ubL.style.background='rgba(255,255,255,0.05)'; ubL.style.color='rgba(255,255,255,0.5)'; ubL.style.border='1px solid rgba(255,255,255,0.1)'; }
+      var un = document.getElementById('u-nome'); if (un) { un.scrollIntoView({behavior:'smooth',block:'center'}); un.focus(); }
+      showToast('✏️', 'Editando ' + u.nome);
+    };
+  });
+
+  // Excluir
+  el.querySelectorAll('.xUsr').forEach(function(b) {
+    b.onclick = function() {
+      var k = b.getAttribute('data-k');
+      var d = Object.assign({}, lerUsuarios(), usuarios || {});
+      var nome = (d[k]||{}).nome || k;
+      if (!confirm('Excluir "' + nome + '"?')) return;
+      delete d[k];
+      salvarUsuarios(d);
+      renderUsr();
+    };
+  });
+}
+
+// ── Toggle painéis ────────────────────────────────────────────────────
+function togglePainelUsr(id) {
+  // Mapear ids da aba principal e da aba digitação
+  var mapBtns = {
+    'up-lista':     'ubtn-lista',
+    'up-cel':       'ubtn-cel',
+    'up-dig-lista': 'ubtn-dig-lista',
+    'up-dig-cel':   'ubtn-dig-cel'
+  };
+  // Fechar todos os painéis do mesmo grupo
+  var grupo = (id === 'up-dig-lista' || id === 'up-dig-cel')
+    ? ['up-dig-lista','up-dig-cel']
+    : ['up-lista','up-cel'];
+
+  grupo.forEach(function(pid) {
+    var el  = document.getElementById(pid);
+    var btn = document.getElementById(mapBtns[pid]);
+    if (!el) return;
+    if (pid === id) {
+      var abrir = el.style.display === 'none';
+      el.style.display = abrir ? 'block' : 'none';
+      if (btn) {
+        btn.style.background = abrir ? 'rgba(52,152,219,0.15)' : 'rgba(255,255,255,0.05)';
+        btn.style.color      = abrir ? '#3498db' : 'rgba(255,255,255,0.4)';
+        btn.style.border     = abrir ? '1px solid rgba(52,152,219,0.3)' : '1px solid rgba(255,255,255,0.1)';
+      }
+      if (abrir) {
+        if (pid === 'up-lista' || pid === 'up-dig-lista') renderUsrNaLista(pid);
+        if (pid === 'up-cel'   || pid === 'up-dig-cel')   renderTokensAdm();
+      }
+    } else {
+      el.style.display = 'none';
+      if (btn) { btn.style.background='rgba(255,255,255,0.05)'; btn.style.color='rgba(255,255,255,0.4)'; btn.style.border='1px solid rgba(255,255,255,0.1)'; }
+    }
+  });
+}
+
+function renderUsrNaLista(painelId) {
+  // Determinar qual elemento de lista usar
+  var listaId = (painelId === 'up-dig-lista') ? 'usr-lista-dig' : 'usr-lista';
+  var el = document.getElementById(listaId);
+  if (!el) return;
+  el.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,0.4);padding:6px 0;">Carregando...</div>';
+
+  kvGet('usuarios').then(function(remoto) {
+    var local = lerUsuarios();
+    var base  = Object.assign({}, local, remoto || {});
+    if (remoto && Object.keys(remoto).length) {
+      localStorage.setItem('frota_usr_v2', JSON.stringify(base));
+      usuarios = base;
+    }
+    _montarListaUsr(base, el);
+  }).catch(function() {
+    _montarListaUsr(lerUsuarios(), el);
+  });
+}
+
+function abrirCadastroRapido() {
+  var senha = prompt('Senha ADM:');
+  if (senha !== SENHA_ADM) { alert('Senha incorreta.'); return; }
+  empAtual = 'ADM';
+  document.getElementById('telaInicial').style.display = 'none';
+  document.getElementById('btnVoltar').style.display = 'flex';
+  document.getElementById('view-adm').style.display = 'block';
+  document.getElementById('view-cliente').style.display = 'none';
+  document.getElementById('view-entrega').style.display = 'none';
+  if (initDone) { atualizarFarois(); renderAdmTable(); }
+  else { pendingAdm = true; }
+  // Scroll até o cadastro
+  setTimeout(function() {
+    var el = document.getElementById('u-nome');
+    if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.focus(); }
+  }, 300);
+}
+
+// ── ABA DIGITAÇÃO ─────────────────────────────────────────────────────
+function goStab(id) {
+  ['planilhas','digitacao'].forEach(function(s) {
+    var el = document.getElementById('stab-'+s);
+    var btn = document.querySelector('.adm-stab[onclick*=\''+s+'\']');
+    if (!el) return;
+    if (s === id) {
+      el.style.display = 'block';
+      if (btn) btn.classList.add('active');
+      if (s === 'digitacao') carregarDig();
+    } else {
+      el.style.display = 'none';
+      if (btn) btn.classList.remove('active');
+    }
+  });
+}
+
+function carregarDig() {
+  // Carregar intervalos
+  kvGet('intervalo_push').then(function(v) {
+    var el = document.getElementById('inp-dig-push');
+    var lb = document.getElementById('lbl-dig-push');
+    if (el && v) el.value = v;
+    if (lb) lb.textContent = 'Atual: ' + (v||5) + ' min';
+  });
+  kvGet('intervalo_banner').then(function(v) {
+    var el = document.getElementById('inp-dig-banner');
+    var lb = document.getElementById('lbl-dig-banner');
+    if (el && v) el.value = v;
+    if (lb) lb.textContent = 'Atual: ' + (v||3) + ' min';
+  });
+  // Carregar metas na aba digitação
+  renderMetasDig();
+}
+
+function mudaTipoUd() {
+  var tipo = (document.getElementById('ud-tipo')||{value:'tudo'}).value;
+  var wrap = document.getElementById('ud-cod-wrap');
+  var label = document.getElementById('ud-cod-label');
+  var frtW = document.getElementById('ud-frt-wrap');
+  if (!wrap) return;
+  if (tipo === 'tudo') {
+    wrap.style.display = 'none';
+  } else if (tipo === 'transporte') {
+    wrap.style.display = 'block';
+    if (frtW) frtW.style.display = 'none';
+    if (label) label.textContent = 'CÓD. PROPRIETÁRIO';
+  } else if (tipo === 'entrega') {
+    wrap.style.display = 'block';
+    if (frtW) frtW.style.display = 'none';
+    if (label) label.textContent = 'CÓD. FRENTE';
+  } else if (tipo === 'completo') {
+    wrap.style.display = 'block';
+    if (frtW) frtW.style.display = 'block';
+    if (label) label.textContent = 'CÓD. PROPRIETÁRIO';
+  }
+}
+
+function salvarUsrDig() {
+  var nome  = (document.getElementById('ud-nome')||{value:''}).value.trim();
+  var senha = (document.getElementById('ud-senha')||{value:''}).value.trim();
+  var tipo  = (document.getElementById('ud-tipo')||{value:'tudo'}).value;
+  var cod   = (document.getElementById('ud-cod')||{value:''}).value.trim();
+  var frt   = (document.getElementById('ud-frt')||{value:''}).value.trim();
+  if (!nome||!senha) { showToast('⚠️','Informe nome e senha.'); return; }
+  if (senha==='admin123') { showToast('⚠️','Senha reservada.'); return; }
+  var listaCod = cod ? cod.split(',').map(function(c){return c.trim();}).filter(Boolean) : [];
+  var listaFrt = frt ? frt.split(',').map(function(c){return c.trim();}).filter(Boolean) : [];
+  var base = Object.assign({}, lerUsuarios(), usuarios||{});
+  if (_editandoChave && _editandoChave !== senha) delete base[_editandoChave];
+  _editandoChave = null;
+  base[senha] = { nome:nome, tipo:tipo, codigos:(tipo==='transporte'||tipo==='completo')?listaCod:[], frentes:(tipo==='entrega'||tipo==='completo')?listaFrt:[], verTudo:tipo==='tudo'||(listaCod.length===0&&listaFrt.length===0) };
+  salvarUsuarios(base);
+  ['ud-nome','ud-senha','ud-cod','ud-frt'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('ud-tipo').value='tudo'; mudaTipoUd();
+  showToast('✅', nome+' salvo!');
+}
+
+function adicionarMetaDig() {
+  var tipo = (document.getElementById('met-dig-tipo')||{value:'caminhao'}).value;
+  var cod  = (document.getElementById('met-dig-cod')||{value:''}).value.trim();
+  var val  = parseFloat((document.getElementById('met-dig-val')||{value:''}).value);
+  if (!cod||isNaN(val)||val<=0) { showToast('⚠️','Informe código e meta.'); return; }
+  var chave = tipo==='entrega' ? 'f_'+cod : cod;
+  metas[chave] = val;
+  kvSet('metas', metas);
+  localStorage.setItem('frota_metas', JSON.stringify(metas));
+  document.getElementById('met-dig-cod').value='';
+  document.getElementById('met-dig-val').value='';
+  renderMetasDig();
+  showToast('✅','Meta salva: '+chave+' = '+val+'t');
+}
+
+function renderMetasDig() {
+  var el = document.getElementById('met-dig-lista');
+  if (!el) return;
+  var keys = Object.keys(metas);
+  if (!keys.length) { el.innerHTML='<div style="font-size:11px;color:rgba(255,255,255,0.3);">Nenhuma meta.</div>'; return; }
+  el.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:6px;">'
+    + keys.map(function(k) {
+        var tipo = k.startsWith('f_') ? '🌿 Frente' : '🚛 Cam.';
+        var cod  = k.startsWith('f_') ? k.slice(2) : k;
+        return '<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">'
+          + '<td style="padding:6px 8px;color:rgba(255,255,255,0.5);font-size:10px;">'+tipo+'</td>'
+          + '<td style="padding:6px 8px;color:#fff;">'+cod+'</td>'
+          + '<td style="padding:6px 8px;color:var(--orange);font-weight:600;">'+metas[k]+'t</td>'
+          + '<td style="padding:6px;"><button data-k="'+k+'" class="xMet" style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.2);color:#e74c3c;padding:3px 8px;font-size:11px;cursor:pointer;border-radius:3px;">✕</button></td>'
+          + '</tr>';
+      }).join('')
+    + '</table>';
+  el.querySelectorAll('.xMet').forEach(function(b) {
+    b.onclick = function() {
+      delete metas[b.getAttribute('data-k')];
+      kvSet('metas', metas);
+      localStorage.setItem('frota_metas', JSON.stringify(metas));
+      renderMetasDig();
+    };
+  });
+}
+
+async function salvarIntervaloPushDig() {
+  var v = parseInt(document.getElementById('inp-dig-push').value)||5;
+  await kvSet('intervalo_push', v);
+  var lb = document.getElementById('lbl-dig-push');
+  if (lb) lb.textContent = 'Atual: '+v+' min';
+  iniciarTimerPush(v);
+  showToast('✅','Push: a cada '+v+' min');
+}
+
+async function salvarIntervaloBannerDig() {
+  var v = parseInt(document.getElementById('inp-dig-banner').value)||3;
+  await kvSet('intervalo_banner', v);
+  var lb = document.getElementById('lbl-dig-banner');
+  if (lb) lb.textContent = 'Atual: '+v+' min';
+  iniciarTimerBanner(v);
+  showToast('✅','Banner: a cada '+v+' min');
+}
+
+function testarBanner() {
+  // Verificar com dados reais primeiro
+  verificarMetasEMostrarBanner();
+  // Se não tiver alertas, mostrar um exemplo para testar o visual
+  var el = document.getElementById('banner-alertas');
+  if (el && (!el.innerHTML || el.style.display === 'none')) {
+    mostrarBannerAlertas([
+      { emp: 'TESTE', nome: 'Frente Exemplo', pct: 65, proj: 650, meta: 1000 },
+    ]);
+    showToast('🔔', 'Banner de teste ativado!');
+  }
+}
+
+// ── PREVISÃO DE CHUVA ─────────────────────────────────────────────────
+var _cidadesChuva = {
+  'chuva-cem':    { emp:'CEM',    cidade:'Luiz Antônio',    lat:-21.5589, lon:-47.7758 },
+  'chuva-cemma':  { emp:'CEMMA',  cidade:'Monte Aprazível', lat:-20.7739, lon:-49.7189 },
+  'chuva-coplasa':{ emp:'COPLASA',cidade:'Planalto',        lat:-21.0411, lon:-49.9328 }
+};
+
+var _diasSemana = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+var _iconeChuva = function(mm) { return mm > 15 ? '⛈' : mm > 5 ? '🌧' : mm > 1 ? '🌦' : '☀️'; };
+var _getCondicao = function(code) {
+  if (code === 0) return 'Céu limpo';
+  if (code <= 3) return 'Parcialmente nublado';
+  if (code <= 49) return 'Nublado / Névoa';
+  if (code <= 59) return 'Garoa';
+  if (code <= 69) return 'Chuva';
+  if (code <= 79) return 'Neve';
+  if (code <= 84) return 'Chuva e trovoada';
+  return 'Tempestade';
+};
+
+async function carregarChuva() {
+  for (var id in _cidadesChuva) {
+    try { await carregarChuvaUnidade(id, _cidadesChuva[id]); }
+    catch(e) { console.log('Chuva erro:', id, e); }
+  }
+}
+
+async function carregarChuvaUnidade(id, cidade) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  try {
+    var url = 'https://api.open-meteo.com/v1/forecast?latitude='+cidade.lat+'&longitude='+cidade.lon
+      + '&daily=precipitation_sum,precipitation_probability_max,temperature_2m_max,temperature_2m_min,weathercode'
+      + '&current_weather=true&timezone=America%2FSao_Paulo&forecast_days=7';
+    var r = await fetch(url);
+    var d = await r.json();
+    var temp     = d.current_weather ? Math.round(d.current_weather.temperature) : '—';
+    var wcode    = d.current_weather ? d.current_weather.weathercode : 0;
+    var hoje_mm  = d.daily.precipitation_sum[0] || 0;
+    var probHoje = d.daily.precipitation_probability_max[0] || 0;
+    var semana   = d.daily.precipitation_sum.slice(0,7).reduce(function(a,b){return a+(b||0);},0);
+    var tmax     = d.daily.temperature_2m_max[0] || '—';
+    var tmin     = d.daily.temperature_2m_min[0] || '—';
+    var icon     = _iconeChuva(hoje_mm);
+    var badgeClass = probHoje >= 70 ? 'danger' : probHoje >= 40 ? 'warn' : 'ok';
+    var badgeText  = probHoje >= 70 ? 'Chuva intensa' : probHoje >= 40 ? 'Chuva moderada' : 'Sem chuva prevista';
+    var condicao   = _getCondicao(wcode);
+    // Data atual
+    var dEl = document.getElementById('cw-data-hoje');
+    if (dEl) {
+      var nd = new Date();
+      dEl.textContent = nd.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+    }
+    el.className = 'cw-card';
+    el.innerHTML = '<span class="cw-icon2">'+icon+'</span>'
+      + '<div class="cw-left">'
+        + '<div class="cw-emp2">'+cidade.emp+'</div>'
+        + '<div class="cw-city">'+cidade.cidade+', SP</div>'
+        + '<div class="cw-metrics">'
+          + '<div class="cw-m"><div class="cw-mv">'+hoje_mm.toFixed(0)+'mm</div><div class="cw-ml">HOJE</div></div>'
+          + '<div class="cw-sep"></div>'
+          + '<div class="cw-m"><div class="cw-mv">'+semana.toFixed(0)+'mm</div><div class="cw-ml">7 DIAS</div></div>'
+          + '<div class="cw-sep"></div>'
+          + '<div class="cw-m"><div class="cw-mv">'+probHoje+'%</div><div class="cw-ml">PROB.</div></div>'
+        + '</div>'
+        + '<span class="cw-badge '+badgeClass+'">'+badgeText+'</span>'
+      + '</div>'
+      + '<div class="cw-right"><div class="cw-temp2">'+temp+'°</div><div class="cw-cond">'+condicao+'</div><div style="font-size:9px;color:rgba(255,255,255,0.25);margin-top:4px;">↑'+tmax+'° ↓'+tmin+'°</div></div>';
+  } catch(e) {
+    el.className = 'cw-card';
+    el.innerHTML = '<div class="cw-left"><div class="cw-emp2">'+cidade.emp+'</div><div class="cw-city">'+cidade.cidade+'</div><div style="font-size:10px;color:rgba(255,255,255,0.2);margin-top:8px;">Indisponível</div></div>';
+  }
+}
+
+var _chuvaPanelAberto = false;
+function toggleChuvaPanel() {
+  _chuvaPanelAberto = !_chuvaPanelAberto;
+  var w = document.getElementById('chuva-widget');
+  if (!w) return;
+  if (_chuvaPanelAberto) {
+    w.style.display = 'block';
+    carregarChuva();
+  } else {
+    w.style.display = 'none';
+  }
+}
+
+function tocarAlerta() {
+  if (typeof _alertaTIAtivo !== "undefined" && !_alertaTIAtivo) return;
+  try {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    function beep(freq, start, dur, vol) {
+      var o = ctx.createOscillator();
+      var g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = freq;
+      o.type = 'square';
+      g.gain.setValueAtTime(vol, ctx.currentTime + start);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+      o.start(ctx.currentTime + start);
+      o.stop(ctx.currentTime + start + dur + 0.05);
+    }
+    beep(880, 0.0, 0.12, 0.4);
+    beep(660, 0.15, 0.12, 0.4);
+    beep(880, 0.30, 0.12, 0.4);
+    beep(440, 0.45, 0.25, 0.5);
+  } catch(e) {}
+  try { if (navigator.vibrate) navigator.vibrate([200,100,200,100,400]); } catch(e) {}
+}
+
+function mostrarBannerAlertas(alertas) {
+  if (typeof _alertaTIAtivo !== "undefined" && !_alertaTIAtivo) return;
+  var el = document.getElementById('banner-alertas');
+  if (!el) return;
+  if (!alertas.length) { el.style.display = 'none'; el.innerHTML = ''; return; }
+
+  el.style.display = 'flex';
+
+  el.innerHTML = alertas.map(function(a) {
+    var cor = a.pct < 50 ? '#e74c3c' : a.pct < 70 ? '#e67e22' : '#f1c40f';
+    var barW = Math.min(a.pct, 100);
+    return '<div class="banner-item">'      + '<div style="flex:1;min-width:0;">'        + '<div style="font-size:9px;font-weight:700;letter-spacing:1px;color:' + cor + ';margin-bottom:2px;">' + a.emp + ' · ' + a.pct + '%</div>'        + '<div style="font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;">' + a.nome + '</div>'        + '<div style="height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;">'          + '<div style="height:100%;width:' + barW + '%;background:' + cor + ';border-radius:2px;"></div>'        + '</div>'        + '<div style="font-size:9px;color:rgba(255,255,255,0.35);margin-top:3px;">' + fmtNum(a.proj) + 't proj · meta ' + fmtNum(a.meta) + 't</div>'      + '</div>'      + '<button class="banner-fechar" onclick="fecharBanner(this)">✕</button>'    + '</div>';
+  }).join('');
+  tocarAlerta();
+}
+
+
+// ── ENTRADA DIRETA (sem modal) ─────────────────────────────────────────
+
+function ir(emp, tipo) {
+  try {
+    entrarDireto(emp, tipo);
+  } catch(e) {
+    alert('Erro: ' + e.message);
+  }
+}
+
+function entrarDireto(emp, tipo) {
+  tipoAtual = tipo;
+  empAtual = emp;
+  var ti = document.getElementById('telaInicial');
+  if (ti) { ti.style.display = 'none'; ti.style.visibility = 'hidden'; ti.style.zIndex = '-1'; ti.style.pointerEvents = 'none'; }
+  var bv = document.getElementById('btnVoltar');
+  if (bv) { bv.style.display = 'flex'; }
+
+  if (tipo === 'entrega') {
+    document.getElementById('view-entrega').style.display = 'block';
+    document.getElementById('view-cliente').style.display = 'none';
+    document.getElementById('view-adm').style.display = 'none';
+    document.querySelectorAll('#view-entrega .emp-content').forEach(function(e){ e.style.display = 'none'; });
+    var el = document.getElementById('emp-entrega-' + emp);
+    if (el) el.style.display = 'block';
+    renderEntrega(emp);
+  } else {
+    document.getElementById('view-cliente').style.display = 'block';
+    document.getElementById('view-entrega').style.display = 'none';
+    document.getElementById('view-adm').style.display = 'none';
+    document.querySelectorAll('#view-cliente .emp-content').forEach(function(e){ e.style.display = 'none'; });
+    var el2 = document.getElementById('emp-' + emp);
+    if (el2) el2.style.display = 'block';
+    Promise.all(['dia','d1'].map(function(per){ return carregarAba(emp, per); })).then(function() {
+      renderGrid(emp); updateToggle(emp); setBarras();
+      setTimeout(verificarAlertasProjecao, 500);
+    });
+  }
+  localStorage.setItem('frota_sessao', JSON.stringify({ emp: emp, tipo: tipo }));
 }
 
 
@@ -1353,8 +2578,6 @@ document.addEventListener('DOMContentLoaded', function() {
 // Boas vindas
 (function(){var el=document.getElementById('boasVindas');if(!el)return;var h=new Date().getHours();var msg=h>=5&&h<12?'☀️ Bom dia':h>=12&&h<18?'🌤️ Boa tarde':'🌙 Boa noite';el.textContent=msg+' — Grupo Moreno';})();
 
-
-async function carregarRPMs(){var j=await kvGet('rpms');if(j){rpms=j;localStorage.setItem('frota_rpms',JSON.stringify(rpms));atualizarRPMButtons();}}
 carregarRPMs();
 atualizarRPMButtons();
 carregarMetas();
@@ -1367,97 +2590,8 @@ carregarUsuariosUpstash();
   usuarioAtual = { nome:'ADM', isAdm:true, verTudo:true };
   sessionStorage.setItem('usrSessao', JSON.stringify(usuarioAtual));
   document.getElementById('tela-login').style.display = 'none';
-  init().then(function(){ ir('CEM','caminhao'); });
+  init();
 })();
-
-var _acumPDFs={1:null,2:null};
-var _currentTrucks=[];
-
-function toggleAcumulado(){
-  var a=document.getElementById('acumArea');
-  a.style.display=a.style.display==='none'?'block':'none';
-}
-
-async function loadAcumPDF(n,input){
-  if(!input.files[0])return;
-  var fn=document.getElementById('acumFn'+n);
-  var lbl=document.getElementById('lbl'+n);
-  fn.textContent='Carregando...';
-  lbl.style.borderColor='rgba(241,196,15,0.6)';
-  lbl.style.color='rgba(241,196,15,0.8)';
-  try{
-    var ab=await input.files[0].arrayBuffer();
-    var doc=await pdfjsLib.getDocument({data:ab}).promise;
-    var text='';
-    for(var i=1;i<=doc.numPages;i++){
-      fn.textContent='Lendo pág '+i+'/'+doc.numPages+'...';
-      var pg=await doc.getPage(i);
-      var ct=await pg.getTextContent();
-      text+=ct.items.map(function(x){return x.str.trim();}).filter(function(x){return x.length>0;}).join(' ')+'\n';
-    }
-    _acumPDFs[n]=text;
-    var parsed=parseAcumLinhas(text);
-    var total=Object.keys(parsed).length;
-    fn.textContent='✅ '+input.files[0].name+' ('+total+' caminhões)';
-    lbl.style.borderColor='rgba(46,204,113,0.6)';
-    lbl.style.color='rgba(46,204,113,0.8)';
-    if(_acumPDFs[1]&&_acumPDFs[2]){
-      var btn=document.getElementById('btnAplicar');
-      btn.disabled=false;btn.style.opacity='1';
-    }
-  }catch(e){
-    fn.textContent='❌ Erro: '+e.message;
-    lbl.style.borderColor='rgba(231,76,60,0.6)';
-  }
-}
-
-function parseAcumLinhas(text){
-  var r={};
-  var re=/(\d{6})\s+SCANIA\s+\S+\s+\S+\s+([\d\.]+,\d+)\s+(\d+)/g;
-  var m;
-  while((m=re.exec(text))!==null){
-    var cod=m[1];
-    var ton=parseFloat(m[2].replace(/\./g,'').replace(',','.'));
-    var viag=parseInt(m[3]);
-    if(!r[cod])r[cod]={ton:0,viagens:0};
-    r[cod].ton+=ton;r[cod].viagens+=viag;
-  }
-  return r;
-}
-
-var _acumChartInst=null;
-function aplicarAcumulado(){
-  var d1=parseAcumLinhas(_acumPDFs[1]);
-  var d2=parseAcumLinhas(_acumPDFs[2]);
-  var pares=_currentTrucks.map(function(t){
-    var cod=String(t.truckCode);
-    var a=d1[cod]||{ton:0};
-    var b=d2[cod]||{ton:0};
-    return {label:'Cam. '+t.truckCode, val:a.ton+b.ton};
-  }).sort(function(a,b){return b.val-a.val;});
-  var labels=pares.map(function(p){return p.label;});
-  var vals=pares.map(function(p){return p.val;});
-  var totalAcum=vals.reduce(function(s,v){return s+v;},0);
-  labels.push('TOTAL');
-  vals.push(totalAcum);
-  document.getElementById('acumArea').style.display='none';
-  document.getElementById('acumChartWrap').style.display='block';
-  if(_acumChartInst){_acumChartInst.destroy();_acumChartInst=null;}
-  _acumChartInst=new Chart(document.getElementById('chartAcum').getContext('2d'),{
-    type:'bar',
-    data:{labels:labels,datasets:[{label:'Acumulado',data:vals,backgroundColor:vals.map(function(_,i){return i===vals.length-1?'rgba(241,196,15,0.95)':i%2===0?'rgba(241,196,15,0.7)':'rgba(230,126,34,0.7)';}),borderWidth:1,borderRadius:2}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'top',offset:4,color:'#fff',font:{size:11,weight:'600'},backgroundColor:'rgba(0,0,0,0.5)',borderRadius:3,padding:{top:2,bottom:2,left:4,right:4},formatter:function(v){return v>0?(Math.round(v*10)/10)+' t':''}}},scales:{x:{ticks:{color:'#6b8a72',font:{size:9}}},y:{ticks:{color:'#6b8a72',font:{size:9}},grace:'15%'}}}
-  });
-}
-function limparAcumulado(){
-  if(_acumChartInst){_acumChartInst.destroy();_acumChartInst=null;}
-  document.getElementById('acumChartWrap').style.display='none';
-  _acumPDFs={1:null,2:null};
-  document.getElementById('acumFn1').textContent='';
-  document.getElementById('acumFn2').textContent='';
-  document.getElementById('btnAplicar').disabled=true;
-  document.getElementById('btnAplicar').style.opacity='0.5';
-}
 
 var _alertaTIAtivo = false;
 function toggleAlertaTI() {
