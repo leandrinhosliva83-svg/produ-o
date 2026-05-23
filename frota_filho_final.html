@@ -2617,6 +2617,31 @@ function toggleAlertaTI() {
     fecharBanner();
   }
 }
+function ir(emp, tipo) {
+  tipoAtual = tipo; empAtual = emp;
+  var ti = document.getElementById('telaInicial');
+  if (ti) { ti.style.display='none'; ti.style.visibility='hidden'; ti.style.zIndex='-1'; ti.style.pointerEvents='none'; }
+  var bv = document.getElementById('btnVoltar');
+  if (bv) bv.style.display = 'flex';
+  if (tipo === 'entrega') {
+    document.getElementById('view-entrega').style.display='block';
+    document.getElementById('view-cliente').style.display='none';
+    document.getElementById('view-adm').style.display='none';
+    document.querySelectorAll('#view-entrega .emp-content').forEach(function(e){e.style.display='none';});
+    var el=document.getElementById('emp-entrega-'+emp); if(el)el.style.display='block';
+    renderEntrega(emp);
+  } else {
+    document.getElementById('view-cliente').style.display='block';
+    document.getElementById('view-entrega').style.display='none';
+    document.getElementById('view-adm').style.display='none';
+    document.querySelectorAll('#view-cliente .emp-content').forEach(function(e){e.style.display='none';});
+    var el2=document.getElementById('emp-'+emp); if(el2)el2.style.display='block';
+    Promise.all(['dia','d1'].map(function(per){return carregarAba(emp,per);})).then(function(){
+      renderGrid(emp); updateToggle(emp); setBarras();
+    });
+  }
+  localStorage.setItem('frota_sessao', JSON.stringify({emp:emp, tipo:tipo}));
+}
 </script>
 </body>
 </html>
