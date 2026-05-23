@@ -1176,7 +1176,13 @@ function buildChart(trucks) {
   var cl=document.getElementById('chartLabel'),cw=document.querySelector('.chart-wrap');
   if(!vals.some(function(v){return v>0;})){cw.style.display='none';cl.style.display='none';return;}
   cw.style.display='block';cl.style.display='flex';
-  chartInst=new Chart(document.getElementById('chartCanvas').getContext('2d'),{type:'bar',data:{labels:trucks.map(function(t){return 'Cam. '+t.truckCode;}),datasets:[{label:'Produção',data:vals,backgroundColor:vals.map(function(_,i){return i===vals.length-1?'rgba(241,196,15,0.85)':i%2===0?'rgba(46,204,113,0.7)':'rgba(26,53,143,0.7)';}),borderWidth:1,borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'top',offset:6,color:'#e8f5e9',font:{size:12,weight:'600'},backgroundColor:'rgba(0,0,0,0.55)',borderRadius:4,padding:{top:3,bottom:3,left:6,right:6},formatter:function(v){return v>0?(Math.round(v*10)/10)+' t':''}}},scales:{x:{ticks:{color:'#6b8a72',font:{size:10}}},y:{ticks:{color:'#6b8a72',font:{size:10}},grace:'15%'}}}});
+  (function(){
+  var n=trucks.length;
+  var fs=n<=6?12:n<=10?10:n<=15?8:7;
+  var pad=n<=6?{top:3,bottom:3,left:6,right:6}:{top:2,bottom:2,left:3,right:3};
+  var off=n<=6?6:4;
+  chartInst=new Chart(document.getElementById('chartCanvas').getContext('2d'),{type:'bar',data:{labels:trucks.map(function(t){return 'Cam. '+t.truckCode;}),datasets:[{label:'Producao',data:vals,backgroundColor:vals.map(function(_,i){return i%2===0?'rgba(46,204,113,0.7)':'rgba(26,53,143,0.7)';}),borderWidth:1,borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'top',offset:off,color:'#e8f5e9',font:{size:fs,weight:'600'},backgroundColor:'rgba(0,0,0,0.55)',borderRadius:4,padding:pad,formatter:function(v){return v>0?(Math.round(v*10)/10)+' t':''}}},scales:{x:{ticks:{color:'#6b8a72',font:{size:10}}},y:{ticks:{color:'#6b8a72',font:{size:10}},grace:'15%'}}}});
+})();
 }
 function closeModal(){document.getElementById('propModalBg').style.display='none';}
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal();});
