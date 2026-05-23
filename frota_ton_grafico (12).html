@@ -9,7 +9,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-<script>Chart.register(ChartDataLabels);</script>
 <style>
 :root{
   --bg:#0a0f0d;--bg2:#111a14;--bg3:#162019;
@@ -201,7 +200,7 @@ thead tr{border-bottom:1px solid var(--green);}
 th{padding:8px 10px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--green);text-align:left;}
 tbody tr{border-bottom:1px solid rgba(46,204,113,.07);}
 td{padding:8px 10px;font-size:12px;color:var(--white);}
-#tela-login{position:fixed;inset:0;z-index:99999;background:#010603;display:flex;align-items:center;justify-content:center;}
+#tela-login{position:fixed;inset:0;z-index:99999;background:#010603;display:none;align-items:center;justify-content:center;}
 .lbox{width:300px;max-width:90vw;background:rgba(10,20,14,0.97);border:1px solid rgba(46,204,113,0.2);border-radius:8px;padding:32px 24px;text-align:center;}
 .lbox img{height:55px;margin-bottom:12px;}
 .ltit{font-size:10px;font-weight:700;letter-spacing:3px;color:rgba(46,204,113,0.4);margin-bottom:20px;}
@@ -363,15 +362,8 @@ if (typeof pdfjsLib !== 'undefined') {
   <div class="ti-footer">
     <span class="ti-version">Grupo Moreno · v2.0 · 2026</span>
 
-    <div style="display:flex;gap:10px;align-items:center;justify-content:space-between;width:100%;max-width:460px;">
-      <button class="ti-adm" onclick="logout()" style="color:rgba(231,76,60,0.5);">⏻ SAIR</button>
-      <button class="ti-adm" onclick="testarBanner()" style="color:rgba(241,196,15,0.5);">🔔 Teste</button>
-      <div style="display:flex;gap:10px;">
-        <button class="ti-adm" onclick="toggleChuvaPanel()" style="color:rgba(52,152,219,0.5);">🌧 Chuva</button>
-        <button class="ti-adm" id="btn-notif" onclick="pedirPermissaoNotif()" style="color:rgba(52,152,219,0.3);">🔔 Alertas</button>
-        <button class="ti-adm" onclick="abrirCadastroRapido()" style="color:rgba(46,204,113,0.5);">➕ Cadastro</button>
-        <button class="ti-adm" onclick="abrirAdm()">⚙ ADM</button>
-      </div>
+    <div style="display:flex;gap:10px;align-items:center;justify-content:flex-end;width:100%;max-width:460px;">
+      <button id="btn-alerta-ti" onclick="toggleAlertaTI()" style="background:transparent;border:2px solid rgba(231,76,60,0.6);color:rgba(231,76,60,0.8);padding:10px 24px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:4px;transition:all .3s;">🔕 ALERTAS OFF</button>
 
     </div>
   </div>
@@ -484,24 +476,6 @@ if (typeof pdfjsLib !== 'undefined') {
         </div>
       </div>
 
-
-      <div style="background:var(--bg2);border:1px solid var(--border);padding:16px 20px;margin-bottom:24px;position:relative;">
-        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--orange),var(--green));"></div>
-        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--orange);margin-bottom:14px;">📊 ACUMULADO PDF</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-          <div>
-            <div style="font-size:9px;color:var(--gray);letter-spacing:1px;margin-bottom:6px;">PDF 1</div>
-            <label style="display:block;border:1px dashed rgba(46,204,113,0.3);border-radius:4px;padding:10px;text-align:center;cursor:pointer;font-size:11px;color:var(--gray);" id="lbl1">↑ Selecionar PDF<input type="file" id="acumPdf1" accept=".pdf" style="display:none" onchange="loadAcumPDF(1,this)"></label>
-            <div id="acumFn1" style="font-size:10px;color:rgba(46,204,113,0.8);margin-top:4px;min-height:14px;"></div>
-          </div>
-          <div>
-            <div style="font-size:9px;color:var(--gray);letter-spacing:1px;margin-bottom:6px;">PDF 2</div>
-            <label style="display:block;border:1px dashed rgba(46,204,113,0.3);border-radius:4px;padding:10px;text-align:center;cursor:pointer;font-size:11px;color:var(--gray);" id="lbl2">↑ Selecionar PDF<input type="file" id="acumPdf2" accept=".pdf" style="display:none" onchange="loadAcumPDF(2,this)"></label>
-            <div id="acumFn2" style="font-size:10px;color:rgba(46,204,113,0.8);margin-top:4px;min-height:14px;"></div>
-          </div>
-        </div>
-        <button onclick="aplicarAcumulado()" id="btnAplicar" disabled style="width:100%;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.4);color:rgba(46,204,113,0.9);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:10px;cursor:pointer;border-radius:4px;opacity:0.5;">Calcular acumulado</button>
-      </div>
       <!-- METAS por codigo -->
       <div class="upload-cards">
         <div class="upload-card">
@@ -717,14 +691,6 @@ if (typeof pdfjsLib !== 'undefined') {
       </div>
       <div class="sec-label" id="chartLabel">Produção por caminhão (ton)</div>
       <div class="chart-wrap"><canvas id="chartCanvas"></canvas></div>
-      <button onclick="toggleAcumChart()" id="btnVerAcum" style="width:100%;margin-top:16px;padding:12px;background:rgba(241,196,15,0.1);border:1px solid rgba(241,196,15,0.4);color:rgba(241,196,15,0.9);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:4px;transition:all .3s;">📊 VER ACUMULADO PDF</button>
-      <div id="acumChartWrap" style="display:none;margin-top:16px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <div class="sec-label" style="margin-bottom:0;font-size:10px;opacity:0.7;">Acumulado PDF (ton)</div>
-          <button onclick="limparAcumulado()" style="background:transparent;border:none;color:rgba(231,76,60,0.6);font-size:10px;cursor:pointer;padding:0;">✕ limpar</button>
-        </div>
-        <div style="height:130px;"><canvas id="chartAcum"></canvas></div>
-      </div>
       <div class="sec-label">Detalhamento dos caminhões</div>
       <div class="trucks-grid" id="mTrucks"></div>
     </div>
@@ -821,9 +787,9 @@ async function init() {
   emps.forEach(function(e){renderGrid(e);updateToggle(e);});
   setBarras(); initDone=true;
   // Verificar metas imediatamente após carregar dados
-  setTimeout(function(){ verificarMetasEMostrarBanner(); }, 2000);
+  setTimeout(function(){ if(typeof _alertaTIAtivo !== "undefined" && _alertaTIAtivo) verificarMetasEMostrarBanner(); }, 2000);
   // Garantir que o timer do banner está rodando (padrão 3 min)
-  if (!_timerBanner) iniciarTimerBanner(3);
+  if (!_timerBanner && typeof _alertaTIAtivo !== "undefined" && _alertaTIAtivo) iniciarTimerBanner(3);
   if(pendingAdm){atualizarFarois();renderAdmTable();pendingAdm=false;}
   try {
     var s = localStorage.getItem('frota_sessao');
@@ -1168,21 +1134,12 @@ function getTruckVelHTML(emp, truckCode) {
 }
 
 function buildChart(trucks) {
-  _currentTrucks=trucks;
   if(chartInst){chartInst.destroy();chartInst=null;}
-  trucks=trucks.slice().sort(function(a,b){return (parseFloat(b.e||b.ton)||0)-(parseFloat(a.e||a.ton)||0);});
   var vals=trucks.map(function(t){return(parseFloat(t.e||t.ton)||0);});
-
   var cl=document.getElementById('chartLabel'),cw=document.querySelector('.chart-wrap');
   if(!vals.some(function(v){return v>0;})){cw.style.display='none';cl.style.display='none';return;}
   cw.style.display='block';cl.style.display='flex';
-  (function(){
-  var n=trucks.length;
-  var fs=n<=6?12:n<=10?10:n<=15?8:7;
-  var pad=n<=6?{top:3,bottom:3,left:6,right:6}:{top:2,bottom:2,left:3,right:3};
-  var off=n<=6?6:4;
-  chartInst=new Chart(document.getElementById('chartCanvas').getContext('2d'),{type:'bar',data:{labels:trucks.map(function(t){return 'Cam. '+t.truckCode;}),datasets:[{label:'Producao',data:vals,backgroundColor:vals.map(function(_,i){return i%2===0?'rgba(46,204,113,0.7)':'rgba(26,53,143,0.7)';}),borderWidth:1,borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'top',offset:off,color:'#e8f5e9',font:{size:fs,weight:'600'},backgroundColor:'rgba(0,0,0,0.55)',borderRadius:4,padding:pad,formatter:function(v){return v>0?(Math.round(v*10)/10):''}}},scales:{x:{ticks:{color:'#6b8a72',font:{size:10}}},y:{ticks:{color:'#6b8a72',font:{size:10}},grace:'15%'}}}});
-})();
+  chartInst=new Chart(document.getElementById('chartCanvas').getContext('2d'),{type:'bar',data:{labels:trucks.map(function(t){return 'Cam. '+t.truckCode;}),datasets:[{label:'Produção',data:vals,backgroundColor:vals.map(function(_,i){return i%2===0?'rgba(46,204,113,0.7)':'rgba(26,53,143,0.7)';}),borderWidth:1,borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6b8a72',font:{size:10}}},y:{ticks:{color:'#6b8a72',font:{size:10}}}}}});
 }
 function closeModal(){document.getElementById('propModalBg').style.display='none';}
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal();});
@@ -2371,6 +2328,7 @@ function toggleChuvaPanel() {
 }
 
 function tocarAlerta() {
+  if (typeof _alertaTIAtivo !== "undefined" && !_alertaTIAtivo) return;
   try {
     var ctx = new (window.AudioContext || window.webkitAudioContext)();
     function beep(freq, start, dur, vol) {
@@ -2393,6 +2351,7 @@ function tocarAlerta() {
 }
 
 function mostrarBannerAlertas(alertas) {
+  if (typeof _alertaTIAtivo !== "undefined" && !_alertaTIAtivo) return;
   var el = document.getElementById('banner-alertas');
   if (!el) return;
   if (!alertas.length) { el.style.display = 'none'; el.innerHTML = ''; return; }
@@ -2628,136 +2587,35 @@ carregarUsuariosUpstash();
 
 // Verificar sessão de login
 (function() {
-  try {
-    var s = sessionStorage.getItem('usrSessao');
-    if (s) { usuarioAtual = JSON.parse(s); init(); return; }
-  } catch(e) {}
-  init(); // Se não tem login, inicia normalmente (tela de login aparece por cima)
+  usuarioAtual = { nome:'ADM', isAdm:true, verTudo:true };
+  sessionStorage.setItem('usrSessao', JSON.stringify(usuarioAtual));
+  document.getElementById('tela-login').style.display = 'none';
+  init().then(function(){ ir('CEM','caminhao'); });
 })();
 
-var _acumPDFs={1:null,2:null};
-var _currentTrucks=[];
-
-function toggleAcumulado(){
-  var a=document.getElementById('acumArea');
-  a.style.display=a.style.display==='none'?'block':'none';
-}
-
-async function loadAcumPDF(n,input){
-  if(!input.files[0])return;
-  var fn=document.getElementById('acumFn'+n);
-  var lbl=document.getElementById('lbl'+n);
-  fn.textContent='Carregando...';
-  lbl.style.borderColor='rgba(241,196,15,0.6)';
-  lbl.style.color='rgba(241,196,15,0.8)';
-  try{
-    if(typeof pdfjsLib==='undefined'){fn.textContent='❌ pdf.js não carregou';return;}
-    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    var ab=await input.files[0].arrayBuffer();
-    var doc=await pdfjsLib.getDocument({data:new Uint8Array(ab)}).promise;
-    var text='';
-    for(var i=1;i<=doc.numPages;i++){
-      fn.textContent='Lendo pág '+i+'/'+doc.numPages+'...';
-      var pg=await doc.getPage(i);
-      var ct=await pg.getTextContent();
-      text+=ct.items.map(function(x){return x.str.trim();}).filter(function(x){return x.length>0;}).join(' ')+'\n';
-    }
-    _acumPDFs[n]=text;
-    var parsed=parseAcumLinhas(text);
-    var total=Object.keys(parsed).length;
-    fn.textContent='✅ '+input.files[0].name+' ('+total+' caminhões)';
-    lbl.style.borderColor='rgba(46,204,113,0.6)';
-    lbl.style.color='rgba(46,204,113,0.8)';
-    if(_acumPDFs[1]&&_acumPDFs[2]){
-      var btn=document.getElementById('btnAplicar');
-      btn.disabled=false;btn.style.opacity='1';
-    }
-  }catch(e){
-    fn.textContent='❌ Erro: '+e.message;
-    lbl.style.borderColor='rgba(231,76,60,0.6)';
-  }
-}
-
-function parseAcumLinhas(text){
-  var r={};
-  var re=/(\d{6})\s+SCANIA\s+\S+\s+\S+\s+([\d\.]+,\d+)\s+(\d+)/g;
-  var m;
-  while((m=re.exec(text))!==null){
-    var cod=m[1];
-    var ton=parseFloat(m[2].replace(/\./g,'').replace(',','.'));
-    var viag=parseInt(m[3]);
-    if(!r[cod])r[cod]={ton:0,viagens:0};
-    r[cod].ton+=ton;r[cod].viagens+=viag;
-  }
-  return r;
-}
-
-var _acumChartInst=null;
-var _acumLabels=null, _acumVals=null;
-function toggleAcumChart(){
-  var wrap=document.getElementById('acumChartWrap');
-  var btn=document.getElementById('btnVerAcum');
-  if(wrap.style.display==='none'||wrap.style.display===''){
-    if(!_acumLabels||!_acumVals){
-      btn.textContent='⚠️ CARREGUE OS PDFs NO ADM';
-      setTimeout(function(){btn.textContent='📊 VER ACUMULADO PDF';},2000);
-      return;
-    }
-    wrap.style.display='block';
-    btn.textContent='✕ FECHAR ACUMULADO';
-    btn.style.background='rgba(231,76,60,0.1)';
-    btn.style.borderColor='rgba(231,76,60,0.4)';
-    btn.style.color='rgba(231,76,60,0.9)';
-    desenharAcumChart();
+var _alertaTIAtivo = false;
+function toggleAlertaTI() {
+  _alertaTIAtivo = !_alertaTIAtivo;
+  var btn = document.getElementById('btn-alerta-ti');
+  if (_alertaTIAtivo) {
+    btn.textContent = '🔔 ALERTAS ON';
+    btn.style.borderColor = 'rgba(46,204,113,0.8)';
+    btn.style.color = 'rgba(46,204,113,0.9)';
+    tocarAlerta();
+    verificarMetasEMostrarBanner();
+    var el = document.getElementById('banner-alertas');
+    setTimeout(function() {
+      if (!el || el.style.display === 'none' || !el.children.length) {
+        el.style.display = 'flex';
+        el.innerHTML = '<div class="banner-item"><div style="flex:1;min-width:0;"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#2ecc71;margin-bottom:2px;">ALERTAS ATIVOS</div><div style="font-size:12px;font-weight:600;color:#fff;">Monitorando projeções da frota</div></div><button class="banner-fechar" onclick="fecharBanner(this)">✕</button></div>';
+      }
+    }, 300);
   } else {
-    wrap.style.display='none';
-    btn.textContent='📊 VER ACUMULADO ✅';
-    btn.style.background='rgba(241,196,15,0.1)';
-    btn.style.borderColor='rgba(241,196,15,0.4)';
-    btn.style.color='rgba(241,196,15,0.9)';
+    btn.textContent = '🔕 ALERTAS OFF';
+    btn.style.borderColor = 'rgba(231,76,60,0.6)';
+    btn.style.color = 'rgba(231,76,60,0.8)';
+    fecharBanner();
   }
-}
-function desenharAcumChart(){
-  if(_acumChartInst){_acumChartInst.destroy();_acumChartInst=null;}
-  var ctx=document.getElementById('chartAcum');
-  if(!ctx)return;
-  _acumChartInst=new Chart(ctx.getContext('2d'),{
-    type:'bar',
-    data:{labels:_acumLabels,datasets:[{label:'Acumulado',data:_acumVals,backgroundColor:_acumVals.map(function(_,i){return i===_acumVals.length-1?'rgba(241,196,15,0.95)':i%2===0?'rgba(241,196,15,0.7)':'rgba(230,126,34,0.7)';}),borderWidth:1,borderRadius:2}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'top',offset:4,color:'#fff',font:{size:11,weight:'600'},backgroundColor:'rgba(0,0,0,0.5)',borderRadius:3,padding:{top:2,bottom:2,left:4,right:4},formatter:function(v){return v>0?(Math.round(v*10)/10):''}}},scales:{x:{ticks:{color:'#6b8a72',font:{size:9}}},y:{ticks:{color:'#6b8a72',font:{size:9}},grace:'15%'}}}
-  });
-}
-function aplicarAcumulado(){
-  var d1=parseAcumLinhas(_acumPDFs[1]);
-  var d2=parseAcumLinhas(_acumPDFs[2]);
-  var pares=_currentTrucks.map(function(t){
-    var cod=String(t.truckCode);
-    var a=d1[cod]||{ton:0};
-    var b=d2[cod]||{ton:0};
-    return {label:'Cam. '+t.truckCode, val:a.ton+b.ton};
-  }).sort(function(a,b){return b.val-a.val;});
-  var labels=pares.map(function(p){return p.label;});
-  var vals=pares.map(function(p){return p.val;});
-
-  document.getElementById('acumArea').style.display='none';
-  document.getElementById('acumChartWrap').style.display='none';
-  var btn=document.getElementById('btnVerAcum');if(btn){btn.textContent='📊 VER ACUMULADO PDF';btn.style.background='rgba(241,196,15,0.1)';btn.style.borderColor='rgba(241,196,15,0.4)';btn.style.color='rgba(241,196,15,0.9)';}
-  if(_acumChartInst){_acumChartInst.destroy();_acumChartInst=null;}
-  _acumChartInst=new Chart(document.getElementById('chartAcum').getContext('2d'),{
-    type:'bar',
-    data:{labels:labels,datasets:[{label:'Acumulado',data:vals,backgroundColor:vals.map(function(_,i){return i===vals.length-1?'rgba(241,196,15,0.95)':i%2===0?'rgba(241,196,15,0.7)':'rgba(230,126,34,0.7)';}),borderWidth:1,borderRadius:2}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'top',offset:4,color:'#fff',font:{size:11,weight:'600'},backgroundColor:'rgba(0,0,0,0.5)',borderRadius:3,padding:{top:2,bottom:2,left:4,right:4},formatter:function(v){return v>0?(Math.round(v*10)/10):''}}},scales:{x:{ticks:{color:'#6b8a72',font:{size:9}}},y:{ticks:{color:'#6b8a72',font:{size:9}},grace:'15%'}}}
-  });
-}
-function limparAcumulado(){
-  if(_acumChartInst){_acumChartInst.destroy();_acumChartInst=null;}
-  document.getElementById('acumChartWrap').style.display='none';
-  var btn=document.getElementById('btnVerAcum');if(btn){btn.textContent='📊 VER ACUMULADO PDF';btn.style.background='rgba(241,196,15,0.1)';btn.style.borderColor='rgba(241,196,15,0.4)';btn.style.color='rgba(241,196,15,0.9)';}
-  _acumPDFs={1:null,2:null};
-  document.getElementById('acumFn1').textContent='';
-  document.getElementById('acumFn2').textContent='';
-  document.getElementById('btnAplicar').disabled=true;
-  document.getElementById('btnAplicar').style.opacity='0.5';
 }
 </script>
 </body>
