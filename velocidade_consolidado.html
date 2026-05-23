@@ -29,13 +29,13 @@
 body{background:var(--bg);font-family:'Barlow',sans-serif;min-height:100vh;color:var(--dark);overflow-x:hidden;}
 
 /* HEADER */
-.header{position:sticky;top:0;z-index:100;background:#fff;border-bottom:3px solid var(--green);padding:0 20px;height:62px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(30,126,52,0.12);}
+.header{position:sticky;top:0;z-index:100;background:#fff;border-bottom:3px solid var(--green);padding:0 12px;height:54px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(30,126,52,0.12);}
 .logo-wrap{display:flex;align-items:center;gap:10px;}
-.logo-img{height:40px;object-fit:contain;}
+.logo-img{height:32px;object-fit:contain;}
 .logo-text{}
-.logo-name{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--dark);}
+.logo-name{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--dark);}
 .logo-sub{font-size:8px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--green);}
-.btn-refresh{display:flex;align-items:center;gap:6px;background:var(--green);border:none;color:#fff;padding:8px 14px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:4px;transition:background .2s;}
+.btn-refresh{display:flex;align-items:center;gap:4px;background:var(--green);border:none;color:#fff;padding:6px 10px;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:4px;transition:background .2s;}
 .btn-refresh:hover{background:var(--green-l);}
 .btn-refresh svg{transition:transform .3s;}
 .btn-refresh.loading svg{animation:spin .8s linear infinite;}
@@ -44,36 +44,36 @@ body{background:var(--bg);font-family:'Barlow',sans-serif;min-height:100vh;color
 /* STRIPE TOPO */
 .top-stripe{height:4px;background:linear-gradient(90deg,var(--blue) 0%,var(--blue) 40%,var(--green) 40%,var(--green) 70%,var(--green-l) 70%,var(--green-l) 100%);}
 
-.main{padding:20px;}
+.main{padding:12px;}
 
 /* TÍTULO */
-.page-header{background:#fff;border-radius:8px;padding:18px 20px;margin-bottom:16px;border-left:5px solid var(--green);box-shadow:0 1px 6px rgba(0,0,0,0.07);}
-.page-title{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--dark);}
+.page-header{background:#fff;border-radius:8px;padding:12px 14px;margin-bottom:12px;border-left:5px solid var(--green);box-shadow:0 1px 6px rgba(0,0,0,0.07);}
+.page-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--dark);}
 .page-title span{color:var(--green);}
 .page-sub{font-size:11px;color:var(--gray);letter-spacing:1px;margin-top:3px;}
 
 /* ABAS */
 .tabs{display:flex;gap:0;margin-bottom:16px;border-radius:6px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
-.tab-btn{flex:1;padding:11px 4px;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border:none;background:#fff;color:var(--gray);border-right:1px solid var(--border);transition:all .2s;font-family:'Barlow',sans-serif;}
+.tab-btn{flex:1;padding:9px 2px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:none;background:#fff;color:var(--gray);border-right:1px solid var(--border);transition:all .2s;font-family:'Barlow',sans-serif;}
 .tab-btn:last-child{border-right:none;}
 .tab-btn.ativo{background:var(--green);color:#fff;}
 .tab-btn:hover:not(.ativo){background:var(--green-dim);}
 
 /* DATAS */
 .upd-bar{display:flex;gap:8px;margin-bottom:16px;}
-.upd-box{flex:1;background:#fff;border-radius:6px;padding:10px 12px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.06);border-top:3px solid var(--green);}
+.upd-box{flex:1;background:#fff;border-radius:6px;padding:6px 4px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.06);border-top:3px solid var(--green);}
 .upd-box-lbl{font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:3px;}
-.upd-box-val{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--green);}
+.upd-box-val{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--green);}
 
 /* KPIs */
 .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
-.kpi{background:#1a2b1a;border-radius:8px;padding:14px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,0.15);border:1px solid rgba(30,126,52,0.3);}
-.kpi-ico{font-size:20px;margin-bottom:4px;}
-.kpi-lbl{font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:4px;}
-.kpi-val{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;}
+.kpi{background:#1a2b1a;border-radius:8px;padding:10px 6px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,0.15);border:1px solid rgba(30,126,52,0.3);}
+.kpi-ico{font-size:16px;margin-bottom:2px;}
+.kpi-lbl{font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:2px;}
+.kpi-val{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;}
 
 /* PROPRIETÁRIO */
-.prop-wrap{background:#1a2b1a;border-radius:8px;padding:14px 16px;margin-bottom:16px;box-shadow:0 1px 6px rgba(0,0,0,0.15);border:1px solid rgba(30,126,52,0.3);}
+.prop-wrap{background:#1a2b1a;border-radius:8px;padding:10px 12px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,0.15);border:1px solid rgba(30,126,52,0.3);}
 .prop-lbl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:10px;}
 .prop-btns{display:flex;flex-wrap:wrap;gap:7px;}
 
@@ -81,9 +81,9 @@ body{background:var(--bg);font-family:'Barlow',sans-serif;min-height:100vh;color
 .tabela-wrap{background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.07);}
 .tabela{width:100%;border-collapse:collapse;font-size:12px;}
 .tabela thead tr{background:var(--green);color:#fff;}
-.tabela th{padding:10px 12px;text-align:left;font-size:9px;letter-spacing:2px;text-transform:uppercase;font-weight:700;white-space:nowrap;}
+.tabela th{padding:8px 6px;text-align:left;font-size:8px;letter-spacing:1px;text-transform:uppercase;font-weight:700;white-space:nowrap;}
 .tabela th.r{text-align:right;}
-.tabela td{padding:10px 12px;border-bottom:1px solid var(--border);}
+.tabela td{padding:8px 6px;border-bottom:1px solid var(--border);}
 .tabela td.r{text-align:right;}
 .tabela tbody tr:hover{background:var(--green-dim);}
 .tabela tbody tr:last-child td{border-bottom:none;}
@@ -292,10 +292,22 @@ function getGrupos() {
       var ownerNome = info ? info.owner     : (r.nome || tc);
       var empresa   = info ? info.empresa   : e;
       if (!grupos[ownerCode]) grupos[ownerCode] = { ownerCode: ownerCode, owner: ownerNome, empresa: empresa, caminhoes: [] };
-      grupos[ownerCode].caminhoes.push({ truckCode: tc, velocidade: r.velocidade || 0, ocorrencias: r.ocorrencias || 0 });
+      grupos[ownerCode].caminhoes.push({ truckCode: tc, velocidade: r.velocidade || 0, ocorrencias: r.ocorrencias || 0, empresa: e });
     });
   });
-  return Object.values(grupos).sort(function(a,b) {
+
+  var listaGrupos = Object.values(grupos);
+
+  // Para CEM: filtrar só caminhões acima de 90 km/h
+  if (empAtual === 'CEM') {
+    listaGrupos = listaGrupos.map(function(g) {
+      return Object.assign({}, g, {
+        caminhoes: g.caminhoes.filter(function(c){ return c.velocidade > 90; })
+      });
+    }).filter(function(g){ return g.caminhoes.length > 0; });
+  }
+
+  return listaGrupos.sort(function(a,b) {
     var ma = a.caminhoes.reduce(function(s,c){return s+c.velocidade;},0) / (a.caminhoes.length||1);
     var mb = b.caminhoes.reduce(function(s,c){return s+c.velocidade;},0) / (b.caminhoes.length||1);
     return mb - ma;
@@ -346,7 +358,7 @@ function renderTabela() {
   var sub = document.getElementById('page-sub');
   if (sub) sub.textContent = propSelecionado
     ? 'Detalhes do proprietário selecionado'
-    : grupos.length + ' proprietário(s) · ' + totalCam + ' caminhão(ões)';
+    : grupos.length + ' proprietário(s) · ' + totalCam + ' caminhão(ões)' + (empAtual === 'CEM' ? ' · acima de 90 km/h' : '');
 
   var el = document.getElementById('tabela-container');
   if (!el) return;
@@ -360,12 +372,11 @@ function renderTabela() {
 
   if (!propSelecionado) {
     html = '<table class="tabela"><thead><tr>'
-      + (mostrarEmp ? '<th>Empresa</th>' : '')
+      + (mostrarEmp ? '<th>EMP</th>' : '')
       + '<th>Proprietário</th>'
-      + '<th class="r">Caminhões</th>'
-      + '<th class="r">Média Vel.</th>'
-      + '<th class="r">Vel. Máx.</th>'
-      + '<th class="r">Eventos</th>'
+      + '<th class="r">CAM</th>'
+      + '<th class="r">MÉDIA</th>'
+      + '<th class="r">EVENTOS</th>'
       + '</tr></thead><tbody>';
 
     grupos.forEach(function(g, i) {
@@ -373,16 +384,14 @@ function renderTabela() {
       var bg = i % 2 === 0 ? '#fff' : '#f7fbf7';
       var vels = g.caminhoes.map(function(c){ return c.velocidade; });
       var media = (vels.reduce(function(s,v){return s+v;},0)/vels.length).toFixed(1);
-      var maxVel = Math.max.apply(null, vels);
       var eventos = g.caminhoes.reduce(function(s,c){ return s+c.ocorrencias; },0);
       html += '<tr style="background:' + bg + ';cursor:pointer;" onclick="setProp(\'' + g.ownerCode + '\')">'
-        + (mostrarEmp ? '<td style="font-size:10px;font-weight:700;color:var(--blue);">' + g.empresa + '</td>' : '')
-        + '<td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + cor + ';margin-right:8px;vertical-align:middle;"></span>'
-          + '<span style="font-size:13px;font-weight:600;color:var(--dark);">' + g.owner + '</span></td>'
-        + '<td class="r" style="font-family:\'Barlow Condensed\',sans-serif;font-size:16px;font-weight:700;color:var(--blue);">' + g.caminhoes.length + '</td>'
-        + '<td class="r"><span style="font-family:\'Barlow Condensed\',sans-serif;font-size:17px;font-weight:700;color:var(--orange);">' + media + ' km/h</span></td>'
-        + '<td class="r"><span style="font-family:\'Barlow Condensed\',sans-serif;font-size:17px;font-weight:700;color:var(--red);">' + maxVel + ' km/h</span></td>'
-        + '<td class="r" style="font-family:\'Barlow Condensed\',sans-serif;font-size:16px;font-weight:700;color:var(--green);">' + eventos.toLocaleString('pt-BR') + '</td>'
+        + (mostrarEmp ? '<td style="font-size:9px;font-weight:700;color:var(--blue);white-space:nowrap;">' + g.empresa + '</td>' : '')
+        + '<td style="max-width:110px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + cor + ';margin-right:5px;vertical-align:middle;flex-shrink:0;"></span>'
+          + '<span style="font-size:11px;font-weight:600;color:var(--dark);">' + g.owner + '</span></td>'
+        + '<td class="r" style="font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:700;color:var(--blue);white-space:nowrap;">' + g.caminhoes.length + '</td>'
+        + '<td class="r" style="white-space:nowrap;"><span style="font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:700;color:var(--orange);">' + media + '</span><span style="font-size:9px;color:var(--gray);"> km/h</span></td>'
+        + '<td class="r" style="font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:700;color:var(--green);white-space:nowrap;">' + eventos.toLocaleString('pt-BR') + '</td>'
         + '</tr>';
     });
     html += '</tbody></table>';
@@ -404,8 +413,8 @@ function renderTabela() {
       var bg = i % 2 === 0 ? '#fff' : '#f7fbf7';
       html += '<tr style="background:' + bg + ';">'
         + (mostrarEmp ? '<td style="font-size:10px;font-weight:700;color:var(--blue);">' + g.empresa + '</td>' : '')
-        + '<td style="font-family:\'Barlow Condensed\',sans-serif;font-size:16px;font-weight:700;color:var(--dark);">🚛 ' + c.truckCode + '</td>'
-        + '<td class="r"><span style="font-family:\'Barlow Condensed\',sans-serif;font-size:17px;font-weight:700;color:var(--red);">' + c.velocidade + ' km/h</span></td>'
+        + '<td style="font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:700;color:var(--dark);">🚛 ' + c.truckCode + '</td>'
+        + '<td class="r"><span style="font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:700;color:var(--red);">' + c.velocidade + ' km/h</span></td>'
         + '<td class="r" style="font-family:\'Barlow Condensed\',sans-serif;font-size:16px;color:var(--green);">' + c.ocorrencias.toLocaleString('pt-BR') + '</td>'
         + '</tr>';
     });
