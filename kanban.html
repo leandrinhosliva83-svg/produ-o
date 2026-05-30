@@ -190,6 +190,8 @@ header{position:relative;z-index:20;padding:max(env(safe-area-inset-top),14px) 1
   <button onclick="this.parentElement.style.display='none'">✕</button>
 </div>
 
+
+<div style="position:relative;z-index:15;padding:3px 18px;flex-shrink:0;text-align:right;"><span id="ss" style="font-size:11px;transition:color .3s;"></span></div>
 <div id="daily-banner" onclick="openDaily()" style="display:none">
   <div class="db-txt">
     <div id="db-txt">⏰ Lembrete diário não configurado</div>
@@ -353,18 +355,45 @@ let tasks=[], alarmTaskId=null, selectedPrio='high';
 let daily={ on:false, time:'08:00', days:[0,1,2,3,4,5,6] };
 let dailyTimer=null;
 
-/* ── STORAGE ── */
-function load(){
+/* ── SYNC JSONBIN ── */
+const BIN_ID='6a1afdf0ddf5aa59f778a25e';
+const MKEY='$2a$10$2Y6FSLwxPUxEx68NVsL1L.5saf0R443Sy9murpTBT5iXVakNU4C4S';
+const BURL='https://api.jsonbin.io/v3/b/';
+let syncTimer=null;
+
+function ss(msg,c){const el=document.getElementById('ss');if(el){el.textContent=msg;el.style.color=c||'var(--text2)';}}
+
+async function load(){
+  try{const d=localStorage.getItem('kb4_daily');if(d)daily=JSON.parse(d);}catch(e){}
+  ss('⟳ Sincronizando...','#ffb800');
   try{
-    const s=localStorage.getItem('kb4');
-    if(s){ tasks=JSON.parse(s); }
-    else{ tasks=[]; save(); }
-    const d=localStorage.getItem('kb4_daily');
-    if(d) daily=JSON.parse(d);
-  }catch(e){ tasks=[]; }
+    const r=await fetch(BURL+BIN_ID+'/latest',{headers:{'X-Master-Key':MKEY}});
+    const j=await r.json();
+    tasks=(j.record&&j.record.tasks)?j.record.tasks:[];
+    localStorage.setItem('kb4',JSON.stringify(tasks));
+    ss('✅ Sincronizado','var(--done)');
+    setTimeout(()=>ss(''),3000);
+  }catch(e){
+    try{const s=localStorage.getItem('kb4');if(s)tasks=JSON.parse(s);}catch(e2){}
+    ss('⚠️ Offline','var(--prog)');
+  }
+  render();
 }
-function save(){ try{localStorage.setItem('kb4',JSON.stringify(tasks));}catch(e){} }
-function saveD(){ try{localStorage.setItem('kb4_daily',JSON.stringify(daily));}catch(e){} }
+
+function save(){
+  try{localStorage.setItem('kb4',JSON.stringify(tasks));}catch(e){}
+  clearTimeout(syncTimer);
+  syncTimer=setTimeout(async()=>{
+    ss('⟳ Salvando...','#ffb800');
+    try{
+      await fetch(BURL+BIN_ID,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':MKEY},body:JSON.stringify({tasks})});
+      ss('✅ Salvo na nuvem','var(--done)');
+      setTimeout(()=>ss(''),3000);
+    }catch(e){ss('⚠️ Erro ao salvar','var(--pend)');}
+  },1500);
+}
+
+function saveD(){try{localStorage.setItem('kb4_daily',JSON.stringify(daily));}catch(e){}}
 
 /* ── RENDER ── */
 function render(){
@@ -743,7 +772,7 @@ function doImport(){
 }
 
 /* ── INIT ── */
-load();render();reqNotif();
+load();reqNotif();
 scheduleDailyAlarm();
 setInterval(checkOneAlarms,20000);
 checkOneAlarms();
