@@ -1139,27 +1139,17 @@ function atualizarBotoesRel(){
 
 function hDTurno(t){
   const agora=agoraDecimal();
-  // CEMMA/COPLASA: turno único de 24h (06:00 a 06:00)
-  if(uni!=='CEM'){
-    let agoraAdj=agora<6.0?agora+24:agora;
-    const dec=Math.min(agoraAdj,30.0)-6.0; // máx 24h
-    return Math.max(parseFloat(dec.toFixed(4)),0.0167);
-  }
+  // Todos os turnos: A=06-14h, B=14-22h, C=22-06h (igual para CEM, CEMMA e COPLASA)
   const TURNOS={A:{ini:6.0,fim:14.0},B:{ini:14.0,fim:22.0},C:{ini:22.0,fim:30.0}};
   const tr=TURNOS[t];
-  // Após meia-noite (00:00-05:59): A e B já encerraram completamente
-  // Usar agora+24 para representar o fluxo contínuo do dia
   let agoraAdj=agora;
-  if(agora<6.0) agoraAdj=agora+24; // ex: 02:00 → 26
-  // Se o turno ainda não começou no fluxo contínuo
+  if(agora<6.0) agoraAdj=agora+24;
   if(agoraAdj<tr.ini) return 0;
-  // Se o turno já encerrou: retornar 8 (completo)
   if(agoraAdj>=tr.fim) return 8.0;
-  // Turno em andamento: retornar horas decorridas
   const dec=agoraAdj-tr.ini;
   return Math.max(parseFloat(dec.toFixed(4)),0.0167);
 }
-function hRestTurno(t){if(uni!=='CEM')return Math.max(24.0-hDTurno(t),0);return Math.max({A:8.0,B:8.0,C:8.0}[t]-hDTurno(t),0);}
+function hRestTurno(t){return Math.max(8.0-hDTurno(t),0);}
 function isTurnoAtivo(t){
   // Retorna true se o turno está acontecendo AGORA
   const agora=agoraDecimal();
