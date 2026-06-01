@@ -1170,18 +1170,16 @@ function gerarRel(){
   // CEM com 1 turno: horas do turno específico
   // CEM com 2 turnos: soma dos 2 turnos
   // CEMMA/COPLASA: sempre horas desde 06:00 (24h)
-  const h=uni!=='CEM' ? hDTurno('A') :
-    todosT ? (function(){const ag=agoraDecimal();const adj=ag<6?ag+24:ag;return Math.max(adj-6.0,0.0167);})()
+  const h=todosT
+    ? (function(){const ag=agoraDecimal();const adj=ag<6?ag+24:ag;return Math.max(adj-6.0,0.0167);}())
     : turnosRelAtivos.length===1 ? hDTurno(turnosRelAtivos[0])
     : turnosRelAtivos.reduce((s,t)=>s+hDTurno(t),0);
-  const hRest=uni!=='CEM' ? Math.max(24.0-h,0) :
-    todosT ? Math.max(24.0-h,0)
+  const hRest=todosT ? Math.max(24.0-h,0)
     : (function(){
-        // soma apenas horas restantes dos turnos selecionados
         let r=0;
         for(const t of turnosRelAtivos){
           const hT=hDTurno(t);
-          if(hT<7.99) r+=Math.max(8-hT,0); // turno ativo ou futuro
+          if(hT<7.99) r+=Math.max(8-hT,0);
         }
         return r;
       })();
@@ -1210,7 +1208,6 @@ function gerarRel(){
   const tPM=prop.reduce((s,f)=>s+f.meta*metaFator,0);
   const tTM=terc.reduce((s,f)=>s+f.meta*metaFator,0);
   const tPO=prop.reduce((s,f)=>{
-    if(uni!=='CEM') return s+orc(f.meta,h,24);
     const nT=turnosUni().length; const mT=f.meta/nT;
     if(todosT) return s+orc(f.meta,h,24);
     let soma=0;
@@ -1222,7 +1219,6 @@ function gerarRel(){
   function ulthFrente(f){return turnosRelAtivos.filter(t=>hDTurno(t)>0||parseFloat(f['ulth'+t]||0)>0).reduce((s,t)=>s+parseFloat(f['ulth'+t]||0),0);}
   const tPR=prop.reduce((s,f)=>s+realFrente(f),0);
   const tTO=terc.reduce((s,f)=>{
-    if(uni!=='CEM') return s+orc(f.meta,h,24);
     const nT=turnosUni().length; const mT=f.meta/nT;
     if(todosT) return s+orc(f.meta,h,24);
     let soma=0;
@@ -1246,24 +1242,21 @@ function gerarRel(){
     const calcOrc=(function(){
       if(!algumTurnoPassou) return null;
       const nT=turnosUni().length;
-      const metaTurno=f.meta/nT;
+      const metaTurno=f.meta/nT; // meta do turno = meta total / 3
       if(turnosRelAtivos.length===nT){
-        // Todos os turnos: meta_total / 24 × horas desde 06h
+        // Todos os turnos: meta_total / 24h × horas desde 06h
         return orc(f.meta, h, 24);
       }
-      // 1 ou 2 turnos: soma turno a turno
-      // Turno encerrado (hT>=8): meta completa
-      // Turno ativo: (meta/8) × horas do turno
-      // Turno futuro: 0
+      // 1 ou 2 turnos: meta do turno ÷ 8h × horas decorridas do turno
       let soma=0;
       for(const t of turnosRelAtivos){
         const hT=hDTurno(t);
-        if(hT>=7.99) soma+=metaTurno;
-        else if(hT>0.02) soma+=orc(metaTurno, hT, 8);
+        if(hT>=7.99) soma+=metaTurno;       // turno encerrado: meta completa
+        else if(hT>0.02) soma+=orc(metaTurno, hT, 8); // turno ativo: proporcional
       }
       return soma;
     })();
-    const o=uni==='CEM'?calcOrc:(algumTurnoPassou?orc(mT,h,24):null);
+    const o=calcOrc;
     const r=realFrente(f), ulth=ulthFrente(f);
     const d=o!==null?r-o:null, p=pct(r,mT), med=h>0.0167?r/h:0, proj=r+(med*hRest);
     const pc=proj>=mT?'#0a8a0a':'#e00000';
