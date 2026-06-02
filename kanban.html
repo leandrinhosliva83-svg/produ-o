@@ -33,6 +33,9 @@ header{position:relative;z-index:20;padding:max(env(safe-area-inset-top),14px) 1
 .btn-imp:active{transform:scale(.94);}
 .btn-clr{padding:9px 11px;background:rgba(255,51,102,.1);border:1px solid rgba(255,51,102,.25);border-radius:99px;font-size:13px;cursor:pointer;transition:transform .15s;}
 .btn-clr:active{transform:scale(.94);}
+.btn-urg{padding:9px 11px;background:rgba(255,51,102,.25);border:2px solid var(--pend);border-radius:99px;font-size:13px;cursor:pointer;transition:transform .15s,box-shadow .15s;animation:urgPulse 1.5s ease infinite;}
+.btn-urg:active{transform:scale(.94);}
+@keyframes urgPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,51,102,.4)}50%{box-shadow:0 0 0 8px rgba(255,51,102,0)}}
 .search-box{position:relative;}
 .search-box input{width:100%;background:var(--glass);border:1px solid var(--gb);border-radius:99px;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;padding:8px 14px 8px 34px;outline:none;}
 .search-box input::placeholder{color:var(--text2);}
@@ -65,6 +68,11 @@ header{position:relative;z-index:20;padding:max(env(safe-area-inset-top),14px) 1
 .sp-pend::before{background:var(--pend);box-shadow:0 0 8px var(--pend);}
 .sp-prog::before{background:var(--prog);box-shadow:0 0 8px var(--prog);}
 .sp-done::before{background:var(--done);box-shadow:0 0 8px var(--done);}
+.sp-urg::before{background:var(--pend);box-shadow:0 0 8px var(--pend);animation:urgTab 1s ease infinite alternate;}
+@keyframes urgTab{0%{opacity:.5}100%{opacity:1}}
+.sp-urg .snum{color:var(--pend);text-shadow:0 0 12px rgba(255,51,102,.8);}
+.card-urg{border-color:rgba(255,51,102,.5)!important;animation:urgCard 1.5s ease infinite;}
+@keyframes urgCard{0%,100%{box-shadow:0 0 0 0 rgba(255,51,102,.3)}50%{box-shadow:0 0 20px rgba(255,51,102,.5)}}
 .sp.active{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.07);transform:translateY(-2px);}
 .snum{font-family:'Bebas Neue',sans-serif;font-size:24px;line-height:1;margin-bottom:1px;}
 .sp-pend .snum{color:var(--pend);text-shadow:0 0 12px rgba(255,51,102,.6);}
@@ -197,6 +205,7 @@ header{position:relative;z-index:20;padding:max(env(safe-area-inset-top),14px) 1
     <div><div class="logo">⚡ Pendências</div><div class="logo-sub">Gestor de tarefas</div></div>
     <div class="hbtns">
       <button class="btn-clr" onclick="clearAll()" title="Limpar tudo">🗑️</button>
+      <button class="btn-urg" onclick="openUrgent()" title="Tarefa urgente">🚨</button>
       <button class="btn-imp" onclick="openImport()">📋 Excel</button>
       <button class="btn-new" onclick="openAdd()">+ NOVA</button>
     </div>
@@ -223,7 +232,7 @@ header{position:relative;z-index:20;padding:max(env(safe-area-inset-top),14px) 1
 </div>
 
 <div id="daily-banner" onclick="openDaily()">
-  <span id="db-txt">🔔 Lembrete não configurado</span>
+  <span id="db-txt">🔔 Alerta a cada X minutos — toque para configurar</span>
   <button class="db-edit" onclick="event.stopPropagation();openDaily()">Configurar</button>
 </div>
 
@@ -237,6 +246,9 @@ header{position:relative;z-index:20;padding:max(env(safe-area-inset-top),14px) 1
   <div class="sp sp-done" data-col="done" onclick="switchTab('done')">
     <div class="snum" id="sn-done">0</div><div class="slbl">Concluído</div>
   </div>
+  <div class="sp sp-urg" data-col="urg" onclick="switchTab('urg')">
+    <div class="snum" id="sn-urg">0</div><div class="slbl">Urgente</div>
+  </div>
 </div>
 
 <div class="swipe-hint">👆 Botões para mover • Arraste → avançar ← voltar</div>
@@ -245,6 +257,7 @@ header{position:relative;z-index:20;padding:max(env(safe-area-inset-top),14px) 1
   <div class="col-panel active" id="panel-pend"></div>
   <div class="col-panel" id="panel-prog"></div>
   <div class="col-panel" id="panel-done"></div>
+  <div class="col-panel" id="panel-urg"></div>
 </div>
 
 <button class="fab" onclick="openAdd()">+</button>
@@ -302,42 +315,33 @@ header{position:relative;z-index:20;padding:max(env(safe-area-inset-top),14px) 1
 <div id="modal-daily" style="display:none" class="overlay" onclick="if(event.target===this)this.style.display='none'">
   <div class="sheet">
     <div class="shandle"></div>
-    <h3>LEMBRETES</h3>
+    <h3>ALERTA PERIÓDICO</h3>
 
     <div class="toggle-row">
-      <div><div class="toggle-label">Lembrete diário</div><div class="toggle-sub">Resumo das tarefas no horário escolhido</div></div>
-      <label class="toggle"><input type="checkbox" id="daily-on"><span class="tslider"></span></label>
-    </div>
-    <span class="flbl">Horário</span>
-    <input type="time" id="daily-time" value="08:00">
-    <span class="flbl">Dias da semana</span>
-    <div class="days-row">
-      <button class="day-btn on" data-d="0" onclick="toggleDay(this)">Dom</button>
-      <button class="day-btn on" data-d="1" onclick="toggleDay(this)">Seg</button>
-      <button class="day-btn on" data-d="2" onclick="toggleDay(this)">Ter</button>
-      <button class="day-btn on" data-d="3" onclick="toggleDay(this)">Qua</button>
-      <button class="day-btn on" data-d="4" onclick="toggleDay(this)">Qui</button>
-      <button class="day-btn on" data-d="5" onclick="toggleDay(this)">Sex</button>
-      <button class="day-btn on" data-d="6" onclick="toggleDay(this)">Sáb</button>
-    </div>
-
-    <div class="toggle-row" style="margin-top:14px;">
-      <div><div class="toggle-label">Alerta periódico</div><div class="toggle-sub">Avisa a cada X minutos enquanto tiver pendentes</div></div>
+      <div><div class="toggle-label">Ativar alerta</div><div class="toggle-sub">Vibra e avisa enquanto tiver tarefas pendentes</div></div>
       <label class="toggle"><input type="checkbox" id="interval-on"><span class="tslider"></span></label>
     </div>
-    <span class="flbl">Repetir a cada</span>
+
+    <span class="flbl">Alertar a cada quantos minutos?</span>
     <div class="interval-row">
-      <input type="number" id="interval-min" value="30" min="1" max="1440">
-      <span>minutos (enquanto o app estiver aberto)</span>
+      <input type="number" id="interval-min" value="30" min="1" max="1440" style="font-size:22px;font-weight:700;text-align:center;padding:14px;">
+      <span>minutos</span>
     </div>
 
-    <p style="font-size:11px;color:var(--text2);margin-top:12px;line-height:1.6;padding:10px;background:rgba(255,255,255,.04);border-radius:var(--rsm);">
-      💡 O Chrome precisa estar aberto em segundo plano para os alertas funcionarem.
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+      <button onclick="document.getElementById('interval-min').value=5" style="flex:1;padding:10px;border-radius:99px;border:1px solid var(--gb);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;">5 min</button>
+      <button onclick="document.getElementById('interval-min').value=15" style="flex:1;padding:10px;border-radius:99px;border:1px solid var(--gb);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;">15 min</button>
+      <button onclick="document.getElementById('interval-min').value=30" style="flex:1;padding:10px;border-radius:99px;border:1px solid var(--gb);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;">30 min</button>
+      <button onclick="document.getElementById('interval-min').value=60" style="flex:1;padding:10px;border-radius:99px;border:1px solid var(--gb);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;">1 hora</button>
+    </div>
+
+    <p style="font-size:12px;color:var(--text2);margin-top:14px;line-height:1.6;padding:12px;background:rgba(124,77,255,.08);border-radius:var(--rsm);border:1px solid rgba(124,77,255,.2);">
+      📱 O Chrome precisa estar aberto (pode estar em segundo plano). O alerta vibra, toca um som e aparece na tela.
     </p>
 
     <div class="sbtns">
       <button class="scancel" onclick="document.getElementById('modal-daily').style.display='none'">Cancelar</button>
-      <button class="sok" onclick="saveDaily()">Salvar 🔔</button>
+      <button class="sok" onclick="saveDaily()">Ativar alerta 🔔</button>
     </div>
   </div>
 </div>
@@ -361,6 +365,20 @@ header{position:relative;z-index:20;padding:max(env(safe-area-inset-top),14px) 1
       <button class="scancel" onclick="document.getElementById('modal-import').style.display='none'">Cancelar</button>
       <button class="sok" onclick="doImport()">Importar ⚡</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL URGENTE -->
+<div id="modal-urgent" style="display:none" class="overlay" onclick="if(event.target===this)this.style.display='none'">
+  <div class="sheet" style="border-top:3px solid var(--pend);box-shadow:0 0 40px rgba(255,51,102,.3);">
+    <div class="shandle"></div>
+    <h3 style="background:linear-gradient(90deg,var(--pend),#ff9f43);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">🚨 TAREFA URGENTE</h3>
+    <span class="flbl">Descreva a urgência</span>
+    <textarea id="urg-text" placeholder="O que precisa ser resolvido AGORA?" style="border-color:rgba(255,51,102,.5);min-height:90px;font-size:15px;"></textarea>
+    <button onclick="fireUrgent()" style="width:100%;margin-top:14px;padding:16px;border-radius:99px;border:none;background:linear-gradient(135deg,#ff3366,#ff6b35);color:white;font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 0 24px rgba(255,51,102,.5);animation:urgPulse 1s ease infinite;">
+      🚨 ADICIONAR URGENTE
+    </button>
+    <button class="scancel" style="width:100%;margin-top:8px;" onclick="document.getElementById('modal-urgent').style.display='none'">Cancelar</button>
   </div>
 </div>
 
@@ -438,19 +456,19 @@ function saveD(){try{localStorage.setItem('kb5_daily',JSON.stringify(daily));}ca
 
 /* ── STATE ── */
 let tasks=[], alarmTaskId=null, selectedPrio='high', selectedCat='', dailyTimer=null, intervalTimer=null;
-let daily={on:false,time:'08:00',days:[0,1,2,3,4,5,6],intervalOn:false,intervalMin:30};
+let daily={intervalOn:false,intervalMin:30};
 
 /* ── RENDER ── */
 function render(){
   const q=(document.getElementById('search').value||'').toLowerCase();
-  const cols={pend:[],prog:[],done:[]};
+  const cols={pend:[],prog:[],done:[],urg:[]};
   tasks.forEach(t=>{if(!q||t.text.toLowerCase().includes(q))cols[t.status].push(t);});
-  ['pend','prog','done'].forEach(s=>{
+  ['pend','prog','done','urg'].forEach(s=>{
     document.getElementById('sn-'+s).textContent=cols[s].length;
     const el=document.getElementById('panel-'+s);
     if(!cols[s].length){
       const ico=s==='done'?'✅':s==='prog'?'⚡':'📋';
-      const msgs={pend:'Sem pendências!',prog:'Nada em andamento',done:'Nada concluído'};
+      const msgs={pend:'Sem pendências!',prog:'Nada em andamento',done:'Nada concluído',urg:'Nenhuma urgência!'};
       el.innerHTML=`<div class="empty-col"><div class="eico">${ico}</div><div class="etxt">${msgs[s]}</div></div>`;
       return;
     }
@@ -473,8 +491,8 @@ function updateProgress(){
 function cardHTML(t,col){
   const pL={high:'Alta',med:'Média',low:'Baixa'};
   const pC={high:'th',med:'tm',low:'tl'};
-  const gC={pend:'gp',prog:'gg',done:'gd'};
-  const sC={pend:'sp2',prog:'sg',done:'sd'};
+  const gC={pend:'gp',prog:'gg',done:'gd',urg:'gp'};
+  const sC={pend:'sp2',prog:'sg',done:'sd',urg:'sp2'};
 
   const prioTag=`<span class="tag ${pC[t.prio]||'tm'}">${pL[t.prio]||'Média'}</span>`;
   const alarmTag=t.alarm?`<span class="tag ta">⏰ ${fmt(t.alarm)}</span>`:'';
@@ -495,11 +513,12 @@ function cardHTML(t,col){
   const notesHTML=t.notes?`<div class="card-notes">📝 ${esc(t.notes)}</div>`:'';
 
   let btns='';
-  if(col==='pend') btns=`<button class="act as" onclick="moveTo(${t.id},'prog')">▶ Iniciar</button>`;
+  if(col==='urg') btns=`<button class="act as" onclick="moveTo(${t.id},'pend')">→ Mover p/ Pendente</button><button class="act ad" onclick="moveTo(${t.id},'done')">✓ Concluir</button>`;
+  else if(col==='pend') btns=`<button class="act as" onclick="moveTo(${t.id},'prog')">▶ Iniciar</button>`;
   else if(col==='prog') btns=`<button class="act ad" onclick="moveTo(${t.id},'done')">✓ Concluir</button><button class="act ab" onclick="moveTo(${t.id},'pend')">◀ Voltar</button>`;
   else btns=`<button class="act ab" onclick="moveTo(${t.id},'pend')">↺ Reabrir</button>`;
 
-  return `<div class="card ${isOverdue?'overdue':''}" data-id="${t.id}" data-col="${col}">
+  return `<div class="card ${isOverdue?'overdue':''} ${col==='urg'?'card-urg':''}" data-id="${t.id}" data-col="${col}">
     <div class="swipe-ind si-right">${col==='pend'?'▶':'✓'}</div>
     <div class="swipe-ind si-left">${col==='done'||col==='prog'?'◀':''}</div>
     <div class="cglow ${gC[col]}"></div>
@@ -658,40 +677,21 @@ function openDaily(){
 }
 function toggleDay(btn){btn.classList.toggle('on');}
 function saveDaily(){
-  daily.on=document.getElementById('daily-on').checked;
-  daily.time=document.getElementById('daily-time').value;
   daily.intervalOn=document.getElementById('interval-on').checked;
   daily.intervalMin=parseInt(document.getElementById('interval-min').value)||30;
-  daily.days=[];
-  document.querySelectorAll('.day-btn.on').forEach(b=>daily.days.push(parseInt(b.dataset.d)));
-  saveD();scheduleDailyAlarm();scheduleInterval();
+  saveD();scheduleInterval();
   document.getElementById('modal-daily').style.display='none';
   updateDailyBanner();
-  toast(daily.on||daily.intervalOn?'Lembretes configurados 🔔':'Lembretes desativados','#7c4dff');
+  toast(daily.intervalOn?`Alerta a cada ${daily.intervalMin} min 🔔`:'Alerta desativado','#7c4dff');
 }
 
 function updateDailyBanner(){
-  const parts=[];
-  if(daily.on){const days=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];parts.push(`Diário ${daily.time} • ${daily.days.map(d=>days[d]).join(', ')}`);}
-  if(daily.intervalOn) parts.push(`A cada ${daily.intervalMin}min`);
-  document.getElementById('db-txt').textContent=parts.length?'🔔 '+parts.join(' | '):'🔔 Lembretes não configurados — toque para configurar';
+  const el=document.getElementById('db-txt');
+  if(daily.intervalOn) el.textContent=`🔔 Alerta ativo — a cada ${daily.intervalMin} minuto${daily.intervalMin!==1?'s':''}`;
+  else el.textContent='🔔 Alerta desativado — toque para configurar';
 }
 
-function scheduleDailyAlarm(){
-  if(dailyTimer)clearTimeout(dailyTimer);
-  if(!daily.on||!daily.days.length)return;
-  const [h,m]=daily.time.split(':').map(Number);
-  const now=new Date();
-  let next=new Date(now);next.setHours(h,m,0,0);
-  let tries=0;
-  while(!daily.days.includes(next.getDay())||next<=now){next.setDate(next.getDate()+1);next.setHours(h,m,0,0);if(++tries>8)return;}
-  dailyTimer=setTimeout(()=>{
-    const pend=tasks.filter(t=>t.status==='pend').length;
-    const prog=tasks.filter(t=>t.status==='prog').length;
-    fireAlarm('🔔 BOM DIA!',`${pend} pendente${pend!==1?'s':''} • ${prog} em andamento`);
-    setTimeout(()=>scheduleDailyAlarm(),2000);
-  },next-now);
-}
+function scheduleDailyAlarm(){ /* removido - usando só intervalo */ }
 
 function scheduleInterval(){
   if(intervalTimer)clearInterval(intervalTimer);
@@ -758,10 +758,49 @@ function toast(msg,color='#00e5a0'){
   el._t=setTimeout(()=>el.style.display='none',3000);
 }
 
+/* ── URGENTE ── */
+function openUrgent(){
+  document.getElementById('urg-text').value='';
+  document.getElementById('modal-urgent').style.display='flex';
+  setTimeout(()=>document.getElementById('urg-text').focus(),300);
+}
+
+function fireUrgent(){
+  const text=document.getElementById('urg-text').value.trim();
+  if(!text){document.getElementById('urg-text').focus();return;}
+  document.getElementById('modal-urgent').style.display='none';
+  // add to urg column immediately
+  const t={id:Date.now(),text,status:'urg',prio:'high',cat:'',alarm:null,due:null,notes:'⚠️ URGENTE'};
+  tasks.unshift(t);save();render();
+  switchTab('urg');
+  // fire alarm
+  urgentBeep();
+  if(Notification.permission==='granted'){
+    try{new Notification('🚨 URGENTE!',{body:text,requireInteraction:true,vibrate:[600,100,600,100,600,100,600],tag:'urgent'});}catch(e){}
+  }
+  toast('🚨 Urgente adicionada!','#ff3366');
+}
+
+function urgentBeep(){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    // urgent pattern: fast aggressive beeps
+    [0,150,300,450,600,750,900].forEach((d,i)=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);
+      o.frequency.value=i%2===0?1318:987;o.type='square';
+      const t=ctx.currentTime+d/1000;
+      g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.6,t+0.03);
+      g.gain.exponentialRampToValueAtTime(0.001,t+0.12);
+      o.start(t);o.stop(t+0.15);
+    });
+  }catch(e){}
+}
+
 /* ── INIT ── */
 load();reqNotif();
 setInterval(checkOneAlarms,20000);checkOneAlarms();
-scheduleDailyAlarm();scheduleInterval();
+scheduleInterval();
 document.getElementById('inp-task').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey)addTask();});
 </script>
 </body>
