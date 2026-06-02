@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BI — Redução de Moagem · Safra 2025/2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#050505;display:flex;justify-content:center;padding:32px 16px;min-height:100vh;}
+  #root{background:#0a0a0a;border-radius:16px;padding:24px;font-family:sans-serif;color:#fff;width:100%;max-width:960px;}
+  .cb-wrap{display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;padding:3px 0;}
+  .cb-box{width:15px;height:15px;border-radius:3px;border:2px solid;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .painel{background:#141414;border-radius:10px;padding:14px;border:0.5px solid #222;margin-bottom:10px;}
+  .titulo{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+  input[type=date]{background:#1a1a1a;border:1px solid #333;color:#ccc;font-size:12px;padding:5px 8px;border-radius:8px;cursor:pointer;}
+  button{cursor:pointer;}
+  .adm-toggle{background:#1a1a1a;border:1px solid #333;color:#888;font-size:12px;padding:6px 14px;border-radius:8px;display:flex;align-items:center;gap:6px;}
+  .adm-toggle:hover{border-color:#555;color:#ccc;}
+  .adm-panel{background:#0f0f0f;border:1px solid #2a2a2a;border-radius:12px;padding:16px;margin-bottom:12px;}
+  .btn-del{background:transparent;border:1px solid #c0392b;color:#c0392b;font-size:11px;padding:5px 12px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;}
+  .btn-del:hover{background:#c0392b22;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const DADOS_PADRAO=[
+  {data:'2026-05-01',motivo:'Norm. Moagem',setor:'agricola',t:37809,hmin:24055,rpm:4262},
+  {data:'2026-05-01',motivo:'Esfriar Mancal',setor:'moenda',t:43,hmin:18,rpm:3900},
+  {data:'2026-05-01',motivo:'Melh. Balanço',setor:'producao',t:182,hmin:84,rpm:4000},
+  {data:'2026-05-01',motivo:'Inic. Moagem',setor:'agricola',t:551,hmin:179,rpm:3550},
+  {data:'2026-05-01',motivo:'Norm. Moagem',setor:'moenda',t:5254,hmin:3590,rpm:4325},
+  {data:'2026-05-01',motivo:'Melhorar Vapor',setor:'moenda',t:571,hmin:155,rpm:3300},
+  {data:'2026-05-01',motivo:'Ajustando Moagem',setor:'agricola',t:55,hmin:32,rpm:4200},
+  {data:'2026-05-01',motivo:'Chuva Solo Úmido',setor:'agricola',t:7334,hmin:2127,rpm:3452},
+  {data:'2026-05-01',motivo:'Ind. Transbordo',setor:'agricola',t:671,hmin:258,rpm:3800},
+  {data:'2026-05-01',motivo:'Ind. Colhedora',setor:'agricola',t:189,hmin:87,rpm:4000},
+  {data:'2026-05-01',motivo:'Norm. Moagem',setor:'producao',t:5291,hmin:2626,rpm:4053},
+  {data:'2026-05-01',motivo:'Proc. Cheio',setor:'producao',t:5929,hmin:1903,rpm:3570},
+  {data:'2026-05-01',motivo:'Proc. Cheio',setor:'moenda',t:3595,hmin:1050,rpm:3426},
+  {data:'2026-05-01',motivo:'Transp. Lento Chuva',setor:'agricola',t:884,hmin:240,rpm:3300},
+  {data:'2026-05-01',motivo:'Inic. Moagem',setor:'moenda',t:783,hmin:506,rpm:4273},
+  {data:'2026-05-01',motivo:'Manut. Caldeira',setor:'moenda',t:1996,hmin:643,rpm:3600},
+  {data:'2026-05-01',motivo:'Mudança de Frente',setor:'agricola',t:836,hmin:411,rpm:4067},
+  {data:'2026-05-01',motivo:'Baixa Colheita',setor:'agricola',t:1254,hmin:503,rpm:3862},
+];
+
+const SETORES={agricola:{label:'Agrícola',cor:'#1D9E75'},producao:{label:'Produção',cor:'#EF9F27'},moenda:{label:'Moenda',cor:'#7F77DD'}};
+let DADOS=[...DADOS_PADRAO];
+let pdfCarregado=false,nomeArquivo='dados de exemplo',admAberto=false;
+let ativosSetor=new Set(['agricola','producao','moenda']);
+let ativosMotivo=new Set();
+let dataIni='',dataFim='';
+let chartBar=null,chartCombo=null;
+let periodo='01/05/2026 – 01/06/2026';
+let modoResumido=true; // true = PDF resumo (1 pág), false = PDF detalhado (datas por linha)
+
+function todosMotivos(){return[...new Set(DADOS.filter(r=>ativosSetor.has(r.setor)).map(r=>r.motivo))].sort();}
+function inicializarMotivos(){ativosMotivo=new Set(todosMotivos());}
+function fmt(n){return Math.round(n).toLocaleString('pt-BR');}
+function fmtH(min){const h=Math.floor(min/60),m=Math.round(min%60);return`${h}h${m>0?String(m).padStart(2,'0'):''}`;}
+function dadosFiltrados(){return DADOS.filter(r=>ativosSetor.has(r.setor)&&ativosMotivo.has(r.motivo)&&(!dataIni||r.data>=dataIni)&&(!dataFim||r.data<=dataFim));}
+
+function kpis(){
+  const rows=dadosFiltrados();
+  const top=Object.entries(rows.reduce((acc,r)=>{acc[r.motivo]=(acc[r.motivo]||0)+r.t;return acc},{})).sort((a,b)=>b[1]-a[1])[0];
+  return{total:rows.reduce((s,r)=>s+r.t,0),occ:rows.length,hmin:rows.reduce((s,r)=>s+r.hmin,0),rpm:rows.length?Math.round(rows.reduce((s,r)=>s+r.rpm,0)/rows.length):0,top};
+}
+
+function toggleSetor(s){if(ativosSetor.has(s)){if(ativosSetor.size===1)return;ativosSetor.delete(s);}else ativosSetor.add(s);inicializarMotivos();renderHTML();}
+function toggleMotivo(m){if(ativosMotivo.has(m)){if(ativosMotivo.size===1)return;ativosMotivo.delete(m);}else ativosMotivo.add(m);renderHTML();}
+function todosMotivosOn(){ativosMotivo=new Set(todosMotivos());renderHTML();}
+function setData(tipo,val){if(tipo==='ini')dataIni=val;else dataFim=val;renderHTML();}
+function toggleAdm(){admAberto=!admAberto;renderHTML();}
+function ev(e){e.preventDefault();}
+async function drop(e){e.preventDefault();const f=e.dataTransfer.files[0];if(f&&f.type==='application/pdf')await onFile(f);}
+
+function excluirPDF(){
+  DADOS=[];pdfCarregado=false;nomeArquivo='nenhum arquivo';
+  periodo='—';modoResumido=true;
+  ativosSetor=new Set(['agricola','producao','moenda']);
+  ativosMotivo=new Set();dataIni='';dataFim='';renderHTML();
+}
+
+function check(cor,on){return`<div class="cb-box" style="border-color:${cor};background:${on?cor:'transparent'};">${on?`<svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3L3.5 5.5L8 1" stroke="#0a0a0a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`:''}</div>`;}
+
+// ── PARSER FORMATO RESUMO (1 página, sem datas por linha) ──────────────
+function parseResumo(texto){
+  const mapaSetor={'AGRICOLA / MOENDA':'agricola','PRODUÇÃO / MOENDA':'producao','MOENDA / MOENDA':'moenda'};
+  const skipPrefixes=['Eqpto.:','Subtotal:','Total Geral:','CEM','5.40','Relatório','Safra','ActRel','Página','Motivo','GA-Tecnologia','Horas','Redução'];
+  let setorAtual='agricola';
+  const resultado=[];
+  const pm=texto.match(/(\d{2}\/\d{2}\/\d{4})\s*a\s*(\d{2}\/\d{2}\/\d{4})/);
+  const dataRef=pm?`${pm[1].split('/')[2]}-${pm[1].split('/')[1]}-${pm[1].split('/')[0]}`:'2026-05-01';
+  if(pm)periodo=pm[1]+' – '+pm[2];
+
+  // Normaliza o texto agrupando por linhas
+  const linhas=texto.split('\n').map(l=>l.trim()).filter(Boolean);
+
+  for(const l of linhas){
+    // detectar setor
+    for(const[k,v]of Object.entries(mapaSetor)){if(l.includes(k)){setorAtual=v;break;}}
+    // pular linhas de cabeçalho
+    if(skipPrefixes.some(p=>l.startsWith(p)))continue;
+
+    // Formato: "NOME DO MOTIVO HH:MM rpm_valor rpm toneladas ocorrencias"
+    // Ex: "NORMALIZANDO MOAGEM 400:55 4262,39 rpm 37808,77 460"
+    // Ex: "CHUVA SOLO UMIDO 35:27 3452,17 rpm 7334,17 46"
+    const re=/^(.+?)\s+(\d{1,4}):(\d{2})\s+([\d,.]+)\s+rpm\s+([\d,.]+)\s+(\d+)\s*$/;
+    const m=l.match(re);
+    if(m){
+      const motivo=m[1].trim();
+      const hmin=parseInt(m[2])*60+parseInt(m[3]);
+      const rpm=parseFloat(m[4].replace(',','.'));
+      const t=parseFloat(m[5].replace(/\./g,'').replace(',','.'));
+      if(t>0&&motivo.length>1&&!motivo.startsWith('Eqpto')){
+        resultado.push({
+          data:dataRef,
+          motivo:motivo.charAt(0).toUpperCase()+motivo.slice(1).toLowerCase(),
+          setor:setorAtual,t,hmin,rpm
+        });
+      }
+    }
+  }
+  return resultado.length>=1?resultado:null;
+}
+
+// ── PARSER FORMATO DETALHADO (29 páginas, datas por linha) ────────────
+function parseDetalhado(texto){
+  const mapaSetor={'AGRICOLA / MOENDA':'agricola','PRODUÇÃO / MOENDA':'producao','MOENDA / MOENDA':'moenda'};
+  const linhas=texto.split('\n').map(l=>l.trim()).filter(Boolean);
+  const reReg=/^(\d{2})\/(\d{2})\/(\d{4})\s+\d{2}:\d{2}\s+\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}\s+(\d{2}):(\d{2})\s+([\d,.]+)\s+([\d,.]+)/;
+  const skipPrefixes=['Eqpto','Subtotal','Total','Observa','Início','Lança','Motivo','Safra','ActRel','CEM','5.40','Relatório','Página','GA-'];
+  let setorAtual='agricola',motivoAtual='Norm. Moagem';
+  const resultado=[];
+  for(const l of linhas){
+    for(const[k,v]of Object.entries(mapaSetor)){if(l.includes(k)){setorAtual=v;break;}}
+    const skip=skipPrefixes.some(p=>l.startsWith(p));
+    if(!skip&&!l.match(/^\d/)&&l===l.toUpperCase()&&l.length>3&&l.length<70){
+      motivoAtual=l.charAt(0)+l.slice(1).toLowerCase();
+    }
+    const m=l.match(reReg);
+    if(m){
+      const data=`${m[3]}-${m[2]}-${m[1]}`;
+      const hmin=parseInt(m[4])*60+parseInt(m[5]);
+      const t=parseFloat(m[6].replace(/\./g,'').replace(',','.'));
+      const rpm=parseFloat(m[7].replace(',','.'));
+      if(t>0)resultado.push({data,motivo:motivoAtual,setor:setorAtual,t,hmin,rpm});
+    }
+  }
+  const pm=texto.match(/(\d{2}\/\d{2}\/\d{4})\s*a\s*(\d{2}\/\d{2}\/\d{4})/);
+  if(pm)periodo=pm[1]+' – '+pm[2];
+  return resultado.length>=3?resultado:null;
+}
+
+async function lerPDF(file){
+  const ab=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data:ab}).promise;
+  let textoTotal='';
+  for(let p=1;p<=pdf.numPages;p++){
+    const pg=await pdf.getPage(p);
+    const tc=await pg.getTextContent();
+    // Agrupa items por linha (mesmo Y) e ordena por X dentro de cada linha
+    const linhasMap={};
+    for(const item of tc.items){
+      const y=Math.round(item.transform[5]);
+      const x=item.transform[4];
+      if(!linhasMap[y])linhasMap[y]=[];
+      linhasMap[y].push({x,str:item.str});
+    }
+    // Ordena linhas de cima para baixo (Y decrescente no PDF)
+    const ys=Object.keys(linhasMap).map(Number).sort((a,b)=>b-a);
+    for(const y of ys){
+      const items=linhasMap[y].sort((a,b)=>a.x-b.x);
+      const linha=items.map(i=>i.str).join(' ').trim();
+      if(linha)textoTotal+=linha+'\n';
+    }
+  }
+  return{texto:textoTotal,paginas:pdf.numPages};
+}
+
+async function onFile(f){
+  if(!f)return;
+  const area=document.getElementById('upload-area');
+  if(area)area.innerHTML='<div style="font-size:12px;color:#1D9E75;padding:12px 0;">⏳ Lendo PDF...</div>';
+  try{
+    const{texto,paginas}=await lerPDF(f);
+    let novo=null;
+    if(paginas<=3){
+      // Formato resumo
+      novo=parseResumo(texto);
+      modoResumido=true;
+    } else {
+      // Formato detalhado com datas
+      novo=parseDetalhado(texto);
+      modoResumido=false;
+    }
+    if(novo&&novo.length>0){
+      DADOS=novo;pdfCarregado=true;nomeArquivo=f.name;
+      ativosSetor=new Set(['agricola','producao','moenda']);
+      inicializarMotivos();dataIni='';dataFim='';
+      renderHTML();
+    }else{
+      alert('PDF lido ('+paginas+' pág.) mas nenhum registro encontrado.\nVerifique se é um Relatório de Redução de Moagem.');
+      renderHTML();
+    }
+  }catch(err){alert('Erro ao ler PDF: '+err.message);renderHTML();}
+}
+
+function renderHTML(){
+  const kpi=kpis(),rows=dadosFiltrados();
+  const corKpi=ativosSetor.size===1?SETORES[[...ativosSetor][0]].cor:'#1D9E75';
+  const motivos=todosMotivos(),todosOn=motivos.every(m=>ativosMotivo.has(m));
+  const porDia={};rows.forEach(r=>{if(!porDia[r.data])porDia[r.data]={t:0,hmin:0};porDia[r.data].t+=r.t;porDia[r.data].hmin+=r.hmin;});
+  const dias=Object.keys(porDia).sort();
+  const diasLabel=dias.map(d=>{const[,m,dd]=d.split('-');return`${dd}/${m}`;});
+  const porMotivo={};rows.forEach(r=>{if(!porMotivo[r.motivo])porMotivo[r.motivo]={t:0,hmin:0,setor:r.setor};porMotivo[r.motivo].t+=r.t;porMotivo[r.motivo].hmin+=r.hmin;});
+  const motivosSorted=Object.entries(porMotivo).sort((a,b)=>b[1].t-a[1].t);
+  const cbSetores=Object.entries(SETORES).map(([k,v])=>{const on=ativosSetor.has(k);return`<label class="cb-wrap" onclick="toggleSetor('${k}')">${check(v.cor,on)}<span style="font-size:12px;font-weight:500;color:${on?v.cor:'#555'};">${v.label}</span></label>`;}).join('');
+  const cols=3,porCol=Math.ceil(motivos.length/cols);
+  let colsHTML='';
+  for(let c=0;c<cols;c++){const slice=motivos.slice(c*porCol,(c+1)*porCol);colsHTML+=`<div style="display:flex;flex-direction:column;gap:1px;">${slice.map(m=>{const on=ativosMotivo.has(m);return`<label class="cb-wrap" onclick="toggleMotivo('${m}')">${check('#888',on)}<span style="font-size:11px;color:${on?'#ccc':'#444'};">${m}</span></label>`;}).join('')}</div>`;}
+  const alturaBar=Math.max(motivosSorted.length*36+50,80);
+
+  const admHTML=admAberto?`<div class="adm-panel">
+    <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;">⚙ Administração</div>
+    <div style="display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:11px;color:#555;margin-bottom:6px;">Arquivo atual</div>
+        <div style="font-size:13px;color:${pdfCarregado?'#1D9E75':'#555'};">📄 ${nomeArquivo}</div>
+        ${pdfCarregado?`<div style="font-size:10px;color:#444;margin-top:4px;">Formato: ${modoResumido?'Resumo mensal':'Detalhado por dia'}</div>`:''}
+        <button class="btn-del" onclick="excluirPDF()" style="margin-top:10px;">
+          <svg width="12" height="13" viewBox="0 0 13 14" fill="none"><path d="M1 3.5h11M4.5 3.5V2.5a1 1 0 011-1h2a1 1 0 011 1v1M5.5 6.5v4M7.5 6.5v4M2 3.5l.7 8a1 1 0 001 .9h5.6a1 1 0 001-.9l.7-8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          ${pdfCarregado?'Excluir arquivo':'Resetar dados'}
+        </button>
+      </div>
+      <div style="width:1px;min-height:60px;background:#222;"></div>
+      <div>
+        <div style="font-size:11px;color:#555;margin-bottom:8px;">Carregar PDF</div>
+        <div style="font-size:10px;color:#444;margin-bottom:8px;">✓ Resumo mensal (1 pág.)<br>✓ Detalhado por dia (múltiplas pág.)</div>
+        <div id="upload-area" ondragover="ev(event)" ondrop="drop(event)"
+          style="border:1.5px dashed #2a2a2a;border-radius:10px;padding:12px 20px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:border-color .2s;"
+          onmouseenter="this.style.borderColor='#1D9E75'" onmouseleave="this.style.borderColor='#2a2a2a'"
+          onclick="document.getElementById('finput').click()">
+          <span style="font-size:22px;">📂</span>
+          <div>
+            <div style="font-size:13px;color:#888;">Arraste o PDF aqui</div>
+            <div style="font-size:11px;color:#555;margin-top:2px;">ou <span style="color:#1D9E75;text-decoration:underline;">clique para selecionar</span></div>
+          </div>
+          <input id="finput" type="file" accept=".pdf" style="display:none" onchange="onFile(this.files[0])">
+        </div>
+      </div>
+    </div>
+  </div>`:'';
+
+  document.getElementById('root').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div>
+        <div style="font-size:16px;font-weight:500;">Redução de moagem</div>
+        <div style="font-size:11px;color:#444;margin-top:3px;">${periodo} · Safra 2025/2026</div>
+      </div>
+      <button class="adm-toggle" onclick="toggleAdm()">⚙ ADM ${admAberto?'▲':'▼'}</button>
+    </div>
+    ${admHTML}
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px;">
+      <div style="background:#141414;border-radius:10px;padding:14px;border:1px solid ${corKpi}44;"><div style="font-size:11px;color:#666;margin-bottom:6px;">Total reduzido</div><div style="font-size:22px;font-weight:500;color:${corKpi};">${fmt(kpi.total)} t</div></div>
+      <div style="background:#141414;border-radius:10px;padding:14px;border:0.5px solid #222;"><div style="font-size:11px;color:#666;margin-bottom:6px;">Horas redução</div><div style="font-size:22px;font-weight:500;color:#38BDF8;">${fmtH(kpi.hmin)}</div></div>
+      <div style="background:#141414;border-radius:10px;padding:14px;border:0.5px solid #222;"><div style="font-size:11px;color:#666;margin-bottom:6px;">Registros</div><div style="font-size:22px;font-weight:500;color:#EF9F27;">${fmt(kpi.occ)}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px;">
+      <div style="background:#141414;border-radius:10px;padding:14px;border:0.5px solid #222;"><div style="font-size:11px;color:#666;margin-bottom:6px;">RPM médio</div><div style="font-size:22px;font-weight:500;color:#7F77DD;">${fmt(kpi.rpm)} rpm</div></div>
+      <div style="background:#141414;border-radius:10px;padding:14px;border:0.5px solid #222;"><div style="font-size:11px;color:#666;margin-bottom:6px;">Maior ofensor</div><div style="font-size:15px;font-weight:500;color:#D85A30;">${kpi.top?kpi.top[0]:'-'}</div><div style="font-size:12px;color:#444;margin-top:4px;">${kpi.top?fmt(kpi.top[1])+' t':''}</div></div>
+    </div>
+    ${!modoResumido?`<div class="painel"><div class="titulo">Filtro por data</div><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:11px;color:#555;">De:</span><input type="date" value="${dataIni}" onchange="setData('ini',this.value)"></div>
+      <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:11px;color:#555;">Até:</span><input type="date" value="${dataFim}" onchange="setData('fim',this.value)"></div>
+      ${(dataIni||dataFim)?`<button onclick="dataIni='';dataFim='';renderHTML()" style="background:#333;border:none;color:#aaa;font-size:11px;padding:4px 10px;border-radius:8px;">✕</button>`:''}
+    </div></div>`:''}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+      <div class="painel"><div class="titulo">Setores</div><div style="display:flex;gap:20px;flex-wrap:wrap;">${cbSetores}</div></div>
+      <div class="painel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div class="titulo" style="margin:0;">Motivos</div>
+          <label class="cb-wrap" onclick="todosMotivosOn()" style="gap:5px;">${check('#555',todosOn)}<span style="font-size:11px;color:${todosOn?'#aaa':'#555'};">Todos</span></label>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0 10px;">${colsHTML}</div>
+      </div>
+    </div>
+    <div class="painel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div class="titulo" style="margin:0;">${modoResumido?'Redução por motivo':'Redução por dia'}</div>
+        ${!modoResumido?`<div style="display:flex;gap:14px;">
+          <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:#666;"><span style="width:14px;height:10px;background:#1D9E7555;border:1px solid #1D9E75;display:inline-block;border-radius:2px;"></span>Toneladas</span>
+          <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:#666;"><span style="width:14px;height:2px;background:#38BDF8;display:inline-block;"></span>Horas</span>
+        </div>`:''}
+      </div>
+      <div style="position:relative;width:100%;height:220px;"><canvas id="ccombo"></canvas></div>
+    </div>
+    <div class="painel"><div class="titulo">Motivos (t)</div><div style="position:relative;width:100%;height:${alturaBar}px;"><canvas id="cbar"></canvas></div></div>
+  `;
+  if(modoResumido){
+    // No resumo, gráfico combo mostra toneladas por setor
+    const porSetor={agricola:{t:0,hmin:0},producao:{t:0,hmin:0},moenda:{t:0,hmin:0}};
+    rows.forEach(r=>{porSetor[r.setor].t+=r.t;porSetor[r.setor].hmin+=r.hmin;});
+    drawComboResumo(
+      ['Agrícola','Produção','Moenda'],
+      [porSetor.agricola.t,porSetor.producao.t,porSetor.moenda.t],
+      [parseFloat((porSetor.agricola.hmin/60).toFixed(1)),parseFloat((porSetor.producao.hmin/60).toFixed(1)),parseFloat((porSetor.moenda.hmin/60).toFixed(1))]
+    );
+  } else {
+    drawCombo(diasLabel,dias.map(d=>Math.round(porDia[d].t)),dias.map(d=>parseFloat((porDia[d].hmin/60).toFixed(1))));
+  }
+  drawBar(motivosSorted);
+}
+
+function drawComboResumo(labels,data,horasData){
+  if(chartCombo){chartCombo.destroy();chartCombo=null;}
+  if(!document.getElementById('ccombo'))return;
+  const cores=['#1D9E75','#EF9F27','#7F77DD'];
+  chartCombo=new Chart(document.getElementById('ccombo'),{type:'bar',data:{labels,datasets:[{data:horasData,backgroundColor:cores,borderRadius:6,barThickness:60}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:30}},plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>' '+fmtH(c.parsed.y*60)}}},scales:{x:{ticks:{color:'#aaa',font:{size:13}},grid:{color:'#1e1e1e'}},y:{ticks:{color:'#555',callback:v=>fmtH(v*60)},grid:{color:'#1e1e1e'}}},animation:{onComplete:function(){const ctx=this.ctx;ctx.save();ctx.fillStyle='#38BDF8';ctx.font='bold 14px sans-serif';ctx.textAlign='center';this.getDatasetMeta(0).data.forEach((bar,i)=>{ctx.fillText(fmtH(horasData[i]*60),bar.x,bar.y-10);});ctx.restore();}}}});
+}
+
+function drawCombo(labels,dataTon,dataHoras){
+  if(chartCombo){chartCombo.destroy();chartCombo=null;}
+  if(!document.getElementById('ccombo'))return;
+  chartCombo=new Chart(document.getElementById('ccombo'),{type:'bar',data:{labels,datasets:[{type:'bar',label:'Toneladas (t)',data:dataTon,backgroundColor:'#1D9E7555',borderColor:'#1D9E75',borderWidth:1,borderRadius:3,yAxisID:'yT'},{type:'line',label:'Horas (h)',data:dataHoras,borderColor:'#38BDF8',backgroundColor:'transparent',tension:0.3,pointRadius:4,pointBackgroundColor:'#38BDF8',borderWidth:2,borderDash:[4,3],yAxisID:'yH'}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>c.dataset.label+': '+c.parsed.y.toLocaleString('pt-BR')+(c.dataset.yAxisID==='yT'?' t':' h')}}},scales:{x:{ticks:{color:'#555',font:{size:10}},grid:{color:'#1e1e1e'}},yT:{position:'left',ticks:{color:'#1D9E75',callback:v=>fmt(v)},grid:{color:'#1e1e1e'},title:{display:true,text:'t',color:'#1D9E75',font:{size:10}}},yH:{position:'right',ticks:{color:'#38BDF8',callback:v=>v+'h'},grid:{drawOnChartArea:false},title:{display:true,text:'h',color:'#38BDF8',font:{size:10}}}}}});
+}
+
+function drawBar(motivosSorted){
+  if(chartBar){chartBar.destroy();chartBar=null;}
+  if(!document.getElementById('cbar'))return;
+  const labels=motivosSorted.map(([m,d])=>ativosSetor.size>1?`${m} · ${SETORES[d.setor]?.label||d.setor}`:m);
+  const data=motivosSorted.map(([,d])=>d.t);
+  const horas=motivosSorted.map(([,d])=>d.hmin||0);
+  const cores=motivosSorted.map(([,d])=>SETORES[d.setor]?.cor||'#888');
+  chartBar=new Chart(document.getElementById('cbar'),{type:'bar',data:{labels,datasets:[{data,backgroundColor:cores,borderRadius:4,barThickness:20}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,layout:{padding:{right:130}},plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>' '+fmt(c.parsed.x)+' t  |  '+fmtH(horas[c.dataIndex])}}},scales:{x:{ticks:{color:'#555',callback:v=>fmt(v)},grid:{color:'#1e1e1e'}},y:{ticks:{color:'#bbb',font:{size:11}},grid:{color:'#1e1e1e'}}},animation:{onComplete:function(){const ctx=this.ctx;ctx.save();ctx.font='500 11px sans-serif';ctx.textAlign='left';this.getDatasetMeta(0).data.forEach((bar,i)=>{ctx.fillStyle='#38BDF8';ctx.fillText(fmtH(horas[i]),bar.x+6,bar.y+4);});ctx.restore();}}}});
+}
+
+inicializarMotivos();
+renderHTML();
+</script>
+</body>
+</html>
