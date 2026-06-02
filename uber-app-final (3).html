@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>RideApp</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --black:#000;--white:#fff;--gray1:#111;--gray2:#1c1c1e;--gray3:#2c2c2e;
+  --gray4:#3a3a3c;--gray5:#636366;--gray6:#aeaeb2;
+  --green:#00cc5a;--green2:#00a847;
+  --surge:#f5a623;--surge2:#e8940a;
+  --red:#ff3b30;
+  --font:'Sora',sans-serif;
+  --radius:16px;--radius-sm:12px;--radius-xs:8px;
+  --sheet-radius:24px;
+}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--black);font-family:var(--font);color:var(--white);display:flex;align-items:center;justify-content:center;}
+#root{width:100%;max-width:430px;height:100vh;max-height:900px;position:relative;overflow:hidden;background:var(--black);}
+
+/* ── SCREENS ── */
+.screen{position:absolute;inset:0;display:none;flex-direction:column;}
+.screen.active{display:flex;}
+
+/* ── LOGIN ── */
+#s-login{background:var(--black);justify-content:flex-end;padding-bottom:0;}
+#login-map{position:absolute;inset:0;z-index:0;filter:brightness(0.45);}
+.login-sheet{position:relative;z-index:1;background:var(--gray1);border-radius:var(--sheet-radius) var(--sheet-radius) 0 0;padding:32px 24px 48px;box-shadow:0 -20px 60px rgba(0,0,0,0.8);}
+.login-brand{font-size:28px;font-weight:700;letter-spacing:-1px;margin-bottom:6px;}
+.login-brand span{color:var(--green);}
+.login-tagline{font-size:14px;color:var(--gray6);margin-bottom:28px;}
+.inp-wrap{margin-bottom:14px;}
+.inp-lbl{font-size:12px;color:var(--gray5);margin-bottom:6px;display:block;font-weight:500;}
+.inp{width:100%;background:var(--gray2);border:1px solid var(--gray3);border-radius:var(--radius-xs);padding:14px 16px;color:var(--white);font-size:15px;font-family:var(--font);outline:none;transition:border 0.2s;}
+.inp:focus{border-color:var(--gray4);}
+.inp::placeholder{color:var(--gray5);}
+.role-tabs{display:flex;background:var(--gray2);border-radius:var(--radius-xs);padding:3px;gap:3px;margin:18px 0 22px;}
+.role-tab{flex:1;padding:10px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);background:transparent;color:var(--gray5);transition:all 0.2s;}
+.role-tab.on{background:var(--white);color:var(--black);}
+
+/* ── MAPA ── */
+#map{position:absolute;inset:0;z-index:0;}
+.leaflet-container{background:#1a1a2e !important;}
+.leaflet-tile{filter:invert(1) hue-rotate(180deg) brightness(0.9) saturate(0.8);}
+
+/* ── BOTTOM SHEET ── */
+.sheet{position:absolute;bottom:0;left:0;right:0;z-index:10;background:var(--gray1);border-radius:var(--sheet-radius) var(--sheet-radius) 0 0;padding:0 0 32px;box-shadow:0 -4px 40px rgba(0,0,0,0.5);transition:transform 0.35s cubic-bezier(.32,1.2,.42,1);}
+.sheet-handle{width:36px;height:4px;background:var(--gray4);border-radius:2px;margin:12px auto 0;}
+.sheet-inner{padding:16px 20px 0;}
+
+/* ── CAMPOS ── */
+.fields-card{background:var(--gray2);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:12px;}
+.field-row{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:text;}
+.field-row+.field-row{border-top:1px solid var(--gray3);}
+.field-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.fd-green{background:var(--green);}
+.fd-white{background:var(--white);}
+.fd-gray{width:10px;height:10px;border-radius:2px;background:var(--gray4);flex-shrink:0;}
+.field-inp{background:transparent;border:none;outline:none;color:var(--white);font-size:15px;flex:1;font-family:var(--font);font-weight:500;}
+.field-inp::placeholder{color:var(--gray5);font-weight:400;}
+.field-val{font-size:15px;font-weight:500;color:var(--white);flex:1;}
+.field-val.dim{color:var(--gray5);font-weight:400;}
+.divider-line{width:1px;height:16px;background:var(--gray4);margin-left:4px;}
+
+/* ── SUGESTÕES ── */
+.sugs{background:var(--gray2);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:12px;display:none;}
+.sug{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;}
+.sug+.sug{border-top:1px solid var(--gray3);}
+.sug:active{background:var(--gray3);}
+.sug-pin{width:36px;height:36px;border-radius:var(--radius-xs);background:var(--gray3);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;}
+.sug-name{font-size:14px;font-weight:500;}
+.sug-addr{font-size:12px;color:var(--gray5);margin-top:1px;}
+
+/* ── SURGE ── */
+.surge-pill{display:none;align-items:center;gap:8px;background:#1a0f00;border:1px solid #3d2200;border-radius:var(--radius-xs);padding:10px 14px;margin-bottom:12px;}
+.surge-fire{font-size:18px;}
+.surge-txt{flex:1;}
+.surge-title{font-size:13px;font-weight:600;color:var(--surge);}
+.surge-sub{font-size:11px;color:#a06020;margin-top:1px;}
+.surge-badge{background:var(--surge);color:#000;font-size:13px;font-weight:700;padding:4px 8px;border-radius:6px;font-family:var(--font);}
+
+/* ── CATEGORIAS ── */
+.cats{display:flex;gap:8px;margin-bottom:12px;}
+.cat{flex:1;background:var(--gray2);border:1.5px solid var(--gray3);border-radius:var(--radius-sm);padding:10px 8px;text-align:center;cursor:pointer;transition:all 0.15s;}
+.cat.on{border-color:var(--white);background:var(--gray3);}
+.cat-emoji{font-size:22px;margin-bottom:4px;}
+.cat-name{font-size:11px;font-weight:600;color:var(--white);}
+.cat-price{font-size:13px;font-weight:700;color:var(--green);margin-top:2px;}
+.cat-eta{font-size:11px;color:var(--gray5);margin-top:1px;}
+
+/* ── BOTÃO PRINCIPAL ── */
+.cta{width:100%;border:none;border-radius:var(--radius-sm);padding:17px;font-size:16px;font-weight:700;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.15s;letter-spacing:-0.2px;}
+.cta:active:not(:disabled){transform:scale(0.97);}
+.cta:disabled{opacity:0.38;cursor:not-allowed;}
+.cta-black{background:var(--white);color:var(--black);}
+.cta-green{background:var(--green);color:var(--black);}
+.cta-red{background:var(--red);color:var(--white);}
+.cta-ghost{background:var(--gray2);color:var(--white);border:1px solid var(--gray3);}
+.cta-pair{display:flex;gap:8px;}
+.cta-pair .cta{flex:1;}
+
+/* ── STATUS CARRO ── */
+.ride-status{background:var(--gray2);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px;display:none;}
+.rs-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
+.rs-title{font-size:16px;font-weight:700;}
+.rs-sub{font-size:13px;color:var(--gray5);margin-top:2px;}
+.rs-eta-box{text-align:right;}
+.rs-eta{font-size:28px;font-weight:700;color:var(--green);line-height:1;}
+.rs-eta-lbl{font-size:11px;color:var(--gray5);margin-top:2px;}
+.rs-bar{height:4px;background:var(--gray3);border-radius:2px;overflow:hidden;margin-bottom:10px;}
+.rs-fill{height:100%;background:var(--green);border-radius:2px;width:0%;transition:width 1.2s ease;}
+.rs-steps{display:flex;justify-content:space-between;}
+.rs-step{font-size:10px;color:var(--gray5);font-weight:500;}
+.rs-step.done{color:var(--green);}
+.rs-step.now{color:var(--white);}
+.driver-row{display:flex;align-items:center;gap:12px;padding-top:14px;border-top:1px solid var(--gray3);margin-top:4px;}
+.driver-av{width:42px;height:42px;border-radius:50%;background:var(--gray3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.driver-name{font-size:14px;font-weight:600;}
+.driver-car{font-size:12px;color:var(--gray5);margin-top:1px;}
+.driver-plate{background:var(--gray3);border-radius:4px;padding:3px 8px;font-size:12px;font-weight:700;letter-spacing:1px;margin-left:auto;}
+
+/* ── MOTORISTA ── */
+.mot-card{background:var(--gray2);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:12px;}
+.mot-card-head{background:var(--green2);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;}
+.mot-card-tag{font-size:11px;font-weight:700;color:rgba(0,0,0,0.6);letter-spacing:0.5px;text-transform:uppercase;}
+.mot-card-price{font-size:26px;font-weight:700;color:var(--black);line-height:1;}
+.mot-card-body{padding:14px 16px;}
+.route-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;}
+.route-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+.route-lbl{font-size:11px;color:var(--gray5);font-weight:500;}
+.route-addr{font-size:13px;font-weight:500;margin-top:1px;}
+.route-vline{width:1.5px;height:12px;background:var(--gray4);margin-left:4px;margin-bottom:4px;}
+.mot-stats{display:flex;gap:8px;margin:12px 0;}
+.mot-stat{flex:1;background:var(--gray3);border-radius:var(--radius-xs);padding:10px;text-align:center;}
+.mot-stat-v{font-size:16px;font-weight:700;}
+.mot-stat-l{font-size:11px;color:var(--gray5);margin-top:2px;}
+.prog-card{background:var(--gray2);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px;display:none;}
+.prog-title{font-size:15px;font-weight:700;}
+.prog-sub{font-size:13px;color:var(--gray5);margin-top:3px;}
+.pbar{height:4px;background:var(--gray3);border-radius:2px;margin-top:14px;overflow:hidden;}
+.pfill{height:100%;background:var(--green);border-radius:2px;width:0%;transition:width 2s ease;}
+
+/* ── RATING ── */
+.rating-screen{padding:20px;}
+.rating-avatar{width:72px;height:72px;border-radius:50%;background:var(--gray2);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 14px;}
+.rating-title{font-size:20px;font-weight:700;text-align:center;}
+.rating-sub{font-size:14px;color:var(--gray5);text-align:center;margin-top:4px;margin-bottom:24px;}
+.rating-stars{display:flex;justify-content:center;gap:10px;margin-bottom:20px;}
+.rating-star{font-size:38px;cursor:pointer;filter:grayscale(1);opacity:0.35;transition:all 0.12s;}
+.rating-star.on{filter:none;opacity:1;transform:scale(1.1);}
+.rating-area{width:100%;background:var(--gray2);border:1px solid var(--gray3);border-radius:var(--radius-xs);padding:14px;color:var(--white);font-size:14px;font-family:var(--font);outline:none;resize:none;height:80px;margin-bottom:16px;}
+.rating-area::placeholder{color:var(--gray5);}
+
+/* ── HIST ── */
+.hist-header{font-size:13px;color:var(--gray5);font-weight:600;letter-spacing:0.3px;text-transform:uppercase;margin-bottom:14px;}
+.hist-card{display:flex;align-items:center;gap:14px;background:var(--gray2);border-radius:var(--radius-sm);padding:14px;margin-bottom:8px;}
+.hist-icon{width:44px;height:44px;border-radius:var(--radius-xs);background:var(--gray3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.hist-info{flex:1;min-width:0;}
+.hist-dest{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hist-meta{font-size:12px;color:var(--gray5);margin-top:3px;}
+.hist-stars{margin-top:4px;font-size:11px;}
+.hist-price{font-size:15px;font-weight:700;color:var(--white);flex-shrink:0;}
+.hist-empty{text-align:center;padding:48px 0;color:var(--gray5);font-size:14px;line-height:2;}
+
+/* ── STATUS BAR NOTICE ── */
+.notice{font-size:12px;color:var(--gray5);text-align:center;padding:6px 0 2px;min-height:20px;}
+
+/* ── SPINNER ── */
+.spin{width:16px;height:16px;border:2.5px solid rgba(0,0,0,0.25);border-top-color:var(--black);border-radius:50%;animation:rot 0.65s linear infinite;}
+@keyframes rot{to{transform:rotate(360deg)}}
+.spin-w{border-color:rgba(255,255,255,0.2);border-top-color:var(--white);}
+
+/* ── LEAFLET OVERRIDES ── */
+.leaflet-control-zoom,.leaflet-control-attribution{display:none!important;}
+.car-icon{font-size:22px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));}
+.pulse-ring{width:20px;height:20px;border-radius:50%;background:rgba(0,204,90,0.25);border:2px solid var(--green);animation:pulse-anim 1.5s ease-out infinite;}
+@keyframes pulse-anim{0%{transform:scale(0.8);opacity:1}100%{transform:scale(2.5);opacity:0}}
+
+/* ── TOP PILL (perfil) ── */
+.top-bar{position:absolute;top:16px;left:0;right:0;z-index:11;display:none;padding:0 16px;justify-content:space-between;align-items:center;}
+.top-bar.visible{display:flex;}
+.top-pill{background:var(--gray1);border-radius:40px;padding:8px 14px 8px 8px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,0.4);}
+.top-av{width:32px;height:32px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#000;flex-shrink:0;}
+.top-name{font-size:13px;font-weight:600;}
+.top-role{font-size:11px;color:var(--gray5);}
+.top-btn{background:var(--gray1);border-radius:40px;padding:8px 14px;border:none;color:var(--white);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);box-shadow:0 4px 20px rgba(0,0,0,0.4);}
+
+/* scrollable sheet content */
+.sheet-scroll{max-height:55vh;overflow-y:auto;padding:0 20px;}
+.sheet-scroll::-webkit-scrollbar{display:none;}
+</style>
+</head>
+<body>
+<div id="root">
+
+<!-- ══ LOGIN ══ -->
+<div id="s-login" class="screen active">
+  <div id="login-map"></div>
+  <div class="login-sheet">
+    <div class="login-brand">ride<span>.</span></div>
+    <div class="login-tagline">O seu app de corridas</div>
+    <div class="inp-wrap">
+      <label class="inp-lbl">Nome</label>
+      <input class="inp" id="inp-nome" placeholder="Seu nome"/>
+    </div>
+    <div class="inp-wrap">
+      <label class="inp-lbl">Email</label>
+      <input class="inp" id="inp-email" placeholder="email@exemplo.com" type="email"/>
+    </div>
+    <div class="role-tabs">
+      <button class="role-tab on" id="rt-pass" onclick="setRole('passageiro')">🧍 Passageiro</button>
+      <button class="role-tab" id="rt-mot" onclick="setRole('motorista')">🚗 Motorista</button>
+    </div>
+    <button class="cta cta-black" onclick="login()">Entrar</button>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="s-app" class="screen">
+  <!-- Mapa ocupa tela toda -->
+  <div id="map"></div>
+
+  <!-- Top bar -->
+  <div class="top-bar visible" id="top-bar">
+    <div class="top-pill">
+      <div class="top-av" id="top-av">?</div>
+      <div>
+        <div class="top-name" id="top-name">—</div>
+        <div class="top-role" id="top-role">Passageiro</div>
+      </div>
+    </div>
+    <button class="top-btn" onclick="sair()">Sair</button>
+  </div>
+
+  <!-- ── SHEET PASSAGEIRO ── -->
+  <div class="sheet" id="sheet-pass">
+    <div class="sheet-handle"></div>
+    <div class="sheet-inner">
+
+      <!-- Surge -->
+      <div class="surge-pill" id="surge-pill">
+        <div class="surge-fire">🔥</div>
+        <div class="surge-txt">
+          <div class="surge-title">Horário de pico</div>
+          <div class="surge-sub">Demanda alta na sua região</div>
+        </div>
+        <div class="surge-badge" id="surge-badge">1.8×</div>
+      </div>
+
+      <!-- Campos origem/destino -->
+      <div class="fields-card">
+        <div class="field-row">
+          <div class="field-dot fd-green"></div>
+          <div class="field-val dim" id="fl-orig">Sua localização atual</div>
+        </div>
+        <div class="divider-line" style="margin-left:25px;"></div>
+        <div class="field-row">
+          <div class="field-dot fd-gray"></div>
+          <input class="field-inp" id="dest-inp" placeholder="Para onde?" oninput="onDestInput(this.value)" autocomplete="off"/>
+        </div>
+      </div>
+
+      <!-- Sugestões -->
+      <div class="sugs" id="sugs"></div>
+
+      <!-- Categorias (aparecem após destino) -->
+      <div class="cats" id="cats" style="display:none;">
+        <div class="cat on" id="cat-eco" onclick="selCat('eco')">
+          <div class="cat-emoji">🚗</div>
+          <div class="cat-name">UberX</div>
+          <div class="cat-price" id="cp-eco">—</div>
+          <div class="cat-eta" id="ce-eco">— min</div>
+        </div>
+        <div class="cat" id="cat-conf" onclick="selCat('conf')">
+          <div class="cat-emoji">🚙</div>
+          <div class="cat-name">Comfort</div>
+          <div class="cat-price" id="cp-conf">—</div>
+          <div class="cat-eta" id="ce-conf">— min</div>
+        </div>
+        <div class="cat" id="cat-black" onclick="selCat('black')">
+          <div class="cat-emoji">⬛</div>
+          <div class="cat-name">Black</div>
+          <div class="cat-price" id="cp-black">—</div>
+          <div class="cat-eta" id="ce-black">— min</div>
+        </div>
+      </div>
+
+      <!-- Status do carro em tempo real -->
+      <div class="ride-status" id="ride-status">
+        <div class="rs-top">
+          <div>
+            <div class="rs-title" id="rs-title">Confirmando motorista</div>
+            <div class="rs-sub" id="rs-sub">Aguarde um momento...</div>
+          </div>
+          <div class="rs-eta-box">
+            <div class="rs-eta" id="rs-eta">—</div>
+            <div class="rs-eta-lbl">para chegar</div>
+          </div>
+        </div>
+        <div class="rs-bar"><div class="rs-fill" id="rs-fill"></div></div>
+        <div class="rs-steps">
+          <span class="rs-step now" id="rss1">Pedido</span>
+          <span class="rs-step" id="rss2">A caminho</span>
+          <span class="rs-step" id="rss3">Chegou</span>
+          <span class="rs-step" id="rss4">Em rota</span>
+          <span class="rs-step" id="rss5">Fim</span>
+        </div>
+        <div class="driver-row">
+          <div class="driver-av">👨</div>
+          <div>
+            <div class="driver-name" id="drv-name">Carlos Silva</div>
+            <div class="driver-car" id="drv-car">Toyota Corolla • ⭐ 4.9</div>
+          </div>
+          <div class="driver-plate" id="drv-plate">ABC-1D34</div>
+        </div>
+      </div>
+
+      <!-- Botão principal -->
+      <button class="cta cta-black" id="btn-pass" onclick="acaoPass()" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        Localizar-me
+      </button>
+      <div class="notice" id="pass-notice"></div>
+    </div>
+  </div>
+
+  <!-- ── SHEET MOTORISTA ── -->
+  <div class="sheet" id="sheet-mot" style="display:none;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-inner">
+
+      <div class="mot-card" id="mot-card">
+        <div class="mot-card-head">
+          <div class="mot-card-tag">Nova corrida</div>
+          <div class="mot-card-price" id="mot-price">R$ —</div>
+        </div>
+        <div class="mot-card-body">
+          <div class="route-row">
+            <div class="route-dot" style="background:var(--green);"></div>
+            <div>
+              <div class="route-lbl">Embarque</div>
+              <div class="route-addr" id="mot-orig">Aguardando...</div>
+            </div>
+          </div>
+          <div class="route-vline"></div>
+          <div class="route-row">
+            <div class="route-dot" style="background:var(--white);"></div>
+            <div>
+              <div class="route-lbl">Destino</div>
+              <div class="route-addr" id="mot-dest">—</div>
+            </div>
+          </div>
+          <div class="mot-stats">
+            <div class="mot-stat"><div class="mot-stat-v" id="mot-dist">—</div><div class="mot-stat-l">Distância</div></div>
+            <div class="mot-stat"><div class="mot-stat-v" id="mot-dur">—</div><div class="mot-stat-l">Duração</div></div>
+            <div class="mot-stat"><div class="mot-stat-v">~1.2km</div><div class="mot-stat-l">Até você</div></div>
+          </div>
+          <div class="cta-pair" id="mot-btns">
+            <button class="cta cta-red" onclick="recusar()" style="font-size:14px;padding:14px;">✕ Recusar</button>
+            <button class="cta cta-green" onclick="aceitar()" style="font-size:14px;padding:14px;">✓ Aceitar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="prog-card" id="prog-card">
+        <div class="prog-title" id="prog-title">A caminho do passageiro</div>
+        <div class="prog-sub" id="prog-sub">Navegue até o ponto de embarque</div>
+        <div class="pbar"><div class="pfill" id="pfill"></div></div>
+      </div>
+
+      <button class="cta cta-black" id="btn-mot" onclick="acaoMot()" style="display:none;">Cheguei ao passageiro</button>
+      <div class="notice" id="mot-notice"></div>
+    </div>
+  </div>
+
+  <!-- ── SHEET AVALIAÇÃO ── -->
+  <div class="sheet" id="sheet-rating" style="display:none;">
+    <div class="sheet-handle"></div>
+    <div class="rating-screen">
+      <div class="rating-avatar">👨</div>
+      <div class="rating-title">Como foi a corrida?</div>
+      <div class="rating-sub" id="rating-sub">Avalie seu motorista</div>
+      <div class="rating-stars">
+        <span class="rating-star" onclick="setNota(1)">★</span>
+        <span class="rating-star" onclick="setNota(2)">★</span>
+        <span class="rating-star" onclick="setNota(3)">★</span>
+        <span class="rating-star" onclick="setNota(4)">★</span>
+        <span class="rating-star" onclick="setNota(5)">★</span>
+      </div>
+      <textarea class="rating-area" id="rating-txt" placeholder="Algum comentário? (opcional)"></textarea>
+      <button class="cta cta-black" id="btn-rating" onclick="enviarRating()" disabled>Enviar avaliação</button>
+    </div>
+  </div>
+
+  <!-- ── SHEET HISTÓRICO ── -->
+  <div class="sheet" id="sheet-hist" style="display:none;transform:translateY(100%);">
+    <div class="sheet-handle"></div>
+    <div style="padding:16px 20px 0;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div class="hist-header" style="margin:0;">Histórico de corridas</div>
+        <button class="top-btn" onclick="fecharHist()" style="font-size:12px;padding:6px 12px;">✕</button>
+      </div>
+    </div>
+    <div class="sheet-scroll" id="hist-list"></div>
+  </div>
+
+</div><!-- /s-app -->
+
+</div><!-- /root -->
+
+<script>
+// ??????????????????????????????????????????????????????????????
+// Estado
+// ??????????????????????????????????????????????????????????????
+let usr={nome:'',role:'passageiro'};
+let esPass='sem-loc', esMot='idle';
+let latMe, lonMe, destNome, destLat, destLon;
+let catSel='eco', surge=1.0, distKm=0, minsV=0;
+let nota=0;
+let hist=JSON.parse(localStorage.getItem('rh')||'[]');
+let searchT;
+let map, markerMe, markerDest, markerCar, polyRoute;
+let carLat, carLon, carAnim;
+
+// ??????????????????????????????????????????????????????????????
+// Login
+// ??????????????????????????????????????????????????????????????
+function setRole(r){
+  usr.role=r;
+  document.getElementById('rt-pass').classList.toggle('on',r==='passageiro');
+  document.getElementById('rt-mot').classList.toggle('on',r==='motorista');
+}
+
+function login(){
+  const n=document.getElementById('inp-nome').value.trim();
+  const e=document.getElementById('inp-email').value.trim();
+  if(!n||!e){alert('Preencha nome e email.');return;}
+  usr.nome=n;
+  document.getElementById('top-av').textContent=n[0].toUpperCase();
+  document.getElementById('top-name').textContent=n;
+  document.getElementById('top-role').textContent=usr.role==='passageiro'?'Passageiro Passageiro':'Motorista CAR';
+  show('s-login','s-app');
+  initMap();
+  calcSurge();
+  if(usr.role==='motorista') modoMotorista();
+  else setTimeout(locatMe,600);
+}
+
+function sair(){
+  show('s-app','s-login');
+  if(map){map.remove();map=null;}
+  esPass='sem-loc'; esMot='idle';
+}
+
+function show(de,para){
+  document.getElementById(de).classList.remove('active');
+  document.getElementById(para).classList.add('active');
+}
+
+// ??????????????????????????????????????????????????????????????
+// Mapa
+// ??????????????????????????????????????????????????????????????
+function initMap(){
+  if(map) return;
+  map = L.map('map',{zoomControl:false,attributionControl:false}).setView([-14.235,-51.925],5);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+}
+
+function locatMe(){
+  if(!navigator.geolocation){setPN('GPS não disponível.');updBtn();return;}
+  setPN('Buscando localização...');
+  navigator.geolocation.getCurrentPosition(pos=>{
+    latMe=pos.coords.latitude; lonMe=pos.coords.longitude;
+    map.setView([latMe,lonMe],15,{animate:true,duration:1.2});
+    // marker passageiro com pulse
+    const pIcon=L.divIcon({className:'',html:'<div class="pulse-ring"></div>',iconSize:[20,20],iconAnchor:[10,10]});
+    markerMe=L.marker([latMe,lonMe],{icon:pIcon}).addTo(map);
+    // endere?o
+    fetch('https://nominatim.openstreetmap.org/reverse?lat='+latMe+'&lon='+lonMe+'&format=json')
+      .then(r=>r.json()).then(d=>{
+        const lbl=d.address.road?d.address.road+(d.address.suburb?', '+d.address.suburb:''):'Localização atual';
+        document.getElementById('fl-orig').textContent=lbl;
+        document.getElementById('fl-orig').classList.remove('dim');
+        document.getElementById('mot-orig').textContent=lbl;
+        esPass='com-loc'; updBtn(); setPN('');
+      }).catch(()=>{esPass='com-loc';updBtn();setPN('');});
+  },err=>{setPN('Erro: '+err.message);document.getElementById('btn-pass').disabled=false;});
+}
+
+// ??????????????????????????????????????????????????????????????
+// Busca destino
+// ??????????????????????????????????????????????????????????????
+function onDestInput(v){
+  clearTimeout(searchT);
+  const s=document.getElementById('sugs');
+  if(v.length<3){s.style.display='none';return;}
+  searchT=setTimeout(()=>{
+    fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(v)+'&format=json&limit=5&addressdetails=1')
+      .then(r=>r.json()).then(data=>{
+        if(!data.length){s.style.display='none';return;}
+        s.innerHTML='';
+        data.forEach(it=>{
+          const p=it.display_name.split(',');
+          const d=document.createElement('div');
+          d.className='sug';
+          d.innerHTML=`<div class="sug-pin"></div><div><div class="sug-name">${p[0]}</div><div class="sug-addr">${p.slice(1,3).join(', ').trim()}</div></div>`;
+          d.onclick=()=>selDest(it);
+          s.appendChild(d);
+        });
+        s.style.display='block';
+      });
+  },380);
+}
+
+function selDest(it){
+  const p=it.display_name.split(',');
+  destNome=p[0];
+  destLat=parseFloat(it.lat); destLon=parseFloat(it.lon);
+  document.getElementById('dest-inp').value=destNome;
+  document.getElementById('sugs').style.display='none';
+  // marker destino
+  if(markerDest) markerDest.remove();
+  const dIcon=L.divIcon({className:'',html:'<div style="width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid #000;box-shadow:0 2px 8px rgba(0,0,0,0.4);"></div>',iconSize:[14,14],iconAnchor:[7,7]});
+  markerDest=L.marker([destLat,destLon],{icon:dIcon}).addTo(map);
+  // polyline
+  if(polyRoute) polyRoute.remove();
+  if(latMe){
+    polyRoute=L.polyline([[latMe,lonMe],[destLat,destLon]],{color:'#00cc5a',weight:3,dashArray:'8,6',opacity:0.7}).addTo(map);
+    map.fitBounds(polyRoute.getBounds(),{padding:[60,60],animate:true,duration:0.8});
+    distKm=calcDist(latMe,lonMe,destLat,destLon);
+    minsV=Math.round(distKm/0.5);
+    atualizarCats();
+    document.getElementById('cats').style.display='flex';
+    document.getElementById('mot-dest').textContent=destNome;
+    document.getElementById('mot-dist').textContent=distKm<1?Math.round(distKm*1000)+'m':distKm.toFixed(1)+'km';
+    document.getElementById('mot-dur').textContent=fmtMin(minsV);
+  }
+  esPass='com-dest'; updBtn();
+}
+
+function calcDist(a,b,c,d){
+  const R=6371,dL=(c-a)*Math.PI/180,dN=(d-b)*Math.PI/180;
+  const x=Math.sin(dL/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dN/2)**2;
+  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+}
+function fmtMin(m){return m<60?m+' min':Math.floor(m/60)+'h'+String(m%60).padStart(2,'0');}
+
+// ??????????????????????????????????????????????????????????????
+// Surge
+// ??????????????????????????????????????????????????????????????
+function calcSurge(){
+  const h=new Date().getHours();
+  const p=(h>=7&&h<=9)||(h>=17&&h<=20);
+  surge=p?+(1.4+Math.random()*0.7).toFixed(1):1.0;
+  document.getElementById('surge-badge').textContent=surge+'x';
+  document.getElementById('surge-pill').style.display=p?'flex':'none';
+}
+
+function atualizarCats(){
+  const base=distKm*2.1+5;
+  const ps={eco:+(base*surge).toFixed(2),conf:+(base*surge*1.4).toFixed(2),black:+(base*surge*1.9).toFixed(2)};
+  const ts={eco:minsV,conf:minsV+2,black:minsV+5};
+  ['eco','conf','black'].forEach(c=>{
+    document.getElementById('cp-'+c).textContent='R$'+ps[c];
+    document.getElementById('ce-'+c).textContent=ts[c]+' min';
+  });
+  document.getElementById('mot-price').textContent='R$'+ps[catSel];
+}
+
+function selCat(c){
+  catSel=c;
+  ['eco','conf','black'].forEach(x=>document.getElementById('cat-'+x).classList.toggle('on',x===c));
+  if(distKm) atualizarCats();
+}
+
+// ??????????????????????????????????????????????????????????????
+// Bot?o passageiro
+// ??????????????????????????????????????????????????????????????
+function updBtn(){
+  const b=document.getElementById('btn-pass');
+  if(esPass==='sem-loc'){
+    b.disabled=false;b.className='cta cta-black';
+    b.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg> Localizar-me';
+  } else if(esPass==='com-loc'){
+    b.disabled=true; b.innerHTML='Digite seu destino acima';
+  } else if(esPass==='com-dest'){
+    b.disabled=false; b.className='cta cta-black';
+    b.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 4v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> Confirmar corrida';
+  }
+}
+
+function acaoPass(){
+  if(esPass==='sem-loc') locatMe();
+  else if(esPass==='com-dest') chamarCarro();
+}
+
+// ??????????????????????????????????????????????????????????????
+// Chamar carro
+// ??????????????????????????????????????????????????????????????
+function chamarCarro(){
+  const b=document.getElementById('btn-pass');
+  b.disabled=true; b.innerHTML='<div class="spin"></div> Confirmando...';
+  setPN('');
+  // Cria marker do carro longe
+  carLat=latMe+0.02+(Math.random()*0.01-0.005);
+  carLon=lonMe-0.02+(Math.random()*0.01-0.005);
+  const cIcon=L.divIcon({className:'',html:'<div class="car-icon">CAR</div>',iconSize:[28,28],iconAnchor:[14,14]});
+  markerCar=L.marker([carLat,carLon],{icon:cIcon}).addTo(map);
+  setTimeout(()=>{
+    b.className='cta cta-green'; b.disabled=true;
+    b.innerHTML='v Motorista confirmado!';
+    document.getElementById('ride-status').style.display='block';
+    document.getElementById('cats').style.display='none';
+    iniciarStatusEAnimCarro();
+    setPN('Acompanhe o carro chegando no mapa');
+  },1800);
+}
+
+function iniciarStatusEAnimCarro(){
+  const etapas=[
+    {title:'Motorista confirmado',sub:'Ele está saindo agora',eta:'6 min',fill:12,step:1},
+    {title:'Motorista a caminho',sub:'Seguindo até você',eta:'5 min',fill:28,step:2},
+    {title:'Chegando em breve',sub:'A apenas 500m de você',eta:'2 min',fill:55,step:2},
+    {title:'Motorista chegou!',sub:'Dirija-se ao ponto de embarque',eta:'0 min',fill:75,step:3},
+    {title:'Em rota ao destino',sub:destNome||'Seu destino',eta:fmtMin(minsV),fill:88,step:4},
+    {title:'Corrida concluída ',sub:'Obrigado por usar o RideApp!',eta:'-',fill:100,step:5},
+  ];
+  const delays=[0,4000,8000,13000,17000,22000];
+  etapas.forEach((e,i)=>{
+    setTimeout(()=>{
+      document.getElementById('rs-title').textContent=e.title;
+      document.getElementById('rs-sub').textContent=e.sub;
+      document.getElementById('rs-eta').textContent=e.eta;
+      document.getElementById('rs-fill').style.width=e.fill+'%';
+      for(let j=1;j<=5;j++){
+        const el=document.getElementById('rss'+j);
+        el.className='rs-step';
+        if(j<e.step) el.classList.add('done');
+        else if(j===e.step) el.classList.add('now');
+      }
+      if(i===etapas.length-1) setPN('Avalie sua corrida!');
+    },delays[i]);
+  });
+  // anima??o do carro
+  animarCarro();
+}
+
+function animarCarro(){
+  if(!markerCar||!latMe||!lonMe) return;
+  let t=0;
+  carAnim=setInterval(()=>{
+    t=Math.min(t+0.004,1);
+    const lat=carLat+(latMe-carLat)*ease(t);
+    const lon=carLon+(lonMe-carLon)*ease(t);
+    markerCar.setLatLng([lat,lon]);
+    if(t>=1){clearInterval(carAnim);}
+  },80);
+}
+function ease(t){return t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+
+function setPN(m){document.getElementById('pass-notice').textContent=m;}
+
+// ??????????????????????????????????????????????????????????????
+// Motorista
+// ??????????????????????????????????????????????????????????????
+function modoMotorista(){
+  document.getElementById('sheet-pass').style.display='none';
+  document.getElementById('sheet-mot').style.display='block';
+  // simula localiza??o do motorista no mapa
+  setTimeout(()=>{
+    if(!map) return;
+    const lat=-23.55+(Math.random()*0.02-0.01);
+    const lon=-46.63+(Math.random()*0.02-0.01);
+    map.setView([lat,lon],14,{animate:true});
+    const cIcon=L.divIcon({className:'',html:'<div class="car-icon">CAR</div>',iconSize:[28,28],iconAnchor:[14,14]});
+    L.marker([lat,lon],{icon:cIcon}).addTo(map);
+  },600);
+}
+
+function aceitar(){
+  document.getElementById('mot-btns').style.display='none';
+  document.getElementById('prog-card').style.display='block';
+  document.getElementById('btn-mot').style.display='flex';
+  setTimeout(()=>document.getElementById('pfill').style.width='55%',100);
+  esMot='aceitou';
+  setMN('Corrida aceita! Dirija ao passageiro.');
+}
+
+function recusar(){
+  document.getElementById('mot-card').style.opacity='0.4';
+  document.getElementById('mot-btns').style.display='none';
+  esMot='recusou';
+  setMN('Corrida recusada.');
+}
+
+function acaoMot(){
+  const b=document.getElementById('btn-mot');
+  if(esMot==='aceitou'){
+    document.getElementById('prog-title').textContent='Passageiro embarcado';
+    document.getElementById('prog-sub').textContent='Navegue ao destino';
+    document.getElementById('pfill').style.width='100%';
+    b.innerHTML='Confirmar chegada ao destino';
+    b.className='cta cta-green';
+    esMot='embarcou'; setMN('');
+  } else if(esMot==='embarcou'){
+    document.getElementById('prog-title').textContent='Corrida finalizada!';
+    document.getElementById('prog-sub').textContent='Passageiro desembarcado';
+    b.style.display='none';
+    esMot='fim';
+    setMN('Ganhos adicionados ao seu saldo v');
+    salvarHist();
+    setTimeout(mostrarRating,900);
+  }
+}
+function setMN(m){document.getElementById('mot-notice').textContent=m;}
+
+// ??????????????????????????????????????????????????????????????
+// Rating
+// ??????????????????????????????????????????????????????????????
+function mostrarRating(){
+  document.getElementById('sheet-mot').style.display='none';
+  document.getElementById('sheet-rating').style.display='block';
+}
+
+function setNota(n){
+  nota=n;
+  document.querySelectorAll('.rating-star').forEach((s,i)=>s.classList.toggle('on',i<n));
+  document.getElementById('btn-rating').disabled=false;
+}
+
+function enviarRating(){
+  atualizarNota(nota);
+  document.getElementById('sheet-rating').style.display='none';
+  document.getElementById('sheet-mot').style.display='block';
+  document.getElementById('prog-card').style.display='none';
+  document.getElementById('mot-card').style.opacity='1';
+  document.getElementById('mot-btns').style.display='flex';
+  document.getElementById('btn-mot').style.display='none';
+  esMot='idle'; nota=0;
+  document.querySelectorAll('.rating-star').forEach(s=>s.classList.remove('on'));
+  document.getElementById('btn-rating').disabled=true;
+  setMN('Obrigado pela avaliação! *');
+}
+
+// ??????????????????????????????????????????????????????????????
+// Hist?rico
+// ??????????????????????????????????????????????????????????????
+function abrirHist(){
+  renderHist();
+  const sh=document.getElementById('sheet-hist');
+  sh.style.display='block';
+  requestAnimationFrame(()=>sh.style.transform='translateY(0)');
+}
+function fecharHist(){
+  const sh=document.getElementById('sheet-hist');
+  sh.style.transform='translateY(100%)';
+  setTimeout(()=>sh.style.display='none',350);
+}
+
+function salvarHist(){
+  const price=document.getElementById('cp-'+catSel).textContent||'-';
+  hist.unshift({
+    id:Date.now(),
+    dest:destNome||'-',
+    orig:document.getElementById('fl-orig').textContent||'-',
+    dist:distKm<1?Math.round(distKm*1000)+'m':distKm.toFixed(1)+'km',
+    dur:fmtMin(minsV),
+    price,cat:catSel,surge:surge>1,
+    data:new Date().toLocaleDateString('pt-BR'),nota:0
+  });
+  localStorage.setItem('rh',JSON.stringify(hist));
+}
+
+function atualizarNota(n){if(hist.length){hist[0].nota=n;localStorage.setItem('rh',JSON.stringify(hist));}}
+
+function renderHist(){
+  const el=document.getElementById('hist-list');
+  if(!hist.length){el.innerHTML='<div class="hist-empty">Nenhuma corrida ainda.<br>Peça a sua primeira! CAR</div>';return;}
+  el.innerHTML='';
+  hist.forEach(c=>{
+    const ics={eco:'CAR',conf:'SUV',black:'Black'};
+    const strs=Array.from({length:5},(_,i)=>i<c.nota?'*':'-').join('');
+    const sp=c.surge?'<span style="font-size:10px;background:#3d1f00;color:var(--surge);padding:2px 5px;border-radius:4px;margin-left:5px;">!pico</span>':'';
+    el.innerHTML+=`<div class="hist-card"><div class="hist-icon">${ics[c.cat]||'CAR'}</div><div class="hist-info"><div class="hist-dest">${c.dest}${sp}</div><div class="hist-meta">${c.data} . ${c.dist} . ${c.dur}</div><div class="hist-stars" style="color:var(--surge)">${strs}</div></div><div class="hist-price">${c.price}</div></div>`;
+  });
+}
+
+// Bot?o hist?rico na top bar (adicionar dinamicamente)
+window.addEventListener('DOMContentLoaded',()=>{
+  const tb=document.getElementById('top-bar');
+  const hb=document.createElement('button');
+  hb.className='top-btn';
+  hb.textContent='Histórico';
+  hb.style.marginRight='8px';
+  hb.onclick=abrirHist;
+  tb.insertBefore(hb,tb.lastElementChild);
+});
+</script>
+</body>
+</html>
