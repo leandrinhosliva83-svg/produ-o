@@ -2,7 +2,9 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>Checklist de Veículo</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -85,6 +87,11 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);position:stic
 .progress-label{font-size:12px;color:var(--text3);margin-top:6px;text-align:right;}
 .btn-save{width:100%;padding:12px;background:var(--verde);color:#0a0a0a;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;border:none;border-radius:var(--radius);cursor:pointer;transition:opacity .15s;margin-top:1rem;}
 .btn-save:hover{opacity:.88;}
+.btn-save:active{opacity:.7;}
+button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+.turno-pill{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+.check-row{-webkit-tap-highlight-color:transparent;}
+.hist-card{-webkit-tap-highlight-color:transparent;}
 /* ALERTA */
 .alerta-turno{background:var(--bg2);border:1px solid rgba(248,113,113,0.3);border-left:3px solid var(--red);border-radius:0 var(--radius-lg) var(--radius-lg) 0;padding:1rem 1.25rem;margin-bottom:1rem;display:none;}
 .alerta-turno.visible{display:block;}
@@ -468,13 +475,16 @@ function buildChecklist(id, items) {
   items.forEach((item, i) => {
     const cid = `${id}-${i}`;
     const div = document.createElement('label');
-    div.className='check-row'; div.htmlFor=cid;
-    div.innerHTML=`<input type="checkbox" id="${cid}">
+    div.className='check-row'; 
+    div.innerHTML=`<input type="checkbox" id="${cid}" style="display:none">
       <div class="check-box"><svg width="10" height="8" fill="none" viewBox="0 0 10 8">
         <path d="M1 4l2.5 2.5L9 1" stroke="#0a0a0a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
       </svg></div><span class="check-label">${item}</span>`;
-    div.querySelector('input').addEventListener('change', function(){
-      div.classList.toggle('checked',this.checked); updateProgress();
+    div.addEventListener('click', function(){
+      const cb = this.querySelector('input');
+      cb.checked = !cb.checked;
+      this.classList.toggle('checked', cb.checked);
+      updateProgress();
     });
     el.appendChild(div);
   });
@@ -575,7 +585,7 @@ function renderFrotasTags() {
   if (!frotas.length) { el.innerHTML=''; vazio.style.display='block'; return; }
   vazio.style.display='none';
   el.innerHTML = frotas.map(f=>
-    `<div class="frota-tag">${f} <button onclick="removerFrota('${f}')">✕</button></div>`
+    `<div class="frota-tag">${f} <button onclick="event.stopPropagation();removerFrota('${f}')">✕</button></div>`
   ).join('');
 }
 
@@ -615,7 +625,7 @@ function renderHistorico() {
         <div class="hist-right">
           <span class="badge badge-turno">${icon} ${e.turno}</span>
           <span class="badge ${allOk?'badge-ok':'badge-warn'}">${ok}/${TOTAL}</span>
-          <button class="btn-del" onclick="deletarChecklist(${e.id},event)">✕</button>
+          <button class="btn-del" ontouchend="event.preventDefault();deletarChecklist(${e.id},event)" onclick="deletarChecklist(${e.id},event)">✕</button>
         </div>
       </div>
       <div class="hist-meta"><span>📅 ${fmtDate(e.data)}</span>${e.obs?'<span>💬 Obs</span>':''}</div>
