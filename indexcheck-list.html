@@ -202,10 +202,15 @@ button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 
   <!-- FORMULÁRIO PÚBLICO -->
   <div class="page active" id="page-form">
-    <div class="alerta-turno" id="alerta-pend">
-      <div class="alerta-turno-title"><span class="dot-pulse"></span> <span id="alerta-turno-label"></span></div>
+
+
+    <div id="alerta-pend" style="display:none;background:#1a0a0a;border:1px solid rgba(248,113,113,0.3);border-left:3px solid #f87171;border-radius:10px;padding:.75rem 1rem;margin-bottom:.75rem;font-size:13px;color:#f87171;display:flex;align-items:center;gap:8px;">
+      <span style="width:7px;height:7px;border-radius:50%;background:#f87171;flex-shrink:0;animation:pulse 1.4s infinite;display:inline-block;"></span>
+      <span id="alerta-turno-label"></span>
     </div>
-    <div class="alerta-ok" id="alerta-ok">✅ <span id="alerta-ok-texto"></span></div>
+    <div id="alerta-ok" style="display:none;background:#0a1a0a;border:1px solid rgba(169,207,70,0.2);border-left:3px solid #a9cf46;border-radius:10px;padding:.75rem 1rem;margin-bottom:.75rem;font-size:13px;color:#a9cf46;">
+      <span id="alerta-ok-texto"></span>
+    </div>
 
     <div class="form-card">
       <div class="card-title">Identificação</div>
@@ -454,12 +459,12 @@ function renderAlertaTurno() {
   });
   if (faltando.length > 0) {
     document.getElementById('alerta-turno-label').textContent = `⚠ ${faltando.length} veículo(s) ainda não completaram os 2 checklists hoje`;
-    document.getElementById('alerta-pend').classList.add('visible');
-    document.getElementById('alerta-ok').classList.remove('visible');
+    document.getElementById('alerta-pend').style.display = 'flex';
+    document.getElementById('alerta-ok').style.display = 'none';
   } else {
     document.getElementById('alerta-ok-texto').textContent = `✅ Todos os veículos completaram os 2 checklists hoje!`;
-    document.getElementById('alerta-ok').classList.add('visible');
-    document.getElementById('alerta-pend').classList.remove('visible');
+    document.getElementById('alerta-ok').style.display = 'block';
+    document.getElementById('alerta-pend').style.display = 'none';
   }
 }
 
