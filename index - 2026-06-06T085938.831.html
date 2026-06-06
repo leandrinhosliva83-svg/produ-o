@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Checklist de Veículo</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0a0a;--bg2:#111;--bg3:#181818;--bg4:#1f1f1f;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+  --text:#f0f0f0;--text2:#999;--text3:#555;
+  --verde:#a9cf46;--verde-escuro:#1a5c2e;
+  --azul:#3e4095;--azul-light:#5a5fc0;
+  --red:#f87171;--red-bg:rgba(248,113,113,0.1);
+  --radius:10px;--radius-lg:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+header{background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+.header-inner{max-width:480px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:stretch;justify-content:space-between;}
+.header-left{display:flex;align-items:stretch;}
+.logo{display:flex;align-items:center;gap:10px;padding:10px 1rem 10px 0;border-right:1px solid var(--border);margin-right:1rem;}
+.logo-stripes{display:flex;flex-direction:column;gap:2px;width:26px;}
+.logo-stripes span:nth-child(1){background:var(--verde);height:5px;border-radius:2px;}
+.logo-stripes span:nth-child(2){background:var(--azul);height:5px;border-radius:2px;}
+.logo-stripes span:nth-child(3){background:var(--verde-escuro);height:5px;border-radius:2px;}
+.logo-text{font-size:14px;font-weight:600;}
+.logo-sub{color:var(--text3);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;}
+.nav-tabs{display:flex;align-items:stretch;}
+.nav-tab{color:var(--text3);font-size:12px;font-weight:500;padding:0 14px;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all .15s;display:flex;align-items:center;gap:7px;font-family:'DM Sans',sans-serif;}
+.nav-tab:hover{color:var(--text2);}
+.nav-tab.active{color:var(--verde);border-bottom-color:var(--verde);}
+.badge-count{background:var(--verde);color:#0a0a0a;font-size:10px;font-weight:700;min-width:17px;height:17px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;}
+.badge-red{background:var(--red)!important;}
+.btn-adm{display:flex;align-items:center;gap:7px;padding:0 14px;font-size:12px;font-weight:600;color:var(--text3);border:none;background:none;cursor:pointer;font-family:'DM Sans',sans-serif;border-left:1px solid var(--border);transition:color .15s;}
+.btn-adm:hover{color:var(--verde);}
+/* LOGIN */
+.login-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+.login-overlay.open{display:flex;}
+.login-box{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:2rem;width:100%;max-width:340px;animation:modalIn .18s ease;}
+.login-title{font-size:16px;font-weight:600;margin-bottom:.4rem;}
+.login-sub{font-size:13px;color:var(--text3);margin-bottom:1.5rem;}
+.login-field{display:flex;flex-direction:column;gap:5px;margin-bottom:1rem;}
+.login-field label{font-size:12px;font-weight:500;color:var(--text2);}
+.login-field input{padding:10px 12px;font-size:14px;font-family:'DM Sans',sans-serif;border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);background:var(--bg3);outline:none;transition:border-color .15s;}
+.login-field input:focus{border-color:var(--verde);box-shadow:0 0 0 3px rgba(169,207,70,.1);}
+.login-error{font-size:12px;color:var(--red);margin-bottom:.75rem;display:none;}
+.login-error.show{display:block;}
+.login-btns{display:flex;gap:8px;}
+.btn-login{flex:1;padding:10px;background:var(--verde);color:#0a0a0a;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;border:none;border-radius:var(--radius);cursor:pointer;}
+.btn-login:hover{opacity:.88;}
+.btn-cancel{padding:10px 16px;background:none;border:1px solid var(--border2);border-radius:var(--radius);color:var(--text2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;}
+.btn-cancel:hover{background:var(--bg3);}
+/* MAIN */
+.main{max-width:480px;margin:0 auto;padding:1.25rem 1rem;}
+.page{display:none;}
+.page.active{display:block;}
+.form-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.1rem;margin-bottom:.75rem;}
+.card-title{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:1rem;display:flex;align-items:center;gap:10px;}
+.card-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.row3{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:12px;font-weight:500;color:var(--text2);}
+.field input,.field textarea{padding:9px 12px;font-size:14px;font-family:'DM Sans',sans-serif;border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);background:var(--bg3);outline:none;transition:border-color .15s;}
+.field input:focus,.field textarea:focus{border-color:var(--verde);box-shadow:0 0 0 3px rgba(169,207,70,.1);}
+.field textarea{resize:vertical;min-height:70px;}
+.turno-pills{display:flex;gap:8px;}
+.turno-pill{flex:1;padding:7px 0;text-align:center;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;border:1px solid var(--border2);border-radius:var(--radius);cursor:pointer;background:var(--bg3);color:var(--text2);transition:all .15s;}
+.turno-pill:hover{border-color:var(--verde);color:var(--verde);}
+.turno-pill.selected{background:var(--verde);border-color:var(--verde);color:#0a0a0a;font-weight:700;}
+.checklist-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px;}
+.check-row{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:8px;cursor:pointer;transition:background .1s;user-select:none;}
+.check-row:hover{background:var(--bg3);}
+.check-row input[type=checkbox]{display:none;}
+.check-box{width:17px;height:17px;border:1.5px solid var(--border2);border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;background:var(--bg3);}
+.check-box svg{display:none;}
+.check-row.checked .check-box{background:var(--verde);border-color:var(--verde);}
+.check-row.checked .check-box svg{display:block;}
+.check-row.checked .check-label{color:var(--text3);text-decoration:line-through;}
+.check-label{font-size:12px;color:var(--text2);line-height:1.3;}
+.progress-wrap{margin-top:1rem;}
+.progress-track{background:var(--bg3);border-radius:99px;height:5px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--azul),var(--verde));transition:width .4s;}
+.progress-label{font-size:12px;color:var(--text3);margin-top:6px;text-align:right;}
+.btn-save{width:100%;padding:10px;background:var(--verde);color:#0a0a0a;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;border:none;border-radius:var(--radius);cursor:pointer;transition:opacity .15s;margin-top:.75rem;}
+.btn-save:hover{opacity:.88;}
+.btn-save:active{opacity:.7;}
+button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+.turno-pill{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+.check-row{-webkit-tap-highlight-color:transparent;}
+.hist-card{-webkit-tap-highlight-color:transparent;}
+/* ALERTA */
+.alerta-turno{background:var(--bg2);border:1px solid rgba(248,113,113,0.3);border-left:3px solid var(--red);border-radius:0 var(--radius-lg) var(--radius-lg) 0;padding:1rem 1.25rem;margin-bottom:1rem;display:none;}
+.alerta-turno.visible{display:block;}
+.alerta-turno-title{font-size:12px;font-weight:600;color:var(--red);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.6rem;display:flex;align-items:center;gap:7px;}
+.dot-pulse{width:7px;height:7px;border-radius:50%;background:var(--red);display:inline-block;animation:pulse 1.4s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.alerta-grid{display:flex;flex-wrap:wrap;gap:6px;}
+.alerta-item{font-size:12px;color:var(--red);background:var(--red-bg);border:1px solid rgba(248,113,113,0.2);padding:3px 10px;border-radius:6px;font-family:'DM Mono',monospace;}
+.alerta-ok{background:var(--bg2);border:1px solid rgba(169,207,70,0.2);border-left:3px solid var(--verde);border-radius:0 var(--radius-lg) var(--radius-lg) 0;padding:.85rem 1.25rem;margin-bottom:1rem;display:none;font-size:13px;color:var(--text2);}
+.alerta-ok.visible{display:flex;align-items:center;gap:10px;}
+/* FROTAS */
+.frotas-resultado{display:flex;flex-wrap:wrap;gap:6px;margin-top:.75rem;}
+.frota-tag{background:var(--bg4);border:1px solid var(--border2);border-radius:6px;padding:3px 10px;font-size:12px;font-family:'DM Mono',monospace;color:var(--text2);display:flex;align-items:center;gap:6px;}
+.frota-tag button{background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;padding:0;}
+.frota-tag button:hover{color:var(--red);}
+/* PENDÊNCIAS */
+.pend-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.pend-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem;}
+.pend-turno{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:.5rem;}
+.pend-items{display:flex;flex-direction:column;gap:4px;}
+.pend-item{font-size:12.5px;font-family:'DM Mono',monospace;padding:4px 8px;border-radius:6px;display:flex;align-items:center;gap:6px;}
+.pend-item.done{color:var(--text3);background:rgba(169,207,70,.06);}
+.pend-item.done::before{content:'✓';color:var(--verde);font-size:11px;}
+.pend-item.miss{color:var(--red);background:var(--red-bg);}
+.pend-item.miss::before{content:'✕';font-size:11px;}
+/* HISTÓRICO */
+.hist-empty{text-align:center;padding:4rem 1rem;color:var(--text3);font-size:14px;}
+.hist-grid{display:flex;flex-direction:column;gap:8px;}
+.hist-card{background:var(--bg2);border:1px solid var(--border);border-left:3px solid transparent;border-radius:var(--radius-lg);padding:1rem 1.25rem;cursor:pointer;transition:background .15s;}
+.hist-card:hover{background:var(--bg3);}
+.hist-card.all-ok{border-left-color:var(--verde);}
+.hist-card.has-issue{border-left-color:var(--azul-light);}
+.hist-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px;}
+.hist-driver{font-size:15px;font-weight:600;}
+.hist-frota{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px;}
+.hist-right{display:flex;align-items:center;gap:8px;}
+.badge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;}
+.badge-ok{background:rgba(169,207,70,.15);color:var(--verde);}
+.badge-warn{background:rgba(62,64,149,.25);color:var(--azul-light);}
+.badge-turno{background:rgba(169,207,70,.08);color:var(--text3);border:1px solid var(--border2);}
+.btn-del{width:26px;height:26px;border:1px solid var(--border2);background:none;border-radius:7px;cursor:pointer;color:var(--text3);font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .1s;}
+.btn-del:hover{background:rgba(248,113,113,.1);color:var(--red);}
+.hist-meta{display:flex;gap:14px;font-size:12px;color:var(--text3);}
+.mini-bar{margin-top:8px;background:var(--bg4);border-radius:99px;height:2px;overflow:hidden;}
+.mini-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--azul),var(--verde));}
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px);}
+.overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);box-shadow:0 24px 60px rgba(0,0,0,.5);width:100%;max-width:540px;max-height:90vh;overflow-y:auto;animation:modalIn .18s ease;}
+@keyframes modalIn{from{transform:translateY(10px) scale(.98);opacity:0;}to{transform:none;opacity:1;}}
+.modal-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;position:sticky;top:0;background:var(--bg2);border-radius:var(--radius-lg) var(--radius-lg) 0 0;}
+.modal-title{font-size:16px;font-weight:600;}
+.modal-sub{font-size:12px;color:var(--text3);margin-top:3px;font-family:'DM Mono',monospace;}
+.btn-close-modal{width:28px;height:28px;border:1px solid var(--border2);background:none;border-radius:7px;cursor:pointer;color:var(--text2);font-size:14px;display:flex;align-items:center;justify-content:center;}
+.btn-close-modal:hover{background:var(--bg3);}
+.modal-body{padding:1.25rem 1.5rem;}
+.modal-sec{font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);margin:1rem 0 .6rem;}
+.modal-checks{display:grid;grid-template-columns:1fr 1fr;gap:2px;}
+.modal-check{font-size:12.5px;display:flex;align-items:center;gap:7px;padding:4px 8px;border-radius:6px;}
+.modal-check.ok{color:var(--text2);}
+.modal-check.no{color:var(--text3);}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.dot.ok{background:var(--verde);}
+.dot.no{background:var(--bg4);}
+.modal-obs{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text2);line-height:1.6;}
+.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;}
+.btn-outline{padding:8px 18px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;border:1px solid var(--border2);background:none;border-radius:var(--radius);cursor:pointer;color:var(--text2);transition:all .15s;}
+.btn-outline:hover{background:var(--bg3);color:var(--text);}
+/* ADM */
+.adm-locked{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4rem 1rem;text-align:center;color:var(--text3);}
+.adm-locked-icon{font-size:40px;margin-bottom:12px;opacity:.3;}
+.adm-locked p{font-size:14px;margin-bottom:1.25rem;}
+.btn-unlock{padding:10px 24px;background:var(--verde);color:#0a0a0a;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;border:none;border-radius:var(--radius);cursor:pointer;}
+/* LOADING */
+.loading{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text3);padding:1rem 0;}
+.spinner{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--verde);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:var(--verde);color:#0a0a0a;padding:9px 18px;border-radius:var(--radius);font-size:13px;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999;white-space:nowrap;}
+.toast.show{opacity:1;}
+@media(max-width:600px){
+  .row3{grid-template-columns:1fr 1fr;}
+  .checklist-grid,.modal-checks{grid-template-columns:1fr;}
+  .pend-grid{grid-template-columns:1fr;}
+  .nav-tab{padding:0 10px;font-size:12px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-left">
+      <div class="logo">
+        <div class="logo-stripes"><span></span><span></span><span></span></div>
+        <div><div class="logo-text">Checklist</div></div>
+      </div>
+      <nav class="nav-tabs">
+        <button class="nav-tab active" onclick="showPage('form',this)">+ Novo</button>
+        <button class="nav-tab" id="tab-adm" onclick="tentarAdm(this)">🔒 ADM <span class="badge-count badge-red" id="pend-badge">0</span></button>
+      </nav>
+    </div>
+    <button class="btn-adm" id="btn-adm-logout" style="display:none;" onclick="logout()">Sair do ADM</button>
+  </div>
+</header>
+
+<main class="main">
+
+  <!-- FORMULÁRIO PÚBLICO -->
+  <div class="page active" id="page-form">
+    <div class="alerta-turno" id="alerta-pend">
+      <div class="alerta-turno-title"><span class="dot-pulse"></span> <span id="alerta-turno-label"></span></div>
+    </div>
+    <div class="alerta-ok" id="alerta-ok">✅ <span id="alerta-ok-texto"></span></div>
+
+    <div class="form-card">
+      <div class="card-title">Identificação</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div class="field"><label>Data</label><input type="date" id="f-data"></div>
+        <div class="field"><label>Motorista</label><input type="text" id="f-motorista" placeholder="Nome completo"></div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div class="field">
+          <label>Frota / Placa</label>
+          <input type="text" id="f-frota" placeholder="Ex: 271724" list="frotas-list" style="width:100%">
+          <datalist id="frotas-list"></datalist>
+        </div>
+      </div>
+
+    </div>
+    <div class="form-card">
+      <div class="card-title">Itens Obrigatórios</div>
+      <div class="checklist-grid" id="cl-obrig"></div>
+    </div>
+    <div class="form-card">
+      <div class="card-title">Limpeza e Conservação</div>
+      <div class="checklist-grid" id="cl-limp"></div>
+    </div>
+    <div class="form-card">
+      <div class="card-title">Observações</div>
+      <div class="field"><textarea id="f-obs" placeholder="Registre qualquer irregularidade..."></textarea></div>
+      <div class="progress-wrap">
+        <div class="progress-track"><div class="progress-fill" id="progress-bar" style="width:0%"></div></div>
+        <div class="progress-label" id="progress-label">0 de 19 itens marcados</div>
+      </div>
+      <button class="btn-save" onclick="salvar()">Salvar checklist</button>
+    </div>
+  </div>
+
+  <!-- ADM -->
+  <div class="page" id="page-adm">
+    <div id="adm-locked-view">
+      <div class="adm-locked">
+        <div class="adm-locked-icon">🔒</div>
+        <p>Área restrita. Faça login para acessar.</p>
+        <button class="btn-unlock" onclick="abrirLogin()">Entrar como ADM</button>
+      </div>
+    </div>
+    <div id="adm-content" style="display:none;">
+      <div style="display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:1.25rem;">
+        <button class="nav-tab active" id="sub-pend" onclick="showSub('pend',this)">⚠ Pendências <span class="badge-count badge-red" id="pend-badge2">0</span></button>
+        <button class="nav-tab" id="sub-frotas" onclick="showSub('frotas',this)">🚛 Frotas</button>
+        <button class="nav-tab" id="sub-hist" onclick="showSub('hist',this)">Histórico <span class="badge-count" id="count-badge">0</span></button>
+      </div>
+
+      <!-- PENDÊNCIAS -->
+      <div id="sub-page-pend">
+        <div class="form-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+            <div style="font-size:15px;font-weight:600;">Pendências do dia</div>
+            <div style="font-size:12px;color:var(--text3);" id="pend-date"></div>
+          </div>
+          <div class="field" style="margin-bottom:1rem;">
+            <label>Filtrar por data</label>
+            <input type="date" id="pend-filtro-data" onchange="renderPendencias()">
+          </div>
+          <div id="pend-content"></div>
+        </div>
+      </div>
+
+      <!-- FROTAS -->
+      <div id="sub-page-frotas" style="display:none;">
+        <div class="form-card">
+          <div class="card-title">Cadastrar frotas em massa</div>
+          <div class="field" style="margin-bottom:1rem;">
+            <label>Cole as placas (uma por linha)</label>
+            <textarea id="frotas-input" placeholder="271724&#10;271824&#10;271924" style="min-height:140px;font-family:'DM Mono',monospace;font-size:13px;"></textarea>
+          </div>
+          <button class="btn-save" onclick="importarFrotas()" style="margin-top:0;">Importar frotas</button>
+          <div style="margin-top:1.25rem;">
+            <div class="card-title">Frotas cadastradas</div>
+            <div id="frotas-loading" class="loading"><div class="spinner"></div>Carregando...</div>
+            <div class="frotas-resultado" id="frotas-tags"></div>
+            <div id="frotas-vazio" style="font-size:13px;color:var(--text3);display:none;">Nenhuma frota cadastrada ainda.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HISTÓRICO -->
+      <div id="sub-page-hist" style="display:none;">
+        <div id="hist-loading" class="loading"><div class="spinner"></div>Carregando...</div>
+        <div id="hist-container"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- LOGIN -->
+<div class="login-overlay" id="login-overlay">
+  <div class="login-box">
+    <div class="login-title">🔐 Acesso ADM</div>
+    <div class="login-sub">Digite a senha para continuar</div>
+    <div class="login-field">
+      <label>Senha</label>
+      <input type="password" id="login-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')confirmarLogin()">
+    </div>
+    <div class="login-error" id="login-error">Senha incorreta.</div>
+    <div class="login-btns">
+      <button class="btn-cancel" onclick="fecharLogin()">Cancelar</button>
+      <button class="btn-login" onclick="confirmarLogin()">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="fecharModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modal-title"></div>
+        <div class="modal-sub" id="modal-sub"></div>
+      </div>
+      <button class="btn-close-modal" onclick="fecharModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-sec">Itens Obrigatórios</div>
+      <div class="modal-checks" id="modal-obrig"></div>
+      <div class="modal-sec">Limpeza e Conservação</div>
+      <div class="modal-checks" id="modal-limp"></div>
+      <div id="modal-obs-section"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="fecharModal()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://loehgloomiimnwwtlrmk.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_YK8jrc2N0XN_zDfcFn0oGw_qFlHZY8H';
+const SENHA_ADM = 'admin123';
+const TURNOS = ['1º checklist','2º checklist'];
+const OBRIG = [
+  "CRLV no veículo","CNH válida","Cinto de segurança funcionando",
+  "Faróis funcionando","Lanternas funcionando","Luz de freio funcionando",
+  "Setas funcionando","Pneus em boas condições","Estepe","Macaco",
+  "Chave de roda","Triângulo de sinalização","Extintor (se aplicável)"
+];
+const LIMP = [
+  "Veículo limpo internamente","Veículo limpo externamente",
+  "Bancos em boas condições","Painel sem avarias",
+  "Sem avarias aparentes na lataria","Sem objetos soltos no interior"
+];
+const TOTAL = OBRIG.length + LIMP.length;
+
+let frotas = [], historico = [], turnoSelecionado = null, admLogado = false;
+
+// ── SUPABASE ──────────────────────────────────────────
+async function sbGet(table, params='') {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  });
+  return r.json();
+}
+
+async function sbPost(table, body) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation'
+    },
+    body: JSON.stringify(body)
+  });
+  return r.json();
+}
+
+async function sbDelete(table, id) {
+  await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+    method: 'DELETE',
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  });
+}
+
+// ── TEMPO BRASÍLIA ────────────────────────────────────
+function nowBRT() {
+  const brt = new Date(Date.now() - 3*60*60*1000);
+  return brt;
+}
+function today() {
+  const brt = nowBRT();
+  if (brt.getUTCHours() < 7) brt.setUTCDate(brt.getUTCDate()-1);
+  return brt.toISOString().split('T')[0];
+}
+function turnoAtual() {
+  // Não usado para determinar turno automaticamente
+  return null;
+}
+function fmtDate(d) { if(!d) return '-'; const [y,m,day]=d.split('-'); return `${day}/${m}/${y}`; }
+
+// ── INIT ──────────────────────────────────────────────
+async function init() {
+  buildChecklist('cl-obrig', OBRIG);
+  buildChecklist('cl-limp', LIMP);
+  document.getElementById('f-data').value = today();
+  document.getElementById('pend-filtro-data').value = today();
+
+  frotas = (await sbGet('frotas', 'select=placa&order=placa')).map(r => r.placa) || [];
+  updateDatalist();
+  await carregarHistorico();
+  updateBadges();
+  renderAlertaTurno();
+  setInterval(renderAlertaTurno, 60000);
+}
+
+async function carregarHistorico() {
+  historico = await sbGet('checklists', 'select=*&order=created_at.desc') || [];
+}
+
+function updateBadges() {
+  const data = today();
+  // Contar frotas que ainda não completaram 2 checklists hoje
+  const pend = frotas.filter(f => {
+    const feitos = historico.filter(h => h.data===data && h.frota===f).length;
+    return feitos < 2;
+  }).length;
+  ['pend-badge','pend-badge2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = pend; el.className = 'badge-count' + (pend>0?' badge-red':''); }
+  });
+  const cb = document.getElementById('count-badge');
+  if (cb) cb.textContent = historico.length;
+}
+
+// ── ALERTA TELA PRINCIPAL ─────────────────────────────
+function renderAlertaTurno() {
+  if (!frotas.length) {
+    document.getElementById('alerta-pend').classList.remove('visible');
+    document.getElementById('alerta-ok').classList.remove('visible');
+    return;
+  }
+  const data = today();
+  const faltando = frotas.filter(f => {
+    const feitos = historico.filter(h => h.data===data && h.frota===f).length;
+    return feitos < 2;
+  });
+  if (faltando.length > 0) {
+    document.getElementById('alerta-turno-label').textContent = `⚠ ${faltando.length} veículo(s) ainda não completaram os 2 checklists hoje`;
+    document.getElementById('alerta-pend').classList.add('visible');
+    document.getElementById('alerta-ok').classList.remove('visible');
+  } else {
+    document.getElementById('alerta-ok-texto').textContent = `✅ Todos os veículos completaram os 2 checklists hoje!`;
+    document.getElementById('alerta-ok').classList.add('visible');
+    document.getElementById('alerta-pend').classList.remove('visible');
+  }
+}
+
+// ── CHECKLIST ─────────────────────────────────────────
+function buildChecklist(id, items) {
+  const el = document.getElementById(id);
+  el.innerHTML = '';
+  items.forEach((item, i) => {
+    const cid = `${id}-${i}`;
+    const div = document.createElement('label');
+    div.className='check-row'; 
+    div.innerHTML=`<input type="checkbox" id="${cid}" style="display:none">
+      <div class="check-box"><svg width="10" height="8" fill="none" viewBox="0 0 10 8">
+        <path d="M1 4l2.5 2.5L9 1" stroke="#0a0a0a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg></div><span class="check-label">${item}</span>`;
+    div.addEventListener('click', function(){
+      const cb = this.querySelector('input');
+      cb.checked = !cb.checked;
+      this.classList.toggle('checked', cb.checked);
+      updateProgress();
+    });
+    el.appendChild(div);
+  });
+}
+
+function updateProgress() {
+  let c=0;
+  [...OBRIG.map((_,i)=>`cl-obrig-${i}`),...LIMP.map((_,i)=>`cl-limp-${i}`)]
+    .forEach(id=>{if(document.getElementById(id)?.checked)c++;});
+  document.getElementById('progress-bar').style.width=Math.round(c/TOTAL*100)+'%';
+  document.getElementById('progress-label').textContent=`${c} de ${TOTAL} itens marcados`;
+}
+
+function getChecks(prefix, items) {
+  return items.map((_,i)=>!!document.getElementById(`${prefix}-${i}`)?.checked);
+}
+
+function selecionarTurno(t) {
+  turnoSelecionado=t;
+  document.querySelectorAll('.turno-pill').forEach(p=>p.classList.toggle('selected',p.textContent.includes(t)));
+}
+
+async function salvar() {
+  const motorista = document.getElementById('f-motorista').value.trim();
+  const frota = document.getElementById('f-frota').value.trim().toUpperCase();
+  const data = document.getElementById('f-data').value;
+  if (!motorista||!frota||!data) { showToast('⚠ Preencha data, frota e motorista'); return; }
+  // Contar quantos checklists esse carro já fez hoje
+  const feitos = historico.filter(h => h.data===data && h.frota===frota);
+  if (feitos.length >= 2) {
+    showToast('✅ Esse veículo já fez os 2 checklists hoje!'); return;
+  }
+  const turnoAuto = feitos.length === 0 ? '1º checklist' : '2º checklist';
+  const btn = document.querySelector('.btn-save');
+  btn.textContent='Salvando...'; btn.disabled=true;
+  const res = await sbPost('checklists', {
+    data, motorista, frota, turno: turnoAuto,
+    obs: document.getElementById('f-obs').value.trim(),
+    obrig: getChecks('cl-obrig',OBRIG),
+    limp: getChecks('cl-limp',LIMP)
+  });
+  btn.textContent='Salvar checklist'; btn.disabled=false;
+  if (res && !res.error) {
+    if (Array.isArray(res)) historico.unshift(res[0]);
+    resetForm(); updateBadges(); renderAlertaTurno();
+    showToast('✓ Checklist salvo!');
+  } else {
+    showToast('❌ Erro ao salvar. Tente novamente.');
+  }
+}
+
+function resetForm() {
+  document.getElementById('f-motorista').value='';
+  document.getElementById('f-frota').value='';
+  document.getElementById('f-obs').value='';
+  document.getElementById('f-data').value=today();
+
+  OBRIG.forEach((_,i)=>{const e=document.getElementById(`cl-obrig-${i}`);if(e){e.checked=false;e.closest('.check-row').classList.remove('checked');}});
+  LIMP.forEach((_,i)=>{const e=document.getElementById(`cl-limp-${i}`);if(e){e.checked=false;e.closest('.check-row').classList.remove('checked');}});
+  updateProgress();
+}
+
+function updateDatalist() {
+  document.getElementById('frotas-list').innerHTML = frotas.map(f=>`<option value="${f}">`).join('');
+}
+
+// ── FROTAS ────────────────────────────────────────────
+async function importarFrotas() {
+  const raw = document.getElementById('frotas-input').value;
+  const novas = raw.split('\n').map(l=>l.trim().toUpperCase()).filter(l=>l.length>0);
+  if (!novas.length) { showToast('⚠ Nenhuma frota encontrada'); return; }
+  const btn = document.querySelector('#sub-page-frotas .btn-save');
+  btn.textContent='Importando...'; btn.disabled=true;
+  let adicionadas = 0;
+  for (const placa of novas) {
+    if (!frotas.includes(placa)) {
+      await sbPost('frotas', { placa });
+      frotas.push(placa);
+      adicionadas++;
+    }
+  }
+  btn.textContent='Importar frotas'; btn.disabled=false;
+  document.getElementById('frotas-input').value='';
+  renderFrotasTags(); updateDatalist(); updateBadges(); renderAlertaTurno();
+  showToast(`✓ ${adicionadas} frota(s) importada(s)`);
+}
+
+async function removerFrota(placa) {
+  const rows = await sbGet('frotas', `select=id&placa=eq.${placa}`);
+  if (rows && rows[0]) await sbDelete('frotas', rows[0].id);
+  frotas = frotas.filter(f=>f!==placa);
+  renderFrotasTags(); updateDatalist(); updateBadges();
+}
+
+function renderFrotasTags() {
+  document.getElementById('frotas-loading').style.display='none';
+  const el = document.getElementById('frotas-tags');
+  const vazio = document.getElementById('frotas-vazio');
+  if (!frotas.length) { el.innerHTML=''; vazio.style.display='block'; return; }
+  vazio.style.display='none';
+  el.innerHTML = frotas.map(f=>
+    `<div class="frota-tag">${f} <button onclick="event.stopPropagation();removerFrota('${f}')">✕</button></div>`
+  ).join('');
+}
+
+// ── PENDÊNCIAS ────────────────────────────────────────
+function renderPendencias() {
+  const data = document.getElementById('pend-filtro-data').value || today();
+  document.getElementById('pend-date').textContent = fmtDate(data);
+  const el = document.getElementById('pend-content');
+  if (!frotas.length) {
+    el.innerHTML='<div style="font-size:13px;color:var(--text3);">Cadastre as frotas primeiro.</div>'; return;
+  }
+  el.innerHTML=`<div class="pend-grid">${TURNOS.map(t=>{
+    const num = t === '1º checklist' ? 0 : 1;
+    const items=frotas.map(f=>{
+      const feitos = historico.filter(h=>h.data===data&&h.frota===f).sort((a,b)=>a.id-b.id);
+      const ok = feitos[num] !== undefined;
+      return `<div class="pend-item ${ok?'done':'miss'}">${f}</div>`;
+    }).join('');
+    return `<div class="pend-card"><div class="pend-turno">${t}</div><div class="pend-items">${items}</div></div>`;
+  }).join('')}</div>`;
+}
+
+// ── HISTÓRICO ─────────────────────────────────────────
+function renderHistorico() {
+  document.getElementById('hist-loading').style.display='none';
+  const el = document.getElementById('hist-container');
+  if (!historico.length) {
+    el.innerHTML='<div class="hist-empty"><div style="font-size:40px;opacity:.4;margin-bottom:10px;">📋</div>Nenhum checklist ainda.</div>'; return;
+  }
+  el.innerHTML=`<div class="hist-grid">${historico.map(e=>{
+    const ok=[...e.obrig,...e.limp].filter(Boolean).length;
+    const allOk=ok===TOTAL;
+    const pct=Math.round(ok/TOTAL*100);
+    const icon=e.turno==='1º checklist'?'①':e.turno==='2º checklist'?'②':'①';
+    return `<div class="hist-card ${allOk?'all-ok':'has-issue'}" onclick="abrirModal(${e.id})">
+      <div class="hist-top">
+        <div><div class="hist-driver">${e.motorista}</div><div class="hist-frota">${e.frota}</div></div>
+        <div class="hist-right">
+          <span class="badge badge-turno">${icon} ${e.turno}</span>
+          <span class="badge ${allOk?'badge-ok':'badge-warn'}">${ok}/${TOTAL}</span>
+          <button class="btn-del" ontouchend="event.preventDefault();deletarChecklist(${e.id},event)" onclick="deletarChecklist(${e.id},event)">✕</button>
+        </div>
+      </div>
+      <div class="hist-meta"><span>📅 ${fmtDate(e.data)}</span>${e.obs?'<span>💬 Obs</span>':''}</div>
+      <div class="mini-bar"><div class="mini-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+async function deletarChecklist(id, evt) {
+  evt.stopPropagation();
+  if (!confirm('Excluir este registro?')) return;
+  await sbDelete('checklists', id);
+  historico = historico.filter(e=>e.id!==id);
+  renderHistorico(); renderPendencias(); updateBadges(); renderAlertaTurno();
+  showToast('Registro removido');
+}
+
+function abrirModal(id) {
+  const e = historico.find(x=>x.id===id); if (!e) return;
+  const ok=[...e.obrig,...e.limp].filter(Boolean).length;
+  const icon=e.turno==='1º checklist'?'①':e.turno==='2º checklist'?'②':'①';
+  document.getElementById('modal-title').textContent=e.motorista;
+  document.getElementById('modal-sub').textContent=`${fmtDate(e.data)} · ${e.frota} · ${icon} ${e.turno} · ${ok}/${TOTAL}`;
+  const rc=(elId,items,checks)=>{
+    document.getElementById(elId).innerHTML=items.map((item,i)=>
+      `<div class="modal-check ${checks[i]?'ok':'no'}"><div class="dot ${checks[i]?'ok':'no'}"></div>${item}</div>`).join('');
+  };
+  rc('modal-obrig',OBRIG,e.obrig);
+  rc('modal-limp',LIMP,e.limp);
+  document.getElementById('modal-obs-section').innerHTML=e.obs
+    ?`<div class="modal-sec">Observações</div><div class="modal-obs">${e.obs}</div>`:'';
+  document.getElementById('overlay').classList.add('open');
+}
+
+function fecharModal(evt) {
+  if (evt&&evt.target!==document.getElementById('overlay')) return;
+  document.getElementById('overlay').classList.remove('open');
+}
+
+// ── ADM ───────────────────────────────────────────────
+function tentarAdm(tab) {
+  admLogado ? mostrarAdm(tab) : abrirLogin();
+}
+
+function abrirLogin() {
+  document.getElementById('login-overlay').classList.add('open');
+  document.getElementById('login-senha').value='';
+  document.getElementById('login-error').classList.remove('show');
+  setTimeout(()=>document.getElementById('login-senha').focus(),100);
+}
+
+function fecharLogin() {
+  document.getElementById('login-overlay').classList.remove('open');
+}
+
+function confirmarLogin() {
+  if (document.getElementById('login-senha').value===SENHA_ADM) {
+    admLogado=true; fecharLogin();
+    document.getElementById('btn-adm-logout').style.display='flex';
+    document.getElementById('tab-adm').innerHTML='🔓 ADM <span class="badge-count badge-red" id="pend-badge">0</span>';
+    updateBadges();
+    mostrarAdm(document.getElementById('tab-adm'));
+    showToast('✓ Bem-vindo ao ADM');
+  } else {
+    document.getElementById('login-error').classList.add('show');
+    document.getElementById('login-senha').value='';
+    document.getElementById('login-senha').focus();
+  }
+}
+
+function mostrarAdm(tab) {
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('header .nav-tab').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-adm').classList.add('active');
+  if (tab) tab.classList.add('active');
+  document.getElementById('adm-locked-view').style.display='none';
+  document.getElementById('adm-content').style.display='block';
+  renderFrotasTags(); renderPendencias(); renderHistorico();
+}
+
+function logout() {
+  admLogado=false;
+  document.getElementById('btn-adm-logout').style.display='none';
+  document.getElementById('adm-content').style.display='none';
+  document.getElementById('adm-locked-view').style.display='block';
+  document.getElementById('tab-adm').innerHTML='🔒 ADM <span class="badge-count badge-red" id="pend-badge">0</span>';
+  updateBadges();
+  showPage('form',document.querySelectorAll('header .nav-tab')[0]);
+  showToast('Sessão encerrada');
+}
+
+function showSub(p,tab) {
+  ['pend','frotas','hist'].forEach(s=>{
+    document.getElementById(`sub-page-${s}`).style.display=s===p?'block':'none';
+  });
+  document.querySelectorAll('#adm-content .nav-tab').forEach(t=>t.classList.remove('active'));
+  if (tab) tab.classList.add('active');
+  if (p==='pend') renderPendencias();
+  if (p==='hist') renderHistorico();
+}
+
+function showPage(p,tab) {
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('header .nav-tab').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  if (tab) tab.classList.add('active');
+}
+
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+init();
+</script>
+</body>
+</html>
