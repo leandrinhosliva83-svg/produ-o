@@ -625,26 +625,62 @@ function renderHistorico() {
   if (!historico.length) {
     el.innerHTML='<div class="hist-empty"><div style="font-size:40px;opacity:.4;margin-bottom:10px;">📋</div>Nenhum checklist ainda.</div>'; return;
   }
-  el.innerHTML=`<div class="hist-grid">${historico.map(e=>{
-    const ok=[...e.obrig,...e.limp].filter(Boolean).length;
-    const allOk=ok===TOTAL;
-    const pct=Math.round(ok/TOTAL*100);
-    const icon=e.turno==='1º checklist'?'①':e.turno==='2º checklist'?'②':'①';
-    return `<div class="hist-card ${allOk?'all-ok':'has-issue'}" onclick="abrirModal(${e.id})">
-      <div class="hist-top">
-        <div><div class="hist-driver">${e.motorista}</div><div class="hist-frota">${e.frota}</div></div>
-        <div class="hist-right">
-          <span class="badge badge-turno">${icon} ${e.turno}</span>
-          <span class="badge ${allOk?'badge-ok':'badge-warn'}">${ok}/${TOTAL}</span>
-          <button class="btn-del" ontouchend="event.preventDefault();deletarChecklist(${e.id},event)" onclick="deletarChecklist(${e.id},event)">✕</button>
-        </div>
-      </div>
-      <div class="hist-meta"><span>📅 ${fmtDate(e.data)}</span>${e.obs?'<span>💬 Obs</span>':''}</div>
-      <div class="mini-bar"><div class="mini-fill" style="width:${pct}%"></div></div>
-    </div>`;
-  }).join('')}</div>`;
-}
 
+  // Agrupar por data
+  const porDia = {};
+  historico.forEach(e => {
+    if (!porDia[e.data]) porDia[e.data] = [];
+    porDia[e.data].push(e);
+  });
+
+  // Ordenar dias do mais recente
+  const dias = Object.keys(porDia).sort((a,b) => b.localeCompare(a));
+
+  let html = '<div style="display:flex;flex-direction:column;gap:1rem;">';
+
+  dias.forEach(data => {
+    const registros = porDia[data];
+    const total = frotas.length || registros.length;
+    // frotas que completaram 2 checklists nesse dia
+    const frotasNoDia = [...new Set(registros.map(r => r.frota))];
+    const completos = frotasNoDia.filter(f => registros.filter(r => r.frota===f).length >= 2).length;
+    const pct = total > 0 ? Math.round((completos/total)*100) : 0;
+    const corPct = pct===100 ? 'var(--verde)' : pct>50 ? '#a9cf46' : '#f87171';
+
+    html += `<div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-size:13px;font-weight:600;color:var(--text2);">📅 ${fmtDate(data)}</span>
+        <span style="font-size:13px;font-weight:700;color:${corPct};">${completos}/${total} (${pct}%)</span>
+      </div>
+      <div style="background:var(--bg4);border-radius:99px;height:4px;overflow:hidden;margin-bottom:10px;">
+        <div style="height:100%;border-radius:99px;background:linear-gradient(90deg,var(--azul),var(--verde));width:${pct}%;transition:width .4s;"></div>
+      </div>
+      <div class="hist-grid">
+        ${registros.map(e => {
+          const ok=[...e.obrig,...e.limp].filter(Boolean).length;
+          const allOk=ok===TOTAL;
+          const pctCard=Math.round(ok/TOTAL*100);
+          const icon=e.turno==='1º checklist'?'①':'②';
+          return `<div class="hist-card ${allOk?'all-ok':'has-issue'}" onclick="abrirModal(${e.id})">
+            <div class="hist-top">
+              <div><div class="hist-driver">${e.motorista}</div><div class="hist-frota">${e.frota}</div></div>
+              <div class="hist-right">
+                <span class="badge badge-turno">${icon} ${e.turno}</span>
+                <span class="badge ${allOk?'badge-ok':'badge-warn'}">${ok}/${TOTAL}</span>
+                <button class="btn-del" ontouchend="event.preventDefault();deletarChecklist(${e.id},event)" onclick="deletarChecklist(${e.id},event)">✕</button>
+              </div>
+            </div>
+            <div class="hist-meta"><span>${e.motorista}</span>${e.obs?'<span>💬 Obs</span>':''}</div>
+            <div class="mini-bar"><div class="mini-fill" style="width:${pctCard}%"></div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  });
+
+  html += '</div>';
+  el.innerHTML = html;
+}
 async function deletarChecklist(id, evt) {
   evt.stopPropagation();
   if (!confirm('Excluir este registro?')) return;
