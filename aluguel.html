@@ -268,6 +268,15 @@
     <label>Quantidade de dias</label>
     <input type="text" id="qtdDias" readonly placeholder="Será calculado automaticamente" style="opacity:0.7;">
 
+    <label for="kmInicial">KM inicial</label>
+    <input type="number" id="kmInicial" placeholder="Ex: 10000" min="0">
+
+    <label for="kmFinal">KM final</label>
+    <input type="number" id="kmFinal" placeholder="Ex: 10500" min="0">
+
+    <label>Total de KM rodado</label>
+    <input type="text" id="kmTotal" readonly placeholder="Será calculado automaticamente" style="opacity:0.7;">
+
     <label for="frota">Número de frota / placa</label>
     <input type="text" id="frota" placeholder="Ex: Frota 123 ou ABC-1234">
 
@@ -357,6 +366,19 @@ document.getElementById('dataInicio').addEventListener('change', calcularDias);
 document.getElementById('dataFim').addEventListener('change', calcularDias);
 document.getElementById('valorDiaria').addEventListener('input', calcularTotal);
 
+function calcularKm() {
+  const ini = parseFloat(document.getElementById('kmInicial').value);
+  const fim = parseFloat(document.getElementById('kmFinal').value);
+  const out = document.getElementById('kmTotal');
+  if (!isNaN(ini) && !isNaN(fim) && fim >= ini) {
+    out.value = (fim - ini).toLocaleString('pt-BR') + ' km';
+  } else {
+    out.value = '';
+  }
+}
+document.getElementById('kmInicial').addEventListener('input', calcularKm);
+document.getElementById('kmFinal').addEventListener('input', calcularKm);
+
 async function render() {
   const items = (await getItems()).sort((a,b) => b.ts - a.ts);
   const abertos = items.filter(i => i.status !== 'fechado');
@@ -386,6 +408,7 @@ async function render() {
         <p><span class="label">Equipamento:</span> ${it.equipamento}</p>
         <p><span class="label">Processo:</span> ${it.processo || '-'}</p>
         <p><span class="label">Diária:</span> R$ ${it.valorDiaria || '0'} &nbsp; <span class="label">Total:</span> ${it.valorTotal || '-'}</p>
+        <p><span class="label">KM:</span> ${it.kmInicial || '-'} → ${it.kmFinal || '-'} (${it.kmTotal || '-'})</p>
       </div>
       ${isOpen ? `<div class="item-buttons">
         <button class="edit-btn" data-id="${it.id}">Editar</button>
@@ -420,6 +443,9 @@ async function render() {
       document.getElementById('equipamento').value = item.equipamento || '';
       document.getElementById('processo').value = item.processo || '';
       document.getElementById('valorDiaria').value = item.valorDiaria || '';
+      document.getElementById('kmInicial').value = item.kmInicial || '';
+      document.getElementById('kmFinal').value = item.kmFinal || '';
+      calcularKm();
       calcularTotal();
       overlay.classList.add('show');
     });
@@ -450,14 +476,14 @@ async function render() {
 let editandoId = null;
 
 function limparFormulario() {
-  ['nome','data','dataInicio','dataFim','qtdDias','frota','equipamento','processo','valorDiaria','valorTotal'].forEach(id => document.getElementById(id).value = '');
+  ['nome','data','dataInicio','dataFim','qtdDias','frota','equipamento','processo','valorDiaria','valorTotal','kmInicial','kmFinal','kmTotal'].forEach(id => document.getElementById(id).value = '');
 }
 
 document.getElementById('exportar').addEventListener('click', async () => {
   const items = await getItems();
   if (!items.length) { alert('Não há dados para exportar.'); return; }
 
-  const headers = ['Status','Nome do solicitante','Frota/Placa','Data da solicitação','Data inicial','Data final','Qtd. dias','Equipamento','Processo','Valor diária','Valor total'];
+  const headers = ['Status','Nome do solicitante','Frota/Placa','Data da solicitação','Data inicial','Data final','Qtd. dias','Equipamento','Processo','Valor diária','Valor total','KM inicial','KM final','KM total'];
   const linhas = items.map(it => [
     it.status === 'fechado' ? 'Finalizado' : 'Em aberto',
     it.nome || '',
@@ -469,7 +495,10 @@ document.getElementById('exportar').addEventListener('click', async () => {
     it.equipamento || '',
     it.processo || '',
     it.valorDiaria || '',
-    it.valorTotal || ''
+    it.valorTotal || '',
+    it.kmInicial || '',
+    it.kmFinal || '',
+    it.kmTotal || ''
   ]);
 
   const escapar = v => `"${String(v).replace(/"/g, '""')}"`;
@@ -519,6 +548,9 @@ document.getElementById('salvar').addEventListener('click', async () => {
   item.processo = document.getElementById('processo').value.trim();
   item.valorDiaria = document.getElementById('valorDiaria').value;
   item.valorTotal = document.getElementById('valorTotal').value;
+  item.kmInicial = document.getElementById('kmInicial').value;
+  item.kmFinal = document.getElementById('kmFinal').value;
+  item.kmTotal = document.getElementById('kmTotal').value;
 
   await saveItem(item);
   limparFormulario();
