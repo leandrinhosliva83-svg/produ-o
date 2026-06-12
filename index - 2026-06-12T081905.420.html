@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Aluguel de Equipamento</title>
+<style>
+  * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+  body {
+    margin: 0;
+    background: #121212;
+    padding: 24px;
+    color: #e8e8e8;
+  }
+  .container {
+    max-width: 700px;
+    margin: 0 auto;
+    position: relative;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #ffffff;
+  }
+  .subtitle {
+    color: #999;
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  .count-card {
+    background: #1e1e1e;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .count-card .num {
+    font-size: 28px;
+    font-weight: 700;
+    color: #ff5c5c;
+  }
+  .count-card .label {
+    font-size: 13px;
+    color: #999;
+  }
+  .export-btn {
+    padding: 10px 16px;
+    background: #1D9E75;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .export-btn:hover { background: #0F6E56; }
+  .resumo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .resumo-card {
+    background: #1e1e1e;
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .resumo-card .num-sm {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1D9E75;
+    margin: 4px 0 0;
+  }
+  h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 24px 0 10px;
+    color: #ffffff;
+  }
+  .item {
+    background: #1e1e1e;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-top: 4px;
+    flex-shrink: 0;
+  }
+  .dot.aberto { background: #ff5c5c; }
+  .dot.fechado { background: #777; }
+  .item-info p { margin: 2px 0; font-size: 13px; color: #ddd; }
+  .item-info .nome { font-weight: 600; font-size: 14px; color: #fff; }
+  .item-info .label { color: #888; }
+  .item-buttons {
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .close-btn, .edit-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+    color: #fff;
+  }
+  .close-btn { background: #E24B4A; }
+  .close-btn:hover { background: #a32d2d; }
+  .edit-btn { background: #378ADD; }
+  .edit-btn:hover { background: #185fa5; }
+  .empty {
+    color: #999;
+    font-size: 13px;
+    font-style: italic;
+  }
+  .notice {
+    font-size: 12px;
+    color: #999;
+    margin-top: 16px;
+  }
+
+  /* botão flutuante + */
+  .fab {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #1D9E75;
+    color: #fff;
+    border: none;
+    font-size: 28px;
+    line-height: 56px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    transition: background 0.15s;
+  }
+  .fab:hover { background: #0F6E56; }
+
+  /* modal */
+  .overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  .overlay.show { display: flex; }
+  .modal {
+    background: #1e1e1e;
+    border-radius: 12px;
+    padding: 20px;
+    width: 90%;
+    max-width: 480px;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  .modal h2 { margin-top: 0; }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 12px 0 4px;
+    color: #bbb;
+  }
+  input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: border 0.15s;
+    background: #2a2a2a;
+    color: #e8e8e8;
+  }
+  input:focus { border-color: #378ADD; }
+  .modal-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .modal-buttons button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-save { background: #1D9E75; color: #fff; }
+  .btn-save:hover { background: #0F6E56; }
+  .btn-cancel { background: #3a3a3a; color: #e8e8e8; }
+  .btn-cancel:hover { background: #4a4a4a; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-app-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-database-compat.js"></script>
+<script>
+  // ====== COLE AQUI AS CREDENCIAIS DO SEU FIREBASE ======
+  const firebaseConfig = {
+    apiKey: "SUA_API_KEY",
+    authDomain: "SEU_PROJETO.firebaseapp.com",
+    databaseURL: "https://SEU_PROJETO-default-rtdb.firebaseio.com",
+    projectId: "SEU_PROJETO",
+  };
+  // =======================================================
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+</script>
+</head>
+<body>
+<div class="container">
+  <h1>Controle de aluguel de equipamento</h1>
+  <p class="subtitle">Dados compartilhados — qualquer pessoa com o link vê e edita.</p>
+
+  <div class="count-card">
+    <div>
+      <p class="label">Equipamentos alugados (em aberto)</p>
+      <p class="num" id="contador">0</p>
+    </div>
+    <button class="export-btn" id="exportar">Exportar Excel</button>
+  </div>
+
+  <div class="resumo-grid">
+    <div class="resumo-card">
+      <p class="label">Total de dias (em aberto)</p>
+      <p class="num-sm" id="totalDias">0</p>
+    </div>
+    <div class="resumo-card">
+      <p class="label">Valor total (em aberto)</p>
+      <p class="num-sm" id="totalValor">R$ 0,00</p>
+    </div>
+  </div>
+
+  <h2>Em aberto</h2>
+  <div id="abertos"></div>
+
+  <h2>Histórico (finalizados)</h2>
+  <div id="historico"></div>
+
+</div>
+
+<button class="fab" id="abrirModal" title="Nova solicitação">+</button>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2 id="modalTitulo">Nova solicitação</h2>
+
+    <label for="nome">Nome do solicitante</label>
+    <input type="text" id="nome" placeholder="Digite o nome">
+
+    <label for="data">Data da solicitação</label>
+    <input type="date" id="data">
+
+    <label for="dataInicio">Data inicial do aluguel</label>
+    <input type="date" id="dataInicio">
+
+    <label for="dataFim">Data final do aluguel</label>
+    <input type="date" id="dataFim">
+
+    <label>Quantidade de dias</label>
+    <input type="text" id="qtdDias" readonly placeholder="Será calculado automaticamente" style="opacity:0.7;">
+
+    <label for="frota">Número de frota / placa</label>
+    <input type="text" id="frota" placeholder="Ex: Frota 123 ou ABC-1234">
+
+    <label for="equipamento">Tipo do equipamento</label>
+    <input type="text" id="equipamento" placeholder="Ex: Betoneira, andaime, gerador...">
+
+    <label for="processo">Processo que vai usar</label>
+    <input type="text" id="processo" placeholder="Descreva o processo">
+
+    <label for="valorDiaria">Valor da diária (R$)</label>
+    <input type="number" id="valorDiaria" placeholder="Ex: 150" step="0.01" min="0">
+
+    <label>Valor total (diária × dias)</label>
+    <input type="text" id="valorTotal" readonly placeholder="Será calculado automaticamente" style="opacity:0.7;">
+
+    <div class="modal-buttons">
+      <button class="btn-cancel" id="cancelar">Cancelar</button>
+      <button class="btn-save" id="salvar">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+async function getItems() {
+  const snapshot = await db.ref('solicitacoes').once('value');
+  const data = snapshot.val() || {};
+  return Object.values(data);
+}
+async function saveItem(item) {
+  await db.ref('solicitacoes/' + item.id).set(item);
+}
+
+function calcularDias() {
+  const ini = document.getElementById('dataInicio').value;
+  const fim = document.getElementById('dataFim').value;
+  const out = document.getElementById('qtdDias');
+  if (ini && fim) {
+    const d1 = new Date(ini);
+    const d2 = new Date(fim);
+    const diff = Math.round((d2 - d1) / (1000*60*60*24)) + 1;
+    out.value = diff > 0 ? diff + (diff === 1 ? ' dia' : ' dias') : 'Data final inválida';
+  } else {
+    out.value = '';
+  }
+  calcularTotal();
+}
+
+function calcularTotal() {
+  const ini = document.getElementById('dataInicio').value;
+  const fim = document.getElementById('dataFim').value;
+  const diaria = parseFloat(document.getElementById('valorDiaria').value);
+  const out = document.getElementById('valorTotal');
+  if (ini && fim && !isNaN(diaria)) {
+    const d1 = new Date(ini);
+    const d2 = new Date(fim);
+    const dias = Math.round((d2 - d1) / (1000*60*60*24)) + 1;
+    if (dias > 0) {
+      out.value = 'R$ ' + (dias * diaria).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      return;
+    }
+  }
+  out.value = '';
+}
+
+document.getElementById('dataInicio').addEventListener('change', calcularDias);
+document.getElementById('dataFim').addEventListener('change', calcularDias);
+document.getElementById('valorDiaria').addEventListener('input', calcularTotal);
+
+async function render() {
+  const items = (await getItems()).sort((a,b) => b.ts - a.ts);
+  const abertos = items.filter(i => i.status !== 'fechado');
+  const fechados = items.filter(i => i.status === 'fechado');
+
+  document.getElementById('contador').textContent = abertos.length;
+
+  let totalDias = 0;
+  let totalValor = 0;
+  abertos.forEach(it => {
+    const dias = parseInt(it.qtdDias) || 0;
+    const val = parseFloat((it.valorTotal || '').replace('R$','').replace(/\./g,'').replace(',','.')) || 0;
+    totalDias += dias;
+    totalValor += val;
+  });
+  document.getElementById('totalDias').textContent = totalDias;
+  document.getElementById('totalValor').textContent = 'R$ ' + totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+  const card = (it, isOpen) => `
+    <div class="item">
+      <div class="dot ${isOpen ? 'aberto' : 'fechado'}"></div>
+      <div class="item-info">
+        <p class="nome">${it.nome}</p>
+        <p><span class="label">Frota/Placa:</span> ${it.frota || '-'}</p>
+        <p><span class="label">Data solicitação:</span> ${it.data || '-'}</p>
+        <p><span class="label">Período:</span> ${it.dataInicio || '-'} até ${it.dataFim || '-'} (${it.qtdDias || '-'})</p>
+        <p><span class="label">Equipamento:</span> ${it.equipamento}</p>
+        <p><span class="label">Processo:</span> ${it.processo || '-'}</p>
+        <p><span class="label">Diária:</span> R$ ${it.valorDiaria || '0'} &nbsp; <span class="label">Total:</span> ${it.valorTotal || '-'}</p>
+      </div>
+      <div class="item-buttons">
+        ${isOpen ? `<button class="edit-btn" data-id="${it.id}">Editar</button>` : ''}
+        ${isOpen ? `<button class="close-btn" data-id="${it.id}">Finalizar</button>` : ''}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('abertos').innerHTML = abertos.length
+    ? abertos.map(it => card(it, true)).join('')
+    : '<p class="empty">Nenhuma solicitação aberta.</p>';
+
+  document.getElementById('historico').innerHTML = fechados.length
+    ? fechados.map(it => card(it, false)).join('')
+    : '<p class="empty">Nenhum histórico ainda.</p>';
+
+  document.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const items = await getItems();
+      const item = items.find(i => i.id === btn.dataset.id);
+      if (!item) return;
+      editandoId = item.id;
+      document.getElementById('modalTitulo').textContent = 'Editar solicitação';
+      document.getElementById('nome').value = item.nome || '';
+      document.getElementById('data').value = item.data || '';
+      document.getElementById('dataInicio').value = item.dataInicio || '';
+      document.getElementById('dataFim').value = item.dataFim || '';
+      document.getElementById('qtdDias').value = item.qtdDias || '';
+      document.getElementById('frota').value = item.frota || '';
+      document.getElementById('equipamento').value = item.equipamento || '';
+      document.getElementById('processo').value = item.processo || '';
+      document.getElementById('valorDiaria').value = item.valorDiaria || '';
+      calcularTotal();
+      document.getElementById('preco').value = item.preco || '';
+      overlay.classList.add('show');
+    });
+  });
+
+  document.querySelectorAll('.close-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const items = await getItems();
+      const item = items.find(i => i.id === btn.dataset.id);
+      if (item) {
+        item.status = 'fechado';
+        await saveItem(item);
+      }
+      render();
+    });
+  });
+}
+
+let editandoId = null;
+
+function limparFormulario() {
+  ['nome','data','dataInicio','dataFim','qtdDias','frota','equipamento','processo','valorDiaria','valorTotal'].forEach(id => document.getElementById(id).value = '');
+}
+
+document.getElementById('exportar').addEventListener('click', async () => {
+  const items = await getItems();
+  if (!items.length) { alert('Não há dados para exportar.'); return; }
+
+  const headers = ['Status','Nome do solicitante','Frota/Placa','Data da solicitação','Data inicial','Data final','Qtd. dias','Equipamento','Processo','Valor diária','Valor total'];
+  const linhas = items.map(it => [
+    it.status === 'fechado' ? 'Finalizado' : 'Em aberto',
+    it.nome || '',
+    it.frota || '',
+    it.data || '',
+    it.dataInicio || '',
+    it.dataFim || '',
+    it.qtdDias || '',
+    it.equipamento || '',
+    it.processo || '',
+    it.valorDiaria || '',
+    it.valorTotal || ''
+  ]);
+
+  const escapar = v => `"${String(v).replace(/"/g, '""')}"`;
+  const csv = [headers, ...linhas].map(linha => linha.map(escapar).join(';')).join('\r\n');
+
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'controle_aluguel.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('abrirModal').addEventListener('click', () => {
+  editandoId = null;
+  document.getElementById('modalTitulo').textContent = 'Nova solicitação';
+  limparFormulario();
+  overlay.classList.add('show');
+});
+document.getElementById('cancelar').addEventListener('click', () => {
+  overlay.classList.remove('show');
+});
+
+document.getElementById('salvar').addEventListener('click', async () => {
+  const nome = document.getElementById('nome').value.trim();
+  const equipamento = document.getElementById('equipamento').value.trim();
+  if (!nome || !equipamento) { alert('Preencha pelo menos nome e equipamento'); return; }
+
+  let item;
+  if (editandoId) {
+    const items = await getItems();
+    item = items.find(i => i.id === editandoId);
+  } else {
+    item = { id: 'item_' + Date.now(), status: 'aberto', ts: Date.now() };
+  }
+
+  item.nome = nome;
+  item.data = document.getElementById('data').value;
+  item.dataInicio = document.getElementById('dataInicio').value;
+  item.dataFim = document.getElementById('dataFim').value;
+  item.qtdDias = document.getElementById('qtdDias').value;
+  item.frota = document.getElementById('frota').value.trim();
+  item.equipamento = equipamento;
+  item.processo = document.getElementById('processo').value.trim();
+  item.valorDiaria = document.getElementById('valorDiaria').value;
+  item.valorTotal = document.getElementById('valorTotal').value;
+
+  await saveItem(item);
+  limparFormulario();
+  overlay.classList.remove('show');
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
