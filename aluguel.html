@@ -122,6 +122,8 @@
   .close-btn:hover { background: #a32d2d; }
   .edit-btn { background: #378ADD; }
   .edit-btn:hover { background: #185fa5; }
+  .delete-btn { background: #555; }
+  .delete-btn:hover { background: #333; }
   .empty {
     color: #999;
     font-size: 13px;
@@ -212,20 +214,6 @@
   .btn-cancel { background: #3a3a3a; color: #e8e8e8; }
   .btn-cancel:hover { background: #4a4a4a; }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-app-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-database-compat.js"></script>
-<script>
-  // ====== COLE AQUI AS CREDENCIAIS DO SEU FIREBASE ======
-  const firebaseConfig = {
-    apiKey: "SUA_API_KEY",
-    authDomain: "SEU_PROJETO.firebaseapp.com",
-    databaseURL: "https://SEU_PROJETO-default-rtdb.firebaseio.com",
-    projectId: "SEU_PROJETO",
-  };
-  // =======================================================
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-</script>
 </head>
 <body>
 <div class="container">
@@ -303,13 +291,34 @@
 </div>
 
 <script>
+const JSONBIN_ID = '6a2bf0daf5f4af5e29e5ec52';
+const JSONBIN_KEY = '$2a$10$2Y6FSLWxPUxEx68NVsL1L.5saf0R443Sy9murpTBT5iXVakNU4C4S';
+
 async function getItems() {
-  const snapshot = await db.ref('solicitacoes').once('value');
-  const data = snapshot.val() || {};
-  return Object.values(data);
+  const res = await fetch('https://api.jsonbin.io/v3/b/' + JSONBIN_ID + '/latest', {
+    headers: { 'X-Master-Key': JSONBIN_KEY }
+  });
+  const data = await res.json();
+  return (data.record && data.record.itens) || [];
 }
 async function saveItem(item) {
-  await db.ref('solicitacoes/' + item.id).set(item);
+  const items = await getItems();
+  const idx = items.findIndex(i => i.id === item.id);
+  if (idx >= 0) items[idx] = item; else items.push(item);
+  await fetch('https://api.jsonbin.io/v3/b/' + JSONBIN_ID, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_KEY },
+    body: JSON.stringify({ itens: items })
+  });
+}
+async function deleteItem(id) {
+  const items = await getItems();
+  const filtrado = items.filter(i => i.id !== id);
+  await fetch('https://api.jsonbin.io/v3/b/' + JSONBIN_ID, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_KEY },
+    body: JSON.stringify({ itens: filtrado })
+  });
 }
 
 function calcularDias() {
@@ -378,10 +387,12 @@ async function render() {
         <p><span class="label">Processo:</span> ${it.processo || '-'}</p>
         <p><span class="label">Diária:</span> R$ ${it.valorDiaria || '0'} &nbsp; <span class="label">Total:</span> ${it.valorTotal || '-'}</p>
       </div>
-      <div class="item-buttons">
-        ${isOpen ? `<button class="edit-btn" data-id="${it.id}">Editar</button>` : ''}
-        ${isOpen ? `<button class="close-btn" data-id="${it.id}">Finalizar</button>` : ''}
-      </div>
+      ${isOpen ? `<div class="item-buttons">
+        <button class="edit-btn" data-id="${it.id}">Editar</button>
+        <button class="close-btn" data-id="${it.id}">Finalizar</button>
+      </div>` : `<div class="item-buttons">
+        <button class="delete-btn" data-id="${it.id}">Excluir</button>
+      </div>`}
     </div>
   `;
 
@@ -412,6 +423,15 @@ async function render() {
       calcularTotal();
       document.getElementById('preco').value = item.preco || '';
       overlay.classList.add('show');
+    });
+  });
+
+  document.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (confirm('Excluir esta solicitação do histórico? Essa ação não pode ser desfeita.')) {
+        await deleteItem(btn.dataset.id);
+        render();
+      }
     });
   });
 
