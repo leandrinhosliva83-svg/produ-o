@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prancheta — meus fluxogramas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --paper:#0b1f38; --panel:#102a4a; --panel-2:#16375e;
+    --ink:#e3eefc; --ink-dim:#7fa3cc; --line:#26496f;
+    --accent:#ffb020; --radius:3px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,sans-serif;
+    background-image:linear-gradient(rgba(38,73,111,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(38,73,111,.5) 1px,transparent 1px);
+    background-size:30px 30px;
+  }
+  .wrap{max-width:1300px;margin:0 auto;padding:0 22px 48px}
+  header{padding:40px 0 24px}
+  h1{margin:0;font-size:clamp(26px,4.5vw,40px);letter-spacing:-.03em;font-weight:700}
+  h1 span{color:var(--accent)}
+  .sub{margin:10px 0 0;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.16em}
+
+  .console{display:grid;grid-template-columns:minmax(280px,340px) 1fr;
+    border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+    background:var(--panel);box-shadow:0 20px 60px -20px rgba(0,0,0,.6)}
+  @media(max-width:880px){.console{grid-template-columns:1fr}}
+
+  aside{border-right:1px solid var(--line);padding:16px;display:flex;flex-direction:column;gap:12px;background:linear-gradient(180deg,var(--panel-2),var(--panel))}
+  @media(max-width:880px){aside{border-right:0;border-bottom:1px solid var(--line)}}
+  .lbl{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;color:var(--ink-dim);text-transform:uppercase;display:block;margin-bottom:6px}
+  input,select,textarea{width:100%;background:#0b1f38;border:1px solid var(--line);color:var(--ink);
+    padding:10px 11px;border-radius:var(--radius);font-family:"IBM Plex Mono",monospace;font-size:13px}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+  select{cursor:pointer}
+  .lista{border:1px solid var(--line);border-radius:var(--radius);overflow-y:auto;max-height:260px;background:#0b1f38}
+  .item{padding:10px 11px;cursor:pointer;border-bottom:1px solid rgba(38,73,111,.5);display:flex;justify-content:space-between;gap:8px;align-items:center}
+  .item:last-child{border-bottom:0}
+  .item:hover{background:var(--panel-2)}
+  .item.on{background:var(--accent);color:#0b1f38}
+  .item.on .it-tag{color:#0b1f38;opacity:.75}
+  .it-nome{font-size:14px;font-weight:500}
+  .it-tag{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.1em;color:var(--accent);white-space:nowrap}
+  .vazio{padding:18px;text-align:center;color:var(--ink-dim);font-family:"IBM Plex Mono",monospace;font-size:12px}
+  hr{border:0;border-top:1px solid var(--line);margin:2px 0}
+
+  button.act{width:100%;font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;
+    background:transparent;border:1px solid var(--line);color:var(--ink);padding:10px;border-radius:var(--radius);cursor:pointer;transition:.15s}
+  button.act:hover{border-color:var(--accent);color:var(--accent)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#0b1f38;font-weight:700}
+  button.primary:hover{color:#0b1f38;filter:brightness(1.08)}
+  button:disabled{opacity:.35;cursor:not-allowed}
+  .dupla{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+  section.tela{display:flex;flex-direction:column;min-height:560px}
+  .topo{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .topo h2{margin:0;font-size:17px;font-weight:600}
+  .topo .meta{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-dim);letter-spacing:.1em}
+  .palco{flex:1;background:#fff;padding:24px;display:flex;align-items:center;justify-content:center;overflow:auto}
+  .palco svg,.palco img{max-width:100%;height:auto}
+  .palco iframe{width:100%;height:70vh;border:0}
+  .placeholder{color:#8aa;font-family:"IBM Plex Mono",monospace;font-size:13px}
+
+  /* Modal adicionar */
+  dialog{border:1px solid var(--line);border-radius:var(--radius);padding:0;width:min(780px,94vw);background:var(--panel);color:var(--ink)}
+  dialog::backdrop{background:rgba(4,12,24,.82)}
+  .bar{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line);gap:10px}
+  .bar h3{margin:0;font-size:16px}
+  .bar .btns{display:flex;gap:8px}
+  .bar .btns button{width:auto;padding:9px 14px}
+  .form{padding:16px;display:grid;gap:12px}
+  .form textarea{min-height:200px;resize:vertical;line-height:1.55}
+  .drop{border:1px dashed var(--line);border-radius:var(--radius);padding:22px;text-align:center;
+    font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-dim);cursor:pointer;transition:.15s}
+  .drop:hover,.drop.over{border-color:var(--accent);color:var(--accent);background:rgba(255,176,32,.06)}
+  .drop b{color:var(--ink)}
+  .hint{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-dim);line-height:1.7;margin:0}
+  #erro{color:#ff9a9a}
+  #anexo{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--accent)}
+
+  /* --- estado travado: esperando o nome --- */
+  .aviso{display:none;align-items:center;gap:10px;background:rgba(255,176,32,.12);
+    border:1px solid var(--accent);border-radius:var(--radius);padding:11px 13px;
+    font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--accent);line-height:1.6}
+  .travado .aviso{display:flex}
+  .travado #fCodigo,.travado #drop,.travado #fTag{opacity:.4;pointer-events:none;filter:grayscale(.4)}
+  .travado #fTitulo{border-color:var(--accent);animation:pisca 1.4s ease-in-out infinite}
+  @keyframes pisca{0%,100%{box-shadow:0 0 0 0 rgba(255,176,32,.55)}50%{box-shadow:0 0 0 5px rgba(255,176,32,0)}}
+  @media (prefers-reduced-motion:reduce){.travado #fTitulo{animation:none;box-shadow:0 0 0 2px rgba(255,176,32,.5)}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Prancheta <span>/</span> meus fluxogramas</h1>
+    <p class="sub">Cole o fluxo ou solte o arquivo · nomeie · busque · gere o PDF</p>
+  </header>
+
+  <div class="console">
+    <aside>
+      <div>
+        <label class="lbl" for="busca">Buscar</label>
+        <input type="search" id="busca" placeholder="nome, etiqueta, texto…">
+      </div>
+      <div>
+        <label class="lbl" for="seletor">Selecionar fluxo</label>
+        <select id="seletor"></select>
+      </div>
+      <div class="lista" id="lista"></div>
+
+      <button class="act primary" id="btnAdd">+ Colar / soltar um fluxo</button>
+      <hr>
+      <button class="act" id="btnPdf" disabled>Baixar PDF deste</button>
+      <button class="act" id="btnPdfTudo">Baixar PDF de todos</button>
+      <div class="dupla">
+        <button class="act" id="btnRenomear" disabled>Renomear</button>
+        <button class="act" id="btnRemover" disabled>Remover</button>
+      </div>
+      <div class="dupla">
+        <button class="act" id="btnSalvarTudo">Salvar .json</button>
+        <button class="act" id="btnCarregar">Carregar .json</button>
+      </div>
+      <input type="file" id="arquivo" accept=".json" hidden>
+    </aside>
+
+    <section class="tela">
+      <div class="topo">
+        <h2 id="titulo">Nenhum fluxo selecionado</h2>
+        <span class="meta" id="meta"></span>
+      </div>
+      <div class="palco" id="palco"><span class="placeholder">escolha um fluxo à esquerda</span></div>
+    </section>
+  </div>
+</div>
+
+<dialog id="modalNovo">
+  <div class="bar">
+    <h3>Adicionar fluxo</h3>
+    <div class="btns">
+      <button class="act primary" id="btnSalvar">Adicionar</button>
+      <button class="act" id="btnCancelar">Cancelar</button>
+    </div>
+  </div>
+  <div class="form" id="form">
+    <div class="aviso">
+      <span>⏸</span>
+      <span>Travado até você dar um nome. É por ele que a busca vai achar este fluxo.</span>
+    </div>
+    <div class="dupla">
+      <input type="text" id="fTitulo" placeholder="Nome (usado na busca e no PDF)">
+      <input type="text" id="fTag" placeholder="Etiqueta (ex: VENDAS)">
+    </div>
+
+    <div class="drop" id="drop">
+      Arraste aqui um <b>PDF</b> ou <b>imagem</b> — ou clique para escolher
+      <input type="file" id="dropInput" accept="application/pdf,image/*" hidden>
+    </div>
+    <p id="anexo"></p>
+
+    <label class="lbl">ou cole o código do fluxo</label>
+    <textarea id="fCodigo" spellcheck="false" placeholder="flowchart TD
+  A[Início] --> B{Deu certo?}
+  B -- Sim --> C[Fim]
+  B -- Não --> A"></textarea>
+    <p class="hint">Mermaid · [ ] caixa · { } decisão · --> seta · TD cima→baixo · LR esquerda→direita</p>
+    <p class="hint" id="erro"></p>
+  </div>
+</dialog>
+
+<script>
+/* ================= BIBLIOTECA ================= */
+// tipo: "mermaid" (codigo) | "pdf" | "imagem" (dados = base64)
+let FLUXOS = [
+  { tipo:"mermaid", titulo:"Fluxo de login", tag:"AUTH", codigo:
+`flowchart TD
+  A[Início] --> B{Usuário tem conta?}
+  B -- Sim --> C[Digitar e-mail e senha]
+  B -- Não --> D[Criar conta]
+  D --> C
+  C --> E{Dados corretos?}
+  E -- Não --> C
+  E -- Sim --> F[Entrar no sistema]` },
+  { tipo:"mermaid", titulo:"Pedido em loja online", tag:"VENDAS", codigo:
+`flowchart LR
+  A[Carrinho] --> B[Pagamento]
+  B --> C{Aprovado?}
+  C -- Não --> B
+  C -- Sim --> D[Separar produto]
+  D --> E[Enviar]
+  E --> F[Entregue]` }
+];
+
+/* ================= MOTOR ================= */
+mermaid.initialize({ startOnLoad:false, theme:"neutral", securityLevel:"loose" });
+const { jsPDF } = window.jspdf;
+const $ = id => document.getElementById(id);
+let selecionado = null, n = 0, anexo = null;
+
+const nomeArquivo = t => t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+  .replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"") || "fluxo";
+const rotulo = f => f.tipo === "mermaid" ? (f.tag||"") : (f.tag ? f.tag+" · " : "") + f.tipo.toUpperCase();
+
+function visiveis(){
+  const t = $("busca").value.trim().toLowerCase();
+  return FLUXOS.filter(f => (f.titulo+" "+(f.tag||"")+" "+(f.codigo||"")).toLowerCase().includes(t));
+}
+
+function montarLista(){
+  const lista = visiveis();
+  $("lista").innerHTML = ""; $("seletor").innerHTML = "";
+  if (!lista.length){
+    $("lista").innerHTML = '<div class="vazio">nenhum resultado</div>';
+    $("seletor").innerHTML = '<option>—</option>'; return;
+  }
+  lista.forEach(f => {
+    const div = document.createElement("div");
+    div.className = "item" + (f === selecionado ? " on" : "");
+    div.innerHTML = '<span class="it-nome"></span><span class="it-tag"></span>';
+    div.querySelector(".it-nome").textContent = f.titulo;
+    div.querySelector(".it-tag").textContent = rotulo(f);
+    div.onclick = () => selecionar(f);
+    $("lista").appendChild(div);
+
+    const opt = document.createElement("option");
+    opt.value = FLUXOS.indexOf(f); opt.textContent = f.titulo;
+    if (f === selecionado) opt.selected = true;
+    $("seletor").appendChild(opt);
+  });
+}
+$("seletor").onchange = e => selecionar(FLUXOS[+e.target.value]);
+$("busca").oninput = montarLista;
+
+async function selecionar(f){
+  selecionado = f;
+  $("titulo").textContent = f.titulo;
+  $("meta").textContent = rotulo(f);
+  $("btnPdf").disabled = $("btnRemover").disabled = $("btnRenomear").disabled = false;
+  montarLista();
+  if (f.tipo === "mermaid"){
+    try{ const { svg } = await mermaid.render("v"+(n++), f.codigo); $("palco").innerHTML = svg; }
+    catch(e){ $("palco").innerHTML = '<span class="placeholder" style="color:#c00">erro na sintaxe do fluxo</span>'; }
+  } else if (f.tipo === "pdf"){
+    $("palco").innerHTML = '<iframe src="'+f.dados+'"></iframe>';
+  } else {
+    $("palco").innerHTML = '<img alt="" src="'+f.dados+'">';
+  }
+}
+
+/* ---------- PDF ---------- */
+function svgParaImagem(svgEl){
+  return new Promise((ok, falha) => {
+    const clone = svgEl.cloneNode(true);
+    clone.setAttribute("xmlns","http://www.w3.org/2000/svg");
+    const box = svgEl.getBoundingClientRect();
+    clone.setAttribute("width", box.width); clone.setAttribute("height", box.height);
+    const str = new XMLSerializer().serializeToString(clone);
+    const img = new Image();
+    img.onload = () => {
+      const escala = 3, c = document.createElement("canvas");
+      c.width = box.width*escala; c.height = box.height*escala;
+      const ctx = c.getContext("2d");
+      ctx.fillStyle="#fff"; ctx.fillRect(0,0,c.width,c.height);
+      ctx.drawImage(img,0,0,c.width,c.height);
+      ok({ dados:c.toDataURL("image/png"), w:box.width, h:box.height });
+    };
+    img.onerror = falha;
+    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(str)));
+  });
+}
+const carregarImg = src => new Promise((ok,f) => {
+  const i = new Image(); i.onload = () => ok({ dados:src, w:i.width, h:i.height }); i.onerror = f; i.src = src;
+});
+
+function porPagina(pdf, img, titulo, tag){
+  const L = pdf.internal.pageSize.getWidth(), A = pdf.internal.pageSize.getHeight();
+  const margem = 15, topo = 32;
+  pdf.setFont("helvetica","bold"); pdf.setFontSize(16); pdf.setTextColor(20,35,60);
+  pdf.text(titulo, margem, 18);
+  if (tag){ pdf.setFont("helvetica","normal"); pdf.setFontSize(9); pdf.setTextColor(150); pdf.text(tag, margem, 24); }
+  pdf.setDrawColor(220); pdf.line(margem, 27, L-margem, 27);
+  const escala = Math.min((L-margem*2)/img.w, (A-topo-margem)/img.h);
+  const w = img.w*escala, h = img.h*escala;
+  pdf.addImage(img.dados, "PNG", (L-w)/2, topo, w, h);
+  pdf.setFontSize(8); pdf.setTextColor(180);
+  pdf.text(new Date().toLocaleDateString("pt-BR"), L-margem, A-8, { align:"right" });
+}
+function baixar(url, nome){ const a=document.createElement("a"); a.href=url; a.download=nome; a.click(); }
+
+async function imagemDe(f){
+  if (f.tipo === "mermaid"){
+    const svgEl = $("palco").querySelector("svg");
+    if (svgEl && selecionado === f) return svgParaImagem(svgEl);
+    const oculto = document.createElement("div");
+    oculto.style.cssText = "position:fixed;left:-9999px;top:0;background:#fff";
+    document.body.appendChild(oculto);
+    const { svg } = await mermaid.render("p"+(n++), f.codigo);
+    oculto.innerHTML = svg;
+    const img = await svgParaImagem(oculto.querySelector("svg"));
+    oculto.remove(); return img;
+  }
+  if (f.tipo === "imagem") return carregarImg(f.dados);
+  return null; // pdf já é pdf
+}
+
+$("btnPdf").onclick = async () => {
+  const f = selecionado; if (!f) return;
+  if (f.tipo === "pdf"){ baixar(f.dados, nomeArquivo(f.titulo)+".pdf"); return; }
+  const img = await imagemDe(f);
+  const pdf = new jsPDF({ orientation: img.h >= img.w ? "portrait":"landscape", unit:"mm", format:"a4" });
+  porPagina(pdf, img, f.titulo, f.tag);
+  pdf.save(nomeArquivo(f.titulo)+".pdf");
+};
+
+$("btnPdfTudo").onclick = async () => {
+  const lista = visiveis().filter(f => f.tipo !== "pdf");
+  if (!lista.length){ alert("Nada para juntar (PDFs anexados baixam um a um)."); return; }
+  const b = $("btnPdfTudo"); b.textContent = "gerando…"; b.disabled = true;
+  const pdf = new jsPDF({ orientation:"landscape", unit:"mm", format:"a4" });
+  for (let i=0;i<lista.length;i++){
+    try{
+      const img = await imagemDe(lista[i]);
+      if (i > 0) pdf.addPage("a4","landscape");
+      porPagina(pdf, img, lista[i].titulo, lista[i].tag);
+    }catch(e){ console.warn("pulei:", lista[i].titulo, e); }
+  }
+  pdf.save("meus-fluxogramas.pdf");
+  b.textContent = "Baixar PDF de todos"; b.disabled = false;
+};
+
+/* ---------- Adicionar ---------- */
+// "travado" = já tem conteúdo (arquivo ou código) mas ainda não tem nome
+function checarTrava(){
+  const temConteudo = !!anexo || $("fCodigo").value.trim().length > 0;
+  const temNome = $("fTitulo").value.trim().length > 0;
+  const travado = temConteudo && !temNome;
+  $("form").classList.toggle("travado", travado);
+  $("btnSalvar").disabled = travado || !temConteudo;
+  $("btnSalvar").textContent = travado ? "Falta o nome" : "Adicionar";
+  if (travado) $("fTitulo").focus();
+  return travado;
+}
+$("fTitulo").oninput = checarTrava;
+$("fCodigo").oninput = checarTrava;
+
+$("btnAdd").onclick = () => {
+  $("erro").textContent=""; $("anexo").textContent=""; anexo=null;
+  $("fTitulo").value = $("fTag").value = $("fCodigo").value = "";
+  $("form").classList.remove("travado");
+  $("modalNovo").showModal();
+  checarTrava();
+};
+
+// Esc não fecha enquanto estiver travado
+$("modalNovo").addEventListener("cancel", e => {
+  if ($("form").classList.contains("travado")){
+    e.preventDefault();
+    $("erro").textContent = "Dê um nome ou clique em Descartar.";
+    $("fTitulo").focus();
+  }
+});
+$("btnCancelar").onclick = () => {
+  if ($("form").classList.contains("travado") &&
+      !confirm("Descartar este fluxo sem salvar?")) return;
+  anexo = null; $("form").classList.remove("travado");
+  $("modalNovo").close();
+};
+
+const drop = $("drop");
+drop.onclick = () => $("dropInput").click();
+drop.ondragover = e => { e.preventDefault(); drop.classList.add("over"); };
+drop.ondragleave = () => drop.classList.remove("over");
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove("over"); pegarArquivo(e.dataTransfer.files[0]); };
+$("dropInput").onchange = e => pegarArquivo(e.target.files[0]);
+
+function pegarArquivo(file){
+  if (!file) return;
+  const tipo = file.type === "application/pdf" ? "pdf" : file.type.startsWith("image/") ? "imagem" : null;
+  if (!tipo){ $("erro").textContent = "Aceito só PDF ou imagem."; return; }
+  const r = new FileReader();
+  r.onload = () => {
+    anexo = { tipo, dados: r.result };
+    $("anexo").textContent = "anexado: " + file.name + " · agora dê um nome";
+    $("erro").textContent = "";
+    checarTrava(); // trava aqui: só destrava quando o nome for digitado
+  };
+  r.readAsDataURL(file);
+}
+
+$("btnSalvar").onclick = async () => {
+  const titulo = $("fTitulo").value.trim(), codigo = $("fCodigo").value.trim();
+  if (!titulo){ $("erro").textContent = "Dê um nome — é ele que aparece na busca."; return; }
+  let novo;
+  if (anexo){
+    novo = { tipo:anexo.tipo, titulo, tag:$("fTag").value.trim().toUpperCase(), dados:anexo.dados };
+  } else if (codigo){
+    try{ await mermaid.parse(codigo); }
+    catch(e){ $("erro").textContent = "Código inválido: " + e.message; return; }
+    novo = { tipo:"mermaid", titulo, tag:$("fTag").value.trim().toUpperCase(), codigo };
+  } else {
+    $("erro").textContent = "Solte um arquivo ou cole o código do fluxo."; return;
+  }
+  FLUXOS.push(novo);
+  $("fTitulo").value = $("fTag").value = $("fCodigo").value = ""; anexo = null; $("anexo").textContent = "";
+  $("form").classList.remove("travado");
+  $("modalNovo").close(); $("busca").value = "";
+  selecionar(novo);
+};
+
+/* ---------- Renomear / remover ---------- */
+$("btnRenomear").onclick = () => {
+  if (!selecionado) return;
+  const novo = prompt("Novo nome:", selecionado.titulo);
+  if (novo && novo.trim()){ selecionado.titulo = novo.trim(); selecionar(selecionado); }
+};
+$("btnRemover").onclick = () => {
+  if (!selecionado || !confirm("Remover “"+selecionado.titulo+"”?")) return;
+  FLUXOS = FLUXOS.filter(f => f !== selecionado);
+  selecionado = null;
+  $("titulo").textContent = "Nenhum fluxo selecionado"; $("meta").textContent = "";
+  $("palco").innerHTML = '<span class="placeholder">escolha um fluxo à esquerda</span>';
+  $("btnPdf").disabled = $("btnRemover").disabled = $("btnRenomear").disabled = true;
+  montarLista();
+};
+
+/* ---------- Biblioteca ---------- */
+$("btnSalvarTudo").onclick = () => {
+  const blob = new Blob([JSON.stringify(FLUXOS,null,2)],{type:"application/json"});
+  baixar(URL.createObjectURL(blob), "meus-fluxogramas.json");
+};
+$("btnCarregar").onclick = () => $("arquivo").click();
+$("arquivo").onchange = e => {
+  const file = e.target.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try{
+      const d = JSON.parse(r.result);
+      if (!Array.isArray(d)) throw new Error("formato inesperado");
+      FLUXOS = d.map(f => ({ tipo:"mermaid", ...f }));
+      selecionado = null;
+      $("titulo").textContent = "Nenhum fluxo selecionado"; $("meta").textContent = "";
+      $("palco").innerHTML = '<span class="placeholder">escolha um fluxo à esquerda</span>';
+      $("btnPdf").disabled = $("btnRemover").disabled = $("btnRenomear").disabled = true;
+      montarLista();
+    }catch(err){ alert("Não consegui ler o arquivo: " + err.message); }
+  };
+  r.readAsText(file); e.target.value = "";
+};
+
+montarLista();
+if (FLUXOS.length) selecionar(FLUXOS[0]);
+</script>
+</body>
+</html>
