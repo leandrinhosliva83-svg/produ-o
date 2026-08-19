@@ -3,42 +3,49 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Rota Simples</title>
+<title>Rota de Entregas</title>
 <style>
-body{margin:0;padding:0 0 90px;background:#F1F3F0;color:#141A17;
+body{margin:0;padding:0 0 96px;background:#F1F3F0;color:#141A17;
   font-family:-apple-system,Roboto,Arial,sans-serif;font-size:16px}
-header{background:#fff;padding:16px;border-bottom:1px solid #DDE2DE;position:sticky;top:0}
-h1{font-size:14px;margin:0 0 8px;color:#5B6862;text-transform:uppercase;letter-spacing:.1em}
+header{background:#fff;padding:16px;border-bottom:1px solid #DDE2DE;position:sticky;top:0;z-index:5}
+h1{font-size:13px;margin:0 0 8px;color:#5B6862;text-transform:uppercase;letter-spacing:.1em}
 .num{font-size:44px;font-weight:bold;line-height:1}
 .num small{font-size:20px;color:#9AA5A0}
 .leg{font-size:13px;color:#5B6862;margin-top:4px}
 main{padding:14px}
 .abas{display:flex;margin-bottom:10px;border:1px solid #DDE2DE;border-radius:8px;overflow:hidden;background:#fff}
-.aba{flex:1;background:#fff;color:#5B6862;border:0;border-radius:0;padding:11px 6px;font-size:14px}
+.aba{flex:1;background:#fff;color:#5B6862;border:0;padding:11px 6px;font-size:14px;font-family:inherit}
 .aba.on{background:#141A17;color:#fff;font-weight:bold}
-.dica{font-size:12px;color:#5B6862;margin:-6px 0 14px}
-.campo{display:flex;gap:8px;margin-bottom:14px}
+.campo{display:flex;gap:8px;margin-bottom:6px}
 .campo input{flex:1;min-width:0;padding:13px;font-size:16px;border:1px solid #DDE2DE;border-radius:8px;background:#fff}
+.dica{font-size:12px;color:#5B6862;margin:0 0 16px}
 button{font-family:inherit;font-size:15px;border-radius:8px;border:1px solid #141A17;
   background:#141A17;color:#fff;padding:13px 14px;cursor:pointer}
-button.claro{background:#fff;color:#141A17;border-color:#DDE2DE;padding:8px 10px;font-size:13px}
-button.verde{background:#0B7A4B;border-color:#0B7A4B;color:#fff;padding:8px 10px;font-size:13px}
+button.claro{background:#fff;color:#141A17;border-color:#DDE2DE;padding:9px 10px;font-size:13px}
+button.verde{background:#0B7A4B;border-color:#0B7A4B;color:#fff;padding:9px 10px;font-size:13px}
+button.ir{background:#fff;color:#1B4DE4;border-color:#C3D0F8;padding:9px 14px;font-size:13px;font-weight:bold}
+button.ir.on{background:#0B7A4B;border-color:#0B7A4B;color:#fff}
 ul{list-style:none;margin:0;padding:0}
 li{background:#fff;border:1px solid #DDE2DE;border-radius:10px;padding:11px 12px;
   margin-bottom:8px;display:flex;gap:10px;align-items:flex-start}
+li.sel{border-color:#0B7A4B;box-shadow:0 0 0 2px rgba(11,122,75,.12)}
 li.ok{opacity:.5}
-li.ok .txt{text-decoration:line-through}
-.pos{font-weight:bold;color:#5B6862;min-width:20px}
+li.ok .txt div:first-child{text-decoration:line-through}
+.pos{font-weight:bold;color:#5B6862;min-width:24px;font-size:15px;padding-top:2px}
+li.sel .pos{color:#0B7A4B}
 .txt{flex:1;word-break:break-word}
-.sub{font-size:12px;color:#5B6862;margin-top:2px}
+.sub{font-size:12px;color:#5B6862;margin-top:3px}
 .bt{display:flex;flex-direction:column;gap:5px}
-a.ir{font-size:13px;color:#1B4DE4;text-decoration:none;border:1px solid #C3D0F8;
-  border-radius:8px;padding:8px 10px;text-align:center}
+a.mapa{font-size:13px;color:#1B4DE4;text-decoration:none;border:1px solid #C3D0F8;
+  border-radius:8px;padding:9px 10px;text-align:center;display:block}
 .rodape{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #DDE2DE;
   padding:10px;display:flex;gap:8px}
 .rodape button{flex:1}
 .msg{background:#FFF4E8;border:1px solid #F0D7BC;color:#B8541C;padding:10px;
   border-radius:8px;font-size:13px;margin-bottom:12px}
+.faixa{background:#E8F3ED;border:1px solid #B7DCC9;color:#0B5F3B;padding:10px 12px;
+  border-radius:8px;font-size:13px;margin-bottom:12px}
+.rodapetxt{font-size:11px;color:#9AA5A0;text-align:center;margin-top:16px}
 </style>
 </head>
 <body>
@@ -51,6 +58,7 @@ a.ir{font-size:13px;color:#1B4DE4;text-decoration:none;border:1px solid #C3D0F8;
 
 <main>
   <div class="msg" id="msg" style="display:none"></div>
+  <div class="faixa" id="faixa" style="display:none"></div>
 
   <div class="abas">
     <button id="abaEnd" class="aba on">Por endereço</button>
@@ -63,29 +71,59 @@ a.ir{font-size:13px;color:#1B4DE4;text-decoration:none;border:1px solid #C3D0F8;
   </div>
   <p class="dica" id="dica">Digite o endereço completo com a cidade. O app procura no mapa sozinho.</p>
 
-  <button id="teste" class="claro" style="width:100%;margin-bottom:14px">
-    Adicionar endereço de teste (sem digitar)
-  </button>
-
   <ul id="lista"></ul>
-  <p style="font-size:11px;color:#9AA5A0;text-align:center">versão 3 · endereço ou coordenadas</p>
+  <p class="rodapetxt">versão 4 · marque as entregas em <b>Ir</b> e toque em <b>Iniciar rota</b></p>
 </main>
 
 <div class="rodape">
-  <button id="btgps">Ordenar pelo GPS</button>
-  <button id="btlimpa" class="claro" style="flex:0 0 90px">Limpar</button>
+  <button id="btiniciar">Iniciar rota</button>
+  <button id="btlimpa" class="claro" style="flex:0 0 84px">Limpar</button>
 </div>
 
 <script>
 var paradas = [];
 var modo = 'endereco';
+var rotaAtiva = false;
 var fila = [], buscando = false;
 
-/* procura as coordenadas de um endereço escrito em texto */
-function buscarCoord(p){
-  fila.push(p);
-  proximaBusca();
+/* ---------- guardar no aparelho ---------- */
+function salvar(){
+  try{ localStorage.setItem('rota_v4', JSON.stringify({p:paradas, r:rotaAtiva})); }catch(e){}
 }
+function carregar(){
+  try{
+    var d = JSON.parse(localStorage.getItem('rota_v4'));
+    if(d && d.p){ paradas = d.p; rotaAtiva = !!d.r; }
+  }catch(e){ paradas = []; }
+}
+
+/* ---------- avisos ---------- */
+function msg(t){
+  var m = document.getElementById('msg');
+  if(!t){ m.style.display='none'; return; }
+  m.innerHTML = t; m.style.display='block';
+}
+function faixa(t){
+  var f = document.getElementById('faixa');
+  if(!t){ f.style.display='none'; return; }
+  f.innerHTML = t; f.style.display='block';
+}
+
+/* ---------- coordenadas ---------- */
+function coords(txt){
+  var m = String(txt).replace('geo:','').match(/(-?\d{1,2}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)/);
+  return m ? {lat:parseFloat(m[1]), lng:parseFloat(m[2])} : null;
+}
+function dist(a,b){
+  var R=6371, r=Math.PI/180;
+  var dLat=(b.lat-a.lat)*r, dLng=(b.lng-a.lng)*r;
+  var s = Math.pow(Math.sin(dLat/2),2) +
+          Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.pow(Math.sin(dLng/2),2);
+  return 2*R*Math.asin(Math.sqrt(s));
+}
+
+/* ---------- procurar endereço no mapa ---------- */
+function buscarCoord(p){ fila.push(p); proximaBusca(); }
 function proximaBusca(){
   if(buscando || fila.length === 0) return;
   buscando = true;
@@ -96,70 +134,96 @@ function proximaBusca(){
     if(x.readyState !== 4) return;
     try{
       var r = JSON.parse(x.responseText);
-      if(r && r[0]){ p.lat = parseFloat(r[0].lat); p.lng = parseFloat(r[0].lon); p.status = 'ok'; }
-      else { p.status = 'nao_achou'; }
-    }catch(e){ p.status = 'erro'; }
+      if(r && r[0]){ p.lat=parseFloat(r[0].lat); p.lng=parseFloat(r[0].lon); p.status='ok'; }
+      else { p.status='nao_achou'; }
+    }catch(e){ p.status='erro'; }
     salvar(); desenhar();
-    setTimeout(function(){ buscando = false; proximaBusca(); }, 1200); // o serviço aceita 1 busca por segundo
+    setTimeout(function(){ buscando=false; proximaBusca(); }, 1200);
   };
   x.send();
 }
 
-function salvar(){
-  try{ localStorage.setItem('rota_simples', JSON.stringify(paradas)); }catch(e){}
-}
-function carregar(){
-  try{
-    var d = localStorage.getItem('rota_simples');
-    if(d) paradas = JSON.parse(d);
-  }catch(e){ paradas = []; }
-}
-function msg(t){
-  var m = document.getElementById('msg');
-  if(!t){ m.style.display = 'none'; return; }
-  m.innerHTML = t; m.style.display = 'block';
-}
-function coords(txt){
-  var m = String(txt).replace('geo:','').match(/(-?\d{1,2}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)/);
-  return m ? {lat: parseFloat(m[1]), lng: parseFloat(m[2])} : null;
-}
-function dist(a,b){
-  var R = 6371, r = Math.PI/180;
-  var dLat = (b.lat-a.lat)*r, dLng = (b.lng-a.lng)*r;
-  var s = Math.pow(Math.sin(dLat/2),2) +
-          Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.pow(Math.sin(dLng/2),2);
-  return 2*R*Math.asin(Math.sqrt(s));
-}
-
+/* ---------- adicionar ---------- */
 function adicionar(txt){
   if(!txt) return;
   txt = txt.replace(/^\s+|\s+$/g,'');
   if(txt === '') return;
   var c = coords(txt);
-
   if(modo === 'coordenadas' && !c){
-    msg('Nesse modo escreva dois números separados por vírgula, assim: <b>-21.1704,-47.8103</b>. Se você quer digitar o nome da rua, use a aba <b>Por endereço</b>.');
+    msg('Nesse modo escreva dois números com vírgula, assim: <b>-21.1704,-47.8103</b>. Para o nome da rua use a aba <b>Por endereço</b>.');
     return;
   }
-
-  var p = { texto: txt, lat: c ? c.lat : null, lng: c ? c.lng : null, feita: false,
-            status: c ? 'ok' : 'buscando' };
-  paradas.push(p);
-  if(!c) buscarCoord(p);
+  paradas.push({ texto:txt, lat:c?c.lat:null, lng:c?c.lng:null,
+                 feita:false, ir:true, km:null, status:c?'ok':'buscando' });
+  if(!c) buscarCoord(paradas[paradas.length-1]);
   msg('');
-  salvar();
-  desenhar();
+  salvar(); desenhar();
 }
 
-function desenhar(){
-  var total = paradas.length, feitas = 0, i;
-  for(i=0;i<paradas.length;i++){ if(paradas[i].feita) feitas++; }
-  var faltam = total - feitas;
+/* ---------- iniciar rota: ordena as marcadas a partir do GPS ---------- */
+function iniciarRota(){
+  var marcadas = [], i;
+  for(i=0;i<paradas.length;i++){
+    var p = paradas[i];
+    if(p.ir && !p.feita && p.lat != null) marcadas.push(p);
+  }
+  if(marcadas.length === 0){
+    msg('Nenhuma entrega marcada com localização. Toque em <b>Ir</b> nas entregas que você vai fazer agora.');
+    return;
+  }
+  faixa('Buscando sua posição no GPS...');
+  if(!navigator.geolocation){ msg('Este navegador não tem GPS.'); faixa(''); return; }
+  navigator.geolocation.getCurrentPosition(
+    function(pos){ ordenar({lat:pos.coords.latitude, lng:pos.coords.longitude}, marcadas); },
+    function(err){
+      faixa('');
+      msg('GPS não liberado (' + err.message + '). Autorize a localização nas permissões do site e tente de novo.');
+    },
+    {enableHighAccuracy:true, timeout:15000}
+  );
+}
 
+function ordenar(minha, marcadas){
+  var resto = [], i;
+  for(i=0;i<paradas.length;i++){
+    if(marcadas.indexOf(paradas[i]) === -1) resto.push(paradas[i]);
+  }
+  var ordem = [], atual = minha, total = 0;
+  var fila2 = marcadas.slice();
+  while(fila2.length){
+    var melhor = 0, menor = 1e9;
+    for(i=0;i<fila2.length;i++){
+      var d = dist(atual, fila2[i]);
+      if(d < menor){ menor = d; melhor = i; }
+    }
+    var q = fila2.splice(melhor,1)[0];
+    q.km = menor;
+    total += menor;
+    ordem.push(q);
+    atual = q;
+  }
+  paradas = ordem.concat(resto);
+  rotaAtiva = true;
+  msg('');
+  faixa('<b>Rota montada:</b> ' + ordem.length + ' entregas na sequência abaixo, aproximadamente ' +
+        total.toFixed(1) + ' km no total. A 1ª é a mais perto de você.');
+  salvar(); desenhar();
+  window.scrollTo(0, 0);
+}
+
+/* ---------- desenhar a tela ---------- */
+function desenhar(){
+  var total = paradas.length, feitas = 0, marcadas = 0, i;
+  for(i=0;i<paradas.length;i++){
+    if(paradas[i].feita) feitas++;
+    else if(paradas[i].ir) marcadas++;
+  }
   document.getElementById('num').innerHTML = feitas + '<small>/' + total + '</small>';
   document.getElementById('leg').innerHTML = total === 0
     ? 'nenhuma entrega cadastrada'
-    : '<b>' + faltam + '</b> faltando de ' + total;
+    : '<b>' + (total-feitas) + '</b> faltando · ' + marcadas + ' marcadas para ir';
+  document.getElementById('btiniciar').textContent =
+    rotaAtiva ? 'Refazer rota daqui' : 'Iniciar rota' + (marcadas ? ' (' + marcadas + ')' : '');
 
   var ul = document.getElementById('lista');
   ul.innerHTML = '';
@@ -167,13 +231,16 @@ function desenhar(){
 
   for(i=0;i<paradas.length;i++){
     (function(p){
-      if(!p.feita) n++;
+      var naFila = p.ir && !p.feita;
+      if(naFila) n++;
+
       var li = document.createElement('li');
       if(p.feita) li.className = 'ok';
+      else if(naFila) li.className = 'sel';
 
       var pos = document.createElement('div');
       pos.className = 'pos';
-      pos.innerHTML = p.feita ? '&#10003;' : n + '&ordf;';
+      pos.innerHTML = p.feita ? '&#10003;' : (naFila ? n + '&ordf;' : '&mdash;');
 
       var box = document.createElement('div');
       box.className = 'txt';
@@ -182,8 +249,11 @@ function desenhar(){
       var s = document.createElement('div');
       s.className = 'sub';
       if(p.feita) s.textContent = 'entregue';
-      else if(p.km != null) s.textContent = p.km.toFixed(1) + ' km';
-      else if(p.lat != null) s.textContent = 'no mapa: ' + p.lat.toFixed(4) + ', ' + p.lng.toFixed(4);
+      else if(!p.ir) s.textContent = 'fora desta rota';
+      else if(rotaAtiva && p.km != null)
+        s.textContent = (n === 1 ? 'próxima parada · ' + p.km.toFixed(1) + ' km de você'
+                                 : p.km.toFixed(1) + ' km da anterior');
+      else if(p.lat != null) s.textContent = 'localizada, pronta para a rota';
       else if(p.status === 'buscando') s.textContent = 'procurando no mapa...';
       else s.textContent = 'endereço não encontrado — toque em Buscar';
       box.appendChild(t); box.appendChild(s);
@@ -191,18 +261,40 @@ function desenhar(){
       var bt = document.createElement('div');
       bt.className = 'bt';
 
+      if(!p.feita){
+        var bIr = document.createElement('button');
+        bIr.className = p.ir ? 'ir on' : 'ir';
+        bIr.textContent = 'Ir';
+        bIr.onclick = function(){
+          p.ir = !p.ir;
+          if(!p.ir) p.km = null;
+          salvar(); desenhar();
+        };
+        bt.appendChild(bIr);
+      }
+
+      if(rotaAtiva && naFila && p.lat != null){
+        var a = document.createElement('a');
+        a.className = 'mapa';
+        a.target = '_blank';
+        a.textContent = 'Mapa';
+        a.href = 'https://www.google.com/maps/dir/?api=1&destination=' + p.lat + ',' + p.lng;
+        bt.appendChild(a);
+      }
+
       var b1 = document.createElement('button');
       b1.className = p.feita ? 'claro' : 'verde';
       b1.textContent = p.feita ? 'Desfazer' : 'Entreguei';
-      b1.onclick = function(){ p.feita = !p.feita; salvar(); desenhar(); };
+      b1.onclick = function(){ p.feita = !p.feita; p.km = null; salvar(); desenhar(); };
+      bt.appendChild(b1);
 
-      var a = document.createElement('a');
-      a.className = 'ir';
-      a.target = '_blank';
-      a.textContent = 'Ir';
-      a.href = p.lat != null
-        ? 'https://www.google.com/maps/dir/?api=1&destination=' + p.lat + ',' + p.lng
-        : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(p.texto);
+      if(!p.feita && p.lat == null && p.status !== 'buscando'){
+        var b3 = document.createElement('button');
+        b3.className = 'claro';
+        b3.textContent = 'Buscar';
+        b3.onclick = function(){ p.status='buscando'; desenhar(); buscarCoord(p); };
+        bt.appendChild(b3);
+      }
 
       var b2 = document.createElement('button');
       b2.className = 'claro';
@@ -212,96 +304,49 @@ function desenhar(){
         if(k > -1) paradas.splice(k,1);
         salvar(); desenhar();
       };
+      bt.appendChild(b2);
 
-      bt.appendChild(b1);
-      if(!p.feita && p.lat == null && p.status !== 'buscando'){
-        var b3 = document.createElement('button');
-        b3.className = 'claro';
-        b3.textContent = 'Buscar';
-        b3.onclick = function(){ p.status = 'buscando'; desenhar(); buscarCoord(p); };
-        bt.appendChild(b3);
-      }
-      bt.appendChild(a); bt.appendChild(b2);
       li.appendChild(pos); li.appendChild(box); li.appendChild(bt);
       ul.appendChild(li);
     })(paradas[i]);
   }
 }
 
-function ordenar(minha){
-  var fila = [], resto = [], i;
-  for(i=0;i<paradas.length;i++){
-    var p = paradas[i];
-    if(!p.feita && p.lat != null) fila.push(p); else resto.push(p);
-  }
-  if(fila.length === 0){
-    msg('Nenhuma parada tem coordenada. Escaneie QR codes que tragam <b>-21.17,-47.81</b> ou digite assim.');
-    return;
-  }
-  var ordem = [], atual = minha;
-  while(fila.length){
-    var melhor = 0, menor = 1e9;
-    for(i=0;i<fila.length;i++){
-      var d = dist(atual, fila[i]);
-      if(d < menor){ menor = d; melhor = i; }
-    }
-    var q = fila.splice(melhor,1)[0];
-    q.km = menor;
-    ordem.push(q);
-    atual = q;
-  }
-  paradas = ordem.concat(resto);
-  salvar(); desenhar();
-  msg('');
-}
-
+/* ---------- modos de entrada ---------- */
 function trocarModo(m){
   modo = m;
   var e = document.getElementById('abaEnd'), c = document.getElementById('abaCoo');
   var cx = document.getElementById('cx'), dica = document.getElementById('dica');
   if(m === 'endereco'){
-    e.className = 'aba on'; c.className = 'aba';
+    e.className='aba on'; c.className='aba';
     cx.placeholder = 'Rua, número, bairro, cidade';
-    cx.setAttribute('inputmode','text');
     dica.textContent = 'Digite o endereço completo com a cidade. O app procura no mapa sozinho.';
   } else {
-    e.className = 'aba'; c.className = 'aba on';
+    e.className='aba'; c.className='aba on';
     cx.placeholder = '-21.1704,-47.8103';
-    cx.setAttribute('inputmode','text');
     dica.textContent = 'Latitude e longitude separadas por vírgula. Entra na hora, sem depender de internet.';
   }
   msg('');
 }
+
+/* ---------- botões ---------- */
 document.getElementById('abaEnd').onclick = function(){ trocarModo('endereco'); };
 document.getElementById('abaCoo').onclick = function(){ trocarModo('coordenadas'); };
-
 document.getElementById('add').onclick = function(){
   var cx = document.getElementById('cx');
   adicionar(cx.value);
   cx.value = '';
-  cx.blur(); // fecha o teclado, que estava tapando a lista
-  var ul = document.getElementById('lista');
-  if(ul.lastChild && ul.lastChild.scrollIntoView) ul.lastChild.scrollIntoView({block:'center'});
-};
-document.getElementById('teste').onclick = function(){
-  adicionar('TESTE Av. Independência 1000 -21.1704,-47.8103');
-  var ul = document.getElementById('lista');
-  if(ul.lastChild && ul.lastChild.scrollIntoView) ul.lastChild.scrollIntoView({block:'center'});
+  cx.blur();
 };
 document.getElementById('cx').onkeydown = function(e){
   if(e.keyCode === 13) document.getElementById('add').onclick();
 };
+document.getElementById('btiniciar').onclick = iniciarRota;
 document.getElementById('btlimpa').onclick = function(){
-  if(confirm('Apagar tudo?')){ paradas = []; salvar(); desenhar(); }
-};
-document.getElementById('btgps').onclick = function(){
-  msg('Buscando o GPS...');
-  if(!navigator.geolocation){ msg('Este navegador não tem GPS.'); return; }
-  navigator.geolocation.getCurrentPosition(
-    function(pos){ ordenar({lat: pos.coords.latitude, lng: pos.coords.longitude}); },
-    function(err){ msg('GPS não liberado (' + err.message + '). Abra a página por um endereço https e autorize a localização.'); },
-    {enableHighAccuracy:true, timeout:15000}
-  );
+  if(confirm('Apagar todas as entregas?')){
+    paradas = []; rotaAtiva = false; faixa(''); msg('');
+    salvar(); desenhar();
+  }
 };
 
 carregar();
