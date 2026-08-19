@@ -120,6 +120,13 @@ a.mapa{font-size:13px;color:var(--acento2);text-decoration:none;border:1px solid
 .proxima .acoes a,.proxima .acoes button{flex:1;padding:16px 8px;font-size:15px;
   text-align:center;border-radius:11px;text-decoration:none;display:block;font-weight:800}
 .proxima .acoes a{background:var(--acento2);color:#04121A;border:1px solid var(--acento2)}
+.casa{background:var(--painel);border:1px solid var(--linha);border-radius:12px;
+  padding:13px 14px;margin-bottom:14px;box-shadow:var(--sombra)}
+.casa .rot{font-size:11px;color:var(--acento);font-weight:800;text-transform:uppercase;
+  letter-spacing:.18em;margin-bottom:9px}
+.casa .atual{display:flex;align-items:center;gap:10px}
+.casa .nome{flex:1;font-weight:700;word-break:break-word;font-size:15px}
+.casa .nome small{display:block;font-weight:400;color:var(--fraco);font-size:12px;margin-top:3px}
 .prev{background:var(--painel);border:1px solid var(--linha);border-radius:14px;
   padding:16px;margin-bottom:14px;box-shadow:var(--sombra);position:relative;overflow:hidden}
 .prev::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
@@ -176,9 +183,10 @@ a.mapa{font-size:13px;color:var(--acento2);text-decoration:none;border:1px solid
     </div>
     <p class="dica" id="dica">Digite o endereço completo com a cidade. O app procura no mapa sozinho.</p>
 
+    <div id="casa"></div>
     <div id="prev1"></div>
     <ul id="lista1"></ul>
-    <p class="rodapetxt">versão 8 · previsão de km e horas</p>
+    <p class="rodapetxt">versão 11 · terminar perto de casa</p>
   </main>
   <div class="rodape">
     <button id="btiniciar">Iniciar rota</button>
@@ -212,10 +220,18 @@ var modo = 'endereco';
 var fila = [], buscando = false;
 
 /* ---------- guardar ---------- */
-function salvar(){ try{ localStorage.setItem('rota_v5', JSON.stringify(paradas)); }catch(e){} }
+var destinoFinal = null;   /* onde a rota deve terminar (sua casa) */
+
+function salvar(){
+  try{
+    localStorage.setItem('rota_v5', JSON.stringify(paradas));
+    localStorage.setItem('destino_final', JSON.stringify(destinoFinal));
+  }catch(e){}
+}
 function carregar(){
   try{ var d = JSON.parse(localStorage.getItem('rota_v5')); if(d) paradas = d; }
   catch(e){ paradas = []; }
+  try{ destinoFinal = JSON.parse(localStorage.getItem('destino_final')) || null; }catch(e){}
 }
 function msg(t){
   var m = document.getElementById('msg');
@@ -273,6 +289,101 @@ function adicionar(txt){
   msg(''); salvar(); desenhar();
 }
 
+/* ---------- histórico do seu tempo real por entrega ---------- */
+var historico = [];      /* minutos de cada entrega, só o tempo parado */
+var horaAnterior = null; /* quando você saiu da parada anterior */
+var mediaManual = false; /* virou true se você digitar o valor na mão */
+
+try{
+  var hg = JSON.parse(localStorage.getItem('historico_entregas'));
+  if(hg){ historico = hg.lista || []; horaAnterior = hg.hora || null; mediaManual = !!hg.manual; }
+}catch(e){}
+
+function salvarHistorico(){
+  try{ localStorage.setItem('historico_entregas',
+    JSON.stringify({lista:historico, hora:horaAnterior, manual:mediaManual})); }catch(e){}
+}
+
+/* mediana: um atraso enorme num dia não estraga a média */
+function mediana(lista){
+  if(lista.length === 0) return null;
+  var a = lista.slice().sort(function(x,y){ return x-y; });
+  var m = Math.floor(a.length/2);
+  return (a.length % 2) ? a[m] : (a[m-1] + a[m]) / 2;
+}
+
+/* quanto tempo você levou dirigindo até essa parada, para descontar */
+function minutosDeViagem(p){
+  if(p.km == null) return 0;
+  var kmEstrada = p.km * (1 + ajustes.estrada/100);
+  return (ajustes.vel > 0) ? (kmEstrada / ajustes.vel) * 60 : 0;
+}
+
+/* chamado a cada Entreguei */
+function registrarTempo(p){
+  var agora = Date.now();
+  if(horaAnterior){
+    var intervalo = (agora - horaAnterior) / 60000;
+    var servico = intervalo - minutosDeViagem(p);
+    /* descarta o que claramente não é entrega: almoço, pausa, erro de toque */
+    if(servico >= 0.3 && servico <= 90 && intervalo <= 240){
+      historico.push(Math.round(servico*10)/10);
+      if(historico.length > 200) historico = historico.slice(historico.length-200);
+    }
+  }
+  horaAnterior = agora;
+  if(!mediaManual && historico.length >= 3){
+    var md = mediana(historico);
+    ajustes.minEntrega = Math.round(md*10)/10;
+    salvarAjustes();
+  }
+  salvarHistorico();
+}
+
+/* ---------- medição real pelas estradas (OSRM) ---------- */
+var usarEstrada = false;
+try{ usarEstrada = localStorage.getItem('usar_estrada') === 'sim'; }catch(e){}
+var medida = null;        /* {km, min, n} vindo do mapa real */
+var medindo = false;
+var ultimoPonto = null;   /* de onde a rota foi calculada */
+
+function medirEstrada(){
+  if(!usarEstrada || medindo) return;
+  var pts = [], i;
+  for(i=0;i<paradas.length;i++){
+    var p = paradas[i];
+    if(p.ir && !p.feita && p.lat != null) pts.push(p);
+  }
+  if(pts.length === 0 || !ultimoPonto) return;
+  if(pts.length > 24) pts = pts.slice(0,24);   /* limite do serviço público */
+
+  var coords = ultimoPonto.lng + ',' + ultimoPonto.lat;
+  for(i=0;i<pts.length;i++) coords += ';' + pts[i].lng + ',' + pts[i].lat;
+  var fx = fim();
+  if(fx) coords += ';' + fx.lng + ',' + fx.lat;
+
+  medindo = true;
+  desenhar();
+  var x = new XMLHttpRequest();
+  x.open('GET','https://router.project-osrm.org/route/v1/driving/' + coords + '?overview=false', true);
+  x.timeout = 20000;
+  x.onreadystatechange = function(){
+    if(x.readyState !== 4) return;
+    medindo = false;
+    try{
+      var r = JSON.parse(x.responseText);
+      if(r && r.routes && r.routes[0]){
+        medida = { km: r.routes[0].distance/1000,
+                   min: r.routes[0].duration/60,
+                   n: pts.length };
+      } else { medida = null; }
+    }catch(e){ medida = null; }
+    desenhar();
+  };
+  x.ontimeout = x.onerror = function(){ medindo = false; medida = null; desenhar(); };
+  x.send();
+}
+
 /* ---------- previsão de tempo e distância ---------- */
 var ajustes = { vel:40, minEntrega:8, estrada:30 };
 try{
@@ -301,7 +412,15 @@ function montarPrevisao(elId, kmReta, qtd, titulo){
   var el = document.getElementById(elId);
   if(!el) return;
   if(qtd === 0){ el.innerHTML = ''; return; }
-  var c = calcularPrevisao(kmReta, qtd);
+
+  var real = (usarEstrada && medida && medida.n === qtd);
+  var c;
+  if(real){
+    c = { km: medida.km, dirigindo: medida.min, parado: qtd * ajustes.minEntrega,
+          total: medida.min + qtd * ajustes.minEntrega };
+  } else {
+    c = calcularPrevisao(kmReta, qtd);
+  }
   var fim = new Date(Date.now() + c.total*60000);
   var hh = (fim.getHours()<10?'0':'') + fim.getHours() + ':' + (fim.getMinutes()<10?'0':'') + fim.getMinutes();
 
@@ -314,14 +433,35 @@ function montarPrevisao(elId, kmReta, qtd, titulo){
         '<div class="cel"><div class="v">' + qtd + '</div><div class="r">entregas</div></div>' +
       '</div>' +
       '<div class="quebra">' +
-        horaTexto(c.dirigindo) + ' dirigindo a ' + ajustes.vel + ' km/h · ' +
-        horaTexto(c.parado) + ' parado (' + ajustes.minEntrega + ' min por entrega)<br>' +
+        (real
+          ? horaTexto(c.dirigindo) + ' dirigindo, <b>medido nas estradas reais</b> · '
+          : horaTexto(c.dirigindo) + ' dirigindo a ' + ajustes.vel + ' km/h (estimado) · ') +
+        horaTexto(c.parado) + ' parado (' + ajustes.minEntrega + ' min por entrega, ' +
+          (mediaManual ? 'valor que você digitou'
+                       : (historico.length >= 3
+                            ? '<b>sua média real de ' + historico.length + ' entregas</b>'
+                            : 'padrão, faltam ' + (3-historico.length) + ' entregas para calcular a sua')) + ')<br>' +
         'Começando agora, termina por volta das <b>' + hh + '</b>' +
       '</div>' +
+      '<button class="btAj" id="btEs' + elId + '" style="margin-bottom:8px">' +
+        (medindo ? 'CONSULTANDO O MAPA...'
+                 : (usarEstrada ? (real ? '&#10003; MEDIDO PELA ESTRADA \u2014 TOQUE PARA VOLTAR À ESTIMATIVA'
+                                        : 'MEDIR DE NOVO PELA ESTRADA')
+                                : 'MEDIR PELA ESTRADA REAL')) +
+      '</button>' +
       '<div class="ajustes' + (ajustesAbertos ? ' on' : '') + '">' +
         '<div class="linhaAj"><label>Minutos por entrega</label><input type="number" inputmode="numeric" id="ajMin" value="' + ajustes.minEntrega + '"></div>' +
         '<div class="linhaAj"><label>Velocidade média (km/h)</label><input type="number" inputmode="numeric" id="ajVel" value="' + ajustes.vel + '"></div>' +
         '<div class="linhaAj"><label>Acréscimo de estrada (%)</label><input type="number" inputmode="numeric" id="ajEst" value="' + ajustes.estrada + '"></div>' +
+        '<div class="quebra" style="margin-top:10px">' +
+          (historico.length
+            ? 'Histórico: ' + historico.length + ' entregas cronometradas · mais rápida ' +
+              Math.min.apply(null,historico).toFixed(1) + ' min · mais lenta ' +
+              Math.max.apply(null,historico).toFixed(1) + ' min'
+            : 'Ainda sem histórico. O app cronometra sozinho a cada Entreguei.') +
+        '</div>' +
+        '<button class="btAj" id="btHi' + elId + '" style="margin-top:10px">' +
+          (mediaManual ? 'VOLTAR A CALCULAR SOZINHO' : 'ZERAR HISTÓRICO') + '</button>' +
       '</div>' +
       '<button class="btAj" id="btAj' + elId + '">' + (ajustesAbertos ? 'FECHAR AJUSTES' : 'AJUSTAR MÉDIAS') + '</button>' +
     '</div>';
@@ -330,17 +470,43 @@ function montarPrevisao(elId, kmReta, qtd, titulo){
     ajustesAbertos = !ajustesAbertos;
     desenhar();
   };
+  document.getElementById('btEs' + elId).onclick = function(){
+    if(medindo) return;
+    if(usarEstrada && medida){ usarEstrada = false; medida = null; }
+    else { usarEstrada = true; }
+    try{ localStorage.setItem('usar_estrada', usarEstrada ? 'sim' : 'nao'); }catch(e){}
+    if(usarEstrada){
+      if(!ultimoPonto){
+        comGps(function(pos){ ultimoPonto = pos; medirEstrada(); });
+      } else { medirEstrada(); }
+    } else { desenhar(); }
+  };
   if(ajustesAbertos){
     var liga = function(id, campo){
       var i = document.getElementById(id);
       if(!i) return;
       i.onchange = i.oninput = function(){
         var v = parseFloat(i.value);
-        if(!isNaN(v) && v >= 0){ ajustes[campo] = v; salvarAjustes(); }
+        if(!isNaN(v) && v >= 0){
+          ajustes[campo] = v;
+          if(campo === 'minEntrega'){ mediaManual = true; salvarHistorico(); }
+          salvarAjustes();
+        }
       };
       i.onblur = function(){ desenhar(); };
     };
     liga('ajMin','minEntrega'); liga('ajVel','vel'); liga('ajEst','estrada');
+
+    document.getElementById('btHi' + elId).onclick = function(){
+      if(mediaManual){
+        mediaManual = false;
+        if(historico.length >= 3){ ajustes.minEntrega = Math.round(mediana(historico)*10)/10; salvarAjustes(); }
+      } else {
+        if(!confirm('Apagar as ' + historico.length + ' entregas cronometradas?')) return;
+        historico = [];
+      }
+      salvarHistorico(); desenhar();
+    };
   }
 }
 
@@ -358,10 +524,14 @@ function urlMapa(destino, origem){
 /* ---------- otimizador de rota ---------- */
 
 /* quanto roda no total: da minha posição até a 1ª, e de cada uma até a seguinte */
+function fim(){ return (destinoFinal && destinoFinal.lat != null) ? destinoFinal : null; }
+
 function custoTotal(ponto, arr){
   if(arr.length === 0) return 0;
   var soma = dist(ponto, arr[0]), i;
   for(i=0;i<arr.length-1;i++) soma += dist(arr[i], arr[i+1]);
+  var f = fim();
+  if(f) soma += dist(arr[arr.length-1], f);   /* último trecho: até em casa */
   return soma;
 }
 
@@ -388,7 +558,7 @@ function doisOpt(ponto, arr){
     for(var i=0;i<n-1;i++){
       var ant = (i === 0) ? ponto : arr[i-1];
       for(var j=i+1;j<n;j++){
-        var seg = (j+1 < n) ? arr[j+1] : null;
+        var seg = (j+1 < n) ? arr[j+1] : fim();
         var antes = dist(ant, arr[i]) + (seg ? dist(arr[j], seg) : 0);
         var depois = dist(ant, arr[j]) + (seg ? dist(arr[i], seg) : 0);
         if(depois < antes - 0.0001){
@@ -411,7 +581,7 @@ function orOpt(ponto, arr){
       for(var i=0;i+t<=arr.length;i++){
         var b = arr[i], e = arr[i+t-1];
         var a = (i === 0) ? ponto : arr[i-1];
-        var f = (i+t < arr.length) ? arr[i+t] : null;
+        var f = (i+t < arr.length) ? arr[i+t] : fim();
         var ganho = dist(a,b) + (f ? dist(e,f) : 0) - (f ? dist(a,f) : 0);
         if(ganho <= 0.0001) continue;
 
@@ -421,7 +591,7 @@ function orOpt(ponto, arr){
 
         for(var j=0;j<=sem.length;j++){
           var c = (j === 0) ? ponto : sem[j-1];
-          var d2 = (j < sem.length) ? sem[j] : null;
+          var d2 = (j < sem.length) ? sem[j] : fim();
           var base = (d2 ? dist(c,d2) : 0);
           var reto = dist(c,b) + (d2 ? dist(e,d2) : 0) - base;
           var virado = dist(c,e) + (d2 ? dist(b,d2) : 0) - base;
@@ -463,8 +633,11 @@ function ordenarDe(ponto){
     atual = ordem[i];
   }
   kmRota = custoTotal(ponto, ordem);
+  ultimoPonto = ponto;
+  medida = null;              /* a rota mudou, a medição antiga não vale mais */
   paradas = ordem.concat(resto);
   salvar();
+  if(usarEstrada) setTimeout(medirEstrada, 50);
 }
 
 /* ---------- iniciar / refazer a rota pelo GPS ---------- */
@@ -491,6 +664,8 @@ function iniciarRota(){
 
   comGps(function(pos){
     ordenarDe(pos);
+    horaAnterior = Date.now();   /* começa a cronometrar a partir daqui */
+    salvarHistorico();
     irParaTela(2);
     var p0 = primeiraDaFila();
     if(janela && p0){ janela.location.href = urlMapa(p0, pos); }
@@ -518,6 +693,7 @@ function primeiraDaFila(){
 }
 
 function entregar(p){
+  registrarTempo(p);
   var deOnde = (p.lat != null) ? {lat:p.lat, lng:p.lng} : null;
   p.feita = true;
   p.km = null;
@@ -550,9 +726,48 @@ function desenhar(){
     'Iniciar rota' + (marcadas ? ' (' + marcadas + ')' : '');
 
   pintarAuto();
+  desenharCasa();
   desenharCadastro();
   desenharRota();
   desenharPrevisoes();
+}
+
+/* bloco da cidade de término */
+function desenharCasa(){
+  var el = document.getElementById('casa');
+  if(!el) return;
+  if(destinoFinal){
+    var sub = (destinoFinal.lat != null)
+      ? 'a rota vai terminar aqui'
+      : (destinoFinal.status === 'buscando' ? 'procurando no mapa...' : 'não encontrado — toque em Trocar');
+    el.innerHTML =
+      '<div class="casa"><div class="rot">Terminar a rota em</div>' +
+        '<div class="atual"><div class="nome"></div>' +
+        '<button class="claro" id="btCasaTirar">Trocar</button></div></div>';
+    el.querySelector('.nome').innerHTML = '<span></span><small>' + sub + '</small>';
+    el.querySelector('.nome span').textContent = destinoFinal.texto;
+    document.getElementById('btCasaTirar').onclick = function(){
+      destinoFinal = null; salvar(); desenhar();
+    };
+  } else {
+    el.innerHTML =
+      '<div class="casa"><div class="rot">Terminar a rota em</div>' +
+        '<div class="campo" style="margin-bottom:6px">' +
+          '<input id="cxCasa" placeholder="Cidade ou endereço onde você mora">' +
+          '<button id="btCasa">Definir</button>' +
+        '</div>' +
+        '<div class="quebra" style="font-size:12px;color:var(--fraco)">' +
+          'As últimas entregas da sequência vão ficar do lado de casa.</div>' +
+      '</div>';
+    document.getElementById('btCasa').onclick = function(){
+      var v = document.getElementById('cxCasa').value.replace(/^\s+|\s+$/g,'');
+      if(v === '') return;
+      var c = coords(v);
+      destinoFinal = { texto:v, lat:c?c.lat:null, lng:c?c.lng:null, status:c?'ok':'buscando' };
+      if(!c) buscarCoord(destinoFinal);
+      salvar(); desenhar();
+    };
+  }
 }
 
 /* previsão da tela 1 (antes de iniciar) e da tela 2 (o que falta) */
@@ -673,6 +888,7 @@ function desenharRota(){
   bloco.appendChild(c);
 
   /* as próximas da sequência */
+  var marcaFim = fim();
   for(i=1;i<fila2.length;i++){
     (function(p,n){
       var li = document.createElement('li');
@@ -691,6 +907,24 @@ function desenharRota(){
       li.appendChild(pos); li.appendChild(box); li.appendChild(bt);
       ul.appendChild(li);
     })(fila2[i], i+1);
+  }
+
+  /* linha final: chegada em casa */
+  if(marcaFim){
+    var ult = fila2[fila2.length-1];
+    var lf = document.createElement('li');
+    lf.style.borderColor = 'var(--acento)';
+    lf.style.opacity = '.85';
+    var pf = document.createElement('div'); pf.className='pos';
+    pf.innerHTML = '&#8962;';
+    pf.style.color = 'var(--acento)';
+    var bf = document.createElement('div'); bf.className='txt';
+    var tf = document.createElement('div'); tf.textContent = destinoFinal.texto;
+    var sf = document.createElement('div'); sf.className='sub';
+    sf.textContent = 'fim da rota · ' + dist(ult, marcaFim).toFixed(1) + ' km da última entrega';
+    bf.appendChild(tf); bf.appendChild(sf);
+    lf.appendChild(pf); lf.appendChild(bf);
+    ul.appendChild(lf);
   }
 }
 
