@@ -44,6 +44,22 @@ h1{font-size:11px;margin:0 0 10px;color:var(--fraco);text-transform:uppercase;
 .leg b{color:var(--acento)}
 
 /* botao de tema */
+.gps{position:fixed;top:14px;left:14px;z-index:50;display:flex;align-items:center;gap:7px;
+  background:var(--painel);border:1px solid var(--linha);border-radius:99px;
+  padding:8px 13px 8px 11px;box-shadow:var(--sombra);font-size:11px;font-weight:800;
+  letter-spacing:.14em;color:var(--fraco);text-transform:uppercase}
+.gps i{width:10px;height:10px;border-radius:50%;background:var(--fraco);display:block;flex:0 0 10px}
+.gps.on{color:var(--ok);border-color:var(--ok)}
+.gps.on i{background:var(--ok);animation:pisca 1.4s infinite}
+.gps.erro{color:var(--perigo);border-color:var(--perigo)}
+.gps.erro i{background:var(--perigo)}
+.gps.buscando i{background:var(--alerta);animation:pisca .7s infinite}
+@keyframes pisca{
+  0%{opacity:1;box-shadow:0 0 0 0 rgba(0,224,138,.65)}
+  70%{opacity:.55;box-shadow:0 0 0 9px rgba(0,224,138,0)}
+  100%{opacity:1;box-shadow:0 0 0 0 rgba(0,224,138,0)}
+}
+@media (prefers-reduced-motion:reduce){.gps i{animation:none!important}}
 .tema{position:fixed;top:14px;right:14px;z-index:50;width:42px;height:42px;padding:0;
   border-radius:50%;border:1px solid var(--linha);background:var(--painel);
   color:var(--texto);font-size:19px;line-height:1;box-shadow:var(--sombra)}
@@ -172,6 +188,7 @@ a.mapa{font-size:13px;color:var(--acento2);text-decoration:none;border:1px solid
 </head>
 <body>
 
+<div class="gps" id="gps"><i></i><span>GPS</span></div>
 <button class="tema" id="tema" title="Trocar entre claro e escuro">☀</button>
 
 <!-- ======== TELA 1: CADASTRO ======== -->
@@ -199,7 +216,7 @@ a.mapa{font-size:13px;color:var(--acento2);text-decoration:none;border:1px solid
     <div id="prev1"></div>
     <div id="mapa"></div>
     <ul id="lista1"></ul>
-    <p class="rodapetxt">versão 14 · mapa com as paradas</p>
+    <p class="rodapetxt">versão 16 · sem aba em branco</p>
   </main>
   <div class="rodape">
     <button id="btatualizar" class="claro" style="padding:14px">Organizar rota</button>
@@ -699,22 +716,66 @@ function ordenarDe(ponto){
 }
 
 /* ---------- iniciar / refazer a rota pelo GPS ---------- */
-var janelaEspera = null;   /* aba aberta esperando o endereço */
+/* ---------- vigia do GPS: bolinha verde piscando quando está ativo ---------- */
+var posAtual = null, posQuando = 0;
+
+function pintarGps(estado, detalhe){
+  var el = document.getElementById('gps');
+  if(!el) return;
+  el.className = 'gps' + (estado ? ' ' + estado : '');
+  el.querySelector('span').textContent = detalhe;
+}
+
+function ligarGps(){
+  if(!navigator.geolocation){ pintarGps('erro','SEM GPS'); return; }
+  pintarGps('buscando','BUSCANDO');
+  navigator.geolocation.watchPosition(
+    function(pos){
+      posAtual = {lat:pos.coords.latitude, lng:pos.coords.longitude};
+      posQuando = Date.now();
+      var m = Math.round(pos.coords.accuracy || 0);
+      pintarGps('on', m ? 'GPS ' + m + 'M' : 'GPS ATIVO');
+    },
+    function(err){
+      pintarGps('erro', err.code === 1 ? 'GPS BLOQUEADO' : 'SEM SINAL');
+    },
+    {enableHighAccuracy:true, maximumAge:15000, timeout:20000}
+  );
+}
+
 function comGps(depois){
-  if(!navigator.geolocation){
-    if(janelaEspera){ try{ janelaEspera.close(); }catch(e){} janelaEspera = null; }
-    msg('Este navegador não tem GPS.'); return;
+  if(!navigator.geolocation){ msg('Este navegador não tem GPS.'); return; }
+  /* se o vigia pegou a posição há menos de 30 segundos, usa ela na hora */
+  if(posAtual && (Date.now() - posQuando) < 30000){
+    depois(posAtual);
+    return;
   }
   navigator.geolocation.getCurrentPosition(
     function(pos){ depois({lat:pos.coords.latitude, lng:pos.coords.longitude}); },
     function(err){
-      if(janelaEspera){ try{ janelaEspera.close(); }catch(e){} janelaEspera = null; }
       irParaTela(1);
       msg('GPS não liberado (' + err.message + '). Autorize a localização do site e tente de novo.');
     },
     {enableHighAccuracy:true, timeout:15000}
   );
 }
+function abrirNavegacao(p0, origem){
+  if(!autoMapa || !p0) return;
+  var w = window.open(urlMapa(p0, origem), '_blank');
+  if(!w) msg('O navegador bloqueou a abertura do mapa. Toque em <b>Ver no mapa</b> no cartão verde, ou libere pop-ups para este site.');
+}
+
+function comecar(pos){
+  ordenarDe(pos);
+  horaAnterior = Date.now();
+  if(!viagemInicio){ viagemInicio = Date.now(); viagemKmReta = 0; viagemEntregas = 0; }
+  salvarHistorico(); salvarViagens();
+  sequenciaPronta = true;
+  msg('');
+  irParaTela(2);
+  return primeiraDaFila();
+}
+
 function iniciarRota(){
   var tem = false, i;
   for(i=0;i<paradas.length;i++){
@@ -722,32 +783,18 @@ function iniciarRota(){
   }
   if(!tem){ msg('Nenhuma entrega marcada com localização. Marque em <b>Ir</b> e confira se o endereço foi encontrado.'); return; }
 
-  /* a aba precisa ser aberta agora, no toque; o GPS demora e o navegador bloquearia depois */
-  var janela = autoMapa ? window.open('', '_blank') : null;
-  if(janela){
-    try{
-      janela.document.write('<html><body style="background:#07080B;color:#FF6A00;' +
-        'font-family:sans-serif;text-align:center;padding-top:80px;font-size:18px">' +
-        'Montando sua rota...<br><br><span style="color:#8A97AA;font-size:14px">' +
-        'esta aba vira a navegação em instantes</span></body></html>');
-      janela.document.close();
-    }catch(e){}
+  /* caminho normal: o vigia já sabe onde você está, então tudo acontece no toque */
+  if(posAtual && (Date.now() - posQuando) < 60000){
+    var p0 = comecar(posAtual);
+    abrirNavegacao(p0, posAtual);
+    return;
   }
 
-  janelaEspera = janela;
+  /* sem posição recente: pede o GPS e só depois abre, sem aba em branco no meio */
+  msg('Buscando sua posição no GPS...');
   comGps(function(pos){
-    janelaEspera = null;
-    ordenarDe(pos);
-    horaAnterior = Date.now();   /* começa a cronometrar a partir daqui */
-    if(!viagemInicio){ viagemInicio = Date.now(); viagemKmReta = 0; viagemEntregas = 0; }
-    salvarHistorico(); salvarViagens();
-    irParaTela(2);
-    var p0 = primeiraDaFila();
-    if(janela && p0){ janela.location.href = urlMapa(p0, pos); }
-    else if(janela){ try{ janela.close(); }catch(e){} }
-    else if(autoMapa && p0){
-      msg('O navegador bloqueou a abertura do mapa. Toque em <b>Ver no mapa</b> no cartão, ou libere pop-ups para este site.');
-    }
+    var pp = comecar(pos);
+    abrirNavegacao(pp, pos);
   });
 }
 
@@ -783,7 +830,7 @@ function entregar(p){
 
   /* já abre a navegação da próxima, aproveitando o toque do dedo */
   var prox = primeiraDaFila();
-  if(autoMapa && prox) window.open(urlMapa(prox, deOnde), '_blank');
+  abrirNavegacao(prox, deOnde);
 }
 
 /* ---------- desenhar ---------- */
@@ -1227,6 +1274,7 @@ var temaSalvo = 'escuro';
 try{ temaSalvo = localStorage.getItem('tema_rota') || 'escuro'; }catch(e){}
 aplicarTema(temaSalvo);
 
+ligarGps();
 carregar();
 desenhar();
 </script>
