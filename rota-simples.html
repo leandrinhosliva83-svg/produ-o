@@ -5,61 +5,131 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Rota de Entregas</title>
 <style>
-body{margin:0;padding:0 0 96px;background:#F1F3F0;color:#141A17;
-  font-family:-apple-system,Roboto,Arial,sans-serif;font-size:16px}
-header{background:#fff;padding:16px;border-bottom:1px solid #DDE2DE;position:sticky;top:0;z-index:5}
-h1{font-size:13px;margin:0 0 8px;color:#5B6862;text-transform:uppercase;letter-spacing:.1em}
-.num{font-size:42px;font-weight:bold;line-height:1}
-.num small{font-size:19px;color:#9AA5A0}
-.leg{font-size:13px;color:#5B6862;margin-top:4px}
-main{padding:14px}
-button{font-family:inherit;font-size:15px;border-radius:8px;border:1px solid #141A17;
-  background:#141A17;color:#fff;padding:13px 14px;cursor:pointer}
-button.claro{background:#fff;color:#141A17;border-color:#DDE2DE;padding:9px 10px;font-size:13px}
-button.verde{background:#0B7A4B;border-color:#0B7A4B;color:#fff}
-button.ir{background:#fff;color:#1B4DE4;border-color:#C3D0F8;padding:9px 14px;font-size:13px;font-weight:bold}
-button.ir.on{background:#0B7A4B;border-color:#0B7A4B;color:#fff}
-.abas{display:flex;margin-bottom:10px;border:1px solid #DDE2DE;border-radius:8px;overflow:hidden;background:#fff}
-.aba{flex:1;background:#fff;color:#5B6862;border:0;padding:11px 6px;font-size:14px}
-.aba.on{background:#141A17;color:#fff;font-weight:bold}
-.campo{display:flex;gap:8px;margin-bottom:6px}
-.campo input{flex:1;min-width:0;padding:13px;font-size:16px;border:1px solid #DDE2DE;border-radius:8px;background:#fff}
-.dica{font-size:12px;color:#5B6862;margin:0 0 16px}
-ul{list-style:none;margin:0;padding:0}
-li{background:#fff;border:1px solid #DDE2DE;border-radius:10px;padding:11px 12px;
-  margin-bottom:8px;display:flex;gap:10px;align-items:flex-start}
-li.sel{border-color:#0B7A4B}
-li.ok{opacity:.5}
-li.ok .txt div:first-child{text-decoration:line-through}
-.pos{font-weight:bold;color:#5B6862;min-width:24px;padding-top:2px}
-li.sel .pos{color:#0B7A4B}
-.txt{flex:1;word-break:break-word}
-.sub{font-size:12px;color:#5B6862;margin-top:3px}
-.bt{display:flex;flex-direction:column;gap:5px}
-a.mapa{font-size:13px;color:#1B4DE4;text-decoration:none;border:1px solid #C3D0F8;
-  border-radius:8px;padding:9px 10px;text-align:center;display:block}
-.rodape{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #DDE2DE;
-  padding:10px;display:flex;gap:8px}
-.rodape button{flex:1}
-.msg{background:#FFF4E8;border:1px solid #F0D7BC;color:#B8541C;padding:10px;
-  border-radius:8px;font-size:13px;margin-bottom:12px}
-.rodapetxt{font-size:11px;color:#9AA5A0;text-align:center;margin-top:16px}
+:root{
+  --fundo:#07080B; --fundo2:#0E1117; --painel:#141922; --linha:#232B38;
+  --texto:#F2F5F9; --fraco:#8A97AA;
+  --acento:#FF6A00;      /* laranja de carga */
+  --acento2:#00D9FF;     /* ciano de painel */
+  --ok:#00E08A;          /* entregue */
+  --alerta:#FFC400;
+  --perigo:#FF3B4E;
+  --sombra:0 8px 28px rgba(0,0,0,.55);
+}
+body.claro{
+  --fundo:#EEF1F6; --fundo2:#FFFFFF; --painel:#FFFFFF; --linha:#D5DCE7;
+  --texto:#0B0E14; --fraco:#5A6678;
+  --acento:#E85500; --acento2:#0069D9; --ok:#00875A; --alerta:#B57900; --perigo:#D32338;
+  --sombra:0 4px 16px rgba(16,24,40,.10);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;padding:0 0 100px;background:var(--fundo);color:var(--texto);
+  font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:16px;
+  transition:background .2s,color .2s}
 
-/* tela da rota */
-.proxima{background:#fff;border:2px solid #0B7A4B;border-radius:12px;padding:16px;margin-bottom:8px}
-.proxima .rot{font-size:12px;color:#0B7A4B;font-weight:bold;text-transform:uppercase;letter-spacing:.1em}
-.proxima .end{font-size:22px;font-weight:bold;line-height:1.25;margin:8px 0 6px;word-break:break-word}
-.proxima .km{font-size:14px;color:#5B6862;margin-bottom:14px}
-.proxima .acoes{display:flex;gap:8px}
-.proxima .acoes a,.proxima .acoes button{flex:1;padding:15px 8px;font-size:15px;text-align:center;
-  border-radius:9px;text-decoration:none;display:block;font-weight:bold}
-.proxima .acoes a{background:#1B4DE4;color:#fff;border:1px solid #1B4DE4}
-.tit{font-size:12px;color:#5B6862;text-transform:uppercase;letter-spacing:.1em;margin:20px 0 8px}
-.fim{background:#E8F3ED;border:1px solid #B7DCC9;color:#0B5F3B;padding:20px;border-radius:12px;
-  text-align:center;font-size:17px;font-weight:bold}
+/* cabecalho */
+header{position:sticky;top:0;z-index:5;padding:18px 16px 16px;
+  background:linear-gradient(140deg,var(--fundo2) 0%,var(--painel) 100%);
+  border-bottom:1px solid var(--linha);
+  box-shadow:0 1px 0 rgba(255,255,255,.03), var(--sombra)}
+header::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;
+  background:linear-gradient(90deg,var(--acento),var(--acento2))}
+h1{font-size:11px;margin:0 0 10px;color:var(--fraco);text-transform:uppercase;
+  letter-spacing:.22em;font-weight:700}
+.num{font-size:46px;font-weight:800;line-height:1;letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums;color:var(--texto)}
+.num small{font-size:20px;color:var(--fraco);font-weight:700}
+.leg{font-size:13px;color:var(--fraco);margin-top:6px}
+.leg b{color:var(--acento)}
+
+/* botao de tema */
+.tema{position:fixed;top:14px;right:14px;z-index:50;width:42px;height:42px;padding:0;
+  border-radius:50%;border:1px solid var(--linha);background:var(--painel);
+  color:var(--texto);font-size:19px;line-height:1;box-shadow:var(--sombra)}
+
+main{padding:16px}
+
+/* botoes */
+button{font-family:inherit;font-size:15px;border-radius:10px;border:1px solid transparent;
+  background:var(--acento);color:#0A0A0A;font-weight:700;padding:14px 16px;cursor:pointer;
+  transition:transform .06s,filter .15s}
+button:active{transform:scale(.97)}
+button.claro{background:transparent;color:var(--texto);border-color:var(--linha);
+  padding:10px 12px;font-size:13px;font-weight:600}
+button.verde{background:var(--ok);color:#04140D}
+button.ir{background:transparent;color:var(--acento2);border-color:var(--acento2);
+  padding:10px 16px;font-size:13px;font-weight:800;letter-spacing:.06em}
+button.ir.on{background:var(--ok);border-color:var(--ok);color:#04140D}
+
+/* abas */
+.abas{display:flex;margin-bottom:12px;border:1px solid var(--linha);border-radius:10px;
+  overflow:hidden;background:var(--painel)}
+.aba{flex:1;background:transparent;color:var(--fraco);border:0;border-radius:0;
+  padding:13px 6px;font-size:14px;font-weight:600}
+.aba.on{background:linear-gradient(135deg,var(--acento),#FF9040);color:#0A0A0A;font-weight:800}
+
+/* campo */
+.campo{display:flex;gap:8px;margin-bottom:8px}
+.campo input{flex:1;min-width:0;padding:14px;font-size:16px;border:1px solid var(--linha);
+  border-radius:10px;background:var(--painel);color:var(--texto)}
+.campo input::placeholder{color:var(--fraco)}
+.campo input:focus{outline:2px solid var(--acento2);outline-offset:0;border-color:transparent}
+.dica{font-size:12px;color:var(--fraco);margin:0 0 18px;line-height:1.45}
+
+/* lista */
+ul{list-style:none;margin:0;padding:0}
+li{background:var(--painel);border:1px solid var(--linha);border-radius:12px;
+  padding:12px 13px;margin-bottom:9px;display:flex;gap:11px;align-items:flex-start;
+  box-shadow:var(--sombra)}
+li.sel{border-color:var(--ok)}
+li.sel .pos{color:var(--ok)}
+li.ok{opacity:.45}
+li.ok .txt div:first-child{text-decoration:line-through}
+.pos{font-weight:800;color:var(--fraco);min-width:26px;padding-top:2px;
+  font-variant-numeric:tabular-nums}
+.txt{flex:1;word-break:break-word;font-weight:600}
+.sub{font-size:12px;color:var(--fraco);margin-top:4px;font-weight:400}
+.bt{display:flex;flex-direction:column;gap:6px}
+a.mapa{font-size:13px;color:var(--acento2);text-decoration:none;border:1px solid var(--acento2);
+  border-radius:10px;padding:10px 12px;text-align:center;display:block;font-weight:700}
+
+/* rodape */
+.rodape{position:fixed;left:0;right:0;bottom:0;z-index:20;
+  background:var(--fundo2);border-top:1px solid var(--linha);
+  padding:12px 12px calc(12px + env(safe-area-inset-bottom));display:flex;gap:9px;
+  box-shadow:0 -8px 24px rgba(0,0,0,.35)}
+.rodape button{flex:1}
+
+/* avisos */
+.msg{background:rgba(255,59,78,.10);border:1px solid var(--perigo);color:var(--perigo);
+  padding:12px;border-radius:10px;font-size:13px;margin-bottom:14px;line-height:1.5}
+.rodapetxt{font-size:11px;color:var(--fraco);text-align:center;margin-top:20px;opacity:.7}
+
+/* cartao da proxima entrega */
+.proxima{position:relative;background:var(--painel);border:1px solid var(--linha);
+  border-radius:14px;padding:18px 16px;margin-bottom:10px;overflow:hidden;
+  box-shadow:var(--sombra)}
+.proxima::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;
+  background:linear-gradient(180deg,var(--acento),var(--acento2))}
+.proxima .rot{font-size:11px;color:var(--acento);font-weight:800;
+  text-transform:uppercase;letter-spacing:.2em}
+.proxima .end{font-size:23px;font-weight:800;line-height:1.25;margin:10px 0 8px;
+  word-break:break-word;letter-spacing:-.01em}
+.proxima .km{font-size:13px;color:var(--fraco);margin-bottom:16px;
+  font-variant-numeric:tabular-nums}
+.proxima .acoes{display:flex;gap:9px}
+.proxima .acoes a,.proxima .acoes button{flex:1;padding:16px 8px;font-size:15px;
+  text-align:center;border-radius:11px;text-decoration:none;display:block;font-weight:800}
+.proxima .acoes a{background:var(--acento2);color:#04121A;border:1px solid var(--acento2)}
+.tit{font-size:11px;color:var(--fraco);text-transform:uppercase;letter-spacing:.2em;
+  margin:24px 0 10px;font-weight:700}
+.fim{background:rgba(0,224,138,.10);border:1px solid var(--ok);color:var(--ok);
+  padding:26px 18px;border-radius:14px;text-align:center;font-size:17px;font-weight:800}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
+
+<button class="tema" id="tema" title="Trocar entre claro e escuro">☀</button>
 
 <!-- ======== TELA 1: CADASTRO ======== -->
 <div id="tela1">
@@ -82,7 +152,7 @@ a.mapa{font-size:13px;color:#1B4DE4;text-decoration:none;border:1px solid #C3D0F
     <p class="dica" id="dica">Digite o endereço completo com a cidade. O app procura no mapa sozinho.</p>
 
     <ul id="lista1"></ul>
-    <p class="rodapetxt">versão 5 · duas telas</p>
+    <p class="rodapetxt">versão 6 · modo claro e escuro</p>
   </main>
   <div class="rodape">
     <button id="btiniciar">Iniciar rota</button>
@@ -175,25 +245,114 @@ function adicionar(txt){
   msg(''); salvar(); desenhar();
 }
 
+/* ---------- otimizador de rota ---------- */
+
+/* quanto roda no total: da minha posição até a 1ª, e de cada uma até a seguinte */
+function custoTotal(ponto, arr){
+  if(arr.length === 0) return 0;
+  var soma = dist(ponto, arr[0]), i;
+  for(i=0;i<arr.length-1;i++) soma += dist(arr[i], arr[i+1]);
+  return soma;
+}
+
+/* primeira versão da rota: sempre a mais perto de onde parei */
+function rotaInicial(ponto, itens){
+  var livres = itens.slice(), ordem = [], atual = ponto, i;
+  while(livres.length){
+    var melhor = 0, menor = 1e9;
+    for(i=0;i<livres.length;i++){
+      var d = dist(atual, livres[i]);
+      if(d < menor){ menor = d; melhor = i; }
+    }
+    atual = livres.splice(melhor,1)[0];
+    ordem.push(atual);
+  }
+  return ordem;
+}
+
+/* 2-opt: inverte trechos para desfazer cruzamentos e idas-e-voltas */
+function doisOpt(ponto, arr){
+  var n = arr.length, melhorou = true, giro = 0;
+  while(melhorou && giro < 100){
+    melhorou = false; giro++;
+    for(var i=0;i<n-1;i++){
+      var ant = (i === 0) ? ponto : arr[i-1];
+      for(var j=i+1;j<n;j++){
+        var seg = (j+1 < n) ? arr[j+1] : null;
+        var antes = dist(ant, arr[i]) + (seg ? dist(arr[j], seg) : 0);
+        var depois = dist(ant, arr[j]) + (seg ? dist(arr[i], seg) : 0);
+        if(depois < antes - 0.0001){
+          var a = i, b = j, tmp;
+          while(a < b){ tmp = arr[a]; arr[a] = arr[b]; arr[b] = tmp; a++; b--; }
+          melhorou = true;
+        }
+      }
+    }
+  }
+  return arr;
+}
+
+/* Or-opt: tira 1 a 3 paradas seguidas e encaixa no melhor lugar da rota */
+function orOpt(ponto, arr){
+  var melhorou = true, giro = 0;
+  while(melhorou && giro < 60){
+    melhorou = false; giro++;
+    for(var t=1;t<=3;t++){
+      for(var i=0;i+t<=arr.length;i++){
+        var b = arr[i], e = arr[i+t-1];
+        var a = (i === 0) ? ponto : arr[i-1];
+        var f = (i+t < arr.length) ? arr[i+t] : null;
+        var ganho = dist(a,b) + (f ? dist(e,f) : 0) - (f ? dist(a,f) : 0);
+        if(ganho <= 0.0001) continue;
+
+        var sem = arr.slice(0,i).concat(arr.slice(i+t));
+        var pedaco = arr.slice(i, i+t);
+        var achou = -1, invertido = false, menorCusto = ganho - 0.0001;
+
+        for(var j=0;j<=sem.length;j++){
+          var c = (j === 0) ? ponto : sem[j-1];
+          var d2 = (j < sem.length) ? sem[j] : null;
+          var base = (d2 ? dist(c,d2) : 0);
+          var reto = dist(c,b) + (d2 ? dist(e,d2) : 0) - base;
+          var virado = dist(c,e) + (d2 ? dist(b,d2) : 0) - base;
+          if(reto < menorCusto){ menorCusto = reto; achou = j; invertido = false; }
+          if(virado < menorCusto){ menorCusto = virado; achou = j; invertido = true; }
+        }
+        if(achou > -1){
+          if(invertido) pedaco.reverse();
+          arr = sem.slice(0,achou).concat(pedaco, sem.slice(achou));
+          melhorou = true;
+        }
+      }
+    }
+  }
+  return arr;
+}
+
+function otimizar(ponto, itens){
+  if(itens.length <= 2) return rotaInicial(ponto, itens);
+  var arr = rotaInicial(ponto, itens);
+  arr = doisOpt(ponto, arr);
+  arr = orOpt(ponto, arr);
+  arr = doisOpt(ponto, arr);
+  return arr;
+}
+
 /* ---------- ordenar a partir de um ponto ---------- */
+var kmRota = 0;
 function ordenarDe(ponto){
   var marcadas = [], resto = [], i;
   for(i=0;i<paradas.length;i++){
     var p = paradas[i];
     if(p.ir && !p.feita && p.lat != null) marcadas.push(p); else resto.push(p);
   }
-  var ordem = [], atual = ponto;
-  while(marcadas.length){
-    var melhor = 0, menor = 1e9;
-    for(i=0;i<marcadas.length;i++){
-      var d = dist(atual, marcadas[i]);
-      if(d < menor){ menor = d; melhor = i; }
-    }
-    var q = marcadas.splice(melhor,1)[0];
-    q.km = menor;
-    ordem.push(q);
-    atual = q;
+  var ordem = otimizar(ponto, marcadas);
+  var atual = ponto;
+  for(i=0;i<ordem.length;i++){
+    ordem[i].km = dist(atual, ordem[i]);
+    atual = ordem[i];
   }
+  kmRota = custoTotal(ponto, ordem);
   paradas = ordem.concat(resto);
   salvar();
 }
@@ -250,7 +409,8 @@ function desenhar(){
     ? 'nenhuma entrega cadastrada'
     : '<b>' + (total-feitas) + '</b> faltando · ' + marcadas + ' marcadas para ir';
   document.getElementById('leg2').innerHTML =
-    '<b>' + marcadas + '</b> na fila · ' + feitas + ' entregues';
+    '<b>' + marcadas + '</b> na fila · ' + feitas + ' entregues' +
+    (kmRota > 0 ? ' · ' + kmRota.toFixed(0) + ' km de rota' : '');
   document.getElementById('btiniciar').textContent =
     'Iniciar rota' + (marcadas ? ' (' + marcadas + ')' : '');
 
@@ -412,6 +572,19 @@ document.getElementById('btrefazer').onclick = function(){
 document.getElementById('btlimpa').onclick = function(){
   if(confirm('Apagar todas as entregas?')){ paradas = []; msg(''); salvar(); desenhar(); }
 };
+
+/* ---------- claro / escuro ---------- */
+function aplicarTema(t){
+  document.body.className = (t === 'claro') ? 'claro' : '';
+  document.getElementById('tema').innerHTML = (t === 'claro') ? '&#9789;' : '&#9728;';
+  try{ localStorage.setItem('tema_rota', t); }catch(e){}
+}
+document.getElementById('tema').onclick = function(){
+  aplicarTema(document.body.className === 'claro' ? 'escuro' : 'claro');
+};
+var temaSalvo = 'escuro';
+try{ temaSalvo = localStorage.getItem('tema_rota') || 'escuro'; }catch(e){}
+aplicarTema(temaSalvo);
 
 carregar();
 desenhar();
