@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Rota de Entregas</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
 :root{
   --fundo:#07080B; --fundo2:#0E1117; --painel:#141922; --linha:#232B38;
@@ -120,6 +122,15 @@ a.mapa{font-size:13px;color:var(--acento2);text-decoration:none;border:1px solid
 .proxima .acoes a,.proxima .acoes button{flex:1;padding:16px 8px;font-size:15px;
   text-align:center;border-radius:11px;text-decoration:none;display:block;font-weight:800}
 .proxima .acoes a{background:var(--acento2);color:#04121A;border:1px solid var(--acento2)}
+#mapa{display:none;height:300px;border-radius:14px;overflow:hidden;margin-bottom:16px;
+  border:1px solid var(--linha);box-shadow:var(--sombra)}
+#mapa.on{display:block}
+.leaflet-container{background:var(--fundo2)}
+.bolinha{background:var(--acento);color:#0A0A0A;border-radius:50%;width:26px;height:26px;
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;
+  border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.5);font-family:inherit}
+.bolinha.eu{background:var(--acento2);color:#04121A}
+.bolinha.casa2{background:var(--ok);color:#04140D}
 .casa{background:var(--painel);border:1px solid var(--linha);border-radius:12px;
   padding:13px 14px;margin-bottom:14px;box-shadow:var(--sombra)}
 .casa .rot{font-size:11px;color:var(--acento);font-weight:800;text-transform:uppercase;
@@ -186,11 +197,12 @@ a.mapa{font-size:13px;color:var(--acento2);text-decoration:none;border:1px solid
     <button id="btHist" class="pill" style="margin-bottom:14px"></button>
     <div id="casa"></div>
     <div id="prev1"></div>
+    <div id="mapa"></div>
     <ul id="lista1"></ul>
-    <p class="rodapetxt">versão 13 · sequência antes de sair</p>
+    <p class="rodapetxt">versão 14 · mapa com as paradas</p>
   </main>
   <div class="rodape">
-    <button id="btatualizar" class="claro" style="padding:14px">Atualizar rota</button>
+    <button id="btatualizar" class="claro" style="padding:14px">Organizar rota</button>
     <button id="btiniciar">Iniciar rota</button>
     <button id="btlimpa" class="claro" style="flex:0 0 74px;padding:14px">Limpar</button>
   </div>
@@ -687,11 +699,16 @@ function ordenarDe(ponto){
 }
 
 /* ---------- iniciar / refazer a rota pelo GPS ---------- */
+var janelaEspera = null;   /* aba aberta esperando o endereço */
 function comGps(depois){
-  if(!navigator.geolocation){ msg('Este navegador não tem GPS.'); return; }
+  if(!navigator.geolocation){
+    if(janelaEspera){ try{ janelaEspera.close(); }catch(e){} janelaEspera = null; }
+    msg('Este navegador não tem GPS.'); return;
+  }
   navigator.geolocation.getCurrentPosition(
     function(pos){ depois({lat:pos.coords.latitude, lng:pos.coords.longitude}); },
     function(err){
+      if(janelaEspera){ try{ janelaEspera.close(); }catch(e){} janelaEspera = null; }
       irParaTela(1);
       msg('GPS não liberado (' + err.message + '). Autorize a localização do site e tente de novo.');
     },
@@ -707,8 +724,19 @@ function iniciarRota(){
 
   /* a aba precisa ser aberta agora, no toque; o GPS demora e o navegador bloquearia depois */
   var janela = autoMapa ? window.open('', '_blank') : null;
+  if(janela){
+    try{
+      janela.document.write('<html><body style="background:#07080B;color:#FF6A00;' +
+        'font-family:sans-serif;text-align:center;padding-top:80px;font-size:18px">' +
+        'Montando sua rota...<br><br><span style="color:#8A97AA;font-size:14px">' +
+        'esta aba vira a navegação em instantes</span></body></html>');
+      janela.document.close();
+    }catch(e){}
+  }
 
+  janelaEspera = janela;
   comGps(function(pos){
+    janelaEspera = null;
     ordenarDe(pos);
     horaAnterior = Date.now();   /* começa a cronometrar a partir daqui */
     if(!viagemInicio){ viagemInicio = Date.now(); viagemKmReta = 0; viagemEntregas = 0; }
@@ -716,6 +744,7 @@ function iniciarRota(){
     irParaTela(2);
     var p0 = primeiraDaFila();
     if(janela && p0){ janela.location.href = urlMapa(p0, pos); }
+    else if(janela){ try{ janela.close(); }catch(e){} }
     else if(autoMapa && p0){
       msg('O navegador bloqueou a abertura do mapa. Toque em <b>Ver no mapa</b> no cartão, ou libere pop-ups para este site.');
     }
@@ -779,9 +808,64 @@ function desenhar(){
   pintarAuto();
   desenharHistorico();
   desenharCasa();
+  desenharMapa();
   desenharCadastro();
   desenharRota();
   desenharPrevisoes();
+}
+
+/* mapa com as bolinhas da sequência */
+var mapa = null, camadas = [];
+function desenharMapa(){
+  var el = document.getElementById('mapa');
+  if(!el || typeof L === 'undefined') return;
+
+  var fila = [], i;
+  for(i=0;i<paradas.length;i++){
+    var p = paradas[i];
+    if(p.ir && !p.feita && p.lat != null) fila.push(p);
+  }
+  if(!sequenciaPronta || fila.length === 0){ el.className = ''; return; }
+  el.className = 'on';
+
+  if(!mapa){
+    mapa = L.map('mapa', {zoomControl:true, attributionControl:false});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19}).addTo(mapa);
+  }
+  for(i=0;i<camadas.length;i++) mapa.removeLayer(camadas[i]);
+  camadas = [];
+
+  var pontos = [], linha = [];
+
+  function bolinha(lat, lng, texto, classe, rotulo){
+    var m = L.marker([lat,lng], {icon: L.divIcon({
+      className:'', html:'<div class="bolinha ' + classe + '">' + texto + '</div>',
+      iconSize:[26,26], iconAnchor:[13,13]
+    })}).addTo(mapa);
+    m.bindPopup(rotulo);
+    camadas.push(m);
+    pontos.push([lat,lng]);
+  }
+
+  if(ultimoPonto){
+    bolinha(ultimoPonto.lat, ultimoPonto.lng, '&#9679;', 'eu', 'Você está aqui');
+    linha.push([ultimoPonto.lat, ultimoPonto.lng]);
+  }
+  for(i=0;i<fila.length;i++){
+    bolinha(fila[i].lat, fila[i].lng, (i+1), '', (i+1) + 'ª parada<br>' + fila[i].texto);
+    linha.push([fila[i].lat, fila[i].lng]);
+  }
+  var f = fim();
+  if(f){
+    bolinha(f.lat, f.lng, '&#8962;', 'casa2', 'Fim da rota<br>' + destinoFinal.texto);
+    linha.push([f.lat, f.lng]);
+  }
+
+  var l = L.polyline(linha, {color:'#FF6A00', weight:3, opacity:.85, dashArray:'7,7'}).addTo(mapa);
+  camadas.push(l);
+
+  mapa.fitBounds(L.latLngBounds(pontos), {padding:[35,35]});
+  setTimeout(function(){ if(mapa) mapa.invalidateSize(); }, 60);
 }
 
 /* tela do histórico */
