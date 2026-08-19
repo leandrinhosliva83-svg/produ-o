@@ -120,6 +120,9 @@ a.mapa{font-size:13px;color:var(--acento2);text-decoration:none;border:1px solid
 .proxima .acoes a,.proxima .acoes button{flex:1;padding:16px 8px;font-size:15px;
   text-align:center;border-radius:11px;text-decoration:none;display:block;font-weight:800}
 .proxima .acoes a{background:var(--acento2);color:#04121A;border:1px solid var(--acento2)}
+.pill{width:100%;margin-bottom:12px;background:transparent;border:1px dashed var(--linha);
+  color:var(--fraco);font-size:12px;font-weight:700;padding:10px;letter-spacing:.06em}
+.pill.on{border-style:solid;border-color:var(--acento2);color:var(--acento2)}
 .tit{font-size:11px;color:var(--fraco);text-transform:uppercase;letter-spacing:.2em;
   margin:24px 0 10px;font-weight:700}
 .fim{background:rgba(0,224,138,.10);border:1px solid var(--ok);color:var(--ok);
@@ -152,7 +155,7 @@ a.mapa{font-size:13px;color:var(--acento2);text-decoration:none;border:1px solid
     <p class="dica" id="dica">Digite o endereço completo com a cidade. O app procura no mapa sozinho.</p>
 
     <ul id="lista1"></ul>
-    <p class="rodapetxt">versão 6 · modo claro e escuro</p>
+    <p class="rodapetxt">versão 7 · mapa automático</p>
   </main>
   <div class="rodape">
     <button id="btiniciar">Iniciar rota</button>
@@ -168,6 +171,7 @@ a.mapa{font-size:13px;color:var(--acento2);text-decoration:none;border:1px solid
     <div class="leg" id="leg2"></div>
   </header>
   <main>
+    <button id="btauto" class="pill"></button>
     <div id="blocoProxima"></div>
     <div class="tit" id="titDepois" style="display:none">Depois dessa</div>
     <ul id="lista2"></ul>
@@ -243,6 +247,17 @@ function adicionar(txt){
                  feita:false, ir:true, km:null, status:c?'ok':'buscando' });
   if(!c) buscarCoord(paradas[paradas.length-1]);
   msg(''); salvar(); desenhar();
+}
+
+/* ---------- link de navegação ---------- */
+var autoMapa = true;
+try{ autoMapa = localStorage.getItem('auto_mapa') !== 'nao'; }catch(e){}
+
+function urlMapa(destino, origem){
+  var u = 'https://www.google.com/maps/dir/?api=1&travelmode=driving' +
+          '&destination=' + destino.lat + ',' + destino.lng;
+  if(origem) u += '&origin=' + origem.lat + ',' + origem.lng;
+  return u;
 }
 
 /* ---------- otimizador de rota ---------- */
@@ -375,7 +390,19 @@ function iniciarRota(){
     if(paradas[i].ir && !paradas[i].feita && paradas[i].lat != null){ tem = true; break; }
   }
   if(!tem){ msg('Nenhuma entrega marcada com localização. Marque em <b>Ir</b> e confira se o endereço foi encontrado.'); return; }
-  comGps(function(pos){ ordenarDe(pos); irParaTela(2); });
+
+  /* a aba precisa ser aberta agora, no toque; o GPS demora e o navegador bloquearia depois */
+  var janela = autoMapa ? window.open('', '_blank') : null;
+
+  comGps(function(pos){
+    ordenarDe(pos);
+    irParaTela(2);
+    var p0 = primeiraDaFila();
+    if(janela && p0){ janela.location.href = urlMapa(p0, pos); }
+    else if(autoMapa && p0){
+      msg('O navegador bloqueou a abertura do mapa. Toque em <b>Ver no mapa</b> no cartão, ou libere pop-ups para este site.');
+    }
+  });
 }
 
 /* ---------- trocar de tela ---------- */
@@ -387,12 +414,25 @@ function irParaTela(n){
 }
 
 /* ---------- entregar: reordena a partir do ponto entregue ---------- */
+function primeiraDaFila(){
+  for(var i=0;i<paradas.length;i++){
+    var p = paradas[i];
+    if(p.ir && !p.feita && p.lat != null) return p;
+  }
+  return null;
+}
+
 function entregar(p){
+  var deOnde = (p.lat != null) ? {lat:p.lat, lng:p.lng} : null;
   p.feita = true;
   p.km = null;
-  if(p.lat != null) ordenarDe({lat:p.lat, lng:p.lng});
+  if(deOnde) ordenarDe(deOnde);
   salvar(); desenhar();
   window.scrollTo(0,0);
+
+  /* já abre a navegação da próxima, aproveitando o toque do dedo */
+  var prox = primeiraDaFila();
+  if(autoMapa && prox) window.open(urlMapa(prox, deOnde), '_blank');
 }
 
 /* ---------- desenhar ---------- */
@@ -414,6 +454,7 @@ function desenhar(){
   document.getElementById('btiniciar').textContent =
     'Iniciar rota' + (marcadas ? ' (' + marcadas + ')' : '');
 
+  pintarAuto();
   desenharCadastro();
   desenharRota();
 }
@@ -565,6 +606,16 @@ document.getElementById('cx').onkeydown = function(e){
   if(e.keyCode === 13) document.getElementById('add').onclick();
 };
 document.getElementById('btiniciar').onclick = iniciarRota;
+function pintarAuto(){
+  var b = document.getElementById('btauto');
+  b.className = autoMapa ? 'pill on' : 'pill';
+  b.textContent = autoMapa ? 'MAPA ABRE SOZINHO: LIGADO' : 'MAPA ABRE SOZINHO: DESLIGADO';
+}
+document.getElementById('btauto').onclick = function(){
+  autoMapa = !autoMapa;
+  try{ localStorage.setItem('auto_mapa', autoMapa ? 'sim' : 'nao'); }catch(e){}
+  pintarAuto();
+};
 document.getElementById('btvoltar').onclick = function(){ irParaTela(1); };
 document.getElementById('btrefazer').onclick = function(){
   comGps(function(pos){ ordenarDe(pos); desenhar(); window.scrollTo(0,0); });
