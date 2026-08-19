@@ -120,6 +120,28 @@ a.mapa{font-size:13px;color:var(--acento2);text-decoration:none;border:1px solid
 .proxima .acoes a,.proxima .acoes button{flex:1;padding:16px 8px;font-size:15px;
   text-align:center;border-radius:11px;text-decoration:none;display:block;font-weight:800}
 .proxima .acoes a{background:var(--acento2);color:#04121A;border:1px solid var(--acento2)}
+.prev{background:var(--painel);border:1px solid var(--linha);border-radius:14px;
+  padding:16px;margin-bottom:14px;box-shadow:var(--sombra);position:relative;overflow:hidden}
+.prev::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+  background:linear-gradient(180deg,var(--acento2),var(--acento))}
+.prev .rot{font-size:11px;color:var(--acento2);font-weight:800;text-transform:uppercase;
+  letter-spacing:.2em;margin-bottom:12px}
+.prev .grade{display:flex;gap:10px;margin-bottom:12px}
+.prev .cel{flex:1;background:var(--fundo);border:1px solid var(--linha);border-radius:10px;padding:11px 12px}
+.prev .cel .v{font-size:26px;font-weight:800;line-height:1;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums}
+.prev .cel .r{font-size:10px;color:var(--fraco);text-transform:uppercase;
+  letter-spacing:.14em;font-weight:700;margin-top:6px}
+.prev .quebra{font-size:12px;color:var(--fraco);line-height:1.6}
+.prev .ajustes{display:none;border-top:1px solid var(--linha);margin-top:12px;padding-top:12px}
+.prev .ajustes.on{display:block}
+.linhaAj{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
+.linhaAj label{font-size:13px;color:var(--fraco);flex:1}
+.linhaAj input{width:88px;padding:9px;font-size:15px;text-align:center;border-radius:8px;
+  border:1px solid var(--linha);background:var(--fundo);color:var(--texto);
+  font-variant-numeric:tabular-nums}
+.btAj{width:100%;background:transparent;border:1px dashed var(--linha);color:var(--fraco);
+  font-size:12px;font-weight:700;padding:9px;letter-spacing:.06em}
 .pill{width:100%;margin-bottom:12px;background:transparent;border:1px dashed var(--linha);
   color:var(--fraco);font-size:12px;font-weight:700;padding:10px;letter-spacing:.06em}
 .pill.on{border-style:solid;border-color:var(--acento2);color:var(--acento2)}
@@ -154,8 +176,9 @@ a.mapa{font-size:13px;color:var(--acento2);text-decoration:none;border:1px solid
     </div>
     <p class="dica" id="dica">Digite o endereço completo com a cidade. O app procura no mapa sozinho.</p>
 
+    <div id="prev1"></div>
     <ul id="lista1"></ul>
-    <p class="rodapetxt">versão 7 · mapa automático</p>
+    <p class="rodapetxt">versão 8 · previsão de km e horas</p>
   </main>
   <div class="rodape">
     <button id="btiniciar">Iniciar rota</button>
@@ -171,6 +194,7 @@ a.mapa{font-size:13px;color:var(--acento2);text-decoration:none;border:1px solid
     <div class="leg" id="leg2"></div>
   </header>
   <main>
+    <div id="prev2"></div>
     <button id="btauto" class="pill"></button>
     <div id="blocoProxima"></div>
     <div class="tit" id="titDepois" style="display:none">Depois dessa</div>
@@ -247,6 +271,77 @@ function adicionar(txt){
                  feita:false, ir:true, km:null, status:c?'ok':'buscando' });
   if(!c) buscarCoord(paradas[paradas.length-1]);
   msg(''); salvar(); desenhar();
+}
+
+/* ---------- previsão de tempo e distância ---------- */
+var ajustes = { vel:40, minEntrega:8, estrada:30 };
+try{
+  var g = JSON.parse(localStorage.getItem('ajustes_rota'));
+  if(g){ ajustes.vel = g.vel || 40; ajustes.minEntrega = g.minEntrega || 8; ajustes.estrada = (g.estrada != null ? g.estrada : 30); }
+}catch(e){}
+var ajustesAbertos = false;
+
+function salvarAjustes(){ try{ localStorage.setItem('ajustes_rota', JSON.stringify(ajustes)); }catch(e){} }
+
+function horaTexto(minutos){
+  var h = Math.floor(minutos/60), m = Math.round(minutos%60);
+  if(h === 0) return m + ' min';
+  return h + 'h' + (m < 10 ? '0' : '') + m;
+}
+
+/* transforma km em linha reta + nº de paradas em tempo total */
+function calcularPrevisao(kmReta, paradasQtd){
+  var kmEstrada = kmReta * (1 + ajustes.estrada/100);
+  var minDirigindo = (ajustes.vel > 0) ? (kmEstrada / ajustes.vel) * 60 : 0;
+  var minParado = paradasQtd * ajustes.minEntrega;
+  return { km:kmEstrada, dirigindo:minDirigindo, parado:minParado, total:minDirigindo + minParado };
+}
+
+function montarPrevisao(elId, kmReta, qtd, titulo){
+  var el = document.getElementById(elId);
+  if(!el) return;
+  if(qtd === 0){ el.innerHTML = ''; return; }
+  var c = calcularPrevisao(kmReta, qtd);
+  var fim = new Date(Date.now() + c.total*60000);
+  var hh = (fim.getHours()<10?'0':'') + fim.getHours() + ':' + (fim.getMinutes()<10?'0':'') + fim.getMinutes();
+
+  el.innerHTML =
+    '<div class="prev">' +
+      '<div class="rot">' + titulo + '</div>' +
+      '<div class="grade">' +
+        '<div class="cel"><div class="v">' + c.km.toFixed(0) + '</div><div class="r">km por estrada</div></div>' +
+        '<div class="cel"><div class="v">' + horaTexto(c.total) + '</div><div class="r">tempo total</div></div>' +
+        '<div class="cel"><div class="v">' + qtd + '</div><div class="r">entregas</div></div>' +
+      '</div>' +
+      '<div class="quebra">' +
+        horaTexto(c.dirigindo) + ' dirigindo a ' + ajustes.vel + ' km/h · ' +
+        horaTexto(c.parado) + ' parado (' + ajustes.minEntrega + ' min por entrega)<br>' +
+        'Começando agora, termina por volta das <b>' + hh + '</b>' +
+      '</div>' +
+      '<div class="ajustes' + (ajustesAbertos ? ' on' : '') + '">' +
+        '<div class="linhaAj"><label>Minutos por entrega</label><input type="number" inputmode="numeric" id="ajMin" value="' + ajustes.minEntrega + '"></div>' +
+        '<div class="linhaAj"><label>Velocidade média (km/h)</label><input type="number" inputmode="numeric" id="ajVel" value="' + ajustes.vel + '"></div>' +
+        '<div class="linhaAj"><label>Acréscimo de estrada (%)</label><input type="number" inputmode="numeric" id="ajEst" value="' + ajustes.estrada + '"></div>' +
+      '</div>' +
+      '<button class="btAj" id="btAj' + elId + '">' + (ajustesAbertos ? 'FECHAR AJUSTES' : 'AJUSTAR MÉDIAS') + '</button>' +
+    '</div>';
+
+  document.getElementById('btAj' + elId).onclick = function(){
+    ajustesAbertos = !ajustesAbertos;
+    desenhar();
+  };
+  if(ajustesAbertos){
+    var liga = function(id, campo){
+      var i = document.getElementById(id);
+      if(!i) return;
+      i.onchange = i.oninput = function(){
+        var v = parseFloat(i.value);
+        if(!isNaN(v) && v >= 0){ ajustes[campo] = v; salvarAjustes(); }
+      };
+      i.onblur = function(){ desenhar(); };
+    };
+    liga('ajMin','minEntrega'); liga('ajVel','vel'); liga('ajEst','estrada');
+  }
 }
 
 /* ---------- link de navegação ---------- */
@@ -457,6 +552,27 @@ function desenhar(){
   pintarAuto();
   desenharCadastro();
   desenharRota();
+  desenharPrevisoes();
+}
+
+/* previsão da tela 1 (antes de iniciar) e da tela 2 (o que falta) */
+function desenharPrevisoes(){
+  var marcadas = [], i;
+  for(i=0;i<paradas.length;i++){
+    var p = paradas[i];
+    if(p.ir && !p.feita && p.lat != null) marcadas.push(p);
+  }
+  if(marcadas.length === 0){
+    document.getElementById('prev1').innerHTML = '';
+    document.getElementById('prev2').innerHTML = '';
+    return;
+  }
+  /* tela 1: ainda não sei onde você está, então estimo saindo da 1ª entrega */
+  var ordem = otimizar(marcadas[0], marcadas);
+  montarPrevisao('prev1', custoTotal(marcadas[0], ordem), marcadas.length, 'Previsão desta rota');
+
+  /* tela 2: usa a rota real já calculada a partir do seu GPS */
+  montarPrevisao('prev2', kmRota > 0 ? kmRota : custoTotal(marcadas[0], ordem), marcadas.length, 'Falta rodar');
 }
 
 function desenharCadastro(){
