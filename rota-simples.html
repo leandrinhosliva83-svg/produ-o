@@ -138,6 +138,19 @@ a.mapa{font-size:13px;color:var(--acento2);text-decoration:none;border:1px solid
 .proxima .acoes a,.proxima .acoes button{flex:1;padding:16px 8px;font-size:15px;
   text-align:center;border-radius:11px;text-decoration:none;display:block;font-weight:800}
 .proxima .acoes a{background:var(--acento2);color:#04121A;border:1px solid var(--acento2)}
+.zona{display:inline-block;margin-top:7px;padding:4px 9px;border-radius:6px;
+  font-size:10px;font-weight:800;letter-spacing:.14em}
+.zporta{background:rgba(0,224,138,.14);color:var(--ok);border:1px solid var(--ok)}
+.zmeio{background:rgba(255,196,0,.14);color:var(--alerta);border:1px solid var(--alerta)}
+.zfundo{background:rgba(255,106,0,.14);color:var(--acento);border:1px solid var(--acento)}
+.carregar{background:var(--painel);border:1px solid var(--linha);border-radius:12px;
+  padding:14px;margin-bottom:16px;box-shadow:var(--sombra)}
+.carregar .rot{font-size:11px;color:var(--acento);font-weight:800;text-transform:uppercase;
+  letter-spacing:.18em;margin-bottom:10px}
+.carregar .barra{display:flex;height:38px;border-radius:9px;overflow:hidden;margin-bottom:10px}
+.carregar .parte{display:flex;align-items:center;justify-content:center;font-size:11px;
+  font-weight:800;letter-spacing:.1em;color:#0A0A0A}
+.carregar .quebra{font-size:12px;color:var(--fraco);line-height:1.6}
 #mapa{display:none;height:300px;border-radius:14px;overflow:hidden;margin-bottom:16px;
   border:1px solid var(--linha);box-shadow:var(--sombra)}
 #mapa.on{display:block}
@@ -214,9 +227,10 @@ a.mapa{font-size:13px;color:var(--acento2);text-decoration:none;border:1px solid
     <button id="btHist" class="pill" style="margin-bottom:14px"></button>
     <div id="casa"></div>
     <div id="prev1"></div>
+    <div id="carga"></div>
     <div id="mapa"></div>
     <ul id="lista1"></ul>
-    <p class="rodapetxt">versão 16 · sem aba em branco</p>
+    <p class="rodapetxt">versão 17 · ordem de carregamento</p>
   </main>
   <div class="rodape">
     <button id="btatualizar" class="claro" style="padding:14px">Organizar rota</button>
@@ -855,10 +869,37 @@ function desenhar(){
   pintarAuto();
   desenharHistorico();
   desenharCasa();
+  desenharCarga();
   desenharMapa();
   desenharCadastro();
   desenharRota();
   desenharPrevisoes();
+}
+
+/* ---------- onde colocar a carga no veículo ---------- */
+/* a 1ª entrega sai primeiro, então fica na porta; a última entra primeiro, vai no fundo */
+function zonaCarga(indice, total){
+  if(total <= 1) return 'PORTA';
+  if(total === 2) return indice === 0 ? 'PORTA' : 'FUNDO';
+  var terco = total/3;
+  if(indice < terco) return 'PORTA';
+  if(indice < terco*2) return 'MEIO';
+  return 'FUNDO';
+}
+function classeZona(z){
+  return 'zona ' + (z === 'PORTA' ? 'zporta' : (z === 'MEIO' ? 'zmeio' : 'zfundo'));
+}
+function selo(indice, total){
+  var z = zonaCarga(indice, total);
+  var e = document.createElement('span');
+  e.className = classeZona(z);
+  e.textContent = 'CARGA: ' + z;
+  return e;
+}
+function contarZonas(total){
+  var c = {PORTA:0, MEIO:0, FUNDO:0}, i;
+  for(i=0;i<total;i++) c[zonaCarga(i,total)]++;
+  return c;
 }
 
 /* mapa com as bolinhas da sequência */
@@ -1015,6 +1056,36 @@ function desenharCasa(){
   }
 }
 
+/* painel de como carregar o veículo */
+function desenharCarga(){
+  var el = document.getElementById('carga');
+  if(!el) return;
+  var fila = [], i;
+  for(i=0;i<paradas.length;i++){
+    var p = paradas[i];
+    if(p.ir && !p.feita && p.lat != null) fila.push(p);
+  }
+  if(!sequenciaPronta || fila.length === 0){ el.innerHTML = ''; return; }
+
+  var c = contarZonas(fila.length);
+  var larg = function(n){ return (n/fila.length*100).toFixed(1) + '%'; };
+
+  el.innerHTML =
+    '<div class="carregar">' +
+      '<div class="rot">Como carregar o veículo</div>' +
+      '<div class="barra">' +
+        '<div class="parte" style="width:' + larg(c.FUNDO) + ';background:var(--acento)">FUNDO ' + c.FUNDO + '</div>' +
+        '<div class="parte" style="width:' + larg(c.MEIO) + ';background:var(--alerta)">MEIO ' + c.MEIO + '</div>' +
+        '<div class="parte" style="width:' + larg(c.PORTA) + ';background:var(--ok)">PORTA ' + c.PORTA + '</div>' +
+      '</div>' +
+      '<div class="quebra">' +
+        'Carregue de trás para frente: comece pela <b>' + fila.length + 'ª parada</b> no fundo e ' +
+        'termine pela <b>1ª</b> junto da porta.<br>' +
+        'Assim cada entrega fica na mão quando chegar a vez dela, sem remexer a carga.' +
+      '</div>' +
+    '</div>';
+}
+
 /* previsão da tela 1 (antes de iniciar) e da tela 2 (o que falta) */
 function desenharPrevisoes(){
   var marcadas = [], i;
@@ -1038,7 +1109,8 @@ function desenharPrevisoes(){
 function desenharCadastro(){
   var ul = document.getElementById('lista1');
   ul.innerHTML = '';
-  var i, ordemN = 0;
+  var i, ordemN = 0, totalFila = 0;
+  for(i=0;i<paradas.length;i++){ if(paradas[i].ir && !paradas[i].feita) totalFila++; }
   for(i=0;i<paradas.length;i++){
     (function(p){
       var li = document.createElement('li');
@@ -1065,6 +1137,7 @@ function desenharCadastro(){
       else if(p.status === 'buscando') s.textContent = 'procurando no mapa...';
       else s.textContent = 'endereço não encontrado — toque em Buscar';
       box.appendChild(t); box.appendChild(s);
+      if(sequenciaPronta && p.ir && !p.feita) box.appendChild(selo(ordemN-1, totalFila));
 
       var bt = document.createElement('div'); bt.className = 'bt';
 
@@ -1132,6 +1205,8 @@ function desenharRota(){
   var e = document.createElement('div'); e.className = 'end'; e.textContent = p0.texto;
   var k = document.createElement('div'); k.className = 'km';
   k.textContent = (p0.km != null ? p0.km.toFixed(1) + ' km daqui · ' : '') + 'faltam ' + fila2.length;
+  var z0 = selo(0, fila2.length);
+  z0.style.marginBottom = '14px';
   var ac = document.createElement('div'); ac.className = 'acoes';
   var a = document.createElement('a');
   a.href = 'https://www.google.com/maps/dir/?api=1&destination=' + p0.lat + ',' + p0.lng;
@@ -1140,7 +1215,7 @@ function desenharRota(){
   b.className = 'verde'; b.textContent = 'Entreguei';
   b.onclick = function(){ entregar(p0); };
   ac.appendChild(a); ac.appendChild(b);
-  c.appendChild(r); c.appendChild(e); c.appendChild(k); c.appendChild(ac);
+  c.appendChild(r); c.appendChild(e); c.appendChild(k); c.appendChild(z0); c.appendChild(ac);
   bloco.appendChild(c);
 
   /* as próximas da sequência */
@@ -1155,6 +1230,7 @@ function desenharRota(){
       var s = document.createElement('div'); s.className = 'sub';
       s.textContent = (p.km != null ? p.km.toFixed(1) + ' km da anterior' : '');
       box.appendChild(t); box.appendChild(s);
+      box.appendChild(selo(n-1, fila2.length));
       var bt = document.createElement('div'); bt.className = 'bt';
       var am = document.createElement('a');
       am.className = 'mapa'; am.target = '_blank'; am.textContent = 'Mapa';
