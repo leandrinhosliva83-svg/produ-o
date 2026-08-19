@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rota Simples</title>
+<style>
+body{margin:0;padding:0 0 90px;background:#F1F3F0;color:#141A17;
+  font-family:-apple-system,Roboto,Arial,sans-serif;font-size:16px}
+header{background:#fff;padding:16px;border-bottom:1px solid #DDE2DE;position:sticky;top:0}
+h1{font-size:14px;margin:0 0 8px;color:#5B6862;text-transform:uppercase;letter-spacing:.1em}
+.num{font-size:44px;font-weight:bold;line-height:1}
+.num small{font-size:20px;color:#9AA5A0}
+.leg{font-size:13px;color:#5B6862;margin-top:4px}
+main{padding:14px}
+.campo{display:flex;gap:8px;margin-bottom:14px}
+.campo input{flex:1;min-width:0;padding:13px;font-size:16px;border:1px solid #DDE2DE;border-radius:8px;background:#fff}
+button{font-family:inherit;font-size:15px;border-radius:8px;border:1px solid #141A17;
+  background:#141A17;color:#fff;padding:13px 14px;cursor:pointer}
+button.claro{background:#fff;color:#141A17;border-color:#DDE2DE;padding:8px 10px;font-size:13px}
+button.verde{background:#0B7A4B;border-color:#0B7A4B;color:#fff;padding:8px 10px;font-size:13px}
+ul{list-style:none;margin:0;padding:0}
+li{background:#fff;border:1px solid #DDE2DE;border-radius:10px;padding:11px 12px;
+  margin-bottom:8px;display:flex;gap:10px;align-items:flex-start}
+li.ok{opacity:.5}
+li.ok .txt{text-decoration:line-through}
+.pos{font-weight:bold;color:#5B6862;min-width:20px}
+.txt{flex:1;word-break:break-word}
+.sub{font-size:12px;color:#5B6862;margin-top:2px}
+.bt{display:flex;flex-direction:column;gap:5px}
+a.ir{font-size:13px;color:#1B4DE4;text-decoration:none;border:1px solid #C3D0F8;
+  border-radius:8px;padding:8px 10px;text-align:center}
+.rodape{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #DDE2DE;
+  padding:10px;display:flex;gap:8px}
+.rodape button{flex:1}
+.msg{background:#FFF4E8;border:1px solid #F0D7BC;color:#B8541C;padding:10px;
+  border-radius:8px;font-size:13px;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Rota do dia</h1>
+  <div class="num" id="num">0<small>/0</small></div>
+  <div class="leg" id="leg">nenhuma entrega cadastrada</div>
+</header>
+
+<main>
+  <div class="msg" id="msg" style="display:none"></div>
+
+  <div class="campo">
+    <input id="cx" placeholder="Endereço ou -21.17,-47.81">
+    <button id="add">Adicionar</button>
+  </div>
+
+  <button id="teste" class="claro" style="width:100%;margin-bottom:14px">
+    Adicionar endereço de teste (sem digitar)
+  </button>
+
+  <ul id="lista"></ul>
+  <p style="font-size:11px;color:#9AA5A0;text-align:center">versão 2 · se você não vê esta linha, o arquivo aberto é o antigo</p>
+</main>
+
+<div class="rodape">
+  <button id="btgps">Ordenar pelo GPS</button>
+  <button id="btlimpa" class="claro" style="flex:0 0 90px">Limpar</button>
+</div>
+
+<script>
+var paradas = [];
+
+function salvar(){
+  try{ localStorage.setItem('rota_simples', JSON.stringify(paradas)); }catch(e){}
+}
+function carregar(){
+  try{
+    var d = localStorage.getItem('rota_simples');
+    if(d) paradas = JSON.parse(d);
+  }catch(e){ paradas = []; }
+}
+function msg(t){
+  var m = document.getElementById('msg');
+  if(!t){ m.style.display = 'none'; return; }
+  m.innerHTML = t; m.style.display = 'block';
+}
+function coords(txt){
+  var m = String(txt).replace('geo:','').match(/(-?\d{1,2}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)/);
+  return m ? {lat: parseFloat(m[1]), lng: parseFloat(m[2])} : null;
+}
+function dist(a,b){
+  var R = 6371, r = Math.PI/180;
+  var dLat = (b.lat-a.lat)*r, dLng = (b.lng-a.lng)*r;
+  var s = Math.pow(Math.sin(dLat/2),2) +
+          Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.pow(Math.sin(dLng/2),2);
+  return 2*R*Math.asin(Math.sqrt(s));
+}
+
+function adicionar(txt){
+  if(!txt) return;
+  txt = txt.replace(/^\s+|\s+$/g,'');
+  if(txt === '') return;
+  var c = coords(txt);
+  paradas.push({ texto: txt, lat: c ? c.lat : null, lng: c ? c.lng : null, feita: false });
+  salvar();
+  desenhar();
+}
+
+function desenhar(){
+  var total = paradas.length, feitas = 0, i;
+  for(i=0;i<paradas.length;i++){ if(paradas[i].feita) feitas++; }
+  var faltam = total - feitas;
+
+  document.getElementById('num').innerHTML = feitas + '<small>/' + total + '</small>';
+  document.getElementById('leg').innerHTML = total === 0
+    ? 'nenhuma entrega cadastrada'
+    : '<b>' + faltam + '</b> faltando de ' + total;
+
+  var ul = document.getElementById('lista');
+  ul.innerHTML = '';
+  var n = 0;
+
+  for(i=0;i<paradas.length;i++){
+    (function(p){
+      if(!p.feita) n++;
+      var li = document.createElement('li');
+      if(p.feita) li.className = 'ok';
+
+      var pos = document.createElement('div');
+      pos.className = 'pos';
+      pos.innerHTML = p.feita ? '&#10003;' : n + '&ordf;';
+
+      var box = document.createElement('div');
+      box.className = 'txt';
+      var t = document.createElement('div');
+      t.textContent = p.texto;
+      var s = document.createElement('div');
+      s.className = 'sub';
+      s.textContent = p.feita ? 'entregue'
+                    : (p.km != null ? p.km.toFixed(1) + ' km' : (p.lat != null ? 'com coordenada' : 'sem coordenada'));
+      box.appendChild(t); box.appendChild(s);
+
+      var bt = document.createElement('div');
+      bt.className = 'bt';
+
+      var b1 = document.createElement('button');
+      b1.className = p.feita ? 'claro' : 'verde';
+      b1.textContent = p.feita ? 'Desfazer' : 'Entreguei';
+      b1.onclick = function(){ p.feita = !p.feita; salvar(); desenhar(); };
+
+      var a = document.createElement('a');
+      a.className = 'ir';
+      a.target = '_blank';
+      a.textContent = 'Ir';
+      a.href = p.lat != null
+        ? 'https://www.google.com/maps/dir/?api=1&destination=' + p.lat + ',' + p.lng
+        : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(p.texto);
+
+      var b2 = document.createElement('button');
+      b2.className = 'claro';
+      b2.textContent = 'Tirar';
+      b2.onclick = function(){
+        var k = paradas.indexOf(p);
+        if(k > -1) paradas.splice(k,1);
+        salvar(); desenhar();
+      };
+
+      bt.appendChild(b1); bt.appendChild(a); bt.appendChild(b2);
+      li.appendChild(pos); li.appendChild(box); li.appendChild(bt);
+      ul.appendChild(li);
+    })(paradas[i]);
+  }
+}
+
+function ordenar(minha){
+  var fila = [], resto = [], i;
+  for(i=0;i<paradas.length;i++){
+    var p = paradas[i];
+    if(!p.feita && p.lat != null) fila.push(p); else resto.push(p);
+  }
+  if(fila.length === 0){
+    msg('Nenhuma parada tem coordenada. Escaneie QR codes que tragam <b>-21.17,-47.81</b> ou digite assim.');
+    return;
+  }
+  var ordem = [], atual = minha;
+  while(fila.length){
+    var melhor = 0, menor = 1e9;
+    for(i=0;i<fila.length;i++){
+      var d = dist(atual, fila[i]);
+      if(d < menor){ menor = d; melhor = i; }
+    }
+    var q = fila.splice(melhor,1)[0];
+    q.km = menor;
+    ordem.push(q);
+    atual = q;
+  }
+  paradas = ordem.concat(resto);
+  salvar(); desenhar();
+  msg('');
+}
+
+document.getElementById('add').onclick = function(){
+  var cx = document.getElementById('cx');
+  adicionar(cx.value);
+  cx.value = '';
+  cx.blur(); // fecha o teclado, que estava tapando a lista
+  var ul = document.getElementById('lista');
+  if(ul.lastChild && ul.lastChild.scrollIntoView) ul.lastChild.scrollIntoView({block:'center'});
+};
+document.getElementById('teste').onclick = function(){
+  adicionar('TESTE Av. Independência 1000 -21.1704,-47.8103');
+  var ul = document.getElementById('lista');
+  if(ul.lastChild && ul.lastChild.scrollIntoView) ul.lastChild.scrollIntoView({block:'center'});
+};
+document.getElementById('cx').onkeydown = function(e){
+  if(e.keyCode === 13) document.getElementById('add').onclick();
+};
+document.getElementById('btlimpa').onclick = function(){
+  if(confirm('Apagar tudo?')){ paradas = []; salvar(); desenhar(); }
+};
+document.getElementById('btgps').onclick = function(){
+  msg('Buscando o GPS...');
+  if(!navigator.geolocation){ msg('Este navegador não tem GPS.'); return; }
+  navigator.geolocation.getCurrentPosition(
+    function(pos){ ordenar({lat: pos.coords.latitude, lng: pos.coords.longitude}); },
+    function(err){ msg('GPS não liberado (' + err.message + '). Abra a página por um endereço https e autorize a localização.'); },
+    {enableHighAccuracy:true, timeout:15000}
+  );
+};
+
+carregar();
+desenhar();
+</script>
+</body>
+</html>
