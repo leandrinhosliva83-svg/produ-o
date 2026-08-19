@@ -187,11 +187,12 @@ a.mapa{font-size:13px;color:var(--acento2);text-decoration:none;border:1px solid
     <div id="casa"></div>
     <div id="prev1"></div>
     <ul id="lista1"></ul>
-    <p class="rodapetxt">versão 12 · histórico de viagens</p>
+    <p class="rodapetxt">versão 13 · sequência antes de sair</p>
   </main>
   <div class="rodape">
+    <button id="btatualizar" class="claro" style="padding:14px">Atualizar rota</button>
     <button id="btiniciar">Iniciar rota</button>
-    <button id="btlimpa" class="claro" style="flex:0 0 84px">Limpar</button>
+    <button id="btlimpa" class="claro" style="flex:0 0 74px;padding:14px">Limpar</button>
   </div>
 </div>
 
@@ -239,6 +240,7 @@ var fila = [], buscando = false;
 
 /* ---------- guardar ---------- */
 var destinoFinal = null;   /* onde a rota deve terminar (sua casa) */
+var sequenciaPronta = false;  /* true depois de calcular a ordem na tela 1 */
 
 function salvar(){
   try{
@@ -301,6 +303,7 @@ function adicionar(txt){
     msg('Nesse modo escreva dois números com vírgula: <b>-21.1704,-47.8103</b>. Para o nome da rua use a aba <b>Por endereço</b>.');
     return;
   }
+  sequenciaPronta = false;
   paradas.push({ texto:txt, lat:c?c.lat:null, lng:c?c.lng:null,
                  feita:false, ir:true, km:null, status:c?'ok':'buscando' });
   if(!c) buscarCoord(paradas[paradas.length-1]);
@@ -825,7 +828,19 @@ function desenharHistorico(){
       t2.textContent = v.entregas + ' entregas · ' + v.km.toFixed(0) + ' km · ' + horaTexto(v.minutos) +
                        ' · ' + horaTexto(v.minutos/v.entregas) + ' por entrega';
       box.appendChild(t1); box.appendChild(t2);
-      li.appendChild(pos); li.appendChild(box);
+
+      var bt = document.createElement('div'); bt.className='bt';
+      var bx = document.createElement('button');
+      bx.className='claro'; bx.textContent='Apagar';
+      bx.onclick = function(){
+        if(!confirm('Apagar a viagem de ' + dataTexto(v.data) + '?')) return;
+        var k = viagens.indexOf(v);
+        if(k > -1) viagens.splice(k,1);
+        salvarViagens(); desenhar();
+      };
+      bt.appendChild(bx);
+
+      li.appendChild(pos); li.appendChild(box); li.appendChild(bt);
       ul.appendChild(li);
     })(viagens[i], i+1);
   }
@@ -892,7 +907,7 @@ function desenharPrevisoes(){
 function desenharCadastro(){
   var ul = document.getElementById('lista1');
   ul.innerHTML = '';
-  var i;
+  var i, ordemN = 0;
   for(i=0;i<paradas.length;i++){
     (function(p){
       var li = document.createElement('li');
@@ -901,7 +916,10 @@ function desenharCadastro(){
 
       var pos = document.createElement('div');
       pos.className = 'pos';
-      pos.innerHTML = p.feita ? '&#10003;' : (p.ir ? '&#9679;' : '&mdash;');
+      if(p.feita) pos.innerHTML = '&#10003;';
+      else if(!p.ir) pos.innerHTML = '&mdash;';
+      else if(sequenciaPronta){ ordemN++; pos.innerHTML = ordemN + '&ordf;'; }
+      else pos.innerHTML = '&#9679;';
 
       var box = document.createElement('div');
       box.className = 'txt';
@@ -909,6 +927,9 @@ function desenharCadastro(){
       var s = document.createElement('div'); s.className = 'sub';
       if(p.feita) s.textContent = 'entregue';
       else if(!p.ir) s.textContent = 'fora desta rota';
+      else if(sequenciaPronta && p.km != null)
+        s.textContent = (ordemN === 1 ? p.km.toFixed(1) + ' km de onde você está'
+                                      : p.km.toFixed(1) + ' km da anterior');
       else if(p.lat != null) s.textContent = 'localizada, pronta para a rota';
       else if(p.status === 'buscando') s.textContent = 'procurando no mapa...';
       else s.textContent = 'endereço não encontrado — toque em Buscar';
@@ -920,7 +941,7 @@ function desenharCadastro(){
         var bIr = document.createElement('button');
         bIr.className = p.ir ? 'ir on' : 'ir';
         bIr.textContent = 'Ir';
-        bIr.onclick = function(){ p.ir = !p.ir; p.km = null; salvar(); desenhar(); };
+        bIr.onclick = function(){ p.ir = !p.ir; p.km = null; sequenciaPronta = false; salvar(); desenhar(); };
         bt.appendChild(bIr);
       }
       if(!p.feita && p.lat == null && p.status !== 'buscando'){
@@ -1067,6 +1088,21 @@ document.getElementById('add').onclick = function(){
 };
 document.getElementById('cx').onkeydown = function(e){
   if(e.keyCode === 13) document.getElementById('add').onclick();
+};
+document.getElementById('btatualizar').onclick = function(){
+  var tem = false, i;
+  for(i=0;i<paradas.length;i++){
+    if(paradas[i].ir && !paradas[i].feita && paradas[i].lat != null){ tem = true; break; }
+  }
+  if(!tem){ msg('Nenhuma entrega marcada com localização para ordenar.'); return; }
+  msg('Buscando sua posição para montar a sequência...');
+  comGps(function(pos){
+    ordenarDe(pos);
+    sequenciaPronta = true;
+    msg('');
+    desenhar();
+    window.scrollTo(0,0);
+  });
 };
 document.getElementById('btiniciar').onclick = iniciarRota;
 function pintarAuto(){
