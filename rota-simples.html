@@ -183,14 +183,32 @@ a.mapa{font-size:13px;color:var(--acento2);text-decoration:none;border:1px solid
     </div>
     <p class="dica" id="dica">Digite o endereço completo com a cidade. O app procura no mapa sozinho.</p>
 
+    <button id="btHist" class="pill" style="margin-bottom:14px"></button>
     <div id="casa"></div>
     <div id="prev1"></div>
     <ul id="lista1"></ul>
-    <p class="rodapetxt">versão 11 · terminar perto de casa</p>
+    <p class="rodapetxt">versão 12 · histórico de viagens</p>
   </main>
   <div class="rodape">
     <button id="btiniciar">Iniciar rota</button>
     <button id="btlimpa" class="claro" style="flex:0 0 84px">Limpar</button>
+  </div>
+</div>
+
+<!-- ======== TELA 3: HISTÓRICO ======== -->
+<div id="tela3" style="display:none">
+  <header>
+    <h1>Histórico de viagens</h1>
+    <div class="num" id="num3">0</div>
+    <div class="leg" id="leg3"></div>
+  </header>
+  <main>
+    <div id="resumo3"></div>
+    <ul id="lista3"></ul>
+  </main>
+  <div class="rodape">
+    <button id="btvoltar3" class="claro" style="padding:14px">Voltar</button>
+    <button id="btlimpahist" class="claro" style="flex:0 0 110px;padding:14px">Apagar tudo</button>
   </div>
 </div>
 
@@ -289,6 +307,62 @@ function adicionar(txt){
   msg(''); salvar(); desenhar();
 }
 
+/* ---------- histórico de viagens finalizadas ---------- */
+var viagens = [];          /* cada viagem fechada */
+var viagemInicio = null;   /* quando a viagem atual começou */
+var viagemKmReta = 0;      /* km em linha reta já percorridos nesta viagem */
+var viagemEntregas = 0;
+
+try{
+  var vg = JSON.parse(localStorage.getItem('viagens'));
+  if(vg){ viagens = vg.lista || []; viagemInicio = vg.inicio || null;
+          viagemKmReta = vg.km || 0; viagemEntregas = vg.entregas || 0; }
+}catch(e){}
+
+function salvarViagens(){
+  try{ localStorage.setItem('viagens', JSON.stringify(
+    {lista:viagens, inicio:viagemInicio, km:viagemKmReta, entregas:viagemEntregas})); }catch(e){}
+}
+
+function finalizarViagem(){
+  if(viagemEntregas === 0){
+    alert('Nenhuma entrega feita nesta viagem ainda.');
+    return;
+  }
+  var minutos = viagemInicio ? (Date.now() - viagemInicio)/60000 : 0;
+  viagens.push({
+    data: Date.now(),
+    entregas: viagemEntregas,
+    km: viagemKmReta * (1 + ajustes.estrada/100),
+    minutos: minutos
+  });
+  /* tira da lista o que já foi entregue */
+  var restam = [], i;
+  for(i=0;i<paradas.length;i++){ if(!paradas[i].feita) restam.push(paradas[i]); }
+  paradas = restam;
+  viagemInicio = null; viagemKmReta = 0; viagemEntregas = 0;
+  medida = null; kmRota = 0;
+  salvarViagens(); salvar();
+  irParaTela(3);
+}
+
+function totaisViagens(){
+  var t = {n:viagens.length, entregas:0, km:0, minutos:0}, i;
+  for(i=0;i<viagens.length;i++){
+    t.entregas += viagens[i].entregas;
+    t.km += viagens[i].km;
+    t.minutos += viagens[i].minutos;
+  }
+  return t;
+}
+
+function dataTexto(ms){
+  var d = new Date(ms);
+  var p2 = function(x){ return (x<10?'0':'') + x; };
+  return p2(d.getDate()) + '/' + p2(d.getMonth()+1) + '/' + d.getFullYear() +
+         ' às ' + p2(d.getHours()) + ':' + p2(d.getMinutes());
+}
+
 /* ---------- histórico do seu tempo real por entrega ---------- */
 var historico = [];      /* minutos de cada entrega, só o tempo parado */
 var horaAnterior = null; /* quando você saiu da parada anterior */
@@ -341,8 +415,15 @@ function registrarTempo(p){
 }
 
 /* ---------- medição real pelas estradas (OSRM) ---------- */
-var usarEstrada = false;
-try{ usarEstrada = localStorage.getItem('usar_estrada') === 'sim'; }catch(e){}
+var usarEstrada = true;   /* sempre tenta medir na estrada; se falhar, usa o que aprendeu */
+var aprendizado = { fatores:[], velocidades:[] };
+try{
+  var ap = JSON.parse(localStorage.getItem('aprendizado'));
+  if(ap){ aprendizado.fatores = ap.fatores || []; aprendizado.velocidades = ap.velocidades || []; }
+}catch(e){}
+function salvarAprendizado(){
+  try{ localStorage.setItem('aprendizado', JSON.stringify(aprendizado)); }catch(e){}
+}
 var medida = null;        /* {km, min, n} vindo do mapa real */
 var medindo = false;
 var ultimoPonto = null;   /* de onde a rota foi calculada */
@@ -376,12 +457,36 @@ function medirEstrada(){
         medida = { km: r.routes[0].distance/1000,
                    min: r.routes[0].duration/60,
                    n: pts.length };
+        aprenderComEstrada(medida, pts);
       } else { medida = null; }
     }catch(e){ medida = null; }
     desenhar();
   };
   x.ontimeout = x.onerror = function(){ medindo = false; medida = null; desenhar(); };
   x.send();
+}
+
+/* aprende sozinho: quanto a estrada é mais longa que a linha reta, e a que velocidade se roda */
+function aprenderComEstrada(m, pts){
+  var kmReta = custoTotal(ultimoPonto, pts);
+  if(kmReta > 1){
+    var f = m.km / kmReta;
+    if(f > 1 && f < 2.5){
+      aprendizado.fatores.push(f);
+      if(aprendizado.fatores.length > 60) aprendizado.fatores.shift();
+    }
+  }
+  if(m.min > 1){
+    var v = m.km / (m.min/60);
+    if(v > 15 && v < 110){
+      aprendizado.velocidades.push(v);
+      if(aprendizado.velocidades.length > 60) aprendizado.velocidades.shift();
+    }
+  }
+  var mf = mediana(aprendizado.fatores), mv = mediana(aprendizado.velocidades);
+  if(mf) ajustes.estrada = Math.round((mf-1)*100);
+  if(mv) ajustes.vel = Math.round(mv);
+  salvarAjustes(); salvarAprendizado();
 }
 
 /* ---------- previsão de tempo e distância ---------- */
@@ -413,7 +518,7 @@ function montarPrevisao(elId, kmReta, qtd, titulo){
   if(!el) return;
   if(qtd === 0){ el.innerHTML = ''; return; }
 
-  var real = (usarEstrada && medida && medida.n === qtd);
+  var real = (medida && medida.n === qtd);
   var c;
   if(real){
     c = { km: medida.km, dirigindo: medida.min, parado: qtd * ajustes.minEntrega,
@@ -421,8 +526,13 @@ function montarPrevisao(elId, kmReta, qtd, titulo){
   } else {
     c = calcularPrevisao(kmReta, qtd);
   }
-  var fim = new Date(Date.now() + c.total*60000);
-  var hh = (fim.getHours()<10?'0':'') + fim.getHours() + ':' + (fim.getMinutes()<10?'0':'') + fim.getMinutes();
+
+  var f = new Date(Date.now() + c.total*60000);
+  var hh = (f.getHours()<10?'0':'') + f.getHours() + ':' + (f.getMinutes()<10?'0':'') + f.getMinutes();
+
+  var origemTempo = (historico.length >= 3)
+    ? 'sua média de ' + historico.length + ' entregas'
+    : 'estimativa inicial, o app ainda está aprendendo a sua';
 
   el.innerHTML =
     '<div class="prev">' +
@@ -433,81 +543,14 @@ function montarPrevisao(elId, kmReta, qtd, titulo){
         '<div class="cel"><div class="v">' + qtd + '</div><div class="r">entregas</div></div>' +
       '</div>' +
       '<div class="quebra">' +
-        (real
-          ? horaTexto(c.dirigindo) + ' dirigindo, <b>medido nas estradas reais</b> · '
-          : horaTexto(c.dirigindo) + ' dirigindo a ' + ajustes.vel + ' km/h (estimado) · ') +
-        horaTexto(c.parado) + ' parado (' + ajustes.minEntrega + ' min por entrega, ' +
-          (mediaManual ? 'valor que você digitou'
-                       : (historico.length >= 3
-                            ? '<b>sua média real de ' + historico.length + ' entregas</b>'
-                            : 'padrão, faltam ' + (3-historico.length) + ' entregas para calcular a sua')) + ')<br>' +
-        'Começando agora, termina por volta das <b>' + hh + '</b>' +
+        (medindo ? 'Consultando as estradas...' :
+          (real ? horaTexto(c.dirigindo) + ' dirigindo, medido nas estradas reais'
+                : horaTexto(c.dirigindo) + ' dirigindo a ' + ajustes.vel + ' km/h, sem sinal para medir')) +
+        ' · ' + horaTexto(c.parado) + ' parado<br>' +
+        ajustes.minEntrega + ' min por entrega (' + origemTempo + ')<br>' +
+        'Termina por volta das <b>' + hh + '</b>' +
       '</div>' +
-      '<button class="btAj" id="btEs' + elId + '" style="margin-bottom:8px">' +
-        (medindo ? 'CONSULTANDO O MAPA...'
-                 : (usarEstrada ? (real ? '&#10003; MEDIDO PELA ESTRADA \u2014 TOQUE PARA VOLTAR À ESTIMATIVA'
-                                        : 'MEDIR DE NOVO PELA ESTRADA')
-                                : 'MEDIR PELA ESTRADA REAL')) +
-      '</button>' +
-      '<div class="ajustes' + (ajustesAbertos ? ' on' : '') + '">' +
-        '<div class="linhaAj"><label>Minutos por entrega</label><input type="number" inputmode="numeric" id="ajMin" value="' + ajustes.minEntrega + '"></div>' +
-        '<div class="linhaAj"><label>Velocidade média (km/h)</label><input type="number" inputmode="numeric" id="ajVel" value="' + ajustes.vel + '"></div>' +
-        '<div class="linhaAj"><label>Acréscimo de estrada (%)</label><input type="number" inputmode="numeric" id="ajEst" value="' + ajustes.estrada + '"></div>' +
-        '<div class="quebra" style="margin-top:10px">' +
-          (historico.length
-            ? 'Histórico: ' + historico.length + ' entregas cronometradas · mais rápida ' +
-              Math.min.apply(null,historico).toFixed(1) + ' min · mais lenta ' +
-              Math.max.apply(null,historico).toFixed(1) + ' min'
-            : 'Ainda sem histórico. O app cronometra sozinho a cada Entreguei.') +
-        '</div>' +
-        '<button class="btAj" id="btHi' + elId + '" style="margin-top:10px">' +
-          (mediaManual ? 'VOLTAR A CALCULAR SOZINHO' : 'ZERAR HISTÓRICO') + '</button>' +
-      '</div>' +
-      '<button class="btAj" id="btAj' + elId + '">' + (ajustesAbertos ? 'FECHAR AJUSTES' : 'AJUSTAR MÉDIAS') + '</button>' +
     '</div>';
-
-  document.getElementById('btAj' + elId).onclick = function(){
-    ajustesAbertos = !ajustesAbertos;
-    desenhar();
-  };
-  document.getElementById('btEs' + elId).onclick = function(){
-    if(medindo) return;
-    if(usarEstrada && medida){ usarEstrada = false; medida = null; }
-    else { usarEstrada = true; }
-    try{ localStorage.setItem('usar_estrada', usarEstrada ? 'sim' : 'nao'); }catch(e){}
-    if(usarEstrada){
-      if(!ultimoPonto){
-        comGps(function(pos){ ultimoPonto = pos; medirEstrada(); });
-      } else { medirEstrada(); }
-    } else { desenhar(); }
-  };
-  if(ajustesAbertos){
-    var liga = function(id, campo){
-      var i = document.getElementById(id);
-      if(!i) return;
-      i.onchange = i.oninput = function(){
-        var v = parseFloat(i.value);
-        if(!isNaN(v) && v >= 0){
-          ajustes[campo] = v;
-          if(campo === 'minEntrega'){ mediaManual = true; salvarHistorico(); }
-          salvarAjustes();
-        }
-      };
-      i.onblur = function(){ desenhar(); };
-    };
-    liga('ajMin','minEntrega'); liga('ajVel','vel'); liga('ajEst','estrada');
-
-    document.getElementById('btHi' + elId).onclick = function(){
-      if(mediaManual){
-        mediaManual = false;
-        if(historico.length >= 3){ ajustes.minEntrega = Math.round(mediana(historico)*10)/10; salvarAjustes(); }
-      } else {
-        if(!confirm('Apagar as ' + historico.length + ' entregas cronometradas?')) return;
-        historico = [];
-      }
-      salvarHistorico(); desenhar();
-    };
-  }
 }
 
 /* ---------- link de navegação ---------- */
@@ -665,7 +708,8 @@ function iniciarRota(){
   comGps(function(pos){
     ordenarDe(pos);
     horaAnterior = Date.now();   /* começa a cronometrar a partir daqui */
-    salvarHistorico();
+    if(!viagemInicio){ viagemInicio = Date.now(); viagemKmReta = 0; viagemEntregas = 0; }
+    salvarHistorico(); salvarViagens();
     irParaTela(2);
     var p0 = primeiraDaFila();
     if(janela && p0){ janela.location.href = urlMapa(p0, pos); }
@@ -679,6 +723,7 @@ function iniciarRota(){
 function irParaTela(n){
   document.getElementById('tela1').style.display = n === 1 ? 'block' : 'none';
   document.getElementById('tela2').style.display = n === 2 ? 'block' : 'none';
+  document.getElementById('tela3').style.display = n === 3 ? 'block' : 'none';
   window.scrollTo(0,0);
   desenhar();
 }
@@ -694,6 +739,9 @@ function primeiraDaFila(){
 
 function entregar(p){
   registrarTempo(p);
+  viagemKmReta += (p.km || 0);
+  viagemEntregas++;
+  salvarViagens();
   var deOnde = (p.lat != null) ? {lat:p.lat, lng:p.lng} : null;
   p.feita = true;
   p.km = null;
@@ -726,10 +774,61 @@ function desenhar(){
     'Iniciar rota' + (marcadas ? ' (' + marcadas + ')' : '');
 
   pintarAuto();
+  desenharHistorico();
   desenharCasa();
   desenharCadastro();
   desenharRota();
   desenharPrevisoes();
+}
+
+/* tela do histórico */
+function desenharHistorico(){
+  var t = totaisViagens();
+  document.getElementById('num3').innerHTML = t.n + '<small> viagens</small>';
+  document.getElementById('leg3').innerHTML =
+    '<b>' + t.entregas + '</b> entregas · ' + t.km.toFixed(0) + ' km · ' + horaTexto(t.minutos);
+
+  var bt = document.getElementById('btHist');
+  if(bt) bt.textContent = t.n ? 'VER HISTÓRICO — ' + t.n + ' VIAGENS, ' + t.entregas + ' ENTREGAS'
+                              : 'VER HISTÓRICO DE VIAGENS';
+
+  var r = document.getElementById('resumo3');
+  if(t.n === 0){
+    r.innerHTML = '<div class="prev"><div class="rot">Ainda vazio</div>' +
+      '<div class="quebra">Quando você finalizar uma viagem na tela de rota, ela entra aqui e ' +
+      'os totais vão somando.</div></div>';
+  } else {
+    r.innerHTML =
+      '<div class="prev"><div class="rot">Totais acumulados</div>' +
+        '<div class="grade">' +
+          '<div class="cel"><div class="v">' + t.entregas + '</div><div class="r">entregas</div></div>' +
+          '<div class="cel"><div class="v">' + t.km.toFixed(0) + '</div><div class="r">km rodados</div></div>' +
+          '<div class="cel"><div class="v">' + horaTexto(t.minutos) + '</div><div class="r">tempo total</div></div>' +
+        '</div>' +
+        '<div class="quebra">Média por viagem: ' + (t.entregas/t.n).toFixed(1) + ' entregas · ' +
+          (t.km/t.n).toFixed(0) + ' km · ' + horaTexto(t.minutos/t.n) + '<br>' +
+          'Média por entrega: ' + (t.km/t.entregas).toFixed(1) + ' km · ' +
+          horaTexto(t.minutos/t.entregas) + '</div>' +
+      '</div>';
+  }
+
+  var ul = document.getElementById('lista3');
+  ul.innerHTML = '';
+  var i;
+  for(i=viagens.length-1;i>=0;i--){
+    (function(v, n){
+      var li = document.createElement('li');
+      var pos = document.createElement('div'); pos.className='pos'; pos.textContent = n;
+      var box = document.createElement('div'); box.className='txt';
+      var t1 = document.createElement('div'); t1.textContent = dataTexto(v.data);
+      var t2 = document.createElement('div'); t2.className='sub';
+      t2.textContent = v.entregas + ' entregas · ' + v.km.toFixed(0) + ' km · ' + horaTexto(v.minutos) +
+                       ' · ' + horaTexto(v.minutos/v.entregas) + ' por entrega';
+      box.appendChild(t1); box.appendChild(t2);
+      li.appendChild(pos); li.appendChild(box);
+      ul.appendChild(li);
+    })(viagens[i], i+1);
+  }
 }
 
 /* bloco da cidade de término */
@@ -866,6 +965,11 @@ function desenharRota(){
     f.className = 'fim';
     f.textContent = 'Rota concluída. Todas as entregas marcadas foram feitas.';
     bloco.appendChild(f);
+    var bf = document.createElement('button');
+    bf.style.width = '100%'; bf.style.marginTop = '12px';
+    bf.textContent = 'FINALIZAR VIAGEM E SALVAR NO HISTÓRICO';
+    bf.onclick = finalizarViagem;
+    bloco.appendChild(bf);
     return;
   }
 
@@ -909,6 +1013,14 @@ function desenharRota(){
     })(fila2[i], i+1);
   }
 
+  /* encerrar antes de terminar tudo */
+  var be = document.createElement('button');
+  be.className = 'pill'; be.style.marginTop = '14px';
+  be.textContent = 'ENCERRAR VIAGEM AGORA (' + viagemEntregas + ' ENTREGUES)';
+  be.onclick = function(){
+    if(confirm('Encerrar a viagem e salvar no histórico? As entregas não feitas continuam na lista.')) finalizarViagem();
+  };
+
   /* linha final: chegada em casa */
   if(marcaFim){
     var ult = fila2[fila2.length-1];
@@ -926,6 +1038,7 @@ function desenharRota(){
     lf.appendChild(pf); lf.appendChild(bf);
     ul.appendChild(lf);
   }
+  ul.parentNode.appendChild(be);
 }
 
 /* ---------- modos ---------- */
@@ -967,6 +1080,13 @@ document.getElementById('btauto').onclick = function(){
   pintarAuto();
 };
 document.getElementById('btvoltar').onclick = function(){ irParaTela(1); };
+document.getElementById('btHist').onclick = function(){ irParaTela(3); };
+document.getElementById('btvoltar3').onclick = function(){ irParaTela(1); };
+document.getElementById('btlimpahist').onclick = function(){
+  if(confirm('Apagar todo o histórico de viagens? Isso não apaga o aprendizado do tempo por entrega.')){
+    viagens = []; salvarViagens(); desenhar();
+  }
+};
 document.getElementById('btrefazer').onclick = function(){
   comGps(function(pos){ ordenarDe(pos); desenhar(); window.scrollTo(0,0); });
 };
