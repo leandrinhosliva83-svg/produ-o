@@ -22,6 +22,17 @@
     font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     padding:24px;
   }
+  .cab{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap}
+  .cabDir{display:flex; align-items:center; gap:12px}
+  .carimbo{font-size:11px; color:var(--apagado)}
+  .adm{
+    background:#0b1512; border:1px solid #1f3a2e; border-left:3px solid var(--verde);
+    border-radius:10px; padding:16px 18px; margin-bottom:20px;
+  }
+  .adm.oculto{display:none}
+  .admTit{font-size:12px; color:var(--verde); text-transform:uppercase; letter-spacing:.8px; margin-bottom:12px}
+  .dica{font-size:12px; color:var(--apagado); margin-top:12px; line-height:1.6}
+  .dica b{color:var(--texto)}
   h1{font-size:20px; margin:0 0 4px; letter-spacing:.5px}
   .sub{color:var(--apagado); font-size:13px; margin-bottom:20px}
 
@@ -136,20 +147,40 @@
 </head>
 <body>
 
-<h1>Painel de Caminhões</h1>
-<div class="sub">Relatório CCT0002 — Caminhões e Dias Trabalhados</div>
-
-<input type="file" id="arquivo" accept="application/pdf" multiple hidden>
-<div class="drop" id="drop">
-  <span id="dropTexto">Solte os PDFs aqui ou clique para escolher (pode mandar COPLASA e CEMMA juntos)</span>
+<div class="cab">
+  <div>
+    <h1>Painel de Caminhões</h1>
+    <div class="sub">Relatório CCT0002 — Caminhões e Dias Trabalhados</div>
+  </div>
+  <div class="cabDir">
+    <span id="carimbo" class="carimbo"></span>
+    <button id="btnAdm">Modo ADM</button>
+  </div>
 </div>
-<div id="status"></div>
+
+<div id="areaAdm" class="adm oculto">
+  <div class="admTit">Área do administrador — só você alimenta os dados aqui</div>
+  <input type="file" id="arquivo" accept="application/pdf" multiple hidden>
+  <div class="drop" id="drop">
+    <span id="dropTexto">Solte os PDFs aqui ou clique para escolher (pode mandar COPLASA e CEMMA juntos)</span>
+  </div>
+  <div id="status"></div>
+  <div class="barra" style="margin-bottom:0">
+    <div class="campo">
+      <label>Código do proprietário</label>
+      <input id="prop" value="404899">
+    </div>
+    <button id="btnGerar">Gerar dados.json</button>
+    <button id="limpar">Limpar dados</button>
+  </div>
+  <div class="dica">
+    Depois de conferir os números, clique em <b>Gerar dados.json</b>, e suba esse arquivo no
+    repositório do GitHub (Adicionar arquivo → Carregar arquivos). Quem abrir o link vai
+    enxergar esses dados automaticamente, sem precisar do PDF.
+  </div>
+</div>
 
 <div class="barra">
-  <div class="campo">
-    <label>Código do proprietário</label>
-    <input id="prop" value="404899">
-  </div>
   <div class="campo">
     <label>Buscar caminhão</label>
     <input id="busca" placeholder="ex: 929250">
@@ -166,7 +197,6 @@
       <option value="abaixo">Abaixo da meta</option>
     </select>
   </div>
-  <button id="limpar">Limpar dados</button>
 </div>
 
 <div class="cards" id="cards"></div>
@@ -178,6 +208,10 @@
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc =
   "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+// ---------- configuração ----------
+const SENHA_ADM = "adm2026";     // troque aqui a senha do administrador
+const ARQUIVO_DADOS = "dados.json";
 
 // ---------- estado ----------
 let dados = { COPLASA: [], CEMMA: [] };
@@ -612,7 +646,7 @@ function render() {
   const cards = document.getElementById("cards");
 
   if (!dados.COPLASA.length && !dados.CEMMA.length) {
-    saida.innerHTML = '<div class="vazio">Nenhum PDF carregado ainda.</div>';
+    saida.innerHTML = '<div class="vazio">Nenhum dado publicado ainda. O administrador precisa gerar e subir o arquivo dados.json.</div>';
     cards.innerHTML = "";
     document.getElementById("bases").innerHTML = "";
     document.getElementById("abas").innerHTML = "";
@@ -719,6 +753,54 @@ async function carregar(files) {
     : "Solte os PDFs aqui ou clique para escolher";
   reprocessar();
 }
+
+// ---------- modo administrador ----------
+document.getElementById("btnAdm").onclick = () => {
+  const area = document.getElementById("areaAdm");
+  if (!area.classList.contains("oculto")) { area.classList.add("oculto"); return; }
+  const senha = prompt("Senha do administrador:");
+  if (senha === null) return;
+  if (senha !== SENHA_ADM) { alert("Senha incorreta."); return; }
+  area.classList.remove("oculto");
+};
+
+// ---------- gerar o arquivo de dados ----------
+document.getElementById("btnGerar").onclick = () => {
+  if (!dados.COPLASA.length && !dados.CEMMA.length) {
+    alert("Carregue os PDFs antes de gerar o arquivo.");
+    return;
+  }
+  const pacote = {
+    geradoEm: new Date().toISOString(),
+    proprietario: document.getElementById("prop").value.trim(),
+    meta: parseFloat(document.getElementById("meta").value) || 0,
+    COPLASA: dados.COPLASA,
+    CEMMA: dados.CEMMA
+  };
+  const blob = new Blob([JSON.stringify(pacote, null, 1)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = ARQUIVO_DADOS;
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+// ---------- carga automática dos dados publicados ----------
+async function carregarPublicado() {
+  try {
+    const r = await fetch(ARQUIVO_DADOS + "?v=" + Date.now());
+    if (!r.ok) return;
+    const j = await r.json();
+    dados = { COPLASA: j.COPLASA || [], CEMMA: j.CEMMA || [] };
+    if (j.proprietario) document.getElementById("prop").value = j.proprietario;
+    if (j.meta) document.getElementById("meta").value = j.meta;
+    const d = j.geradoEm ? new Date(j.geradoEm) : null;
+    document.getElementById("carimbo").textContent =
+      d ? "Dados de " + d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR").slice(0, 5) : "";
+    render();
+  } catch (e) { /* sem dados.json publicado ainda */ }
+}
+carregarPublicado();
 
 ["busca", "meta", "filtroMeta"].forEach(id =>
   document.getElementById(id).addEventListener("input", render));
