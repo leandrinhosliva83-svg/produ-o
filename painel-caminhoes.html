@@ -137,12 +137,40 @@
   .resumo .r{font-size:10px; color:var(--apagado); text-transform:uppercase; letter-spacing:.6px}
   .resumo .v{font-size:16px; font-weight:600; margin-top:2px}
   .painel svg{width:100%; height:auto; display:block; margin-top:14px}
+  .svgWrap{overflow-x:auto; -webkit-overflow-scrolling:touch}
   .barra-anim{transform-origin:center bottom; animation:subir .55s cubic-bezier(.2,.8,.3,1) both}
   @keyframes subir{from{transform:scaleY(0)}to{transform:scaleY(1)}}
   @media (prefers-reduced-motion:reduce){.barra-anim{animation:none}}
   .legenda{display:flex; gap:18px; font-size:12px; color:var(--apagado); margin-top:10px; flex-wrap:wrap}
   .bolinha{display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px}
   button.ativo{border-color:var(--verde); color:var(--verde)}
+
+  .rolagem{overflow-x:auto; -webkit-overflow-scrolling:touch}
+  .rolagem table{min-width:560px}
+
+  @media (max-width:640px){
+    body{padding:14px}
+    h1{font-size:17px}
+    .cab{flex-direction:column; gap:8px}
+    .cabDir{width:100%; justify-content:space-between}
+    .barra{gap:8px}
+    .campo{flex:1 1 46%}
+    input,select{min-width:0; width:100%; font-size:16px}
+    .cards{gap:8px}
+    .card{flex:1 1 46%; min-width:0; padding:10px 12px}
+    .card .val{font-size:17px}
+    .base,.aba{flex:1 1 auto; justify-content:center; padding:9px 12px; font-size:12px}
+    .tipos{width:100%}
+    .tipo{flex:1 1 auto; text-align:center}
+    .painel{padding:14px 12px 12px; border-radius:10px}
+    .painel .topo{flex-direction:column}
+    .resumo{width:100%; justify-content:space-between; gap:10px}
+    .resumo div{text-align:left}
+    .resumo .v{font-size:14px}
+    .painel h3{font-size:16px}
+    th,td{padding:7px 8px; font-size:12px}
+    .arq{flex-wrap:wrap}
+  }
 </style>
 </head>
 <body>
@@ -382,7 +410,7 @@ function tabela(titulo, lista) {
     </tr>`;
 
   return `<div class="bloco"><h2>${titulo}</h2>
-    <table><thead><tr>${th}</tr></thead><tbody>${tr}${trTotal}</tbody></table></div>`;
+    <div class="rolagem"><table><thead><tr>${th}</tr></thead><tbody>${tr}${trTotal}</tbody></table></div></div>`;
 }
 
 // ---------- gráficos (um botão por indicador) ----------
