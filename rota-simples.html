@@ -86,6 +86,16 @@ button.ir.on{background:var(--ok);border-color:var(--ok);color:#04140D}
 .aba.on{background:linear-gradient(135deg,var(--acento),#FF9040);color:#0A0A0A;font-weight:800}
 
 /* campo */
+.entrada{position:relative;background:var(--painel);border:1px solid var(--acento2);
+  border-radius:14px;padding:16px 15px 14px;margin-bottom:18px;overflow:hidden;
+  box-shadow:var(--sombra)}
+.entrada::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--acento2)}
+.entrada .rot{font-size:11px;color:var(--acento2);font-weight:800;text-transform:uppercase;
+  letter-spacing:.18em;margin-bottom:12px}
+.entrada .dica{margin-bottom:0}
+.entrada .campo{margin-bottom:9px}
+.entrada input{border-color:var(--acento2);background:var(--fundo)}
+.entrada #add{background:var(--acento2);color:#04121A;border-color:var(--acento2)}
 .campo{display:flex;gap:8px;margin-bottom:8px}
 .campo input{flex:1;min-width:0;padding:14px;font-size:16px;border:1px solid var(--linha);
   border-radius:10px;background:var(--painel);color:var(--texto)}
@@ -177,8 +187,12 @@ li.falhou .sub{color:var(--perigo);font-weight:700;animation:alertaTexto 1.3s in
   border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.5);font-family:inherit}
 .bolinha.eu{background:var(--acento2);color:#04121A}
 .bolinha.casa2{background:var(--ok);color:#04140D}
-.casa{background:var(--painel);border:1px solid var(--linha);border-radius:12px;
-  padding:13px 14px;margin-bottom:14px;box-shadow:var(--sombra)}
+.casa{position:relative;background:var(--painel);border:1px solid var(--acento);
+  border-radius:14px;padding:16px 15px 14px;margin-bottom:16px;overflow:hidden;
+  box-shadow:var(--sombra)}
+.casa::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--acento)}
+.casa input{border-color:var(--acento);background:var(--fundo)}
+.casa #btCasa{background:var(--acento);color:#0A0A0A;border-color:var(--acento)}
 .casa .rot{font-size:11px;color:var(--acento);font-weight:800;text-transform:uppercase;
   letter-spacing:.18em;margin-bottom:9px}
 .casa .atual{display:flex;align-items:center;gap:10px}
@@ -231,24 +245,27 @@ li.falhou .sub{color:var(--perigo);font-weight:700;animation:alertaTexto 1.3s in
   <main>
     <div class="msg" id="msg" style="display:none"></div>
 
-    <div class="abas">
-      <button id="abaEnd" class="aba on">Por endereço</button>
-      <button id="abaCoo" class="aba">Por coordenadas</button>
+    <div class="entrada">
+      <div class="rot">&#43; Adicionar entrega</div>
+      <div class="abas">
+        <button id="abaEnd" class="aba on">Por endereço</button>
+        <button id="abaCoo" class="aba">Por coordenadas</button>
+      </div>
+      <div class="campo">
+        <input id="cx" placeholder="Rua, número, bairro, cidade">
+        <button id="add">Adicionar</button>
+      </div>
+      <p class="dica" id="dica">Digite o endereço completo com a cidade. O app procura no mapa sozinho.</p>
     </div>
-    <div class="campo">
-      <input id="cx" placeholder="Rua, número, bairro, cidade">
-      <button id="add">Adicionar</button>
-    </div>
-    <p class="dica" id="dica">Digite o endereço completo com a cidade. O app procura no mapa sozinho.</p>
 
     <button id="btHist" class="pill" style="margin-bottom:14px"></button>
-    <div id="casa"></div>
     <div id="prev1"></div>
+    <div id="casa"></div>
     <div id="falhas"></div>
     <div id="carga"></div>
     <div id="mapa"></div>
     <ul id="lista1"></ul>
-    <p class="rodapetxt">versão 19 · alerta de endereço não achado</p>
+    <p class="rodapetxt">versão 20 · campos separados por cor</p>
   </main>
   <div class="rodape">
     <button id="btatualizar" class="claro" style="padding:14px">Organizar rota</button>
