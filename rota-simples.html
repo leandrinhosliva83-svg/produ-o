@@ -230,7 +230,7 @@ a.mapa{font-size:13px;color:var(--acento2);text-decoration:none;border:1px solid
     <div id="carga"></div>
     <div id="mapa"></div>
     <ul id="lista1"></ul>
-    <p class="rodapetxt">versão 17 · ordem de carregamento</p>
+    <p class="rodapetxt">versão 18 · CEP e ponto travado</p>
   </main>
   <div class="rodape">
     <button id="btatualizar" class="claro" style="padding:14px">Organizar rota</button>
@@ -315,6 +315,43 @@ function dist(a,b){
   return 2*R*Math.asin(Math.sqrt(s));
 }
 
+/* ---------- CEP ---------- */
+function ehCep(txt){
+  return /^\s*\d{5}-?\d{3}\s*$/.test(String(txt));
+}
+/* CEP -> endereço (ViaCEP) -> coordenada (Nominatim) */
+function buscarCep(p){
+  var cep = String(p.texto).replace(/\D/g,'');
+  var x = new XMLHttpRequest();
+  x.open('GET','https://viacep.com.br/ws/' + cep + '/json/', true);
+  x.timeout = 15000;
+  x.onreadystatechange = function(){
+    if(x.readyState !== 4) return;
+    var achou = false;
+    try{
+      var r = JSON.parse(x.responseText);
+      if(r && !r.erro && r.localidade){
+        var partes = [];
+        if(r.logradouro) partes.push(r.logradouro);
+        if(r.bairro) partes.push(r.bairro);
+        partes.push(r.localidade); partes.push(r.uf); partes.push('Brasil');
+        p.texto = partes.join(', ');
+        p.cep = cep;
+        achou = true;
+      }
+    }catch(e){}
+    if(achou){ buscarCoord(p); }
+    else { p.status = 'nao_achou'; salvar(); desenhar(); }
+  };
+  x.ontimeout = x.onerror = function(){ p.status='erro'; salvar(); desenhar(); };
+  x.send();
+}
+/* decide sozinho: coordenada, CEP ou endereço escrito */
+function resolverLocal(p){
+  if(p.lat != null) return;
+  if(ehCep(p.texto)) buscarCep(p); else buscarCoord(p);
+}
+
 /* ---------- procurar endereço no mapa ---------- */
 function buscarCoord(p){ fila.push(p); proximaBusca(); }
 function proximaBusca(){
@@ -349,7 +386,7 @@ function adicionar(txt){
   sequenciaPronta = false;
   paradas.push({ texto:txt, lat:c?c.lat:null, lng:c?c.lng:null,
                  feita:false, ir:true, km:null, status:c?'ok':'buscando' });
-  if(!c) buscarCoord(paradas[paradas.length-1]);
+  if(!c) resolverLocal(paradas[paradas.length-1]);
   msg(''); salvar(); desenhar();
 }
 
@@ -1018,14 +1055,27 @@ function desenharHistorico(){
   }
 }
 
+/* guarda o ponto atual como fim da rota e trava */
+function travarAqui(pos){
+  destinoFinal = {
+    texto: 'Minha localização (' + pos.lat.toFixed(5) + ', ' + pos.lng.toFixed(5) + ')',
+    lat: pos.lat, lng: pos.lng, status: 'ok', travado: true
+  };
+  sequenciaPronta = false;
+  salvar(); desenhar();
+}
+
 /* bloco da cidade de término */
 function desenharCasa(){
   var el = document.getElementById('casa');
   if(!el) return;
   if(destinoFinal){
     var sub = (destinoFinal.lat != null)
-      ? 'a rota vai terminar aqui'
-      : (destinoFinal.status === 'buscando' ? 'procurando no mapa...' : 'não encontrado — toque em Trocar');
+      ? (destinoFinal.travado ? '&#128274; ponto travado no GPS · a rota vai terminar aqui'
+                              : 'a rota vai terminar aqui')
+      : (destinoFinal.status === 'buscando'
+           ? 'procurando no mapa...'
+           : 'não encontrado — toque em Trocar e tente com a cidade junto');
     el.innerHTML =
       '<div class="casa"><div class="rot">Terminar a rota em</div>' +
         '<div class="atual"><div class="nome"></div>' +
@@ -1033,25 +1083,38 @@ function desenharCasa(){
     el.querySelector('.nome').innerHTML = '<span></span><small>' + sub + '</small>';
     el.querySelector('.nome span').textContent = destinoFinal.texto;
     document.getElementById('btCasaTirar').onclick = function(){
-      destinoFinal = null; salvar(); desenhar();
+      destinoFinal = null; sequenciaPronta = false; salvar(); desenhar();
     };
   } else {
     el.innerHTML =
       '<div class="casa"><div class="rot">Terminar a rota em</div>' +
-        '<div class="campo" style="margin-bottom:6px">' +
-          '<input id="cxCasa" placeholder="Cidade ou endereço onde você mora">' +
+        '<div class="campo" style="margin-bottom:8px">' +
+          '<input id="cxCasa" placeholder="Endereço, CEP ou -21.17,-47.81">' +
           '<button id="btCasa">Definir</button>' +
         '</div>' +
+        '<button class="pill" id="btCasaGps" style="margin-bottom:8px">' +
+          '&#9678; USAR ONDE ESTOU AGORA E TRAVAR</button>' +
         '<div class="quebra" style="font-size:12px;color:var(--fraco)">' +
+          'Vale endereço escrito, CEP (só os 8 números) ou coordenada. ' +
           'As últimas entregas da sequência vão ficar do lado de casa.</div>' +
       '</div>';
+
     document.getElementById('btCasa').onclick = function(){
       var v = document.getElementById('cxCasa').value.replace(/^\s+|\s+$/g,'');
       if(v === '') return;
       var c = coords(v);
       destinoFinal = { texto:v, lat:c?c.lat:null, lng:c?c.lng:null, status:c?'ok':'buscando' };
-      if(!c) buscarCoord(destinoFinal);
+      if(!c) resolverLocal(destinoFinal);
       salvar(); desenhar();
+    };
+
+    document.getElementById('btCasaGps').onclick = function(){
+      if(posAtual && (Date.now() - posQuando) < 120000){
+        travarAqui(posAtual);
+      } else {
+        msg('Buscando sua posição...');
+        comGps(function(pos){ msg(''); travarAqui(pos); });
+      }
     };
   }
 }
@@ -1151,7 +1214,7 @@ function desenharCadastro(){
       if(!p.feita && p.lat == null && p.status !== 'buscando'){
         var b3 = document.createElement('button');
         b3.className = 'claro'; b3.textContent = 'Buscar';
-        b3.onclick = function(){ p.status='buscando'; desenhar(); buscarCoord(p); };
+        b3.onclick = function(){ p.status='buscando'; desenhar(); resolverLocal(p); };
         bt.appendChild(b3);
       }
       if(p.feita){
