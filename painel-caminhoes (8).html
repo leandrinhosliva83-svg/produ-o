@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel de Caminhões — CCT0002</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root{
+    --bg:#000000;
+    --painel:#0d0f0e;
+    --linha:#1e2422;
+    --texto:#e8ebe9;
+    --apagado:#7d8783;
+    --verde:#4ade80;
+    --vermelho:#f87171;
+    --ambar:#fbbf24;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--texto);
+    font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding:24px;
+  }
+  h1{font-size:20px; margin:0 0 4px; letter-spacing:.5px}
+  .sub{color:var(--apagado); font-size:13px; margin-bottom:20px}
+
+  .drop{
+    border:2px dashed #2a3330; border-radius:10px; padding:28px;
+    text-align:center; color:var(--apagado); cursor:pointer;
+    transition:.2s; margin-bottom:18px; background:var(--painel);
+  }
+  .drop:hover,.drop.ativo{border-color:var(--verde); color:var(--texto)}
+
+  .barra{display:flex; flex-wrap:wrap; gap:12px; margin-bottom:18px; align-items:flex-end}
+  .campo{display:flex; flex-direction:column; gap:4px}
+  .campo label{font-size:11px; color:var(--apagado); text-transform:uppercase; letter-spacing:.6px}
+  input,select{
+    background:var(--painel); border:1px solid var(--linha); color:var(--texto);
+    padding:8px 10px; border-radius:6px; font-size:14px; outline:none; min-width:130px;
+  }
+  input:focus,select:focus{border-color:var(--verde)}
+  button{
+    background:#16211c; border:1px solid var(--linha); color:var(--texto);
+    padding:8px 14px; border-radius:6px; cursor:pointer; font-size:13px;
+  }
+  button:hover{border-color:var(--verde)}
+
+  .cards{display:flex; flex-wrap:wrap; gap:12px; margin-bottom:22px}
+  .card{
+    background:var(--painel); border:1px solid var(--linha); border-radius:8px;
+    padding:12px 16px; min-width:150px;
+  }
+  .card .rot{font-size:11px; color:var(--apagado); text-transform:uppercase}
+  .card .val{font-size:20px; font-weight:600; margin-top:4px}
+
+  .bloco{margin-bottom:34px}
+  .bloco h2{
+    font-size:14px; text-transform:uppercase; letter-spacing:1px;
+    border-left:3px solid var(--verde); padding-left:10px; margin:0 0 10px;
+  }
+  table{width:100%; border-collapse:collapse; font-size:13px; background:var(--painel)}
+  th,td{padding:8px 10px; text-align:right; border-bottom:1px solid var(--linha)}
+  th{
+    color:var(--apagado); font-size:11px; text-transform:uppercase;
+    cursor:pointer; user-select:none; white-space:nowrap; background:#111614;
+  }
+  th:hover{color:var(--verde)}
+  th:first-child,td:first-child{text-align:left}
+  tr.total td{font-weight:700; border-top:2px solid var(--linha); background:#111614}
+  .ok{color:var(--verde)}
+  .ruim{color:var(--vermelho)}
+  #status{margin:-8px 0 16px; display:flex; flex-direction:column; gap:6px}
+  .arq{
+    display:flex; align-items:center; gap:10px; font-size:12px; color:var(--apagado);
+    background:var(--painel); border:1px solid var(--linha); border-radius:6px; padding:8px 12px;
+  }
+  .arq b{color:var(--texto); font-weight:600}
+  .arq select{padding:4px 8px; font-size:12px; min-width:110px}
+  .aviso{color:var(--ambar); font-size:13px}
+  .vazio{color:var(--apagado); padding:14px 0; font-size:13px}
+
+  .bases{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px}
+  .base{
+    background:var(--painel); border:1px solid var(--linha); color:var(--apagado);
+    padding:9px 18px; border-radius:8px; font-size:13px; cursor:pointer; transition:.18s;
+    display:flex; align-items:center; gap:8px;
+  }
+  .base:hover{color:var(--texto); border-color:#33413b}
+  .base.on{background:linear-gradient(180deg,#132a20,#0f1d17); border-color:var(--verde); color:var(--verde)}
+  .base .qt{font-size:11px; opacity:.75}
+  .abas{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px}
+  .aba{
+    background:var(--painel); border:1px solid var(--linha); color:var(--apagado);
+    padding:9px 15px; border-radius:999px; font-size:13px; cursor:pointer;
+    display:flex; align-items:center; gap:8px; transition:.18s;
+  }
+  .aba:hover{color:var(--texto); border-color:#33413b}
+  .aba.on{
+    background:linear-gradient(180deg,#132a20,#0f1d17);
+    border-color:var(--verde); color:var(--verde);
+  }
+  .aba .pct{font-size:11px; opacity:.75}
+
+  .tipos{display:flex; gap:6px; flex-wrap:wrap}
+  .tipo{
+    background:#0b0f0d; border:1px solid var(--linha); color:var(--apagado);
+    padding:6px 13px; border-radius:8px; font-size:12px; cursor:pointer; transition:.16s;
+  }
+  .tipo:hover{color:var(--texto)}
+  .tipo.on{background:#132a20; border-color:var(--verde); color:var(--verde)}
+  .legRosca{display:flex; flex-wrap:wrap; gap:8px 18px; margin-top:12px; font-size:12px; color:var(--apagado)}
+  .legRosca span{display:flex; align-items:center; gap:6px}
+  .legRosca i{width:9px; height:9px; border-radius:2px; display:inline-block}
+  .grafico{margin-bottom:30px}
+  .grafico.oculto{display:none}
+  .painel{
+    background:linear-gradient(180deg,#0f1211,#0a0c0b);
+    border:1px solid var(--linha); border-radius:14px; padding:22px 24px 16px;
+  }
+  .painel .topo{display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px}
+  .painel h3{margin:0; font-size:19px; font-weight:600; letter-spacing:.3px}
+  .painel .ref{font-size:12px; color:var(--apagado); margin-top:3px}
+  .resumo{display:flex; gap:22px; flex-wrap:wrap}
+  .resumo div{text-align:right}
+  .resumo .r{font-size:10px; color:var(--apagado); text-transform:uppercase; letter-spacing:.6px}
+  .resumo .v{font-size:16px; font-weight:600; margin-top:2px}
+  .painel svg{width:100%; height:auto; display:block; margin-top:14px}
+  .barra-anim{transform-origin:center bottom; animation:subir .55s cubic-bezier(.2,.8,.3,1) both}
+  @keyframes subir{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+  @media (prefers-reduced-motion:reduce){.barra-anim{animation:none}}
+  .legenda{display:flex; gap:18px; font-size:12px; color:var(--apagado); margin-top:10px; flex-wrap:wrap}
+  .bolinha{display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px}
+  button.ativo{border-color:var(--verde); color:var(--verde)}
+</style>
+</head>
+<body>
+
+<h1>Painel de Caminhões</h1>
+<div class="sub">Relatório CCT0002 — Caminhões e Dias Trabalhados</div>
+
+<input type="file" id="arquivo" accept="application/pdf" multiple hidden>
+<div class="drop" id="drop">
+  <span id="dropTexto">Solte os PDFs aqui ou clique para escolher (pode mandar COPLASA e CEMMA juntos)</span>
+</div>
+<div id="status"></div>
+
+<div class="barra">
+  <div class="campo">
+    <label>Código do proprietário</label>
+    <input id="prop" value="404899">
+  </div>
+  <div class="campo">
+    <label>Buscar caminhão</label>
+    <input id="busca" placeholder="ex: 929250">
+  </div>
+  <div class="campo">
+    <label>Meta (t/dia trabalhado)</label>
+    <input id="meta" type="number" value="300">
+  </div>
+  <div class="campo">
+    <label>Mostrar</label>
+    <select id="filtroMeta">
+      <option value="todos">Todos</option>
+      <option value="acima">Acima da meta</option>
+      <option value="abaixo">Abaixo da meta</option>
+    </select>
+  </div>
+  <button id="limpar">Limpar dados</button>
+</div>
+
+<div class="cards" id="cards"></div>
+<div class="bases" id="bases"></div>
+<div class="abas" id="abas"></div>
+<div class="grafico oculto" id="grafico"></div>
+<div id="saida"><div class="vazio">Nenhum PDF carregado ainda.</div></div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+// ---------- estado ----------
+let dados = { COPLASA: [], CEMMA: [] };
+let ordem = { campo: "codigo", asc: true };
+
+// ---------- utilidades ----------
+const num = t => parseFloat(String(t).replace(/\./g, "").replace(",", ".")) || 0;
+const fmt = (v, d = 2) => v.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
+
+// ---------- leitura do PDF ----------
+async function lerPDF(file) {
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  let empresa = null;
+  const linhas = [];
+
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const page = await pdf.getPage(p);
+    const tc = await page.getTextContent();
+    const grupos = {};
+    tc.items.forEach(it => {
+      const y = Math.round(it.transform[5]);
+      (grupos[y] = grupos[y] || []).push({ x: it.transform[4], s: it.str });
+    });
+    Object.keys(grupos)
+      .sort((a, b) => b - a)
+      .forEach(y => {
+        const txt = grupos[y].sort((a, b) => a.x - b.x).map(i => i.s).join(" ")
+          .replace(/\s+/g, " ").trim();
+        if (txt) linhas.push(txt);
+      });
+    if (!empresa) {
+      const t = linhas.join(" ");
+      if (/COPLASA/i.test(t)) empresa = "COPLASA";
+      else if (/CEMMA/i.test(t)) empresa = "CEMMA";
+    }
+  }
+  return { empresa: empresa || "COPLASA", linhas };
+}
+
+// ---------- interpretação das linhas ----------
+function extrair(linhas, propAlvo) {
+  const saida = [];
+  let dentro = false;
+  for (const l of linhas) {
+    const cab = l.match(/^(\d{5,6})\s*-\s*(.+)$/);
+    if (cab) { dentro = cab[1] === propAlvo; continue; }
+    if (/^Total\s*\/\s*M[ée]dia/i.test(l)) { dentro = false; continue; }
+    if (!dentro) continue;
+
+    const t = l.split(" ");
+    if (!/^\d{5,7}$/.test(t[0])) continue;
+    const nums = t.filter(x => /^-?[\d.]+,?\d*$/.test(x) && /[,.]|\d/.test(x));
+    if (t.length < 11) continue;
+
+    const n = t.slice(-10);           // as 10 colunas numéricas do fim
+    if (n.some(v => !/^[\d.,]+$/.test(v))) continue;
+
+    saida.push({
+      codigo: t[0],
+      modelo: t.slice(1, t.length - 10).join(" "),
+      toneladas: num(n[0]),
+      viagens: num(n[1]),
+      densidade: num(n[2]),
+      distMedia: num(n[3]),
+      distTotal: num(n[4]),
+      diasTrab: num(n[5]),
+      diasDisp: num(n[6]),
+      pctDias: num(n[7]),
+      mediaDia: num(n[8]),
+      mediaDisp: num(n[9])
+    });
+  }
+  return saida;
+}
+
+// ---------- consolidação ----------
+function somar(lista) {
+  const ton = lista.reduce((s, r) => s + r.toneladas, 0);
+  const via = lista.reduce((s, r) => s + r.viagens, 0);
+  const dias = lista.reduce((s, r) => s + r.diasTrab, 0);
+  const distT = lista.reduce((s, r) => s + r.distTotal, 0);
+  return {
+    codigo: "TOTAL",
+    toneladas: ton,
+    viagens: via,
+    densidade: via ? ton / via : 0,
+    distMedia: via ? distT / via : 0,
+    diasTrab: dias,
+    mediaDia: dias ? ton / dias : 0
+  };
+}
+
+function combinar() {
+  const mapa = {};
+  ["COPLASA", "CEMMA"].forEach(e => dados[e].forEach(r => {
+    const a = mapa[r.codigo] || (mapa[r.codigo] = {
+      codigo: r.codigo, modelo: r.modelo, toneladas: 0, viagens: 0,
+      distTotal: 0, diasTrab: 0
+    });
+    a.toneladas += r.toneladas; a.viagens += r.viagens;
+    a.distTotal += r.distTotal; a.diasTrab += r.diasTrab;
+  }));
+  return Object.values(mapa).map(a => ({
+    ...a,
+    densidade: a.viagens ? a.toneladas / a.viagens : 0,
+    distMedia: a.viagens ? a.distTotal / a.viagens : 0,
+    mediaDia: a.diasTrab ? a.toneladas / a.diasTrab : 0
+  }));
+}
+
+// ---------- desenho da tela ----------
+const COLS = [
+  ["codigo", "Caminhão"],
+  ["toneladas", "Toneladas transp."],
+  ["viagens", "Nº viagens"],
+  ["densidade", "Densidade (t/viagem)"],
+  ["distMedia", "Distância média"],
+  ["mediaDia", "Média diária (t/dia trab.)"],
+  ["difPct", "% vs meta"]
+];
+
+// diferença percentual em relação à meta
+const dif = (v, meta) => meta ? (v - meta) / meta * 100 : 0;
+const selMeta = () => parseFloat(document.getElementById("meta").value) || 0;
+const cel = (v, meta) =>
+  `<td class="${v >= meta ? "ok" : "ruim"}">${v >= meta ? "+" : ""}${fmt(dif(v, meta), 1)}%</td>`;
+
+function tabela(titulo, lista) {
+  const meta = parseFloat(document.getElementById("meta").value) || 0;
+  const busca = document.getElementById("busca").value.trim();
+  const fMeta = document.getElementById("filtroMeta").value;
+
+  let l = lista.filter(r => !busca || r.codigo.includes(busca));
+  if (fMeta === "acima") l = l.filter(r => r.mediaDia >= meta);
+  if (fMeta === "abaixo") l = l.filter(r => r.mediaDia < meta);
+
+  l.sort((a, b) => {
+    const c = ordem.campo === "difPct" ? "mediaDia" : ordem.campo;
+    const va = c === "codigo" ? a[c] : +a[c], vb = c === "codigo" ? b[c] : +b[c];
+    return (va > vb ? 1 : va < vb ? -1 : 0) * (ordem.asc ? 1 : -1);
+  });
+
+  if (!l.length) return `<div class="bloco"><h2>${titulo}</h2><div class="vazio">Nenhum caminhão nesse filtro.</div></div>`;
+
+  const th = COLS.map(([k, t]) =>
+    `<th data-c="${k}">${t}${ordem.campo === k ? (ordem.asc ? " ▲" : " ▼") : ""}</th>`).join("");
+
+  const tr = l.map(r => `<tr>
+      <td>${r.codigo}</td>
+      <td>${fmt(r.toneladas)}</td>
+      <td>${fmt(r.viagens, 0)}</td>
+      <td>${fmt(r.densidade, 3)}</td>
+      <td>${fmt(r.distMedia, 1)}</td>
+      <td class="${r.mediaDia >= meta ? "ok" : "ruim"}">${fmt(r.mediaDia, 3)}</td>
+      ${cel(r.mediaDia, meta)}
+    </tr>`).join("");
+
+  const t = somar(l);
+  const trTotal = `<tr class="total">
+      <td>TOTAL (${l.length})</td>
+      <td>${fmt(t.toneladas)}</td>
+      <td>${fmt(t.viagens, 0)}</td>
+      <td>${fmt(t.densidade, 3)}</td>
+      <td>${fmt(t.distMedia, 1)}</td>
+      <td class="${t.mediaDia >= meta ? "ok" : "ruim"}">${fmt(t.mediaDia, 3)}</td>
+      ${cel(t.mediaDia, meta)}
+    </tr>`;
+
+  return `<div class="bloco"><h2>${titulo}</h2>
+    <table><thead><tr>${th}</tr></thead><tbody>${tr}${trTotal}</tbody></table></div>`;
+}
+
+// ---------- gráficos (um botão por indicador) ----------
+const INDICADORES = [
+  { chave:"mediaDia",  titulo:"Média diária",      unid:"t / dia trabalhado", dec:1, usaMeta:true  },
+  { chave:"toneladas", titulo:"Toneladas",         unid:"toneladas",          dec:0, usaMeta:false },
+  { chave:"viagens",   titulo:"Viagens",           unid:"viagens",            dec:0, usaMeta:false },
+  { chave:"densidade", titulo:"Densidade",         unid:"t / viagem",         dec:2, usaMeta:false },
+  { chave:"distMedia", titulo:"Distância média",   unid:"km",                 dec:1, usaMeta:false },
+  { chave:"diasTrab",  titulo:"Dias trabalhados",  unid:"dias",               dec:0, usaMeta:false }
+];
+let indicadorAtivo = null;
+let baseAtiva = "JUNTO";   // COPLASA | CEMMA | JUNTO
+
+function baseDados() {
+  if (baseAtiva === "COPLASA") return dados.COPLASA;
+  if (baseAtiva === "CEMMA") return dados.CEMMA;
+  return combinar();
+}
+
+function desenharBases() {
+  const opcoes = [
+    ["COPLASA", "COPLASA", dados.COPLASA.length],
+    ["CEMMA", "CEMMA", dados.CEMMA.length],
+    ["JUNTO", "Junto (total)", combinar().length]
+  ];
+  document.getElementById("bases").innerHTML = opcoes.map(([k, t, n]) =>
+    `<button class="base ${baseAtiva === k ? "on" : ""}" data-b="${k}">${t}<span class="qt">${n}</span></button>`
+  ).join("");
+  document.querySelectorAll(".base").forEach(b => b.onclick = () => { baseAtiva = b.dataset.b; render(); });
+}
+
+function listaFiltrada(lista) {
+  const meta = selMeta();
+  const busca = document.getElementById("busca").value.trim();
+  const fMeta = document.getElementById("filtroMeta").value;
+  let l = lista.filter(r => !busca || r.codigo.includes(busca));
+  if (fMeta === "acima") l = l.filter(r => r.mediaDia >= meta);
+  if (fMeta === "abaixo") l = l.filter(r => r.mediaDia < meta);
+  return l;
+}
+
+function referencia(l, ind) {
+  const vals = l.map(r => +r[ind.chave] || 0);
+  return ind.usaMeta ? selMeta() : vals.reduce((s, v) => s + v, 0) / (vals.length || 1);
+}
+
+function desenharAbas(lista) {
+  const l = listaFiltrada(lista);
+  document.getElementById("abas").innerHTML = INDICADORES.map(ind => {
+    const ref = referencia(l, ind);
+    const dentro = l.filter(r => (+r[ind.chave] || 0) >= ref).length;
+    return `<button class="aba ${indicadorAtivo === ind.chave ? "on" : ""}" data-i="${ind.chave}">
+      ${ind.titulo}<span class="pct">${l.length ? dentro + "/" + l.length : "—"}</span></button>`;
+  }).join("");
+
+  document.querySelectorAll(".aba").forEach(b => b.onclick = () => {
+    indicadorAtivo = indicadorAtivo === b.dataset.i ? null : b.dataset.i;
+    render();
+  });
+}
+
+let tipoGrafico = "barra";
+const TIPOS = [["barra","Barras"],["linha","Linha"],["ranking","Ranking"],["rosca","Rosca"]];
+const PALETA = ["#4ade80","#22d3ee","#a78bfa","#fbbf24","#fb7185","#34d399","#60a5fa","#f472b6",
+                "#facc15","#2dd4bf","#c084fc","#f97316"];
+
+function cabecalho(dados_, ind, ref, rotuloRef) {
+  const dentroQtd = dados_.filter(d => d.v >= ref).length;
+  const melhor = dados_[0], pior = dados_[dados_.length - 1];
+  const media = dados_.reduce((s, d) => s + d.v, 0) / dados_.length;
+  const difGeral = ref ? (media - ref) / ref * 100 : 0;
+  const abas = TIPOS.map(([k, t]) =>
+    `<button class="tipo ${tipoGrafico === k ? "on" : ""}" data-t="${k}">${t}</button>`).join("");
+  return `<div class="topo">
+      <div>
+        <h3>${ind.titulo}</h3>
+        <div class="ref">${ind.unid} · ${dentroQtd} de ${dados_.length} acima da linha</div>
+        <div class="tipos" style="margin-top:10px">${abas}</div>
+      </div>
+      <div class="resumo">
+        <div><div class="r">Melhor</div><div class="v ok">${melhor.codigo} · ${fmt(melhor.v, ind.dec)}</div></div>
+        <div><div class="r">Pior</div><div class="v ruim">${pior.codigo} · ${fmt(pior.v, ind.dec)}</div></div>
+        <div><div class="r">Média vs ${rotuloRef.toLowerCase()}</div>
+             <div class="v ${difGeral >= 0 ? "ok" : "ruim"}">${difGeral >= 0 ? "+" : ""}${fmt(difGeral, 1)}%</div></div>
+      </div>
+    </div>`;
+}
+
+const DEFS = `<defs>
+  <linearGradient id="gok" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#4ade80" stop-opacity=".95"/><stop offset="100%" stop-color="#166534" stop-opacity=".65"/>
+  </linearGradient>
+  <linearGradient id="gruim" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#f87171" stop-opacity=".95"/><stop offset="100%" stop-color="#7f1d1d" stop-opacity=".65"/>
+  </linearGradient>
+  <linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#4ade80" stop-opacity=".35"/><stop offset="100%" stop-color="#4ade80" stop-opacity="0"/>
+  </linearGradient>
+</defs>`;
+
+// ---- barras verticais ----
+function svgBarra(d_, ind, ref, rotuloRef) {
+  const larg = 1000, alt = 430, L = 66, T = 34, B = 62, R = 26;
+  const areaH = alt - T - B, areaW = larg - L - R;
+  const maxV = Math.max(ref, ...d_.map(d => d.v)) * 1.16 || 1;
+  const y = v => T + areaH - (v / maxV) * areaH;
+  const passo = areaW / d_.length, w = Math.max(5, Math.min(56, passo * 0.58));
+  const rot = d_.length <= 24;
+
+  const grade = [0, .25, .5, .75, 1].map(f => {
+    const v = maxV * f;
+    return `<line x1="${L}" x2="${larg - R}" y1="${y(v)}" y2="${y(v)}" stroke="#161c1a"/>
+      <text x="${L - 10}" y="${y(v) + 4}" fill="#5f6a66" font-size="11" text-anchor="end">${fmt(v, 0)}</text>`;
+  }).join("");
+
+  const barras = d_.map((d, i) => {
+    const ok = d.v >= ref, x = L + i * passo + (passo - w) / 2, topo = y(d.v);
+    const p = ref ? (d.v - ref) / ref * 100 : 0;
+    return `<g class="barra-anim" style="animation-delay:${i * 22}ms">
+        <rect x="${x}" y="${topo}" width="${w}" height="${Math.max(2, T + areaH - topo)}" rx="4" fill="url(#g${ok ? "ok" : "ruim"})">
+          <title>${d.codigo} — ${fmt(d.v, ind.dec)} ${ind.unid} (${ok ? "+" : ""}${fmt(p, 1)}%)</title></rect>
+        <rect x="${x}" y="${topo}" width="${w}" height="3" rx="1.5" fill="${ok ? "#86efac" : "#fca5a5"}"/></g>
+      ${rot ? `<text x="${x + w / 2}" y="${topo - 16}" fill="#e8ebe9" font-size="11" font-weight="600" text-anchor="middle">${fmt(d.v, ind.dec)}</text>
+      <text x="${x + w / 2}" y="${topo - 5}" fill="${ok ? "#4ade80" : "#f87171"}" font-size="10" text-anchor="middle">${ok ? "+" : ""}${fmt(p, 0)}%</text>
+      <text x="${x + w / 2}" y="${alt - B + 20}" fill="#9aa4a0" font-size="10" text-anchor="middle">${d.codigo}</text>` : ""}`;
+  }).join("");
+
+  return `<svg viewBox="0 0 ${larg} ${alt}">${DEFS}${grade}${barras}
+    ${linhaRef(L, larg - R, y(ref), ref, ind, rotuloRef)}
+    <line x1="${L}" x2="${larg - R}" y1="${T + areaH}" y2="${T + areaH}" stroke="#2a3330"/></svg>`;
+}
+
+function linhaRef(x1, x2, yr, ref, ind, rotulo) {
+  return `<line x1="${x1}" x2="${x2}" y1="${yr}" y2="${yr}" stroke="#fbbf24" stroke-width="1.8" stroke-dasharray="8 6"/>
+    <rect x="${x1}" y="${yr - 20}" width="${rotulo.length * 7 + 74}" height="18" rx="9" fill="#2a2110" stroke="#fbbf24" stroke-opacity=".5"/>
+    <text x="${x1 + 10}" y="${yr - 7}" fill="#fbbf24" font-size="11">${rotulo} · ${fmt(ref, ind.dec)}</text>`;
+}
+
+// ---- linha com área ----
+function svgLinha(d_, ind, ref, rotuloRef) {
+  const larg = 1000, alt = 430, L = 66, T = 34, B = 62, R = 26;
+  const areaH = alt - T - B, areaW = larg - L - R;
+  const maxV = Math.max(ref, ...d_.map(d => d.v)) * 1.16 || 1;
+  const y = v => T + areaH - (v / maxV) * areaH;
+  const x = i => d_.length === 1 ? L + areaW / 2 : L + (areaW * i) / (d_.length - 1);
+
+  const grade = [0, .25, .5, .75, 1].map(f => {
+    const v = maxV * f;
+    return `<line x1="${L}" x2="${larg - R}" y1="${y(v)}" y2="${y(v)}" stroke="#161c1a"/>
+      <text x="${L - 10}" y="${y(v) + 4}" fill="#5f6a66" font-size="11" text-anchor="end">${fmt(v, 0)}</text>`;
+  }).join("");
+
+  const pts = d_.map((d, i) => `${x(i)},${y(d.v)}`).join(" ");
+  const area = `<polygon points="${L},${T + areaH} ${pts} ${x(d_.length - 1)},${T + areaH}" fill="url(#gArea)"/>`;
+  const rot = d_.length <= 24;
+  const bolas = d_.map((d, i) => {
+    const ok = d.v >= ref, p = ref ? (d.v - ref) / ref * 100 : 0;
+    return `<circle cx="${x(i)}" cy="${y(d.v)}" r="5" fill="${ok ? "#4ade80" : "#f87171"}" stroke="#0a0c0b" stroke-width="2">
+        <title>${d.codigo} — ${fmt(d.v, ind.dec)} ${ind.unid} (${ok ? "+" : ""}${fmt(p, 1)}%)</title></circle>
+      ${rot ? `<text x="${x(i)}" y="${y(d.v) - 12}" fill="#e8ebe9" font-size="10" text-anchor="middle">${fmt(d.v, ind.dec)}</text>
+      <text x="${x(i)}" y="${alt - B + 20}" fill="#9aa4a0" font-size="10" text-anchor="middle">${d.codigo}</text>` : ""}`;
+  }).join("");
+
+  return `<svg viewBox="0 0 ${larg} ${alt}">${DEFS}${grade}${area}
+    <polyline points="${pts}" fill="none" stroke="#4ade80" stroke-width="2.5" stroke-linejoin="round"/>
+    ${bolas}${linhaRef(L, larg - R, y(ref), ref, ind, rotuloRef)}
+    <line x1="${L}" x2="${larg - R}" y1="${T + areaH}" y2="${T + areaH}" stroke="#2a3330"/></svg>`;
+}
+
+// ---- ranking (barras horizontais) ----
+function svgRanking(d_, ind, ref, rotuloRef) {
+  const larg = 1000, L = 92, R = 96, T = 26, hLinha = 30;
+  const alt = T + d_.length * hLinha + 20, areaW = larg - L - R;
+  const maxV = Math.max(ref, ...d_.map(d => d.v)) || 1;
+  const x = v => (v / maxV) * areaW;
+  const xr = L + x(ref);
+
+  const linhas = d_.map((d, i) => {
+    const ok = d.v >= ref, yb = T + i * hLinha, w = Math.max(2, x(d.v));
+    const p = ref ? (d.v - ref) / ref * 100 : 0;
+    return `<g>
+      <text x="${L - 12}" y="${yb + 15}" fill="#9aa4a0" font-size="11" text-anchor="end">${d.codigo}</text>
+      <rect x="${L}" y="${yb + 3}" width="${areaW}" height="17" rx="4" fill="#101514"/>
+      <rect x="${L}" y="${yb + 3}" width="${w}" height="17" rx="4" fill="url(#g${ok ? "ok" : "ruim"})">
+        <title>${d.codigo} — ${fmt(d.v, ind.dec)} ${ind.unid}</title></rect>
+      <text x="${L + areaW + 10}" y="${yb + 16}" fill="#e8ebe9" font-size="11">${fmt(d.v, ind.dec)}</text>
+      <text x="${larg - 6}" y="${yb + 16}" fill="${ok ? "#4ade80" : "#f87171"}" font-size="10" text-anchor="end">${ok ? "+" : ""}${fmt(p, 0)}%</text>
+    </g>`;
+  }).join("");
+
+  return `<svg viewBox="0 0 ${larg} ${alt}">${DEFS}${linhas}
+    <line x1="${xr}" x2="${xr}" y1="${T - 6}" y2="${alt - 16}" stroke="#fbbf24" stroke-width="1.8" stroke-dasharray="7 5"/>
+    <text x="${xr + 6}" y="${T - 10}" fill="#fbbf24" font-size="11">${rotuloRef} ${fmt(ref, ind.dec)}</text></svg>`;
+}
+
+// ---- rosca (participação) ----
+function svgRosca(d_, ind) {
+  const total = d_.reduce((s, d) => s + d.v, 0) || 1;
+  const cx = 220, cy = 220, rOut = 170, rIn = 108, larg = 1000, alt = 440;
+  let ang = -Math.PI / 2;
+  const fatias = d_.map((d, i) => {
+    const frac = d.v / total, a2 = ang + frac * 2 * Math.PI;
+    const p1 = [cx + rOut * Math.cos(ang), cy + rOut * Math.sin(ang)];
+    const p2 = [cx + rOut * Math.cos(a2), cy + rOut * Math.sin(a2)];
+    const p3 = [cx + rIn * Math.cos(a2), cy + rIn * Math.sin(a2)];
+    const p4 = [cx + rIn * Math.cos(ang), cy + rIn * Math.sin(ang)];
+    const grande = frac > .5 ? 1 : 0;
+    const cor = PALETA[i % PALETA.length];
+    ang = a2;
+    return `<path d="M${p1} A${rOut},${rOut} 0 ${grande},1 ${p2} L${p3} A${rIn},${rIn} 0 ${grande},0 ${p4} Z"
+      fill="${cor}" fill-opacity=".88" stroke="#0a0c0b" stroke-width="2">
+      <title>${d.codigo} — ${fmt(d.v, ind.dec)} ${ind.unid} (${fmt(frac * 100, 1)}%)</title></path>`;
+  }).join("");
+
+  const legenda = d_.map((d, i) => {
+    const yb = 40 + i * 26;
+    if (yb > alt - 20) return "";
+    return `<rect x="470" y="${yb - 9}" width="10" height="10" rx="2" fill="${PALETA[i % PALETA.length]}"/>
+      <text x="490" y="${yb}" fill="#e8ebe9" font-size="12">${d.codigo}</text>
+      <text x="700" y="${yb}" fill="#9aa4a0" font-size="12" text-anchor="end">${fmt(d.v, ind.dec)}</text>
+      <text x="800" y="${yb}" fill="#4ade80" font-size="12" text-anchor="end">${fmt(d.v / total * 100, 1)}%</text>`;
+  }).join("");
+
+  return `<svg viewBox="0 0 ${larg} ${alt}">${fatias}
+    <text x="${cx}" y="${cy - 6}" fill="#7d8783" font-size="12" text-anchor="middle">TOTAL</text>
+    <text x="${cx}" y="${cy + 20}" fill="#e8ebe9" font-size="22" font-weight="600" text-anchor="middle">${fmt(total, ind.dec)}</text>
+    ${legenda}</svg>`;
+}
+
+function painelGrande(l, ind) {
+  const ref = referencia(l, ind);
+  const rotuloRef = ind.usaMeta ? "Meta" : "Média da frota";
+  const d_ = l.map(r => ({ codigo: r.codigo, v: +r[ind.chave] || 0 })).sort((a, b) => b.v - a.v);
+  const corpo =
+    tipoGrafico === "linha"   ? svgLinha(d_, ind, ref, rotuloRef) :
+    tipoGrafico === "ranking" ? svgRanking(d_, ind, ref, rotuloRef) :
+    tipoGrafico === "rosca"   ? svgRosca(d_, ind) :
+                                svgBarra(d_, ind, ref, rotuloRef);
+  const nota = tipoGrafico === "rosca"
+    ? `<div class="ref" style="margin-top:10px">Participação de cada caminhão no total de ${ind.titulo.toLowerCase()}.</div>` : "";
+  return `<div class="painel">${cabecalho(d_, ind, ref, rotuloRef)}${corpo}${nota}</div>`;
+}
+
+function desenharGrafico() {
+  const box = document.getElementById("grafico");
+  const lista = baseDados();
+  desenharBases();
+  desenharAbas(lista);
+  if (!indicadorAtivo) { box.classList.add("oculto"); box.innerHTML = ""; return; }
+  const l = listaFiltrada(lista);
+  box.classList.remove("oculto");
+  if (!l.length) { box.innerHTML = '<div class="vazio">Sem dados para o gráfico.</div>'; return; }
+  box.innerHTML = painelGrande(l, INDICADORES.find(i => i.chave === indicadorAtivo));
+  box.querySelectorAll(".tipo").forEach(b => b.onclick = () => { tipoGrafico = b.dataset.t; render(); });
+}
+
+function render() {
+  const total = combinar();
+  const saida = document.getElementById("saida");
+  const cards = document.getElementById("cards");
+
+  if (!dados.COPLASA.length && !dados.CEMMA.length) {
+    saida.innerHTML = '<div class="vazio">Nenhum PDF carregado ainda.</div>';
+    cards.innerHTML = "";
+    document.getElementById("bases").innerHTML = "";
+    document.getElementById("abas").innerHTML = "";
+    document.getElementById("grafico").classList.add("oculto");
+    return;
+  }
+
+  const g = somar(baseDados());
+  const meta = parseFloat(document.getElementById("meta").value) || 0;
+  cards.innerHTML = `
+    <div class="card"><div class="rot">Caminhões · ${baseAtiva === "JUNTO" ? "junto" : baseAtiva}</div><div class="val">${baseDados().length}</div></div>
+    <div class="card"><div class="rot">Toneladas</div><div class="val">${fmt(g.toneladas)}</div></div>
+    <div class="card"><div class="rot">Viagens</div><div class="val">${fmt(g.viagens, 0)}</div></div>
+    <div class="card"><div class="rot">Média diária</div>
+      <div class="val ${g.mediaDia >= meta ? "ok" : "ruim"}">${fmt(g.mediaDia, 1)}</div></div>
+    <div class="card"><div class="rot">Meta</div><div class="val">${fmt(meta, 0)}</div></div>
+    <div class="card"><div class="rot">Diferença vs meta</div>
+      <div class="val ${g.mediaDia >= meta ? "ok" : "ruim"}">${g.mediaDia >= meta ? "+" : ""}${fmt(dif(g.mediaDia, meta), 1)}%</div></div>`;
+
+  desenharGrafico();
+
+  saida.innerHTML =
+    baseAtiva === "COPLASA" ? tabela("COPLASA", dados.COPLASA) :
+    baseAtiva === "CEMMA"   ? tabela("CEMMA", dados.CEMMA) :
+    (tabela("COPLASA", dados.COPLASA) +
+     tabela("CEMMA", dados.CEMMA) +
+     tabela("Total (COPLASA + CEMMA)", total));
+
+  saida.querySelectorAll("th").forEach(th => th.onclick = () => {
+    const c = th.dataset.c;
+    ordem = { campo: c, asc: ordem.campo === c ? !ordem.asc : true };
+    render();
+  });
+}
+
+// ---------- eventos ----------
+const drop = document.getElementById("drop");
+const inputArq = document.getElementById("arquivo");
+
+drop.onclick = () => inputArq.click();
+drop.ondragover = e => { e.preventDefault(); drop.classList.add("ativo"); };
+drop.ondragleave = () => drop.classList.remove("ativo");
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove("ativo"); carregar(e.dataTransfer.files); };
+inputArq.onchange = e => carregar(e.target.files);
+
+let arquivos = [];   // {nome, empresa, linhas, qtd}
+
+function detectarEmpresa(linhas) {
+  const t = linhas.join(" ").toUpperCase();
+  const nC = (t.match(/COPLASA/g) || []).length;
+  const nM = (t.match(/CEMMA/g) || []).length;
+  if (nC === 0 && nM === 0) return null;
+  return nC >= nM ? "COPLASA" : "CEMMA";
+}
+
+function reprocessar() {
+  const prop = document.getElementById("prop").value.trim();
+  dados = { COPLASA: [], CEMMA: [] };
+  arquivos.forEach(a => {
+    a.qtd = 0;
+    if (!a.empresa) return;
+    const linhasProp = extrair(a.linhas, prop);
+    a.qtd = linhasProp.length;
+    dados[a.empresa] = dados[a.empresa].concat(linhasProp);
+  });
+  mostrarStatus();
+  render();
+}
+
+function mostrarStatus() {
+  const box = document.getElementById("status");
+  box.innerHTML = arquivos.map((a, i) => `
+    <div class="arq">
+      <b>${a.nome}</b>
+      <select data-a="${i}">
+        <option value="COPLASA" ${a.empresa === "COPLASA" ? "selected" : ""}>COPLASA</option>
+        <option value="CEMMA" ${a.empresa === "CEMMA" ? "selected" : ""}>CEMMA</option>
+      </select>
+      <span class="${a.qtd ? "ok" : "aviso"}">${a.qtd} caminhão(ões) do código ${document.getElementById("prop").value.trim()}</span>
+      <span>· ${a.linhas.length} linhas lidas</span>
+    </div>`).join("");
+  box.querySelectorAll("select").forEach(sel => sel.onchange = () => {
+    arquivos[+sel.dataset.a].empresa = sel.value;
+    reprocessar();
+  });
+}
+
+async function carregar(files) {
+  const txt = document.getElementById("dropTexto");
+  txt.textContent = "Lendo PDF...";
+  for (const f of files) {
+    try {
+      const { linhas } = await lerPDF(f);
+      const empresa = detectarEmpresa(linhas);
+      const jaTem = arquivos.findIndex(a => a.nome === f.name);
+      const item = { nome: f.name, empresa: empresa || "COPLASA", linhas, qtd: 0 };
+      if (jaTem >= 0) arquivos[jaTem] = item; else arquivos.push(item);
+    } catch (err) {
+      txt.innerHTML = `<span class="aviso">Não consegui ler ${f.name}. Confira se é o PDF do relatório CCT0002.</span>`;
+    }
+  }
+  txt.textContent = arquivos.length
+    ? `${arquivos.length} arquivo(s) carregado(s) — clique para adicionar mais`
+    : "Solte os PDFs aqui ou clique para escolher";
+  reprocessar();
+}
+
+["busca", "meta", "filtroMeta"].forEach(id =>
+  document.getElementById(id).addEventListener("input", render));
+document.getElementById("prop").addEventListener("input", () => { if (arquivos.length) reprocessar(); });
+document.getElementById("filtroMeta").addEventListener("change", render);
+document.getElementById("limpar").onclick = () => {
+  dados = { COPLASA: [], CEMMA: [] };
+  arquivos = [];
+  inputArq.value = "";
+  document.getElementById("status").innerHTML = "";
+  document.getElementById("dropTexto").textContent =
+    "Solte os PDFs aqui ou clique para escolher (pode mandar COPLASA e CEMMA juntos)";
+  render();
+};
+</script>
+</body>
+</html>
