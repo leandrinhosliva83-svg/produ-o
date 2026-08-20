@@ -241,6 +241,185 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
 const SENHA_ADM = "adm2026";     // troque aqui a senha do administrador
 const ARQUIVO_DADOS = "dados.json";
 
+// Dados embutidos: valem quando não existe dados.json ao lado do HTML.
+const DADOS_EMBUTIDOS = {
+ "geradoEm": "2026-08-19T16:49:00",
+ "proprietario": "404899",
+ "meta": 300,
+ "COPLASA": [
+  {
+   "codigo": "929200",
+   "modelo": "SCANIA G-560 6X",
+   "toneladas": 7693.44,
+   "viagens": 105,
+   "densidade": 73.271,
+   "distMedia": 37.9,
+   "distTotal": 7948.7,
+   "diasTrab": 33.0,
+   "diasDisp": 8937.0,
+   "pctDias": 0.37,
+   "mediaDia": 233.135,
+   "mediaDisp": 0.861
+  },
+  {
+   "codigo": "929240",
+   "modelo": "SCANIA G-560 6X",
+   "toneladas": 6003.46,
+   "viagens": 81,
+   "densidade": 74.117,
+   "distMedia": 37.3,
+   "distTotal": 6037.6,
+   "diasTrab": 32.0,
+   "diasDisp": 8937.0,
+   "pctDias": 0.36,
+   "mediaDia": 187.608,
+   "mediaDisp": 0.672
+  },
+  {
+   "codigo": "929245",
+   "modelo": "SCANIA G-560 6X",
+   "toneladas": 7377.58,
+   "viagens": 99,
+   "densidade": 74.521,
+   "distMedia": 38.6,
+   "distTotal": 7639.4,
+   "diasTrab": 31.0,
+   "diasDisp": 8937.0,
+   "pctDias": 0.35,
+   "mediaDia": 237.986,
+   "mediaDisp": 0.826
+  },
+  {
+   "codigo": "929250",
+   "modelo": "SCANIA G-560 6X",
+   "toneladas": 8227.68,
+   "viagens": 112,
+   "densidade": 73.461,
+   "distMedia": 44.8,
+   "distTotal": 10038.6,
+   "diasTrab": 37.0,
+   "diasDisp": 8937.0,
+   "pctDias": 0.41,
+   "mediaDia": 222.37,
+   "mediaDisp": 0.921
+  },
+  {
+   "codigo": "929255",
+   "modelo": "SCANIA G-560 6X",
+   "toneladas": 8213.86,
+   "viagens": 113,
+   "densidade": 72.689,
+   "distMedia": 38.8,
+   "distTotal": 8779.7,
+   "diasTrab": 39.0,
+   "diasDisp": 8937.0,
+   "pctDias": 0.44,
+   "mediaDia": 210.612,
+   "mediaDisp": 0.919
+  },
+  {
+   "codigo": "929260",
+   "modelo": "SCANIA G-560 6X",
+   "toneladas": 8665.48,
+   "viagens": 119,
+   "densidade": 72.819,
+   "distMedia": 39.5,
+   "distTotal": 9409.1,
+   "diasTrab": 35.0,
+   "diasDisp": 8937.0,
+   "pctDias": 0.39,
+   "mediaDia": 247.585,
+   "mediaDisp": 0.97
+  }
+ ],
+ "CEMMA": [
+  {
+   "codigo": "929200",
+   "modelo": "SCANIA G-560 6X",
+   "toneladas": 34257.16,
+   "viagens": 460,
+   "densidade": 74.472,
+   "distMedia": 34.9,
+   "distTotal": 32121.5,
+   "diasTrab": 101.0,
+   "diasDisp": 171.0,
+   "pctDias": 59.06,
+   "mediaDia": 339.18,
+   "mediaDisp": 200.334
+  },
+  {
+   "codigo": "929240",
+   "modelo": "SCANIA G-560 6X",
+   "toneladas": 26361.94,
+   "viagens": 348,
+   "densidade": 75.753,
+   "distMedia": 38.6,
+   "distTotal": 26900.1,
+   "diasTrab": 92.0,
+   "diasDisp": 171.0,
+   "pctDias": 53.8,
+   "mediaDia": 286.543,
+   "mediaDisp": 154.163
+  },
+  {
+   "codigo": "929245",
+   "modelo": "SCANIA G-560 6X",
+   "toneladas": 31584.68,
+   "viagens": 421,
+   "densidade": 75.023,
+   "distMedia": 38.0,
+   "distTotal": 31960.4,
+   "diasTrab": 94.0,
+   "diasDisp": 171.0,
+   "pctDias": 54.97,
+   "mediaDia": 336.007,
+   "mediaDisp": 184.706
+  },
+  {
+   "codigo": "929250",
+   "modelo": "SCANIA G-560 6X",
+   "toneladas": 36746.84,
+   "viagens": 487,
+   "densidade": 75.456,
+   "distMedia": 39.0,
+   "distTotal": 38008.7,
+   "diasTrab": 102.0,
+   "diasDisp": 171.0,
+   "pctDias": 59.65,
+   "mediaDia": 360.263,
+   "mediaDisp": 214.894
+  },
+  {
+   "codigo": "929255",
+   "modelo": "SCANIA G-560 6X",
+   "toneladas": 33222.48,
+   "viagens": 442,
+   "densidade": 75.164,
+   "distMedia": 38.1,
+   "distTotal": 33676.8,
+   "diasTrab": 101.0,
+   "diasDisp": 171.0,
+   "pctDias": 59.06,
+   "mediaDia": 328.935,
+   "mediaDisp": 194.284
+  },
+  {
+   "codigo": "929260",
+   "modelo": "SCANIA G-560 6X",
+   "toneladas": 32237.5,
+   "viagens": 429,
+   "densidade": 75.146,
+   "distMedia": 39.5,
+   "distTotal": 33897.8,
+   "diasTrab": 102.0,
+   "diasDisp": 171.0,
+   "pctDias": 59.65,
+   "mediaDia": 316.054,
+   "mediaDisp": 188.523
+  }
+ ]
+};
+
 // ---------- estado ----------
 let dados = { COPLASA: [], CEMMA: [] };
 let ordem = { campo: "codigo", asc: true };
@@ -814,19 +993,37 @@ document.getElementById("btnGerar").onclick = () => {
 };
 
 // ---------- carga automática dos dados publicados ----------
+function aplicarPacote(j, origem) {
+  dados = { COPLASA: j.COPLASA || [], CEMMA: j.CEMMA || [] };
+  if (j.proprietario) document.getElementById("prop").value = j.proprietario;
+  if (j.meta) document.getElementById("meta").value = j.meta;
+  const d = j.geradoEm ? new Date(j.geradoEm) : null;
+  document.getElementById("carimbo").textContent =
+    (d ? "Dados de " + d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR").slice(0, 5) : "") +
+    " · " + origem;
+  render();
+}
+
 async function carregarPublicado() {
+  // 1) tenta o arquivo externo (mais recente)
   try {
     const r = await fetch(ARQUIVO_DADOS + "?v=" + Date.now());
-    if (!r.ok) return;
-    const j = await r.json();
-    dados = { COPLASA: j.COPLASA || [], CEMMA: j.CEMMA || [] };
-    if (j.proprietario) document.getElementById("prop").value = j.proprietario;
-    if (j.meta) document.getElementById("meta").value = j.meta;
-    const d = j.geradoEm ? new Date(j.geradoEm) : null;
-    document.getElementById("carimbo").textContent =
-      d ? "Dados de " + d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR").slice(0, 5) : "";
-    render();
-  } catch (e) { /* sem dados.json publicado ainda */ }
+    if (r.ok) {
+      const j = await r.json();
+      if ((j.COPLASA || []).length || (j.CEMMA || []).length) {
+        aplicarPacote(j, "dados.json");
+        return;
+      }
+    }
+  } catch (e) { /* sem arquivo externo: usa o embutido */ }
+
+  // 2) reserva embutida no próprio HTML
+  if (typeof DADOS_EMBUTIDOS === "object" &&
+      ((DADOS_EMBUTIDOS.COPLASA || []).length || (DADOS_EMBUTIDOS.CEMMA || []).length)) {
+    aplicarPacote(DADOS_EMBUTIDOS, "dados do arquivo");
+    return;
+  }
+  render();
 }
 carregarPublicado();
 
