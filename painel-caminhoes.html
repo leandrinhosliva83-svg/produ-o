@@ -53,9 +53,17 @@
   input:focus,select:focus{border-color:var(--verde)}
   button{
     background:#16211c; border:1px solid var(--linha); color:var(--texto);
-    padding:8px 14px; border-radius:6px; cursor:pointer; font-size:13px;
+    padding:8px 14px; border-radius:6px; cursor:pointer; font-size:13px; transition:.16s;
   }
-  button:hover{border-color:var(--verde)}
+  button:hover{border-color:var(--verde); background:#1b2a23}
+  #btnAdm{
+    background:linear-gradient(135deg,#a78bfa,#6d28d9); border:0; color:#fff; font-weight:600;
+  }
+  #btnGerar{
+    background:linear-gradient(135deg,#4ade80,#15803d); border:0; color:#052e16; font-weight:700;
+  }
+  #limpar{background:#231416; border-color:#4c1d24; color:#fca5a5}
+  #limpar:hover{border-color:var(--vermelho); background:#2b171a}
 
   .cards{display:flex; flex-wrap:wrap; gap:12px; margin-bottom:22px}
   .card{
@@ -98,20 +106,29 @@
     display:flex; align-items:center; gap:8px;
   }
   .base:hover{color:var(--texto); border-color:#33413b}
-  .base.on{background:linear-gradient(180deg,#132a20,#0f1d17); border-color:var(--verde); color:var(--verde)}
+  .base.on{
+    background:linear-gradient(135deg,var(--cor,#4ade80),color-mix(in srgb,var(--cor,#4ade80) 55%,#000));
+    border-color:var(--cor,#4ade80); color:#06110c; font-weight:700;
+    box-shadow:0 4px 14px color-mix(in srgb,var(--cor,#4ade80) 25%,transparent);
+  }
+  .base .qt{background:rgba(0,0,0,.25); padding:1px 7px; border-radius:999px}
   .base .qt{font-size:11px; opacity:.75}
   .abas{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px}
   .aba{
-    background:var(--painel); border:1px solid var(--linha); color:var(--apagado);
-    padding:9px 15px; border-radius:999px; font-size:13px; cursor:pointer;
+    background:#101513; border:1px solid var(--cor,#2a3330); color:var(--cor,#9aa4a0);
+    padding:9px 15px; border-radius:999px; font-size:13px; cursor:pointer; font-weight:500;
     display:flex; align-items:center; gap:8px; transition:.18s;
+    border-left:4px solid var(--cor,#2a3330);
   }
-  .aba:hover{color:var(--texto); border-color:#33413b}
+  .aba:hover{background:#161d1a; transform:translateY(-1px)}
   .aba.on{
-    background:linear-gradient(180deg,#132a20,#0f1d17);
-    border-color:var(--verde); color:var(--verde);
+    background:var(--cor); color:#06110c; font-weight:700;
+    box-shadow:0 0 0 3px color-mix(in srgb, var(--cor) 22%, transparent);
   }
-  .aba .pct{font-size:11px; opacity:.75}
+  .aba .pct{
+    font-size:11px; background:rgba(0,0,0,.28); color:inherit;
+    padding:1px 7px; border-radius:999px; opacity:.9;
+  }
 
   .tipos{display:flex; gap:6px; flex-wrap:wrap}
   .tipo{
@@ -119,7 +136,10 @@
     padding:6px 13px; border-radius:8px; font-size:12px; cursor:pointer; transition:.16s;
   }
   .tipo:hover{color:var(--texto)}
-  .tipo.on{background:#132a20; border-color:var(--verde); color:var(--verde)}
+  .tipo.on{
+    background:linear-gradient(135deg,#22d3ee,#0e7490); border-color:#22d3ee;
+    color:#04191d; font-weight:700;
+  }
   .legRosca{display:flex; flex-wrap:wrap; gap:8px 18px; margin-top:12px; font-size:12px; color:var(--apagado)}
   .legRosca span{display:flex; align-items:center; gap:6px}
   .legRosca i{width:9px; height:9px; border-radius:2px; display:inline-block}
@@ -594,12 +614,12 @@ function tabela(titulo, lista) {
 
 // ---------- gráficos (um botão por indicador) ----------
 const INDICADORES = [
-  { chave:"mediaDia",  titulo:"Média diária",      unid:"t / dia trabalhado", dec:1, usaMeta:true  },
-  { chave:"toneladas", titulo:"Toneladas",         unid:"toneladas",          dec:0, usaMeta:false },
-  { chave:"viagens",   titulo:"Viagens",           unid:"viagens",            dec:0, usaMeta:false },
-  { chave:"densidade", titulo:"Densidade",         unid:"t / viagem",         dec:2, usaMeta:false },
-  { chave:"distMedia", titulo:"Distância média",   unid:"km",                 dec:1, usaMeta:false },
-  { chave:"diasTrab",  titulo:"Dias trabalhados",  unid:"dias",               dec:0, usaMeta:false }
+  { chave:"mediaDia",  titulo:"Média diária",      unid:"t / dia trabalhado", dec:1, usaMeta:true,  cor:"#4ade80" },
+  { chave:"toneladas", titulo:"Toneladas",         unid:"toneladas",          dec:0, usaMeta:false, cor:"#22d3ee" },
+  { chave:"viagens",   titulo:"Viagens",           unid:"viagens",            dec:0, usaMeta:false, cor:"#a78bfa" },
+  { chave:"densidade", titulo:"Densidade",         unid:"t / viagem",         dec:2, usaMeta:false, cor:"#fbbf24" },
+  { chave:"distMedia", titulo:"Distância média",   unid:"km",                 dec:1, usaMeta:false, cor:"#fb7185" },
+  { chave:"diasTrab",  titulo:"Dias trabalhados",  unid:"dias",               dec:0, usaMeta:false, cor:"#2dd4bf" }
 ];
 let indicadorAtivo = null;
 let baseAtiva = "JUNTO";   // COPLASA | CEMMA | JUNTO
@@ -612,12 +632,12 @@ function baseDados() {
 
 function desenharBases() {
   const opcoes = [
-    ["COPLASA", "COPLASA", dados.COPLASA.length],
-    ["CEMMA", "CEMMA", dados.CEMMA.length],
-    ["JUNTO", "Junto (total)", combinar().length]
+    ["COPLASA", "COPLASA", dados.COPLASA.length, "#22d3ee"],
+    ["CEMMA", "CEMMA", dados.CEMMA.length, "#fbbf24"],
+    ["JUNTO", "Junto (total)", combinar().length, "#4ade80"]
   ];
-  document.getElementById("bases").innerHTML = opcoes.map(([k, t, n]) =>
-    `<button class="base ${baseAtiva === k ? "on" : ""}" data-b="${k}">${t}<span class="qt">${n}</span></button>`
+  document.getElementById("bases").innerHTML = opcoes.map(([k, t, n, c]) =>
+    `<button class="base ${baseAtiva === k ? "on" : ""}" data-b="${k}" style="--cor:${c}">${t}<span class="qt">${n}</span></button>`
   ).join("");
   document.querySelectorAll(".base").forEach(b => b.onclick = () => { baseAtiva = b.dataset.b; render(); });
 }
@@ -642,7 +662,7 @@ function desenharAbas(lista) {
   document.getElementById("abas").innerHTML = INDICADORES.map(ind => {
     const ref = referencia(l, ind);
     const dentro = l.filter(r => (+r[ind.chave] || 0) >= ref).length;
-    return `<button class="aba ${indicadorAtivo === ind.chave ? "on" : ""}" data-i="${ind.chave}">
+    return `<button class="aba ${indicadorAtivo === ind.chave ? "on" : ""}" data-i="${ind.chave}" style="--cor:${ind.cor}">
       ${ind.titulo}<span class="pct">${l.length ? dentro + "/" + l.length : "—"}</span></button>`;
   }).join("");
 
@@ -666,7 +686,7 @@ function cabecalho(dados_, ind, ref, rotuloRef) {
     `<button class="tipo ${tipoGrafico === k ? "on" : ""}" data-t="${k}">${t}</button>`).join("");
   return `<div class="topo">
       <div>
-        <h3>${ind.titulo}</h3>
+        <h3 style="color:${ind.cor}">${ind.titulo}</h3>
         <div class="ref">${ind.unid} · ${dentroQtd} de ${dados_.length} acima da linha</div>
         <div class="tipos" style="margin-top:10px">${abas}</div>
       </div>
