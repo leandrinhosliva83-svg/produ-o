@@ -138,6 +138,23 @@ a.mapa{font-size:13px;color:var(--acento2);text-decoration:none;border:1px solid
 .proxima .acoes a,.proxima .acoes button{flex:1;padding:16px 8px;font-size:15px;
   text-align:center;border-radius:11px;text-decoration:none;display:block;font-weight:800}
 .proxima .acoes a{background:var(--acento2);color:#04121A;border:1px solid var(--acento2)}
+@keyframes alerta{
+  0%{border-color:var(--perigo);box-shadow:0 0 0 0 rgba(255,59,78,.55)}
+  60%{border-color:var(--linha);box-shadow:0 0 0 8px rgba(255,59,78,0)}
+  100%{border-color:var(--perigo);box-shadow:0 0 0 0 rgba(255,59,78,0)}
+}
+@keyframes alertaTexto{ 0%,100%{opacity:1} 55%{opacity:.35} }
+li.falhou{border-color:var(--perigo);animation:alerta 1.3s infinite}
+li.falhou .pos{color:var(--perigo)}
+li.falhou .sub{color:var(--perigo);font-weight:700;animation:alertaTexto 1.3s infinite}
+.casa.falhou{border-color:var(--perigo);animation:alerta 1.3s infinite}
+.casa.falhou .nome small{color:var(--perigo);font-weight:700;animation:alertaTexto 1.3s infinite}
+.avisoFalha{background:rgba(255,59,78,.10);border:1px solid var(--perigo);color:var(--perigo);
+  padding:12px 14px;border-radius:10px;font-size:13px;font-weight:700;margin-bottom:14px;
+  animation:alertaTexto 1.3s infinite;line-height:1.5}
+@media (prefers-reduced-motion:reduce){
+  li.falhou,.casa.falhou,.avisoFalha,li.falhou .sub,.casa.falhou .nome small{animation:none!important}
+}
 .zona{display:inline-block;margin-top:7px;padding:4px 9px;border-radius:6px;
   font-size:10px;font-weight:800;letter-spacing:.14em}
 .zporta{background:rgba(0,224,138,.14);color:var(--ok);border:1px solid var(--ok)}
@@ -227,10 +244,11 @@ a.mapa{font-size:13px;color:var(--acento2);text-decoration:none;border:1px solid
     <button id="btHist" class="pill" style="margin-bottom:14px"></button>
     <div id="casa"></div>
     <div id="prev1"></div>
+    <div id="falhas"></div>
     <div id="carga"></div>
     <div id="mapa"></div>
     <ul id="lista1"></ul>
-    <p class="rodapetxt">versão 18 · CEP e ponto travado</p>
+    <p class="rodapetxt">versão 19 · alerta de endereço não achado</p>
   </main>
   <div class="rodape">
     <button id="btatualizar" class="claro" style="padding:14px">Organizar rota</button>
@@ -905,6 +923,7 @@ function desenhar(){
 
   pintarAuto();
   desenharHistorico();
+  desenharFalhas();
   desenharCasa();
   desenharCarga();
   desenharMapa();
@@ -1075,9 +1094,11 @@ function desenharCasa(){
                               : 'a rota vai terminar aqui')
       : (destinoFinal.status === 'buscando'
            ? 'procurando no mapa...'
-           : 'não encontrado — toque em Trocar e tente com a cidade junto');
+           : '&#9888; NÃO ENCONTRADO — toque em Trocar e tente com a cidade e o estado');
+    var falhouCasa = (destinoFinal.lat == null && destinoFinal.status !== 'buscando');
     el.innerHTML =
-      '<div class="casa"><div class="rot">Terminar a rota em</div>' +
+      '<div class="casa' + (falhouCasa ? ' falhou' : '') + '">' +
+        '<div class="rot">Terminar a rota em</div>' +
         '<div class="atual"><div class="nome"></div>' +
         '<button class="claro" id="btCasaTirar">Trocar</button></div></div>';
     el.querySelector('.nome').innerHTML = '<span></span><small>' + sub + '</small>';
@@ -1169,6 +1190,21 @@ function desenharPrevisoes(){
   montarPrevisao('prev2', kmRota > 0 ? kmRota : custoTotal(marcadas[0], ordem), marcadas.length, 'Falta rodar');
 }
 
+function desenharFalhas(){
+  var el = document.getElementById('falhas');
+  if(!el) return;
+  var n = 0, i;
+  for(i=0;i<paradas.length;i++){
+    var p = paradas[i];
+    if(p.ir && !p.feita && p.lat == null && p.status !== 'buscando') n++;
+  }
+  if(n === 0){ el.innerHTML = ''; return; }
+  el.innerHTML = '<div class="avisoFalha">&#9888; ' + n +
+    (n === 1 ? ' endereço não foi localizado no mapa e ficará de fora da rota.'
+             : ' endereços não foram localizados no mapa e ficarão de fora da rota.') +
+    ' Toque em <b>Buscar</b> neles, ou corrija acrescentando a cidade e o estado.</div>';
+}
+
 function desenharCadastro(){
   var ul = document.getElementById('lista1');
   ul.innerHTML = '';
@@ -1176,8 +1212,10 @@ function desenharCadastro(){
   for(i=0;i<paradas.length;i++){ if(paradas[i].ir && !paradas[i].feita) totalFila++; }
   for(i=0;i<paradas.length;i++){
     (function(p){
+      var falhou = (p.ir && !p.feita && p.lat == null && p.status !== 'buscando');
       var li = document.createElement('li');
       if(p.feita) li.className = 'ok';
+      else if(falhou) li.className = 'falhou';
       else if(p.ir) li.className = 'sel';
 
       var pos = document.createElement('div');
@@ -1198,7 +1236,9 @@ function desenharCadastro(){
                                       : p.km.toFixed(1) + ' km da anterior');
       else if(p.lat != null) s.textContent = 'localizada, pronta para a rota';
       else if(p.status === 'buscando') s.textContent = 'procurando no mapa...';
-      else s.textContent = 'endereço não encontrado — toque em Buscar';
+      else s.textContent = (p.status === 'erro')
+        ? 'sem internet para localizar — toque em Buscar'
+        : 'ENDEREÇO NÃO ENCONTRADO — corrija ou toque em Buscar';
       box.appendChild(t); box.appendChild(s);
       if(sequenciaPronta && p.ir && !p.feita) box.appendChild(selo(ordemN-1, totalFila));
 
