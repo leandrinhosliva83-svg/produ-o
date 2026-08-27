@@ -1401,14 +1401,29 @@ function marcarConexao(cor, texto){
    do que o último que este aparelho leu, adota. Senão, mantém o local.
    Com forcar = true (botão Atualizar), pega a base publicada de qualquer jeito. */
 async function buscarBasePublicada(forcar){
-  let pacote;
+  /* Aberto direto do computador (endereço file://) não existe servidor:
+     o navegador bloqueia a busca. Não é falta de sinal, então não pisca vermelho. */
+  if(location.protocol === 'file:'){
+    marcarConexao('', 'Arquivo local');
+    if(forcar) avisar('Aberto como arquivo solto · a base publicada só funciona pelo link na internet');
+    return false;
+  }
+
+  let pacote, achou = true;
   try{
     const r = await fetch('dados.json?v=' + Date.now(), {cache:'no-store'});
-    if(!r.ok) throw new Error('sem arquivo');
-    pacote = await r.json();
+    if(r.status === 404) achou = false;
+    else if(!r.ok) throw new Error('erro ' + r.status);
+    else pacote = await r.json();
   }catch(e){
     marcarConexao('vermelho', navigator.onLine ? 'Sem sinal' : 'Offline');
-    if(forcar) avisar('Sem sinal · não consegui achar o <b>dados.json</b>');
+    if(forcar) avisar('Sem sinal · não consegui falar com o servidor');
+    return false;
+  }
+
+  if(!achou){
+    marcarConexao('ambar', 'Sem base publicada');
+    if(forcar) avisar('Ainda não existe <b>dados.json</b> no site · publique e suba o arquivo');
     return false;
   }
 
