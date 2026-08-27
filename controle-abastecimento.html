@@ -259,6 +259,35 @@
   .troca-modo{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:8px}
   .modo-nota{font-size:12.5px; color:var(--tinta-2); font-family:'IBM Plex Mono',monospace}
   body.painel .modo-nota{color:var(--ambar)}
+  .fonte-base{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--tinta-2);
+              margin-bottom:6px}
+  .fonte-base b{color:var(--verde); font-weight:600}
+  .fonte-base em{color:var(--ambar); font-style:normal}
+
+  /* ---------- luz do botão Atualizar ---------- */
+  #btnAtualizar{display:inline-flex; align-items:center; gap:8px}
+  .luz{width:9px; height:9px; border-radius:50%; flex:none;
+       background:var(--tinta-2); box-shadow:0 0 0 0 transparent}
+  @keyframes pisca{0%,100%{opacity:1} 50%{opacity:.12}}
+
+  #btnAtualizar.verde{border-color:var(--verde); color:var(--verde)}
+  #btnAtualizar.verde .luz{background:var(--verde); box-shadow:0 0 7px rgba(79,178,134,.75)}
+
+  #btnAtualizar.vermelho{border-color:var(--vermelho); color:var(--vermelho)}
+  #btnAtualizar.vermelho .luz{background:var(--vermelho);
+                              box-shadow:0 0 8px rgba(224,100,79,.85);
+                              animation:pisca 1s steps(1,end) infinite}
+
+  #btnAtualizar.ambar{border-color:var(--ambar); color:var(--ambar)}
+  #btnAtualizar.ambar .luz{background:var(--ambar);
+                           box-shadow:0 0 7px rgba(232,163,61,.8);
+                           animation:pisca 1.5s ease-in-out infinite}
+
+  #btnAtualizar.buscando .luz{animation:pisca .6s ease-in-out infinite}
+
+  @media (prefers-reduced-motion:reduce){
+    #btnAtualizar .luz{animation:none !important}
+  }
 
   /* ---------- janela de senha ---------- */
   .modal{position:fixed; inset:0; z-index:100; display:flex; align-items:center;
@@ -349,8 +378,12 @@
 
   <div class="troca-modo">
     <button class="ghost" id="btnModo">Modo administração</button>
+    <button class="ghost" id="btnAtualizar" title="Buscar a base publicada agora">
+      <span class="luz" id="luz"></span><span id="txtAtualizar">Atualizar</span>
+    </button>
     <span class="modo-nota" id="modoNota"></span>
   </div>
+  <div class="fonte-base" id="fonteBase"></div>
 
   <h2 class="so-adm">Novo lançamento</h2>
   <div class="faixa-edicao so-adm" id="faixaEdicao" hidden></div>
@@ -431,6 +464,7 @@
   <div class="barra-acoes so-adm">
     <button class="ghost" id="btnConsumo">Gráfico de consumo</button>
     <button class="ghost" id="btnRendimento">Gráfico de rendimento energético</button>
+    <button class="ghost" id="btnPublicar">Publicar base (dados.json)</button>
     <button class="ghost" id="btnSenha">Trocar senha</button>
     <button class="ghost" id="btnPainelCelular">Gerar painel do celular</button>
     <button class="ghost" id="btnCsv">Baixar CSV</button>
@@ -781,6 +815,10 @@ function desenhar(){
   document.getElementById('notaMetaA').textContent = n(metas.media,2);
   document.getElementById('notaMetaB').textContent = n(metas.rendimento,2);
 
+  if(typeof mostrarFonte === 'function') mostrarFonte();
+  if(typeof acenderEstado === 'function' &&
+     !document.getElementById('btnAtualizar').classList.contains('vermelho') &&
+     !document.getElementById('btnAtualizar').classList.contains('buscando')) acenderEstado();
   if(graficoAberto) desenharGrafico();
 }
 
@@ -998,6 +1036,7 @@ document.getElementById('form').addEventListener('submit', e => {
     /* ----- atualizando um lançamento que já existe ----- */
     const i = dados.findIndex(x => x.id === editando);
     dados[i] = {...dados[i], ...registro};
+    pendente = true;
     ultimoSalvo = editando;
     avisar(`Lançamento alterado · veículo ${registro.veiculo}` +
            (media !== null ? ` · consumo <b>${n(media,2)}</b>` : ' · <b>segue em aberto</b>'));
@@ -1007,6 +1046,7 @@ document.getElementById('form').addEventListener('submit', e => {
     /* ----- criando um lançamento novo ----- */
     registro.id = novoId();
     dados.push(registro);
+    usandoExemplo = false; pendente = true;
     ultimoSalvo = registro.id;
     if(kmFim === null){
       avisar(`Abastecimento salvo em aberto · veículo ${registro.veiculo} · <b>falta o Km final</b>`);
@@ -1036,6 +1076,7 @@ document.getElementById('corpo').addEventListener('change', e => {
     return;
   }
   r.kmFim = kmFim;
+  pendente = true;
   ultimoSalvo = r.id;
   const media = r.litros > 0 ? (kmFim - r.kmIni) / r.litros : null;
   avisar(`Fechado · veículo ${r.veiculo} · consumo <b>${n(media,2)}</b>`);
@@ -1056,7 +1097,7 @@ document.getElementById('corpo').addEventListener('click', e => {
   const i = dados.findIndex(r => r.id === b.dataset.id);
   if(i > -1){
     if(editando === dados[i].id) sairEdicao();
-    dados.splice(i,1); ultimoSalvo = null; desenhar(); avisar('Lançamento apagado');
+    dados.splice(i,1); ultimoSalvo = null; pendente = true; desenhar(); avisar('Lançamento apagado');
   }
 });
 
@@ -1305,8 +1346,146 @@ document.getElementById('btnPainelCelular').addEventListener('click', () => {
   avisar('Painel gerado · mande este arquivo para o celular');
 });
 
+/* =========================================================
+   6. BASE PUBLICADA (dados.json ao lado do arquivo)
+   O computador publica; qualquer aparelho que abrir o link lê.
+========================================================= */
+let publicadoEm = null;               // data da publicação que está em uso
+var usandoExemplo = false;            // true = ainda são os lançamentos de demonstração
+var pendente = false;                 // true = tem lançamento local ainda não publicado
+
+function mostrarFonte(){
+  const el = document.getElementById('fonteBase');
+  if(!el) return;
+  const marca = pendente ? ' · <em>alterações não publicadas</em>' : '';
+  el.innerHTML = (publicadoEm
+    ? `Base publicada em <b>${new Date(publicadoEm).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</b>`
+    : `Base <em>local</em> — só existe neste navegador`) + marca;
+}
+
+/* Baixa o dados.json para você subir no GitHub */
+document.getElementById('btnPublicar').addEventListener('click', () => {
+  const agora = new Date().toISOString();
+  const pacote = {
+    publicadoEm: agora,
+    metas: {media: metas.media, rendimento: metas.rendimento},
+    preco: preco,
+    lancamentos: dados
+  };
+  baixar('dados.json', JSON.stringify(pacote, null, 2), 'application/json');
+  publicadoEm = agora;
+  pendente = false;
+  try{ localStorage.setItem('abast_publicado', agora); }catch(e){}
+  mostrarFonte();
+  acenderEstado();
+  avisar(`Base pronta · <b>${dados.length}</b> lançamentos · suba o dados.json no GitHub`);
+});
+
+/* Acende a luz do botão Atualizar.
+   verde    = em dia com a base publicada
+   vermelho = sem sinal (piscando)
+   âmbar    = tem lançamento seu ainda não publicado (piscando devagar) */
+function acenderEstado(){
+  if(pendente) marcarConexao('ambar', 'Não publicado');
+  else marcarConexao('verde', 'Atualizado');
+}
+
+function marcarConexao(cor, texto){
+  const b = document.getElementById('btnAtualizar');
+  if(!b) return;
+  b.className = 'ghost ' + cor;
+  document.getElementById('txtAtualizar').textContent = texto;
+}
+
+/* Ao abrir, procura o dados.json. Se o que está lá for mais novo
+   do que o último que este aparelho leu, adota. Senão, mantém o local.
+   Com forcar = true (botão Atualizar), pega a base publicada de qualquer jeito. */
+async function buscarBasePublicada(forcar){
+  let pacote;
+  try{
+    const r = await fetch('dados.json?v=' + Date.now(), {cache:'no-store'});
+    if(!r.ok) throw new Error('sem arquivo');
+    pacote = await r.json();
+  }catch(e){
+    marcarConexao('vermelho', navigator.onLine ? 'Sem sinal' : 'Offline');
+    if(forcar) avisar('Sem sinal · não consegui achar o <b>dados.json</b>');
+    return false;
+  }
+
+  const lista = Array.isArray(pacote) ? pacote : pacote.lancamentos;
+  if(!Array.isArray(lista)){
+    marcarConexao('vermelho', 'Arquivo inválido');
+    if(forcar) avisar('O arquivo <b>dados.json</b> está fora do formato esperado');
+    return false;
+  }
+  const dataPub = Array.isArray(pacote) ? null : pacote.publicadoEm;
+
+  let jaLido = null;
+  try{ jaLido = localStorage.getItem('abast_publicado'); }catch(e){}
+
+  const semNadaLocal = dados.length === 0 || usandoExemplo;   // exemplo não conta como base
+  const publicacaoNova = dataPub && dataPub !== jaLido;
+
+  if(!forcar && !semNadaLocal && !publicacaoNova){
+    mostrarFonte(); acenderEstado(); return false;
+  }
+
+  if(forcar && !semNadaLocal && !publicacaoNova && pendente){
+    const ok = confirm('Você tem lançamentos ainda não publicados neste navegador.\n\n' +
+                       'Buscar a base publicada vai substituir o que está aqui. Continuar?');
+    if(!ok){ avisar('Atualização cancelada'); return false; }
+  }
+
+  if(forcar && !publicacaoNova && !semNadaLocal && !pendente){
+    mostrarFonte(); acenderEstado();
+    avisar('Já está com a versão mais recente publicada');
+    return false;
+  }
+
+  dados = lista;
+  usandoExemplo = false;
+  pendente = false;
+  garantirIds();
+  if(!Array.isArray(pacote)){
+    if(pacote.metas) metas = Object.assign(metas, pacote.metas);
+    if(pacote.preco !== undefined) preco = pacote.preco;
+    document.getElementById('metaMedia').value = metas.media;
+    document.getElementById('metaRendimento').value = metas.rendimento;
+    document.getElementById('precoDiesel').value = preco;
+  }
+  publicadoEm = dataPub;
+  try{ if(dataPub) localStorage.setItem('abast_publicado', dataPub); }catch(e){}
+  mostrarFonte();
+  desenhar();
+  acenderEstado();
+  avisar(`Base atualizada · <b>${lista.length}</b> lançamentos`);
+  return true;
+}
+
+/* Botão Atualizar: vai buscar o dados.json na hora */
+document.getElementById('btnAtualizar').addEventListener('click', async () => {
+  const b = document.getElementById('btnAtualizar');
+  b.disabled = true;
+  marcarConexao('buscando', 'Buscando…');
+  await buscarBasePublicada(true);
+  b.disabled = false;
+});
+
+/* A luz não espera você clicar: reconfere sozinha de tempos em tempos,
+   ao voltar para a aba, e quando o aparelho perde ou recupera a internet. */
+window.addEventListener('offline', () => marcarConexao('vermelho', 'Offline'));
+window.addEventListener('online',  () => buscarBasePublicada(false));
+
+document.addEventListener('visibilitychange', () => {
+  if(!document.hidden) buscarBasePublicada(false);
+});
+
+setInterval(() => {
+  if(!document.hidden) buscarBasePublicada(false);
+}, 60000);   // a cada 1 minuto
+
 /* ---------- início ---------- */
-if(!carregar()) dados = EXEMPLO.slice();
+if(!carregar()){ dados = EXEMPLO.slice(); usandoExemplo = true; }
 garantirIds();
 carregarMetas();
 
@@ -1320,8 +1499,11 @@ try{
 aplicarModo();
 
 document.getElementById('data').valueAsDate = new Date();
+try{ publicadoEm = localStorage.getItem('abast_publicado'); }catch(e){}
+mostrarFonte();
 atualizarPrevia();
 desenhar();
+buscarBasePublicada(false);
 </script>
 </body>
 </html>
