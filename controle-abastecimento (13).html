@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DM Agrícola · Controle de Abastecimento</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --fundo:#0B0F12;      /* preto executivo */
+    --papel:#141A20;      /* painéis */
+    --papel-2:#1B232A;    /* campos e cabeçalhos */
+    --linha:#2A353E;      /* bordas */
+    --tinta:#EAF0F3;      /* texto principal */
+    --tinta-2:#8FA3AD;    /* texto secundário */
+    --ambar:#E8A33D;      /* cor da DM Agrícola */
+    --verde:#4FB286;
+    --vermelho:#E0644F;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--fundo); color:var(--tinta);
+       font-family:'IBM Plex Sans',system-ui,sans-serif; font-size:15px; line-height:1.5;
+       -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1240px; margin:0 auto; padding:28px 20px 80px}
+
+  /* ---------- topo ---------- */
+  header{border-bottom:1px solid var(--linha); padding-bottom:18px; margin-bottom:26px}
+  .marca{display:flex; align-items:center; gap:11px; margin-bottom:12px}
+  .logo{height:58px; width:auto; flex:none; display:block}
+  @media print{ .logo{height:44px} }
+  .nome-empresa{font-family:'Oswald',sans-serif; font-weight:600; text-transform:uppercase;
+                letter-spacing:.16em; font-size:14px; line-height:1.1}
+  .ramo{font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--tinta-2); font-weight:500}
+  h1{font-family:'Oswald',sans-serif; font-weight:600; text-transform:uppercase;
+     letter-spacing:.06em; font-size:clamp(26px,5vw,40px); margin:0; line-height:1.05}
+  h1 span{color:var(--ambar)}
+  .sub{color:var(--tinta-2); font-size:14px; margin-top:6px}
+
+  h2{font-family:'Oswald',sans-serif; font-weight:600; text-transform:uppercase;
+     letter-spacing:.08em; font-size:14px; margin:34px 0 12px; color:var(--tinta-2);
+     display:flex; align-items:center; gap:10px}
+  h2::after{content:""; flex:1; height:1px; background:var(--linha)}
+
+  /* ---------- formulário ---------- */
+  form{background:var(--papel); border:1px solid var(--linha); border-left:3px solid var(--ambar);
+       padding:18px; display:grid; gap:14px;
+       grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); align-items:end}
+  label{display:block; font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+        color:var(--tinta-2); font-weight:600; margin-bottom:5px}
+  .dica{font-size:10px; text-transform:none; letter-spacing:0; color:var(--ambar); font-weight:500}
+  input{width:100%; padding:9px 10px; border:1px solid var(--linha); border-radius:3px;
+        font-family:'IBM Plex Mono',monospace; font-size:15px;
+        background:var(--papel-2); color:var(--tinta); color-scheme:dark}
+  input::placeholder{color:#5E7079}
+  input:focus{outline:2px solid var(--ambar); outline-offset:1px; border-color:var(--ambar)}
+  .previa{background:var(--papel); border:1px solid var(--linha); border-top:none;
+          padding:12px 18px; display:flex; gap:26px; flex-wrap:wrap;
+          font-family:'IBM Plex Mono',monospace; font-size:14px; color:var(--tinta-2)}
+  .previa b{font-weight:600; color:var(--ambar)}
+
+  /* ---------- metas ---------- */
+  .metas{background:var(--papel); border:1px solid var(--linha); border-top:none;
+         padding:12px 18px; display:flex; align-items:center; gap:18px; flex-wrap:wrap}
+  .metas-tit{font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:.12em;
+             font-size:12px; color:var(--ambar)}
+  .meta-campo{display:flex; align-items:center; gap:8px; margin:0;
+              font-size:11px; text-transform:uppercase; letter-spacing:.06em;
+              color:var(--tinta-2); font-weight:600}
+  .meta-campo input{width:92px; padding:6px 8px; font-size:14px}
+  .metas-nota{font-size:12px; color:#5E7079; margin-left:auto}
+  .ok{color:var(--verde)}
+  .ruim{color:var(--vermelho)}
+
+  /* ---------- lançamento em aberto ---------- */
+  tr.aberto{background:rgba(232,163,61,.05)}
+  tr.aberto td:first-child{box-shadow:inset 3px 0 0 var(--ambar)}
+  .tag-aberto{font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:.1em;
+              text-transform:uppercase; color:var(--ambar); border:1px solid var(--ambar);
+              border-radius:2px; padding:1px 5px; margin-left:7px; white-space:nowrap}
+  input.fechar-km{width:104px; padding:5px 8px; font-size:13px; text-align:right;
+                  border-color:var(--ambar); background:rgba(232,163,61,.08)}
+  input.fechar-km::placeholder{color:var(--ambar); opacity:.75}
+
+  /* ---------- edição ---------- */
+  .botoes-form{display:flex; gap:8px; align-items:center}
+  .acoes{display:flex; gap:6px; justify-content:flex-end}
+  .editar, .apagar{
+    border:1px solid var(--linha); background:var(--papel-2); color:var(--tinta-2);
+    font-family:'IBM Plex Sans',sans-serif; font-size:12px; font-weight:600;
+    padding:4px 9px; border-radius:3px; cursor:pointer; line-height:1.4;
+  }
+  .editar:hover{border-color:var(--ambar); color:var(--ambar); background:rgba(232,163,61,.12)}
+  .apagar:hover{border-color:var(--vermelho); color:var(--vermelho); background:rgba(224,100,79,.12)}
+
+  /* a coluna de ações gruda na borda direita e não some ao rolar a tabela */
+  th.fixa, td.fixa{
+    position:sticky; right:0; z-index:2;
+    background:var(--papel); border-left:1px solid var(--linha);
+  }
+  th.fixa{background:var(--papel-2)}
+  tbody tr:hover td.fixa{background:var(--papel-2)}
+  tr.aberto td.fixa{background:#16191c}
+  tr.editando td.fixa{background:#1b1f1e}
+
+  tr.editando{background:rgba(232,163,61,.10)}
+  tr.editando td:first-child{box-shadow:inset 3px 0 0 var(--ambar)}
+  form.modo-edicao{border-left-color:var(--verde)}
+  .faixa-edicao{background:rgba(79,178,134,.10); border:1px solid var(--verde); border-bottom:none;
+                padding:9px 18px; font-size:13px; color:var(--verde);
+                font-family:'IBM Plex Mono',monospace}
+
+  button{font-family:'IBM Plex Sans',sans-serif; font-weight:600; font-size:14px;
+         padding:10px 16px; border-radius:3px; cursor:pointer;
+         border:1px solid var(--ambar); background:var(--ambar); color:#0B0F12}
+  button:hover{background:#F2B55C; border-color:#F2B55C}
+  button.ghost{background:transparent; color:var(--tinta); border-color:var(--linha)}
+  button.ghost:hover{background:var(--papel-2); border-color:#3C4A54}
+  button.ghost.ativo{border-color:var(--ambar); color:var(--ambar); background:rgba(232,163,61,.10)}
+  #btnFechar{padding:6px 11px; font-size:14px; line-height:1}
+  button:focus-visible{outline:2px solid var(--ambar); outline-offset:2px}
+  .barra-acoes{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
+
+  /* ---------- gráfico ---------- */
+  .painel-grafico{background:var(--papel); border:1px solid var(--linha); padding:18px; margin-top:14px}
+  .grafico-topo{display:flex; justify-content:space-between; align-items:center;
+                gap:14px; flex-wrap:wrap; margin-bottom:14px}
+  .grafico-topo .titulo{font-family:'Oswald',sans-serif; text-transform:uppercase;
+                        letter-spacing:.08em; font-size:13px; color:var(--tinta-2)}
+  .seletor{display:flex; gap:8px}
+  .seletor button{padding:6px 12px; font-size:12px}
+  svg.grafico{width:100%; height:auto; display:block; overflow:visible}
+  .legenda{display:flex; gap:16px; flex-wrap:wrap; margin-top:14px; font-size:13px;
+           font-family:'IBM Plex Mono',monospace; color:var(--tinta-2)}
+  .legenda span{display:inline-flex; align-items:center; gap:7px}
+  .chave{width:14px; height:3px; border-radius:2px; flex:none}
+
+  /* ---------- tabela ---------- */
+  .status{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--tinta-2);
+          margin:-4px 0 10px; font-family:'IBM Plex Mono',monospace}
+  .bolinha{width:8px; height:8px; border-radius:50%; background:var(--verde); flex:none}
+  .bolinha.off{background:var(--vermelho)}
+  .rolagem{overflow-x:auto; background:var(--papel); border:1px solid var(--linha)}
+  table{width:100%; border-collapse:collapse; min-width:1340px}
+  th{font-family:'Oswald',sans-serif; font-weight:400; text-transform:uppercase;
+     letter-spacing:.06em; font-size:11px; color:var(--tinta-2); background:var(--papel-2);
+     padding:10px 12px; text-align:right; white-space:nowrap;
+     border-bottom:1px solid var(--linha)}
+  th:nth-child(1),th:nth-child(2){text-align:left}
+  th.calcCab{color:var(--ambar)}
+  td{padding:9px 12px; border-bottom:1px solid var(--linha); text-align:right;
+     font-family:'IBM Plex Mono',monospace; font-size:14px; white-space:nowrap}
+  td:nth-child(1),td:nth-child(2){text-align:left}
+  tbody tr:hover{background:var(--papel-2)}
+  .veic{font-family:'Oswald',sans-serif; letter-spacing:.05em; font-size:15px}
+  .calc{color:var(--tinta-2)}
+  .destaque{font-weight:600; color:var(--ambar)}
+
+  .desvio{display:inline-flex; align-items:center; gap:7px; justify-content:flex-end}
+  .trilho{position:relative; width:64px; height:8px; background:#232D35; border-radius:2px}
+  .trilho::before{content:""; position:absolute; left:50%; top:-3px; width:1px; height:14px; background:#4A5A64}
+  .preenche{position:absolute; top:0; height:8px; border-radius:2px}
+
+  /* ---------- resumo ---------- */
+  .cards{display:grid; gap:14px; grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+  .card{background:var(--papel); border:1px solid var(--linha); padding:16px}
+  .card .veic-tit{font-family:'Oswald',sans-serif; font-size:20px; letter-spacing:.05em; margin-bottom:2px}
+  .card .media{font-family:'IBM Plex Mono',monospace; font-size:30px; font-weight:600; color:var(--ambar); line-height:1.1}
+  .card .media small{font-size:13px; color:var(--tinta-2); font-weight:400}
+  .card dl{display:grid; grid-template-columns:1fr auto; gap:2px 10px; margin:12px 0 0; font-size:13px}
+  .card dt{color:var(--tinta-2)} .card dd{margin:0; font-family:'IBM Plex Mono',monospace; text-align:right}
+
+  .aviso{background:rgba(232,163,61,.08); border-left:3px solid var(--ambar);
+
+         padding:12px 14px; font-size:13.5px; color:#D9C39A; margin-top:26px}
+
+  /* ---------- comparativo de custo ---------- */
+  .custo-topo{background:var(--papel); border:1px solid var(--linha);
+              border-left:3px solid var(--ambar); padding:20px; margin-bottom:14px}
+  .custo-num{font-family:'IBM Plex Mono',monospace; font-size:clamp(30px,6vw,44px);
+             font-weight:600; line-height:1.05}
+  .custo-rot{font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:.1em;
+             font-size:12px; color:var(--tinta-2); margin-bottom:6px}
+  .custo-detalhe{display:flex; gap:26px; flex-wrap:wrap; margin-top:14px;
+                 font-family:'IBM Plex Mono',monospace; font-size:14px; color:var(--tinta-2)}
+  .custo-detalhe b{color:var(--tinta); font-weight:600}
+  .custo-barra{display:flex; height:26px; margin-top:16px; border-radius:2px; overflow:hidden;
+               background:var(--papel-2); font-size:11px; font-family:'IBM Plex Mono',monospace}
+  .custo-barra div{display:flex; align-items:center; justify-content:center; white-space:nowrap;
+                   color:#0B0F12; font-weight:600; min-width:0; overflow:hidden}
+  .fatia-meta{background:#4FB286}
+  .fatia-perda{background:var(--vermelho)}
+  .fatia-economia{background:rgba(79,178,134,.28); color:var(--verde)}
+  .nada{padding:26px; text-align:center; color:var(--tinta-2); font-size:14px}
+
+  .toast{position:fixed; left:50%; bottom:28px; transform:translate(-50%,20px);
+         background:var(--papel-2); color:var(--tinta); border:1px solid var(--ambar);
+         padding:12px 20px; border-radius:3px; font-size:14px; font-weight:600;
+         box-shadow:0 10px 30px rgba(0,0,0,.5);
+         opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:50}
+  .toast.ver{opacity:1; transform:translate(-50%,0)}
+  .toast b{color:var(--ambar)}
+  @keyframes acender{ from{background:rgba(232,163,61,.18)} to{background:transparent} }
+  tr.nova td{animation:acender 1.6s ease-out}
+  @media (prefers-reduced-motion:reduce){
+    .toast{transition:none}
+    tr.nova td{animation:none; background:rgba(232,163,61,.12)}
+  }
+
+  /* ---------- quadros por veículo (modo painel) ---------- */
+  .grade{display:grid; gap:10px; grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+         align-items:start}
+  .quadro{background:var(--papel); border:1px solid var(--linha);
+          border-top:3px solid var(--tinta-2); padding:0; overflow:hidden}
+  .quadro.ok{border-top-color:var(--verde)}
+  .quadro.ruim{border-top-color:var(--vermelho)}
+  .quadro summary{list-style:none; cursor:pointer; padding:15px 14px; display:block;
+                  user-select:none; text-align:center}
+  .quadro summary::-webkit-details-marker{display:none}
+  .quadro summary:hover{background:var(--papel-2)}
+
+  .q-num{display:block; font-family:'Oswald',sans-serif; font-weight:600; font-size:27px;
+         letter-spacing:.04em; line-height:1.05; color:var(--tinta)}
+  .q-pre{display:none}
+  .q-linha{display:block; margin-top:5px}
+  .q-media{font-family:'IBM Plex Mono',monospace; font-size:21px; font-weight:600;
+           color:var(--ambar)}
+  .q-media.ruim{color:var(--vermelho)}
+  .q-rot{display:block; font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+         color:var(--tinta-2); margin-top:1px}
+  .r-aberto{display:none}
+
+  /* ----- aberto: vira o cartão completo ----- */
+  .quadro[open]{grid-column:1 / -1}
+  .quadro[open] summary{text-align:left; padding:16px 16px 14px; background:transparent;
+                        border-bottom:1px solid var(--linha)}
+  .quadro[open] summary:hover{background:transparent}
+  .quadro[open] .q-num{font-size:21px}
+  .quadro[open] .q-pre{display:inline}
+  .quadro[open] .q-linha{display:flex; align-items:baseline; gap:11px; margin-top:4px}
+  .quadro[open] .q-media{font-size:32px}
+  .quadro[open] .q-rot{display:inline; margin:0; font-size:12px; letter-spacing:.02em;
+                       text-transform:none; font-family:'IBM Plex Mono',monospace}
+  .quadro[open] .r-fechado{display:none}
+  .quadro[open] .r-aberto{display:inline}
+
+  .quadro dl{display:grid; grid-template-columns:1fr auto; gap:5px 12px;
+             margin:0; padding:15px 16px; font-size:13.5px}
+  .quadro dt{color:var(--tinta-2)}
+  .quadro dd{margin:0; font-family:'IBM Plex Mono',monospace; text-align:right; font-weight:500}
+
+  .dica-rolagem{display:none}
+
+  /* =========================================================
+     MODO PAINEL — só os quadros de resultado, sem digitação
+     ========================================================= */
+  body.painel .so-adm{display:none !important}
+  .troca-modo{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:8px}
+  .modo-nota{font-size:12.5px; color:var(--tinta-2); font-family:'IBM Plex Mono',monospace}
+  body.painel .modo-nota{color:var(--ambar)}
+
+  /* ---------- janela de senha ---------- */
+  .modal{position:fixed; inset:0; z-index:100; display:flex; align-items:center;
+         justify-content:center; padding:20px; background:rgba(5,8,10,.82)}
+  .modal[hidden]{display:none}
+  .modal-caixa{background:var(--papel); border:1px solid var(--linha);
+               border-top:3px solid var(--ambar); padding:24px; width:100%; max-width:360px;
+               box-shadow:0 20px 60px rgba(0,0,0,.6)}
+  .modal-tit{font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:.1em;
+             font-size:15px; color:var(--ambar); margin-bottom:8px}
+  .modal-txt{font-size:13.5px; color:var(--tinta-2); margin:0 0 14px}
+  .modal-caixa input{width:100%; font-size:16px; text-align:center; letter-spacing:.1em}
+  .modal-erro{color:var(--vermelho); font-size:12.5px; margin-top:8px;
+              font-family:'IBM Plex Mono',monospace}
+  .modal-botoes{display:flex; gap:8px; margin-top:16px}
+  .modal-botoes button{flex:1}
+
+  /* =========================================================
+     CELULAR — telas estreitas
+     ========================================================= */
+  @media (max-width: 700px){
+    .wrap{padding:16px 12px 60px}
+    header{padding-bottom:12px; margin-bottom:18px}
+    .logo{height:46px}
+    h1{font-size:24px}
+    .sub{font-size:12.5px}
+    h2{margin:26px 0 10px; font-size:13px}
+
+    /* formulário: dois campos por linha, botões ocupando a largura toda */
+    form{grid-template-columns:1fr 1fr; padding:14px; gap:11px}
+    form input{font-size:16px}          /* 16px evita o zoom automático do iPhone */
+    .botoes-form{grid-column:1 / -1}
+    .botoes-form button{flex:1}
+    .previa, .metas{padding:11px 14px; font-size:13px}
+    .metas{gap:12px}
+    .meta-campo{flex:1 1 132px}
+    .meta-campo input{width:100%}
+    .metas-nota{display:none}
+
+    /* aviso de que a tabela se arrasta para o lado */
+    .dica-rolagem{display:block; font-size:12px; color:var(--tinta-2);
+                  margin:-4px 0 8px; font-family:'IBM Plex Mono',monospace}
+
+    /* resumo: os cartões viram um carrossel que se arrasta com o dedo */
+    .cards{display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory;
+           margin:0 -12px; padding:0 12px 8px; -webkit-overflow-scrolling:touch}
+    .card{flex:0 0 84%; scroll-snap-align:start; padding:14px}
+    .card .veic-tit{font-size:18px}
+    .card .media{font-size:26px}
+    .card dl{font-size:12.5px}
+
+    /* quadros do painel: dois por linha, do tamanho do dedo */
+    .grade{grid-template-columns:1fr 1fr; gap:9px}
+    .quadro summary{padding:17px 10px}
+    .q-num{font-size:25px}
+    .q-media{font-size:20px}
+    .quadro dl{font-size:13.5px; padding:13px 12px}
+
+    .custo-topo{padding:15px}
+    .custo-detalhe{gap:8px 16px; font-size:13px}
+    .painel-grafico{padding:13px}
+    .seletor{flex-wrap:wrap}
+    .barra-acoes button{flex:1 1 46%}
+    .toast{left:12px; right:12px; bottom:14px; transform:translateY(20px); text-align:center}
+    .toast.ver{transform:translateY(0)}
+  }
+
+  @media (max-width: 400px){
+    form{grid-template-columns:1fr}
+    .card{flex:0 0 90%}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="marca">
+      <img class="logo" src="data:image/png;base64,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" alt="DM Agrícola">
+      <div>
+        <div class="nome-empresa">DM Agrícola</div>
+        <div class="ramo">Gestão de frota</div>
+      </div>
+    </div>
+    <h1>Controle de <span>Abastecimento</span></h1>
+    <div class="sub">Km total, média e rendimento energético por veículo, acumulando a cada lançamento.</div>
+  </header>
+
+  <div class="troca-modo">
+    <button class="ghost" id="btnModo">Modo administração</button>
+    <span class="modo-nota" id="modoNota"></span>
+  </div>
+
+  <h2 class="so-adm">Novo lançamento</h2>
+  <div class="faixa-edicao so-adm" id="faixaEdicao" hidden></div>
+  <form id="form" class="so-adm">
+    <div>
+      <label for="data">Data</label>
+      <input type="date" id="data" required>
+    </div>
+    <div>
+      <label for="veiculo">Veículo</label>
+      <input type="text" id="veiculo" placeholder="5000" required>
+    </div>
+    <div>
+      <label for="kmIni">Km inicial <span class="dica" id="dicaKm"></span></label>
+      <input type="number" id="kmIni" step="1" min="0" placeholder="1000" required>
+    </div>
+    <div>
+      <label for="kmFim">Km final <span class="dica">pode ficar em branco</span></label>
+      <input type="number" id="kmFim" step="1" min="0" placeholder="depois">
+    </div>
+    <div>
+      <label for="litros">Litros abastecido</label>
+      <input type="number" id="litros" step="0.01" min="0" placeholder="200" required>
+    </div>
+    <div>
+      <label for="peso">Peso</label>
+      <input type="number" id="peso" step="0.01" min="0" placeholder="70" value="70">
+    </div>
+    <div class="botoes-form">
+      <button type="submit" id="btnSubmit">Salvar lançamento</button>
+      <button type="button" class="ghost" id="btnCancelar" hidden>Cancelar</button>
+    </div>
+  </form>
+  <div class="previa so-adm" id="previa"></div>
+
+  <div class="metas so-adm">
+    <span class="metas-tit">Metas</span>
+    <label class="meta-campo">Consumo (km/L)
+      <input type="number" id="metaMedia" step="0.01" min="0" value="1.20">
+    </label>
+    <label class="meta-campo">Rendimento energético
+      <input type="number" id="metaRendimento" step="0.01" min="0" value="90">
+    </label>
+    <label class="meta-campo">Diesel R$/L
+      <input type="number" id="precoDiesel" step="0.01" min="0" value="6.20">
+    </label>
+    <span class="metas-nota">Verde = dentro ou acima da meta · Vermelho = abaixo</span>
+  </div>
+
+  <h2 class="so-adm">Histórico</h2>
+  <div class="status so-adm"><span class="bolinha" id="bolinha"></span><span id="status"></span></div>
+  <div class="dica-rolagem so-adm">← arraste a tabela para o lado · a coluna Ações fica fixa</div>
+  <div class="rolagem so-adm">
+    <table>
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Veículo</th>
+          <th>Km inicial</th>
+          <th>Km final</th>
+          <th class="calcCab">Km total</th>
+          <th>Litros abastecido</th>
+          <th class="calcCab">Média</th>
+          <th>Peso</th>
+          <th class="calcCab">Rendimento Energético</th>
+          <th class="calcCab">vs. meta</th>
+          <th class="calcCab">Litros pela meta</th>
+          <th class="calcCab">Custo real</th>
+          <th class="calcCab">Perda R$</th>
+          <th class="fixa">Ações</th>
+        </tr>
+      </thead>
+      <tbody id="corpo"></tbody>
+    </table>
+    <div class="nada" id="nada" hidden>Nenhum lançamento ainda. Preencha o formulário acima.</div>
+  </div>
+
+  <div class="barra-acoes so-adm">
+    <button class="ghost" id="btnConsumo">Gráfico de consumo</button>
+    <button class="ghost" id="btnRendimento">Gráfico de rendimento energético</button>
+    <button class="ghost" id="btnSenha">Trocar senha</button>
+    <button class="ghost" id="btnPainelCelular">Gerar painel do celular</button>
+    <button class="ghost" id="btnCsv">Baixar CSV</button>
+    <button class="ghost" id="btnSalvar">Salvar backup</button>
+    <button class="ghost" id="btnAbrir">Abrir backup</button>
+    <input type="file" id="arquivo" accept=".json" hidden>
+  </div>
+
+  <div class="painel-grafico" id="painelGrafico" hidden>
+    <div class="grafico-topo">
+      <div class="titulo" id="tituloGrafico">Evolução por data</div>
+      <div class="seletor">
+        <button class="ghost ativo" data-metrica="media">Consumo</button>
+        <button class="ghost" data-metrica="rendimento">Rendimento energético</button>
+        <button class="ghost" data-metrica="litros">Litros</button>
+        <button class="ghost" id="btnFechar" title="Fechar o gráfico">&times;</button>
+      </div>
+    </div>
+    <div id="areaGrafico"></div>
+    <div class="legenda" id="legenda"></div>
+  </div>
+
+  <h2>Comparativo de custo — real x meta</h2>
+  <div id="painelCusto"></div>
+
+  <h2>Resumo acumulado por veículo</h2>
+  <div class="cards" id="resumo"></div>
+
+  <div class="aviso so-adm">
+    <strong>Km total</strong> = Km final − Km inicial &nbsp;·&nbsp;
+    <strong>Média</strong> = Km total ÷ Litros &nbsp;·&nbsp;
+    <strong>Rendimento Energético</strong> = Consumo × Peso.
+    Metas atuais: consumo <strong id="notaMetaA"></strong> km/L e rendimento <strong id="notaMetaB"></strong>.
+    Dá para alterar a qualquer momento nos campos de meta, acima.
+  </div>
+
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="modal" id="modalSenha" hidden>
+  <div class="modal-caixa">
+    <div class="modal-tit" id="modalTit">Modo administração</div>
+    <p class="modal-txt" id="modalTxt">Digite a senha para liberar os lançamentos.</p>
+    <input type="password" id="campoSenha" placeholder="senha" autocomplete="current-password">
+    <div class="modal-erro" id="erroSenha" hidden>Senha incorreta.</div>
+    <div class="modal-botoes">
+      <button id="btnEntrar">Entrar</button>
+      <button class="ghost" id="btnFecharModal">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   1. ONDE OS DADOS FICAM  — todas as variáveis gerais aqui
+========================================================= */
+let dados = [];
+let ultimoSalvo = null;      // marca a linha que acabou de entrar
+let editando = null;         // id do lançamento em edição (null = criando um novo)
+let salvamentoOk = true;     // o navegador aceita guardar?
+let graficoAberto = false;
+let metrica = 'media';       // media | rendimento | litros
+
+/* Cada lançamento ganha um id próprio. Sem isso, editar o veículo ou o km
+   faria o programa perder a linha de vista. */
+function novoId(){
+  return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+}
+function garantirIds(){
+  dados.forEach(r => { if(!r.id) r.id = novoId(); });
+}
+
+const CORES = ['#E8A33D','#4FB286','#6FA8DC','#E0644F','#B58BE0','#D6C34A','#5FC2C2','#F08FB0'];
+
+/* Metas da DM Agrícola. Litros não tem meta (é volume, não desempenho). */
+let metas = {media:1.20, rendimento:90, litros:null};
+let preco = 6.20;                     // R$ por litro de diesel
+
+const R$ = v => (v === null || v === undefined || isNaN(v)) ? '—'
+  : v.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+
+function gravarMetas(){
+  try{ localStorage.setItem('abast_metas', JSON.stringify({...metas, preco})); }catch(e){}
+}
+function carregarMetas(){
+  try{
+    const s = localStorage.getItem('abast_metas');
+    if(s){
+      const lido = JSON.parse(s);
+      if(lido.preco !== undefined) preco = lido.preco;
+      metas = Object.assign(metas, {media:lido.media, rendimento:lido.rendimento});
+    }
+  }catch(e){}
+  document.getElementById('metaMedia').value = metas.media;
+  document.getElementById('metaRendimento').value = metas.rendimento;
+  document.getElementById('precoDiesel').value = preco;
+}
+
+function gravar(){
+  try{ localStorage.setItem('abast_v3', JSON.stringify(dados)); salvamentoOk = true; }
+  catch(e){ salvamentoOk = false; }
+}
+function carregar(){
+  try{ const s = localStorage.getItem('abast_v3'); if(s){ dados = JSON.parse(s); return true; } }catch(e){}
+  return false;
+}
+
+/* Exemplo com três datas, para o gráfico já nascer com evolução */
+const EXEMPLO = [
+  {data:'2026-06-15', veiculo:'5000', kmIni:1000, kmFim:1300, litros:200, peso:70},
+  {data:'2026-07-14', veiculo:'5000', kmIni:1300, kmFim:1660, litros:220, peso:70},
+  {data:'2026-08-12', veiculo:'5000', kmIni:1660, kmFim:1930, litros:210, peso:70}
+];
+
+/* =========================================================
+   2. O CÁLCULO
+========================================================= */
+/* Um lançamento sem Km final fica "em aberto": guarda data, veículo,
+   km inicial e litros, e espera o fechamento. Nada é calculado ainda. */
+function contas(r){
+  const aberto = r.kmFim === null || r.kmFim === undefined || r.kmFim === '';
+  if(aberto) return {...r, aberto:true, kmTotal:null, media:null, rendimento:null,
+                     litrosMeta:null, custoReal:null, custoMeta:null, perda:null};
+
+  const kmTotal = r.kmFim - r.kmIni;
+  const media = r.litros > 0 ? kmTotal / r.litros : null;
+  const rendimento = media !== null ? media * r.peso : null;
+
+  /* Comparação com a meta, em litros e em dinheiro:
+     litrosMeta = quantos litros ESTE trecho deveria ter consumido
+     perda      = o que você gastou a mais (ou a menos, se ficar negativo) */
+  const litrosMeta = metas.media > 0 ? kmTotal / metas.media : null;
+  const custoReal  = r.litros * preco;
+  const custoMeta  = litrosMeta !== null ? litrosMeta * preco : null;
+  const perda      = custoMeta !== null ? custoReal - custoMeta : null;
+
+  return {...r, aberto:false, kmTotal, media, rendimento,
+          litrosMeta, custoReal, custoMeta, perda};
+}
+
+function calcular(){
+  return dados.map(contas).sort((a,b) =>
+    (a.data || '').localeCompare(b.data || '') ||
+    a.veiculo.localeCompare(b.veiculo,'pt-BR',{numeric:true}) ||
+    a.kmIni - b.kmIni);
+}
+
+function resumir(linhas){
+  const mapa = {};
+  linhas.forEach(l => {
+    const m = mapa[l.veiculo] = mapa[l.veiculo] || {
+      km:0, litros:0, litrosMeta:0, custoReal:0, custoMeta:0, n:0, abertos:0, peso:l.peso};
+    m.n++; m.peso = l.peso;
+    if(l.aberto){ m.abertos++; return; }        // em aberto não entra nas somas
+    m.km += l.kmTotal;
+    m.litros += l.litros;
+    m.litrosMeta += l.litrosMeta || 0;
+    m.custoReal += l.custoReal || 0;
+    m.custoMeta += l.custoMeta || 0;
+  });
+  Object.values(mapa).forEach(m => {
+    m.media = m.litros > 0 ? m.km / m.litros : null;
+    m.perda = m.custoReal - m.custoMeta;
+    m.litrosPerdidos = m.litros - m.litrosMeta;
+  });
+  return mapa;
+}
+
+/* Sugestão de Km inicial: o maior Km final já fechado daquele veículo */
+function ultimoKm(veiculo){
+  const kms = dados.filter(r => r.veiculo === veiculo && r.kmFim).map(r => r.kmFim);
+  return kms.length ? Math.max(...kms) : null;
+}
+
+/* =========================================================
+   3. MOSTRAR NA TELA
+========================================================= */
+const n = (v, casas=2) => (v === null || v === undefined || isNaN(v)) ? '—'
+  : v.toLocaleString('pt-BR', {minimumFractionDigits:casas, maximumFractionDigits:casas});
+const dataBR = s => s ? s.split('-').reverse().join('/') : '—';
+const dataCurta = s => s ? s.slice(8,10) + '/' + s.slice(5,7) : '';
+
+/* Compara um valor com a meta e devolve a barrinha colorida.
+   Zero no meio = na meta. Direita/verde = acima. Esquerda/vermelho = abaixo. */
+function barraMeta(valor, meta){
+  if(valor === null || !meta) return '<span class="calc">—</span>';
+  const p = (valor - meta) / meta;
+  const lim = Math.max(-1, Math.min(1, p / 0.25));   // 25% já enche a barra
+  const larg = Math.abs(lim) * 32;
+  const cor = p >= 0 ? 'var(--verde)' : 'var(--vermelho)';
+  const pos = p >= 0 ? `left:32px; width:${larg}px` : `left:${32-larg}px; width:${larg}px`;
+  return `<span class="desvio">
+      <span style="color:${cor}; font-size:12px">${(p>=0?'+':'')+(p*100).toFixed(0)}%</span>
+      <span class="trilho"><span class="preenche" style="${pos}; background:${cor}"></span></span>
+    </span>`;
+}
+
+/* Pinta o número de verde ou vermelho conforme bate ou não a meta */
+function classeMeta(valor, meta){
+  if(valor === null || !meta) return 'destaque';
+  return valor >= meta ? 'ok destaque' : 'ruim destaque';
+}
+
+/* Monta os quadros por veículo.
+   compacto = true  -> quadradinhos fechados, que abrem ao toque (celular/painel)
+   compacto = false -> cartões abertos, tudo à mostra (computador/administração) */
+function montarCards(resumo, compacto){
+  const chaves = Object.keys(resumo).sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true}));
+  if(!chaves.length) return '<div class="nada">Os totais por veículo aparecem aqui.</div>';
+
+  return chaves.map(v => {
+    const m = resumo[v];
+    const rend = m.media !== null ? m.media * m.peso : null;
+    const corMedia = m.media === null ? '' : (m.media >= metas.media ? 'ok' : 'ruim');
+    const falta = (m.media !== null && metas.media)
+      ? ((m.media - metas.media) / metas.media * 100) : null;
+
+    const detalhes = `<dl>
+        <dt>Meta de consumo</dt><dd>${n(metas.media,2)}</dd>
+        <dt>Diferença</dt><dd class="${falta===null?'':(falta>=0?'ok':'ruim')}">${falta===null?'—':(falta>=0?'+':'')+falta.toFixed(1)+'%'}</dd>
+        <dt>Km total</dt><dd>${n(m.km,0)}</dd>
+        <dt>Litros abastecidos</dt><dd>${n(m.litros)}</dd>
+        <dt>Lançamentos</dt><dd>${m.n}${m.abertos ? ' <span class="tag-aberto">'+m.abertos+' em aberto</span>' : ''}</dd>
+        <dt>Rendimento energético</dt><dd class="${rend===null?'':(rend>=metas.rendimento?'ok':'ruim')}">${n(rend,2)}</dd>
+        <dt>Custo real</dt><dd>${R$(m.custoReal)}</dd>
+        <dt>${m.perda>0?'Perda':'Economia'} em R$</dt><dd class="${m.perda>0?'ruim':'ok'}">${(m.perda>0?'+':'−')+R$(Math.abs(m.perda))}</dd>
+      </dl>`;
+
+    if(!compacto){
+      return `<div class="card">
+        <div class="veic-tit">Veículo ${v}</div>
+        <div class="media ${corMedia}">${n(m.media,2)} <small>consumo acumulado</small></div>
+        ${detalhes}
+      </div>`;
+    }
+
+    /* Celular: fechado mostra só o número do veículo e o consumo.
+       Usa <details>, que abre e fecha sozinho, sem precisar de código nenhum. */
+    return `<details class="quadro ${corMedia}">
+        <summary>
+          <span class="q-num"><span class="q-pre">Veículo </span>${v}</span>
+          <span class="q-linha">
+            <span class="q-media ${corMedia}">${n(m.media,2)}</span>
+            <span class="q-rot">
+              <span class="r-fechado">km/L${m.abertos ? ' · ' + m.abertos + ' aberto' : ''}</span>
+              <span class="r-aberto">consumo acumulado</span>
+            </span>
+          </span>
+        </summary>
+        ${detalhes}
+      </details>`;
+  }).join('');
+}
+
+function desenhar(){
+  const linhas = calcular();
+  const resumo = resumir(linhas);
+
+  document.getElementById('nada').hidden = linhas.length > 0;
+
+  document.getElementById('corpo').innerHTML = linhas.map(l => `
+    <tr class="${l.id === ultimoSalvo ? 'nova ' : ''}${l.id === editando ? 'editando ' : ''}${l.aberto ? 'aberto' : ''}">
+      <td>${dataBR(l.data)}${l.aberto ? '<span class="tag-aberto">em aberto</span>' : ''}</td>
+      <td class="veic">${l.veiculo}</td>
+      <td>${n(l.kmIni,0)}</td>
+      <td>${l.aberto
+            ? `<input class="fechar-km" type="number" step="1" min="${l.kmIni+1}"
+                 placeholder="fechar" title="Digite o Km final e tecle Enter"
+                 data-id="${l.id}">`
+            : n(l.kmFim,0)}</td>
+      <td class="calc">${n(l.kmTotal,0)}</td>
+      <td>${n(l.litros)}</td>
+      <td class="${classeMeta(l.media, metas.media)}">${n(l.media,2)}</td>
+      <td>${n(l.peso,0)}</td>
+      <td class="${classeMeta(l.rendimento, metas.rendimento)}">${n(l.rendimento,2)}</td>
+      <td>${barraMeta(l.media, metas.media)}</td>
+      <td class="calc">${n(l.litrosMeta,2)}</td>
+      <td>${R$(l.custoReal)}</td>
+      <td class="${l.perda === null ? '' : (l.perda > 0 ? 'ruim destaque' : 'ok destaque')}">${
+        l.perda === null ? '—' : (l.perda > 0 ? '+' : '') + R$(l.perda)}</td>
+      <td class="fixa">
+        <span class="acoes">
+          <button class="editar" title="Editar este lançamento" data-editar="${l.id}">Editar</button>
+          <button class="apagar" title="Apagar este lançamento" data-id="${l.id}">Apagar</button>
+        </span>
+      </td>
+    </tr>`).join('');
+
+  /* ----- comparativo de custo: soma tudo e mostra a diferença em R$ ----- */
+  const T = Object.values(resumo).reduce((s,m) => ({
+    km: s.km + m.km, litros: s.litros + m.litros, litrosMeta: s.litrosMeta + m.litrosMeta,
+    custoReal: s.custoReal + m.custoReal, custoMeta: s.custoMeta + m.custoMeta
+  }), {km:0, litros:0, litrosMeta:0, custoReal:0, custoMeta:0});
+
+  const perdaTotal = T.custoReal - T.custoMeta;
+  const litrosPerdidos = T.litros - T.litrosMeta;
+  const perdendo = perdaTotal > 0;
+  const custoKmReal = T.km > 0 ? T.custoReal / T.km : null;
+  const custoKmMeta = T.km > 0 ? T.custoMeta / T.km : null;
+
+  /* barra: parte verde = o que a meta previa; parte vermelha = o excedente */
+  let barra = '';
+  if(T.custoReal > 0 && T.custoMeta > 0){
+    const base = Math.max(T.custoReal, T.custoMeta);
+    const pMeta = Math.min(T.custoMeta, T.custoReal) / base * 100;
+    const pExtra = 100 - pMeta;
+    barra = `<div class="custo-barra">
+        <div class="fatia-meta" style="width:${pMeta}%">${pMeta > 22 ? 'meta ' + R$(T.custoMeta) : ''}</div>
+        <div class="${perdendo ? 'fatia-perda' : 'fatia-economia'}" style="width:${pExtra}%">${
+          pExtra > 14 ? (perdendo ? '+' : '−') + R$(Math.abs(perdaTotal)) : ''}</div>
+      </div>`;
+  }
+
+  document.getElementById('painelCusto').innerHTML = T.km === 0
+    ? '<div class="nada">Feche pelo menos um lançamento para ver o comparativo de custo.</div>'
+    : `<div class="custo-topo">
+        <div class="custo-rot">${perdendo ? 'Perda acumulada em combustível' : 'Economia acumulada em combustível'}</div>
+        <div class="custo-num ${perdendo ? 'ruim' : 'ok'}">${(perdendo ? '' : '−') + R$(Math.abs(perdaTotal))}</div>
+        <div class="custo-detalhe">
+          <span>Km rodado <b>${n(T.km,0)}</b></span>
+          <span>Litros reais <b>${n(T.litros)}</b></span>
+          <span>Litros pela meta <b>${n(T.litrosMeta)}</b></span>
+          <span>Diferença <b class="${litrosPerdidos>0?'ruim':'ok'}">${(litrosPerdidos>0?'+':'')+n(litrosPerdidos)} L</b></span>
+        </div>
+        <div class="custo-detalhe">
+          <span>Custo real <b>${R$(T.custoReal)}</b></span>
+          <span>Custo pela meta <b>${R$(T.custoMeta)}</b></span>
+          <span>R$ por km real <b>${R$(custoKmReal)}</b></span>
+          <span>R$ por km na meta <b>${R$(custoKmMeta)}</b></span>
+        </div>
+        ${barra}
+      </div>`;
+
+  document.getElementById('resumo').innerHTML = montarCards(resumo, modo === 'painel');
+  document.getElementById('resumo').className = modo === 'painel' ? 'grade' : 'cards';
+
+  gravar();
+
+  const qtd = linhas.length, veic = Object.keys(resumo).length;
+  const abertos = linhas.filter(l => l.aberto).length;
+  const aviso = abertos ? ` · ${abertos} aguardando fechamento` : '';
+  document.getElementById('bolinha').className = 'bolinha' + (salvamentoOk ? '' : ' off');
+  document.getElementById('status').textContent = salvamentoOk
+    ? `${qtd} lançamento${qtd===1?'':'s'} · ${veic} veículo${veic===1?'':'s'}${aviso} · salvo neste navegador`
+    : `${qtd} lançamento${qtd===1?'':'s'}${aviso} · este navegador não está guardando — use "Salvar backup" antes de fechar`;
+
+  document.getElementById('notaMetaA').textContent = n(metas.media,2);
+  document.getElementById('notaMetaB').textContent = n(metas.rendimento,2);
+
+  if(graficoAberto) desenharGrafico();
+}
+
+/* ---------------------------------------------------------
+   O GRÁFICO — desenhado à mão em SVG, sem biblioteca externa
+   Ideia: cada ponto vira uma coordenada x,y dentro de uma
+   caixa. Data → eixo X. Valor da métrica → eixo Y.
+--------------------------------------------------------- */
+const ROTULOS = {media:'Consumo (km/L)', rendimento:'Rendimento energético', litros:'Litros abastecidos'};
+
+function desenharGrafico(){
+  const area = document.getElementById('areaGrafico');
+  const legenda = document.getElementById('legenda');
+  document.getElementById('tituloGrafico').textContent = ROTULOS[metrica] + ' — evolução por data';
+
+  const linhas = calcular().filter(l => l.data && l[metrica] !== null && !isNaN(l[metrica]));
+  if(linhas.length < 1){
+    area.innerHTML = '<div class="nada">Sem dados suficientes. Lance pelo menos um abastecimento com data.</div>';
+    legenda.innerHTML = '';
+    return;
+  }
+
+  /* dimensões da caixa de desenho — mais estreita e com texto maior no celular */
+  const mobile = window.innerWidth < 700;
+  const L = mobile ? 380 : 720, A = mobile ? 300 : 320;
+  const mE = mobile ? 44 : 52, mD = 14, mT = 14, mB = mobile ? 36 : 40;
+  const fonte = mobile ? 13 : 11;
+  const larg = L - mE - mD, alt = A - mT - mB;
+
+  /* eixo X: datas em milissegundos */
+  const tempos = linhas.map(l => new Date(l.data).getTime());
+  let tMin = Math.min(...tempos), tMax = Math.max(...tempos);
+  if(tMin === tMax){ tMin -= 86400000; tMax += 86400000; }   // um único dia: abre a janela
+
+  /* eixo Y: sempre começa no zero, e sempre cabe a meta dentro */
+  const meta = metas[metrica];
+  const valores = linhas.map(l => l[metrica]);
+  const vMax = Math.max(...valores, meta || 0) * 1.15 || 1;
+
+  const px = t => mE + (t - tMin) / (tMax - tMin) * larg;
+  const py = v => mT + alt - (v / vMax) * alt;
+
+  /* grades horizontais */
+  let svg = '';
+  for(let i = 0; i <= 4; i++){
+    const v = vMax * i / 4, y = py(v);
+    svg += `<line x1="${mE}" y1="${y}" x2="${L-mD}" y2="${y}" stroke="#2A353E" stroke-width="1"/>
+            <text x="${mE-9}" y="${y+4}" text-anchor="end" fill="#8FA3AD"
+                  font-family="IBM Plex Mono" font-size="${fonte}">${n(v, v>=100?0:2)}</text>`;
+  }
+
+  /* rótulos de data no eixo X */
+  const datasUnicas = [...new Set(linhas.map(l => l.data))].sort();
+  const passo = Math.ceil(datasUnicas.length / (mobile ? 3 : 6));
+  datasUnicas.forEach((d, i) => {
+    if(i % passo !== 0 && i !== datasUnicas.length - 1) return;
+    const x = px(new Date(d).getTime());
+    svg += `<text x="${x}" y="${A-mB+20}" text-anchor="middle" fill="#8FA3AD"
+                  font-family="IBM Plex Mono" font-size="${fonte}">${dataCurta(d)}</text>`;
+  });
+
+  /* uma linha por veículo */
+  const veiculos = [...new Set(linhas.map(l => l.veiculo))]
+                    .sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true}));
+  veiculos.forEach((v, i) => {
+    const cor = CORES[i % CORES.length];
+    const pts = linhas.filter(l => l.veiculo === v)
+                      .map(l => [px(new Date(l.data).getTime()), py(l[metrica]), l]);
+    if(pts.length > 1){
+      svg += `<polyline points="${pts.map(p => p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}"
+              fill="none" stroke="${cor}" stroke-width="2"
+              stroke-linejoin="round" stroke-linecap="round"/>`;
+    }
+    pts.forEach(p => {
+      svg += `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4"
+                fill="#0B0F12" stroke="${cor}" stroke-width="2">
+                <title>Veículo ${v} · ${dataBR(p[2].data)} · ${n(p[2][metrica],2)}</title>
+              </circle>`;
+    });
+  });
+
+  /* eixos */
+  svg += `<line x1="${mE}" y1="${mT}" x2="${mE}" y2="${mT+alt}" stroke="#3C4A54"/>
+          <line x1="${mE}" y1="${mT+alt}" x2="${L-mD}" y2="${mT+alt}" stroke="#3C4A54"/>`;
+
+  /* linha tracejada da meta, por cima de tudo */
+  if(meta){
+    const y = py(meta);
+    svg += `<line x1="${mE}" y1="${y}" x2="${L-mD}" y2="${y}"
+              stroke="#E8A33D" stroke-width="1.5" stroke-dasharray="7 5" opacity="0.9"/>
+            <rect x="${L-mD-92}" y="${y-19}" width="92" height="17" rx="2" fill="#0B0F12" opacity="0.85"/>
+            <text x="${L-mD-4}" y="${y-7}" text-anchor="end" fill="#E8A33D"
+                  font-family="IBM Plex Mono" font-size="${fonte}">META ${n(meta,2)}</text>`;
+  }
+
+  area.innerHTML = `<svg class="grafico" viewBox="0 0 ${L} ${A}"
+      xmlns="http://www.w3.org/2000/svg" role="img"
+      aria-label="Evolução de ${ROTULOS[metrica]} por data">${svg}</svg>`;
+
+  legenda.innerHTML = veiculos.map((v,i) =>
+    `<span><i class="chave" style="background:${CORES[i%CORES.length]}"></i>Veículo ${v}</span>`).join('');
+}
+
+function atualizarPrevia(){
+  const kmIni = Number(document.getElementById('kmIni').value);
+  const campoFim = document.getElementById('kmFim').value;
+  const litros = Number(document.getElementById('litros').value);
+  const peso = Number(document.getElementById('peso').value);
+
+  if(campoFim === ''){
+    document.getElementById('previa').innerHTML =
+      'Sem Km final: será salvo <b>em aberto</b> · você fecha depois pela tabela';
+    return;
+  }
+  const kmTotal = Number(campoFim) - kmIni;
+  const media = litros > 0 ? kmTotal / litros : null;
+  const cor = (v, meta) => (v !== null && meta && v < meta) ? 'ruim' : '';
+  document.getElementById('previa').innerHTML =
+    `Km total <b>${n(kmTotal,0)}</b>` +
+    ` &nbsp;·&nbsp; Consumo <b class="${cor(media,metas.media)}">${n(media,2)}</b>` +
+    ` &nbsp;·&nbsp; Rendimento energético <b class="${cor(media!==null?media*peso:null,metas.rendimento)}">${media!==null?n(media*peso,2):'—'}</b>`;
+}
+
+/* =========================================================
+   4. AÇÕES DA TELA
+========================================================= */
+const campoVeiculo = document.getElementById('veiculo');
+
+let tempoToast;
+function avisar(texto){
+  const t = document.getElementById('toast');
+  t.innerHTML = texto;
+  t.classList.add('ver');
+  clearTimeout(tempoToast);
+  tempoToast = setTimeout(() => t.classList.remove('ver'), 2600);
+}
+
+campoVeiculo.addEventListener('input', () => {
+  if(editando){ atualizarPrevia(); return; }   // editando: não mexe no que já está lá
+  const km = ultimoKm(campoVeiculo.value.trim().toUpperCase());
+  const dica = document.getElementById('dicaKm');
+  if(km !== null){ document.getElementById('kmIni').value = km; dica.textContent = '(último registrado)'; }
+  else { dica.textContent = ''; }
+  atualizarPrevia();
+});
+
+['kmIni','kmFim','litros','peso'].forEach(id =>
+  document.getElementById(id).addEventListener('input', atualizarPrevia));
+
+/* Entra no modo edição: joga o lançamento de volta no formulário */
+function editarLancamento(id){
+  const r = dados.find(x => x.id === id);
+  if(!r) return;
+  editando = id;
+  ultimoSalvo = null;
+  document.getElementById('data').value = r.data || '';
+  document.getElementById('veiculo').value = r.veiculo;
+  document.getElementById('kmIni').value = r.kmIni;
+  document.getElementById('kmFim').value = r.kmFim ?? '';
+  document.getElementById('litros').value = r.litros;
+  document.getElementById('peso').value = r.peso;
+  document.getElementById('dicaKm').textContent = '';
+
+  document.getElementById('btnSubmit').textContent = 'Salvar alteração';
+  document.getElementById('btnCancelar').hidden = false;
+  document.getElementById('form').classList.add('modo-edicao');
+  const faixa = document.getElementById('faixaEdicao');
+  faixa.hidden = false;
+  faixa.textContent = `Editando o lançamento do veículo ${r.veiculo} de ${dataBR(r.data)}`;
+
+  atualizarPrevia();
+  desenhar();
+  const f = document.getElementById('form');
+  if(f.scrollIntoView) f.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+/* Sai do modo edição e devolve o formulário ao normal */
+function sairEdicao(){
+  editando = null;
+  document.getElementById('btnSubmit').textContent = 'Salvar lançamento';
+  document.getElementById('btnCancelar').hidden = true;
+  document.getElementById('form').classList.remove('modo-edicao');
+  document.getElementById('faixaEdicao').hidden = true;
+  document.getElementById('kmFim').value = '';
+  document.getElementById('litros').value = '';
+  document.getElementById('dicaKm').textContent = '';
+  atualizarPrevia();
+}
+
+document.getElementById('btnCancelar').addEventListener('click', () => {
+  sairEdicao(); desenhar(); avisar('Edição cancelada');
+});
+
+document.getElementById('form').addEventListener('submit', e => {
+  e.preventDefault();
+  const kmIni = Number(document.getElementById('kmIni').value);
+  const campoFim = document.getElementById('kmFim').value;
+  const kmFim = campoFim === '' ? null : Number(campoFim);   // null = em aberto
+
+  if(kmFim !== null && kmFim <= kmIni){
+    alert('O Km final precisa ser maior que o Km inicial.');
+    return;
+  }
+
+  const registro = {
+    data: document.getElementById('data').value,
+    veiculo: campoVeiculo.value.trim().toUpperCase(),
+    kmIni, kmFim,
+    litros: Number(document.getElementById('litros').value),
+    peso: Number(document.getElementById('peso').value) || 0
+  };
+  const media = (kmFim !== null && registro.litros > 0) ? (kmFim - kmIni) / registro.litros : null;
+
+  if(editando){
+    /* ----- atualizando um lançamento que já existe ----- */
+    const i = dados.findIndex(x => x.id === editando);
+    dados[i] = {...dados[i], ...registro};
+    ultimoSalvo = editando;
+    avisar(`Lançamento alterado · veículo ${registro.veiculo}` +
+           (media !== null ? ` · consumo <b>${n(media,2)}</b>` : ' · <b>segue em aberto</b>'));
+    sairEdicao();
+    document.getElementById('kmIni').value = '';
+  }else{
+    /* ----- criando um lançamento novo ----- */
+    registro.id = novoId();
+    dados.push(registro);
+    ultimoSalvo = registro.id;
+    if(kmFim === null){
+      avisar(`Abastecimento salvo em aberto · veículo ${registro.veiculo} · <b>falta o Km final</b>`);
+      document.getElementById('kmIni').value = '';
+    }else{
+      avisar(`Lançamento salvo · veículo ${registro.veiculo} · consumo <b>${n(media,2)}</b>`);
+      document.getElementById('kmIni').value = kmFim;   // emenda o próximo trecho
+    }
+    document.getElementById('kmFim').value = '';
+    document.getElementById('litros').value = '';
+  }
+
+  atualizarPrevia();
+  desenhar();
+});
+
+/* Fechamento pela tabela: digita o Km final na linha em aberto e tecla Enter */
+document.getElementById('corpo').addEventListener('change', e => {
+  const campo = e.target.closest('.fechar-km');
+  if(!campo) return;
+  const r = dados.find(x => x.id === campo.dataset.id);
+  if(!r) return;
+  const kmFim = Number(campo.value);
+  if(!kmFim || kmFim <= r.kmIni){
+    alert('O Km final precisa ser maior que ' + n(r.kmIni,0) + '.');
+    campo.value = '';
+    return;
+  }
+  r.kmFim = kmFim;
+  ultimoSalvo = r.id;
+  const media = r.litros > 0 ? (kmFim - r.kmIni) / r.litros : null;
+  avisar(`Fechado · veículo ${r.veiculo} · consumo <b>${n(media,2)}</b>`);
+  desenhar();
+});
+
+/* Enter dentro do campo de fechamento já dispara o "change" */
+document.getElementById('corpo').addEventListener('keydown', e => {
+  if(e.key === 'Enter' && e.target.closest('.fechar-km')){ e.preventDefault(); e.target.blur(); }
+});
+
+document.getElementById('corpo').addEventListener('click', e => {
+  const bEditar = e.target.closest('.editar');
+  if(bEditar){ editarLancamento(bEditar.dataset.editar); return; }
+
+  const b = e.target.closest('.apagar');
+  if(!b) return;
+  const i = dados.findIndex(r => r.id === b.dataset.id);
+  if(i > -1){
+    if(editando === dados[i].id) sairEdicao();
+    dados.splice(i,1); ultimoSalvo = null; desenhar(); avisar('Lançamento apagado');
+  }
+});
+
+/* Abre o gráfico já na métrica pedida.
+   Se já estiver aberto naquela mesma métrica, o clique fecha. */
+function abrirGrafico(qual){
+  if(graficoAberto && metrica === qual){ fecharGrafico(); return; }
+  metrica = qual;
+  graficoAberto = true;
+  document.getElementById('painelGrafico').hidden = false;
+
+  /* deixa marcado o botão de fora e o de dentro que correspondem à métrica */
+  document.querySelectorAll('.seletor button[data-metrica]').forEach(x =>
+    x.classList.toggle('ativo', x.dataset.metrica === qual));
+  document.getElementById('btnConsumo').classList.toggle('ativo', qual === 'media');
+  document.getElementById('btnRendimento').classList.toggle('ativo', qual === 'rendimento');
+
+  desenharGrafico();
+  document.getElementById('painelGrafico').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function fecharGrafico(){
+  graficoAberto = false;
+  document.getElementById('painelGrafico').hidden = true;
+  document.getElementById('btnConsumo').classList.remove('ativo');
+  document.getElementById('btnRendimento').classList.remove('ativo');
+}
+
+document.getElementById('btnConsumo').addEventListener('click', () => abrirGrafico('media'));
+document.getElementById('btnRendimento').addEventListener('click', () => abrirGrafico('rendimento'));
+document.getElementById('btnFechar').addEventListener('click', fecharGrafico);
+
+document.querySelectorAll('.seletor button[data-metrica]').forEach(b =>
+  b.addEventListener('click', () => abrirGrafico(b.dataset.metrica)));
+
+function baixar(nome, texto, tipo){
+  const url = URL.createObjectURL(new Blob([texto], {type:tipo}));
+  const a = document.createElement('a');
+  a.href = url; a.download = nome; a.click();
+  URL.revokeObjectURL(url);
+}
+const virgula = (v, c) => (v === null || isNaN(v)) ? '' : v.toFixed(c).replace('.',',');
+
+document.getElementById('btnCsv').addEventListener('click', () => {
+  const titulo = 'DM AGRICOLA - CONTROLE DE ABASTECIMENTO';
+  const cab = 'Data;Veiculo;Km inicial;Km final;Km total;Litros abastecido;Media;Peso;Rendimento Energetico;Litros pela meta;Custo real;Custo meta;Perda R$';
+  const corpo = calcular().map(l => [
+    dataBR(l.data), l.veiculo, l.kmIni, l.kmFim ?? 'EM ABERTO', l.kmTotal ?? '',
+    virgula(l.litros,2), virgula(l.media,2), l.peso, virgula(l.rendimento,2),
+    virgula(l.litrosMeta,2), virgula(l.custoReal,2), virgula(l.custoMeta,2), virgula(l.perda,2)
+  ].join(';')).join('\n');
+  baixar('dm-agricola-abastecimentos.csv', '\uFEFF' + titulo + '\n\n' + cab + '\n' + corpo,
+         'text/csv;charset=utf-8');
+});
+
+document.getElementById('btnSalvar').addEventListener('click', () =>
+  baixar('dm-agricola-backup.json', JSON.stringify(dados, null, 2), 'application/json'));
+
+document.getElementById('btnAbrir').addEventListener('click', () =>
+  document.getElementById('arquivo').click());
+
+document.getElementById('arquivo').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if(!f) return;
+  const leitor = new FileReader();
+  leitor.onload = () => {
+    try{
+      const lido = JSON.parse(leitor.result);
+      if(Array.isArray(lido)){
+        dados = lido; ultimoSalvo = null; garantirIds(); sairEdicao(); desenhar();
+        avisar(`Backup aberto · <b>${lido.length}</b> lançamentos`);
+      } else alert('Esse arquivo não é um backup de abastecimentos.');
+    }catch(err){ alert('Não consegui ler o arquivo. Escolha o backup em .json.'); }
+  };
+  leitor.readAsText(f);
+  e.target.value = '';
+});
+
+/* ---------- metas: ao mudar o campo, recalcula tudo ---------- */
+document.getElementById('metaMedia').addEventListener('input', e => {
+  metas.media = Number(e.target.value) || 0;
+  gravarMetas(); desenhar();
+});
+document.getElementById('metaRendimento').addEventListener('input', e => {
+  metas.rendimento = Number(e.target.value) || 0;
+  gravarMetas(); desenhar();
+});
+
+document.getElementById('precoDiesel').addEventListener('input', e => {
+  preco = Number(e.target.value) || 0;
+  gravarMetas(); desenhar();
+});
+
+/* =========================================================
+   5. MODO PAINEL x MODO ADMINISTRAÇÃO
+   Painel  = só os quadros de resultado (celular)
+   Admin   = formulário, histórico, botões (computador)
+========================================================= */
+let modo = 'painel';
+
+/* A senha não é guardada como texto: só o "embaralhado" dela fica salvo.
+   Se alguém abrir a gaveta do navegador, vê algo tipo "1kq3zf", não a senha. */
+function embaralhar(txt){
+  let h = 5381;
+  for(let i = 0; i < txt.length; i++) h = (((h << 5) + h) ^ txt.charCodeAt(i)) >>> 0;
+  return h.toString(36);
+}
+const SENHA_PADRAO = 'dm2026';
+let senhaSalva = embaralhar(SENHA_PADRAO);
+try{
+  const s = localStorage.getItem('abast_senha');
+  if(s) senhaSalva = s;
+}catch(e){}
+
+let acaoModal = 'entrar';   // entrar | trocar
+
+function aplicarModo(){
+  document.body.classList.toggle('painel', modo === 'painel');
+  document.getElementById('btnModo').textContent =
+    modo === 'painel' ? 'Modo administração' : 'Ver painel';
+  document.getElementById('modoNota').textContent =
+    modo === 'painel' ? 'Painel — somente leitura' : 'Administração — lançamentos liberados';
+}
+
+function abrirModal(acao){
+  acaoModal = acao;
+  const novo = acao === 'trocar';
+  document.getElementById('modalTit').textContent = novo ? 'Trocar a senha' : 'Modo administração';
+  document.getElementById('modalTxt').textContent = novo
+    ? 'Digite a nova senha. Ela passa a valer neste navegador.'
+    : 'Digite a senha para liberar os lançamentos.';
+  document.getElementById('btnEntrar').textContent = novo ? 'Salvar senha' : 'Entrar';
+  document.getElementById('campoSenha').value = '';
+  document.getElementById('erroSenha').hidden = true;
+  document.getElementById('modalSenha').hidden = false;
+  document.getElementById('campoSenha').focus();
+}
+
+function fecharModal(){
+  document.getElementById('modalSenha').hidden = true;
+  document.getElementById('campoSenha').value = '';
+}
+
+function confirmarModal(){
+  const txt = document.getElementById('campoSenha').value;
+
+  if(acaoModal === 'trocar'){
+    if(txt.length < 4){
+      const err = document.getElementById('erroSenha');
+      err.textContent = 'A senha precisa ter pelo menos 4 caracteres.';
+      err.hidden = false;
+      return;
+    }
+    senhaSalva = embaralhar(txt);
+    try{ localStorage.setItem('abast_senha', senhaSalva); }catch(e){}
+    fecharModal();
+    avisar('Senha alterada');
+    return;
+  }
+
+  if(embaralhar(txt) !== senhaSalva){
+    document.getElementById('erroSenha').textContent = 'Senha incorreta.';
+    document.getElementById('erroSenha').hidden = false;
+    document.getElementById('campoSenha').value = '';
+    document.getElementById('campoSenha').focus();
+    return;
+  }
+
+  /* liberado: fica destravado até fechar a aba */
+  try{ sessionStorage.setItem('abast_destravado','1'); }catch(e){}
+  modo = 'adm';
+  fecharModal();
+  aplicarModo();
+  desenhar();
+  avisar('Modo administração liberado');
+}
+
+document.getElementById('btnEntrar').addEventListener('click', confirmarModal);
+document.getElementById('btnFecharModal').addEventListener('click', fecharModal);
+document.getElementById('campoSenha').addEventListener('keydown', e => {
+  if(e.key === 'Enter'){ e.preventDefault(); confirmarModal(); }
+  if(e.key === 'Escape') fecharModal();
+});
+document.getElementById('btnSenha').addEventListener('click', () => abrirModal('trocar'));
+
+document.getElementById('btnModo').addEventListener('click', () => {
+  if(modo === 'adm'){
+    /* saindo da administração: tranca de novo */
+    modo = 'painel';
+    if(editando) sairEdicao();
+    try{ sessionStorage.removeItem('abast_destravado'); }catch(e){}
+    aplicarModo();
+    desenhar();
+    window.scrollTo({top:0, behavior:'smooth'});
+  }else{
+    abrirModal('entrar');
+  }
+});
+
+/* Gera um arquivo novo, só de leitura, com os números já congelados dentro.
+   É esse arquivo que você manda para o celular depois de atualizar a base. */
+document.getElementById('btnPainelCelular').addEventListener('click', () => {
+  const css = document.querySelector('style').textContent;
+  const logo = document.querySelector('.logo').src;
+  const agora = new Date().toLocaleString('pt-BR', {dateStyle:'short', timeStyle:'short'});
+
+  const arquivo = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DM Agrícola · Painel</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>${css}</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="marca">
+      <img class="logo" src="${logo}" alt="DM Agrícola">
+      <div>
+        <div class="nome-empresa">DM Agrícola</div>
+        <div class="ramo">Gestão de frota</div>
+      </div>
+    </div>
+    <h1>Painel de <span>Abastecimento</span></h1>
+    <div class="sub">Posição de ${agora} · somente leitura</div>
+  </header>
+
+  <h2>Comparativo de custo — real x meta</h2>
+  ${document.getElementById('painelCusto').innerHTML}
+
+  <h2>Resumo acumulado por veículo</h2>
+  <div class="grade">${montarCards(resumir(calcular()), true)}</div>
+
+  <div class="aviso">
+    Toque no número do veículo para ver os detalhes.
+    Este é um retrato dos números no momento em que foi gerado — ${agora}.
+  </div>
+</div>
+</body>
+</html>`;
+
+  const data = new Date().toISOString().slice(0,10);
+  baixar(`dm-agricola-painel-${data}.html`, arquivo, 'text/html;charset=utf-8');
+  avisar('Painel gerado · mande este arquivo para o celular');
+});
+
+/* ---------- início ---------- */
+if(!carregar()) dados = EXEMPLO.slice();
+garantirIds();
+carregarMetas();
+
+/* Começa sempre no painel. Só continua em administração se você
+   destravou nesta mesma sessão do navegador (aba ainda aberta). */
+try{
+  modo = sessionStorage.getItem('abast_destravado') === '1' ? 'adm' : 'painel';
+}catch(e){
+  modo = 'painel';
+}
+aplicarModo();
+
+document.getElementById('data').valueAsDate = new Date();
+atualizarPrevia();
+desenhar();
+</script>
+</body>
+</html>
