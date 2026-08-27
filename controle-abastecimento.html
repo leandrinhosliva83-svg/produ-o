@@ -250,6 +250,19 @@
   .quadro dt{color:var(--tinta-2)}
   .quadro dd{margin:0; font-family:'IBM Plex Mono',monospace; text-align:right; font-weight:500}
 
+  /* ---------- envio automático ---------- */
+  .config-envio{background:var(--papel); border:1px solid var(--linha);
+                border-left:3px solid var(--verde); padding:16px 18px; margin-top:14px}
+  .cfg-tit{font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:.1em;
+           font-size:13px; color:var(--verde); margin-bottom:12px}
+  .cfg-campos{display:flex; gap:14px; flex-wrap:wrap; align-items:end}
+  .cfg-campos .meta-campo{flex-direction:column; align-items:flex-start; gap:5px}
+  .cfg-campos input{width:190px}
+  .cfg-auto{flex-direction:row !important; align-items:center !important; gap:8px !important}
+  .cfg-auto input{width:18px !important; height:18px; accent-color:var(--verde); cursor:pointer}
+  .cfg-aviso{font-size:12.5px; color:var(--tinta-2); margin-top:14px; line-height:1.6}
+  .cfg-aviso b{color:var(--tinta)}
+
   .dica-rolagem{display:none}
 
   /* =========================================================
@@ -360,6 +373,8 @@
     .card{flex:0 0 90%}
   }
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -460,13 +475,38 @@
   <div class="barra-acoes so-adm">
     <button class="ghost" id="btnConsumo">Gráfico de consumo</button>
     <button class="ghost" id="btnRendimento">Gráfico de rendimento energético</button>
-    <button class="ghost" id="btnPublicar">Publicar base (dados.json)</button>
+    <button class="ghost" id="btnConfigEnvio">Conectar banco de dados</button>
+    <button class="ghost" id="btnPublicar">Baixar cópia (dados.json)</button>
     <button class="ghost" id="btnSenha">Trocar senha</button>
     <button class="ghost" id="btnPainelCelular">Gerar painel do celular</button>
     <button class="ghost" id="btnCsv">Baixar CSV</button>
     <button class="ghost" id="btnSalvar">Salvar backup</button>
     <button class="ghost" id="btnAbrir">Abrir backup</button>
     <input type="file" id="arquivo" accept=".json" hidden>
+  </div>
+
+  <div class="config-envio so-adm" id="configEnvio" hidden>
+    <div class="cfg-tit">Conexão com o banco de dados (Firebase)</div>
+    <div class="cfg-campos">
+      <label class="meta-campo">apiKey
+        <input id="fbApiKey" placeholder="AIzaSy..." autocomplete="off">
+      </label>
+      <label class="meta-campo">databaseURL
+        <input id="fbUrl" placeholder="https://seu-projeto-default-rtdb.firebaseio.com" autocomplete="off">
+      </label>
+      <label class="meta-campo">projectId
+        <input id="fbProj" placeholder="seu-projeto" autocomplete="off">
+      </label>
+      <button id="btnGerarCfg">Gerar firebase-config.json</button>
+      <button class="ghost" id="btnTestarCfg">Testar aqui</button>
+    </div>
+    <div class="cfg-aviso">
+      Pegue esses três valores no console do Firebase, em
+      <b>Configurações do projeto → Seus apps → Configuração do SDK</b>.
+      Depois clique em Gerar, e suba o <b>firebase-config.json</b> no repositório,
+      ao lado do HTML. Isso é feito <b>uma vez só</b> — daí em diante todos os aparelhos
+      se conectam sozinhos.
+    </div>
   </div>
 
   <div class="painel-grafico" id="painelGrafico" hidden>
@@ -515,6 +555,14 @@
 </div>
 
 <script>
+/* Liga um evento a um elemento. Se o elemento não existir, avisa no console
+   e segue em frente — um botão faltando não pode derrubar a página inteira. */
+function on(id, evento, fn){
+  const el = document.getElementById(id);
+  if(!el){ console.warn('elemento não encontrado:', id); return; }
+  el.addEventListener(evento, fn);
+}
+
 /* =========================================================
    1. ONDE OS DADOS FICAM  — todas as variáveis gerais aqui
 ========================================================= */
@@ -561,6 +609,7 @@ function carregarMetas(){
 }
 
 function gravar(){
+  if(usandoExemplo) return;      // demonstração não ocupa a gaveta do navegador
   try{ localStorage.setItem('abast_v3', JSON.stringify(dados)); salvamentoOk = true; }
   catch(e){ salvamentoOk = false; }
 }
@@ -812,6 +861,7 @@ function desenhar(){
   document.getElementById('notaMetaB').textContent = n(metas.rendimento,2);
 
   if(typeof mostrarFonte === 'function') mostrarFonte();
+  if(pendente && typeof salvarNaNuvem === 'function') salvarNaNuvem();
   if(typeof acenderEstado === 'function' &&
      !document.getElementById('btnAtualizar').classList.contains('vermelho') &&
      !document.getElementById('btnAtualizar').classList.contains('buscando')) acenderEstado();
@@ -1004,11 +1054,11 @@ function sairEdicao(){
   atualizarPrevia();
 }
 
-document.getElementById('btnCancelar').addEventListener('click', () => {
+on('btnCancelar', 'click', () => {
   sairEdicao(); desenhar(); avisar('Edição cancelada');
 });
 
-document.getElementById('form').addEventListener('submit', e => {
+on('form', 'submit', e => {
   e.preventDefault();
   const kmIni = Number(document.getElementById('kmIni').value);
   const campoFim = document.getElementById('kmFim').value;
@@ -1032,7 +1082,7 @@ document.getElementById('form').addEventListener('submit', e => {
     /* ----- atualizando um lançamento que já existe ----- */
     const i = dados.findIndex(x => x.id === editando);
     dados[i] = {...dados[i], ...registro};
-    pendente = true;
+    pendente = true; usandoExemplo = false;
     ultimoSalvo = editando;
     avisar(`Lançamento alterado · veículo ${registro.veiculo}` +
            (media !== null ? ` · consumo <b>${n(media,2)}</b>` : ' · <b>segue em aberto</b>'));
@@ -1040,6 +1090,7 @@ document.getElementById('form').addEventListener('submit', e => {
     document.getElementById('kmIni').value = '';
   }else{
     /* ----- criando um lançamento novo ----- */
+    if(usandoExemplo){ dados = []; usandoExemplo = false; }   // sai a demonstração
     registro.id = novoId();
     dados.push(registro);
     usandoExemplo = false; pendente = true;
@@ -1060,7 +1111,7 @@ document.getElementById('form').addEventListener('submit', e => {
 });
 
 /* Fechamento pela tabela: digita o Km final na linha em aberto e tecla Enter */
-document.getElementById('corpo').addEventListener('change', e => {
+on('corpo', 'change', e => {
   const campo = e.target.closest('.fechar-km');
   if(!campo) return;
   const r = dados.find(x => x.id === campo.dataset.id);
@@ -1072,7 +1123,7 @@ document.getElementById('corpo').addEventListener('change', e => {
     return;
   }
   r.kmFim = kmFim;
-  pendente = true;
+  pendente = true; usandoExemplo = false;
   ultimoSalvo = r.id;
   const media = r.litros > 0 ? (kmFim - r.kmIni) / r.litros : null;
   avisar(`Fechado · veículo ${r.veiculo} · consumo <b>${n(media,2)}</b>`);
@@ -1080,11 +1131,11 @@ document.getElementById('corpo').addEventListener('change', e => {
 });
 
 /* Enter dentro do campo de fechamento já dispara o "change" */
-document.getElementById('corpo').addEventListener('keydown', e => {
+on('corpo', 'keydown', e => {
   if(e.key === 'Enter' && e.target.closest('.fechar-km')){ e.preventDefault(); e.target.blur(); }
 });
 
-document.getElementById('corpo').addEventListener('click', e => {
+on('corpo', 'click', e => {
   const bEditar = e.target.closest('.editar');
   if(bEditar){ editarLancamento(bEditar.dataset.editar); return; }
 
@@ -1093,7 +1144,7 @@ document.getElementById('corpo').addEventListener('click', e => {
   const i = dados.findIndex(r => r.id === b.dataset.id);
   if(i > -1){
     if(editando === dados[i].id) sairEdicao();
-    dados.splice(i,1); ultimoSalvo = null; pendente = true; desenhar(); avisar('Lançamento apagado');
+    dados.splice(i,1); ultimoSalvo = null; pendente = true; usandoExemplo = false; desenhar(); avisar('Lançamento apagado');
   }
 });
 
@@ -1122,9 +1173,9 @@ function fecharGrafico(){
   document.getElementById('btnRendimento').classList.remove('ativo');
 }
 
-document.getElementById('btnConsumo').addEventListener('click', () => abrirGrafico('media'));
-document.getElementById('btnRendimento').addEventListener('click', () => abrirGrafico('rendimento'));
-document.getElementById('btnFechar').addEventListener('click', fecharGrafico);
+on('btnConsumo', 'click', () => abrirGrafico('media'));
+on('btnRendimento', 'click', () => abrirGrafico('rendimento'));
+on('btnFechar', 'click', fecharGrafico);
 
 document.querySelectorAll('.seletor button[data-metrica]').forEach(b =>
   b.addEventListener('click', () => abrirGrafico(b.dataset.metrica)));
@@ -1137,7 +1188,7 @@ function baixar(nome, texto, tipo){
 }
 const virgula = (v, c) => (v === null || isNaN(v)) ? '' : v.toFixed(c).replace('.',',');
 
-document.getElementById('btnCsv').addEventListener('click', () => {
+on('btnCsv', 'click', () => {
   const titulo = 'DM AGRICOLA - CONTROLE DE ABASTECIMENTO';
   const cab = 'Data;Veiculo;Km inicial;Km final;Km total;Litros abastecido;Media;Peso;Rendimento Energetico;Litros pela meta;Custo real;Custo meta;Perda R$';
   const corpo = calcular().map(l => [
@@ -1149,13 +1200,13 @@ document.getElementById('btnCsv').addEventListener('click', () => {
          'text/csv;charset=utf-8');
 });
 
-document.getElementById('btnSalvar').addEventListener('click', () =>
+on('btnSalvar', 'click', () =>
   baixar('dm-agricola-backup.json', JSON.stringify(dados, null, 2), 'application/json'));
 
-document.getElementById('btnAbrir').addEventListener('click', () =>
+on('btnAbrir', 'click', () =>
   document.getElementById('arquivo').click());
 
-document.getElementById('arquivo').addEventListener('change', e => {
+on('arquivo', 'change', e => {
   const f = e.target.files[0];
   if(!f) return;
   const leitor = new FileReader();
@@ -1163,7 +1214,7 @@ document.getElementById('arquivo').addEventListener('change', e => {
     try{
       const lido = JSON.parse(leitor.result);
       if(Array.isArray(lido)){
-        dados = lido; ultimoSalvo = null; garantirIds(); sairEdicao(); desenhar();
+        dados = lido; ultimoSalvo = null; usandoExemplo = false; garantirIds(); sairEdicao(); desenhar();
         avisar(`Backup aberto · <b>${lido.length}</b> lançamentos`);
       } else alert('Esse arquivo não é um backup de abastecimentos.');
     }catch(err){ alert('Não consegui ler o arquivo. Escolha o backup em .json.'); }
@@ -1173,16 +1224,16 @@ document.getElementById('arquivo').addEventListener('change', e => {
 });
 
 /* ---------- metas: ao mudar o campo, recalcula tudo ---------- */
-document.getElementById('metaMedia').addEventListener('input', e => {
+on('metaMedia', 'input', e => {
   metas.media = Number(e.target.value) || 0;
   gravarMetas(); desenhar();
 });
-document.getElementById('metaRendimento').addEventListener('input', e => {
+on('metaRendimento', 'input', e => {
   metas.rendimento = Number(e.target.value) || 0;
   gravarMetas(); desenhar();
 });
 
-document.getElementById('precoDiesel').addEventListener('input', e => {
+on('precoDiesel', 'input', e => {
   preco = Number(e.target.value) || 0;
   gravarMetas(); desenhar();
 });
@@ -1271,15 +1322,15 @@ function confirmarModal(){
   avisar('Modo administração liberado');
 }
 
-document.getElementById('btnEntrar').addEventListener('click', confirmarModal);
-document.getElementById('btnFecharModal').addEventListener('click', fecharModal);
-document.getElementById('campoSenha').addEventListener('keydown', e => {
+on('btnEntrar', 'click', confirmarModal);
+on('btnFecharModal', 'click', fecharModal);
+on('campoSenha', 'keydown', e => {
   if(e.key === 'Enter'){ e.preventDefault(); confirmarModal(); }
   if(e.key === 'Escape') fecharModal();
 });
-document.getElementById('btnSenha').addEventListener('click', () => abrirModal('trocar'));
+on('btnSenha', 'click', () => abrirModal('trocar'));
 
-document.getElementById('btnModo').addEventListener('click', () => {
+on('btnModo', 'click', () => {
   if(modo === 'adm'){
     /* saindo da administração: tranca de novo */
     modo = 'painel';
@@ -1295,7 +1346,7 @@ document.getElementById('btnModo').addEventListener('click', () => {
 
 /* Gera um arquivo novo, só de leitura, com os números já congelados dentro.
    É esse arquivo que você manda para o celular depois de atualizar a base. */
-document.getElementById('btnPainelCelular').addEventListener('click', () => {
+on('btnPainelCelular', 'click', () => {
   const css = document.querySelector('style').textContent;
   const logo = document.querySelector('.logo').src;
   const agora = new Date().toLocaleString('pt-BR', {dateStyle:'short', timeStyle:'short'});
@@ -1345,10 +1396,21 @@ document.getElementById('btnPainelCelular').addEventListener('click', () => {
 let publicadoEm = null;               // data da publicação que está em uso
 var usandoExemplo = false;            // true = ainda são os lançamentos de demonstração
 var pendente = false;                 // true = tem lançamento local ainda não publicado
+var nuvemLigada = false;              // true = conectado ao banco de dados ao vivo
 
 function mostrarFonte(){
   const el = document.getElementById('fonteBase');
   if(!el) return;
+  if(usandoExemplo){
+    el.innerHTML = 'Mostrando <em>dados de demonstração</em> — ainda não recebeu a base publicada';
+    return;
+  }
+  if(nuvemLigada){
+    el.innerHTML = publicadoEm
+      ? `<b>Ao vivo</b> · última alteração ${new Date(publicadoEm).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}`
+      : '<b>Ao vivo</b> · conectado ao banco de dados';
+    return;
+  }
   const marca = pendente ? ' · <em>alterações não publicadas</em>' : '';
   el.innerHTML = (publicadoEm
     ? `Base publicada em <b>${new Date(publicadoEm).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</b>`
@@ -1356,17 +1418,12 @@ function mostrarFonte(){
 }
 
 /* Baixa o dados.json para você subir no GitHub */
-document.getElementById('btnPublicar').addEventListener('click', () => {
-  const agora = new Date().toISOString();
-  const pacote = {
-    publicadoEm: agora,
-    metas: {media: metas.media, rendimento: metas.rendimento},
-    preco: preco,
-    lancamentos: dados
-  };
-  baixar('dados.json', JSON.stringify(pacote, null, 2), 'application/json');
+on('btnPublicar', 'click', () => {
+  const {agora, json} = montarPacote();
+  baixar('dados.json', json, 'application/json');
   publicadoEm = agora;
   pendente = false;
+  usandoExemplo = false;
   try{ localStorage.setItem('abast_publicado', agora); }catch(e){}
   mostrarFonte();
   acenderEstado();
@@ -1385,10 +1442,12 @@ function acenderEstado(){
   switch(estadoBase){
     case 'arquivo':  return marcarConexao('', 'Arquivo local');
     case 'semsinal': return marcarConexao('vermelho', navigator.onLine ? 'Sem sinal' : 'Offline');
-    case 'sembase':  return marcarConexao('ambar', 'Sem base publicada');
-    case 'ok':       return pendente
+    case 'sembase':  return marcarConexao('ambar', 'Banco não conectado');
+    case 'ok':       if(nuvemLigada) return marcarConexao('verde', 'Ao vivo');
+                     return pendente
                             ? marcarConexao('ambar', 'Não publicado')
                             : marcarConexao('verde', 'Atualizado');
+    case 'demo':     return marcarConexao('ambar', 'Demonstração');
     default:         return marcarConexao('buscando', 'Verificando…');
   }
 }
@@ -1425,7 +1484,7 @@ async function buscarBasePublicada(forcar){
   }
 
   if(!achou){
-    estadoBase = 'sembase'; acenderEstado();
+    estadoBase = usandoExemplo ? 'demo' : 'sembase'; acenderEstado();
     if(forcar) avisar('Ainda não existe <b>dados.json</b> no site · publique e suba o arquivo');
     return false;
   }
@@ -1482,8 +1541,13 @@ async function buscarBasePublicada(forcar){
 }
 
 /* Botão Atualizar: vai buscar o dados.json na hora */
-document.getElementById('btnAtualizar').addEventListener('click', async () => {
+on('btnAtualizar', 'click', async () => {
   const b = document.getElementById('btnAtualizar');
+  if(nuvemLigada){
+    marcarConexao('buscando', 'Buscando…');
+    ref.once('value').then(() => { acenderEstado(); avisar('Sincronizado com o banco'); });
+    return;
+  }
   b.disabled = true;
   marcarConexao('buscando', 'Buscando…');
   await buscarBasePublicada(true);
@@ -1493,15 +1557,139 @@ document.getElementById('btnAtualizar').addEventListener('click', async () => {
 /* A luz não espera você clicar: reconfere sozinha de tempos em tempos,
    ao voltar para a aba, e quando o aparelho perde ou recupera a internet. */
 window.addEventListener('offline', () => { estadoBase = 'semsinal'; acenderEstado(); });
-window.addEventListener('online',  () => buscarBasePublicada(false));
+window.addEventListener('online',  () => { if(!nuvemLigada) buscarBasePublicada(false); });
 
 document.addEventListener('visibilitychange', () => {
-  if(!document.hidden) buscarBasePublicada(false);
+  if(!document.hidden && !nuvemLigada) buscarBasePublicada(false);
 });
 
 setInterval(() => {
-  if(!document.hidden) buscarBasePublicada(false);
+  if(!document.hidden && !nuvemLigada) buscarBasePublicada(false);
 }, 60000);   // a cada 1 minuto
+
+/* =========================================================
+   7. BANCO DE DADOS AO VIVO (Firebase Realtime Database)
+   Digitou no computador, aparece no celular na hora.
+   Ninguém salva nada, ninguém publica nada.
+========================================================= */
+let ref = null;                 // o "endereço" dos dados lá no banco
+let meuId = 'd' + Math.random().toString(36).slice(2,9);   // identifica este aparelho
+let timerNuvem = null;
+let recebendo = false;          // trava para não devolver o que acabou de chegar
+
+function ligarBanco(conf){
+  if(!conf || !conf.apiKey || !conf.databaseURL) return false;
+  if(typeof firebase === 'undefined'){
+    estadoBase = 'semsinal'; acenderEstado();
+    return false;
+  }
+  try{
+    if(!firebase.apps.length) firebase.initializeApp(conf);
+    ref = firebase.database().ref('dm-agricola/abastecimento');
+  }catch(e){
+    estadoBase = 'semsinal'; acenderEstado();
+    return false;
+  }
+
+  /* Fica ouvindo o banco. Qualquer mudança, em qualquer aparelho, cai aqui. */
+  ref.on('value', snap => {
+    const pacote = snap.val();
+    if(!pacote || !Array.isArray(pacote.lancamentos)) {
+      nuvemLigada = true; estadoBase = 'ok'; pendente = false; acenderEstado();
+      return;
+    }
+    if(pacote.origem === meuId){          // eco do que eu mesmo mandei
+      nuvemLigada = true; estadoBase = 'ok'; pendente = false;
+      publicadoEm = pacote.atualizadoEm; mostrarFonte(); acenderEstado();
+      return;
+    }
+    recebendo = true;
+    dados = pacote.lancamentos;
+    usandoExemplo = false;
+    pendente = false;
+    if(pacote.metas) metas = Object.assign(metas, pacote.metas);
+    if(pacote.preco !== undefined) preco = pacote.preco;
+    document.getElementById('metaMedia').value = metas.media;
+    document.getElementById('metaRendimento').value = metas.rendimento;
+    document.getElementById('precoDiesel').value = preco;
+    publicadoEm = pacote.atualizadoEm;
+    nuvemLigada = true;
+    estadoBase = 'ok';
+    garantirIds();
+    desenhar();
+    mostrarFonte();
+    acenderEstado();
+    recebendo = false;
+  }, () => {
+    estadoBase = 'semsinal'; acenderEstado();
+  });
+
+  /* Avisa quando o aparelho perde e recupera a ligação com o banco */
+  firebase.database().ref('.info/connected').on('value', s => {
+    if(!nuvemLigada) return;
+    estadoBase = s.val() ? 'ok' : 'semsinal';
+    acenderEstado();
+  });
+
+  return true;
+}
+
+/* Manda para o banco. Espera 700ms parado para não escrever a cada tecla. */
+function salvarNaNuvem(){
+  if(!ref || recebendo || usandoExemplo) return;
+  clearTimeout(timerNuvem);
+  timerNuvem = setTimeout(() => {
+    ref.set({
+      atualizadoEm: new Date().toISOString(),
+      origem: meuId,
+      metas: {media: metas.media, rendimento: metas.rendimento},
+      preco: preco,
+      lancamentos: dados
+    }).catch(() => { estadoBase = 'semsinal'; acenderEstado(); });
+  }, 700);
+}
+
+/* ----- tela de configuração: gera o firebase-config.json ----- */
+function montarConf(){
+  return {
+    apiKey:      document.getElementById('fbApiKey').value.trim(),
+    databaseURL: document.getElementById('fbUrl').value.trim(),
+    projectId:   document.getElementById('fbProj').value.trim()
+  };
+}
+
+on('btnConfigEnvio', 'click', () => {
+  const p = document.getElementById('configEnvio');
+  p.hidden = !p.hidden;
+  if(!p.hidden) p.scrollIntoView({behavior:'smooth', block:'nearest'});
+});
+
+on('btnGerarCfg', 'click', () => {
+  const conf = montarConf();
+  if(!conf.apiKey || !conf.databaseURL){ avisar('Preencha ao menos apiKey e databaseURL'); return; }
+  baixar('firebase-config.json', JSON.stringify(conf, null, 2), 'application/json');
+  avisar('Arquivo gerado · suba o <b>firebase-config.json</b> no repositório');
+});
+
+on('btnTestarCfg', 'click', () => {
+  const conf = montarConf();
+  if(ligarBanco(conf)) avisar('Conectado · os dados começam a sincronizar');
+  else avisar('Não consegui conectar · confira os valores');
+});
+
+/* Procura o firebase-config.json ao abrir. É ele que liga tudo. */
+async function iniciarNuvem(){
+  if(location.protocol === 'file:') return false;
+  try{
+    const r = await fetch('firebase-config.json?v=' + Date.now(), {cache:'no-store'});
+    if(!r.ok) return false;
+    const conf = await r.json();
+    document.getElementById('fbApiKey').value = conf.apiKey || '';
+    document.getElementById('fbUrl').value    = conf.databaseURL || '';
+    document.getElementById('fbProj').value   = conf.projectId || '';
+    return ligarBanco(conf);
+  }catch(e){ return false; }
+}
 
 /* ---------- início ---------- */
 if(!carregar()){ dados = EXEMPLO.slice(); usandoExemplo = true; }
@@ -1523,7 +1711,7 @@ mostrarFonte();
 acenderEstado();
 atualizarPrevia();
 desenhar();
-buscarBasePublicada(false);
+iniciarNuvem().then(ok => { if(!ok) buscarBasePublicada(false); });
 </script>
 </body>
 </html>
