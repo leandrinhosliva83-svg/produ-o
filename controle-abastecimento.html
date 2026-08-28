@@ -477,6 +477,7 @@
   <div class="barra-acoes so-adm">
     <button class="ghost" id="btnConsumo">Gráfico de consumo</button>
     <button class="ghost" id="btnRendimento">Gráfico de rendimento energético</button>
+    <button class="ghost" id="btnSubirBase">Enviar minha base para o banco</button>
     <button class="ghost" id="btnEnviarGit">Enviar para o GitHub</button>
     <button class="ghost" id="btnConfigEnvio">Configurações de envio</button>
     <button class="ghost" id="btnPublicar">Baixar cópia (dados.json)</button>
@@ -1720,7 +1721,16 @@ function aplicarDoBanco(pacote){
   nuvemLigada = true;
   estadoBase = 'ok';
   if(!pacote || !Array.isArray(pacote.lancamentos)){
-    pendente = false; acenderEstado(); mostrarFonte();
+    /* Banco vazio. Se este aparelho já tem lançamentos de verdade,
+       manda eles para lá — senão eles ficariam presos só aqui. */
+    if(dados.length && !usandoExemplo){
+      pendente = true;
+      salvarNaNuvem();
+      avisar(`Enviando <b>${dados.length}</b> lançamentos para o banco`);
+    } else {
+      pendente = false;
+    }
+    acenderEstado(); mostrarFonte();
     return;
   }
   if(pacote.origem === meuId){
@@ -1948,6 +1958,18 @@ function agendarEnvioAuto(){
   marcarConexao('buscando', 'Enviando em breve…');
   timerAuto = setTimeout(() => enviarGitHub(true), 6000);
 }
+
+/* Força a base deste aparelho para o banco, por cima do que estiver lá.
+   Serve para quando um aparelho tem os dados certos e o outro não. */
+on('btnSubirBase', 'click', () => {
+  if(!nuvemLigada){ avisar('O banco não está conectado'); return; }
+  if(usandoExemplo || !dados.length){ avisar('Não há lançamentos aqui para enviar'); return; }
+  if(!confirm('Isto vai substituir a base do banco pelos ' + dados.length +
+              ' lançamentos deste aparelho.\n\nTodos os outros aparelhos passam a ver estes números. Continuar?')) return;
+  pendente = true;
+  salvarNaNuvem();
+  avisar(`Enviando <b>${dados.length}</b> lançamentos · os outros aparelhos atualizam em segundos`);
+});
 
 /* ---------- início ---------- */
 if(!carregar()){ dados = EXEMPLO.slice(); usandoExemplo = true; }
