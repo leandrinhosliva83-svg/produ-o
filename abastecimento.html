@@ -285,6 +285,7 @@
     .per-info{margin-left:0; flex-basis:100%}
   }
 
+  .barra-graficos{margin-top:10px}
   .oculto{display:none}
   .cfg-recolhe{cursor:pointer; list-style:none; margin-bottom:12px}
   .cfg-recolhe::-webkit-details-marker{display:none}
@@ -452,6 +453,33 @@
     <span class="per-info" id="perInfo"></span>
   </div>
 
+  <div class="barra-acoes barra-graficos">
+    <button class="ghost" id="btnConsumo">Gráfico de consumo</button>
+    <button class="ghost" id="btnRendimento">Gráfico de rendimento energético</button>
+  </div>
+  <div class="painel-grafico" id="painelGrafico" hidden>
+    <div class="grafico-topo">
+      <div class="titulo" id="tituloGrafico">Evolução por data</div>
+      <div class="seletor">
+        <button class="ghost ativo" data-metrica="media">Consumo</button>
+        <button class="ghost" data-metrica="rendimento">Rendimento energético</button>
+        <button class="ghost" data-metrica="litros">Litros</button>
+        <button class="ghost" id="btnFechar" title="Fechar o gráfico">&times;</button>
+      </div>
+    </div>
+    <div class="grafico-topo" style="margin-top:-6px">
+      <label class="per-campo">Veículo
+        <select id="selVeiculo"><option value="">Todos</option></select>
+      </label>
+      <label class="per-campo" style="cursor:pointer">
+        <input type="checkbox" id="chkFrota" checked style="width:17px;height:17px;accent-color:#E8A33D">
+        mostrar linha da frota
+      </label>
+    </div>
+    <div id="areaGrafico"></div>
+    <div class="legenda" id="legenda"></div>
+  </div>
+
   <h2 class="so-adm">Novo lançamento</h2>
   <div class="faixa-edicao so-adm" id="faixaEdicao" hidden></div>
   <form id="form" class="so-adm">
@@ -529,8 +557,6 @@
   </div>
 
   <div class="barra-acoes so-adm">
-    <button class="ghost" id="btnConsumo">Gráfico de consumo</button>
-    <button class="ghost" id="btnRendimento">Gráfico de rendimento energético</button>
     <button class="ghost" id="btnCsv">Baixar CSV</button>
     <button class="ghost" id="btnMais">Mais opções ▾</button>
     <input type="file" id="arquivo" accept=".json" hidden>
@@ -604,28 +630,6 @@
     </div>
   </div>
 
-  <div class="painel-grafico" id="painelGrafico" hidden>
-    <div class="grafico-topo">
-      <div class="titulo" id="tituloGrafico">Evolução por data</div>
-      <div class="seletor">
-        <button class="ghost ativo" data-metrica="media">Consumo</button>
-        <button class="ghost" data-metrica="rendimento">Rendimento energético</button>
-        <button class="ghost" data-metrica="litros">Litros</button>
-        <button class="ghost" id="btnFechar" title="Fechar o gráfico">&times;</button>
-      </div>
-    </div>
-    <div class="grafico-topo" style="margin-top:-6px">
-      <label class="per-campo">Veículo
-        <select id="selVeiculo"><option value="">Todos</option></select>
-      </label>
-      <label class="per-campo" style="cursor:pointer">
-        <input type="checkbox" id="chkFrota" checked style="width:17px;height:17px;accent-color:#E8A33D">
-        mostrar linha da frota
-      </label>
-    </div>
-    <div id="areaGrafico"></div>
-    <div class="legenda" id="legenda"></div>
-  </div>
 
   <h2>Comparativo de custo — real x meta</h2>
   <div id="painelCusto"></div>
