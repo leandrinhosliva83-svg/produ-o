@@ -283,6 +283,9 @@
                          letter-spacing:.1em; font-size:14px; color:var(--vermelho); margin-bottom:5px}
   .alerta-conexao .a-txt{font-size:13.5px; color:#E8C0B8; line-height:1.6}
   .alerta-conexao b{color:var(--tinta)}
+  .alerta-conexao.modo-github{border-color:var(--verde); background:rgba(79,178,134,.10)}
+  .alerta-conexao.modo-github .a-tit{color:var(--verde)}
+  .alerta-conexao.modo-github .a-txt{color:#B9D9CB}
 
   /* ---------- luz do botão Atualizar ---------- */
   #btnAtualizar{display:inline-flex; align-items:center; gap:8px}
@@ -524,7 +527,7 @@
     <div class="cfg-tit">Envio para o GitHub</div>
     <div class="cfg-campos">
       <label class="meta-campo">Repositório
-        <input id="cfgRepo" placeholder="usuario/repositorio" autocomplete="off">
+        <input id="cfgRepo" value="leandrinhosliva83-svg/produ-o" autocomplete="off">
       </label>
       <label class="meta-campo">Branch
         <input id="cfgBranch" value="main" autocomplete="off">
@@ -537,7 +540,7 @@
       </label>
       <label class="meta-campo cfg-auto">
         <span>Enviar sozinho</span>
-        <input type="checkbox" id="cfgAuto">
+        <input type="checkbox" id="cfgAuto" checked>
       </label>
       <button id="btnSalvarCfg">Salvar</button>
       <button class="ghost" id="btnApagarToken">Apagar token</button>
@@ -1445,20 +1448,40 @@ function mostrarAlerta(){
   const el = document.getElementById('alertaConexao');
   if(!el) return;
   if(nuvemLigada){ el.hidden = true; return; }
+
+  /* Com o GitHub configurado, o compartilhamento funciona — só não é instantâneo */
+  if(cfg && cfg.repo && cfg.token){
+    el.hidden = false;
+    el.className = 'alerta-conexao modo-github';
+    el.innerHTML =
+      '<div class="a-tit">Compartilhando pelo GitHub</div>' +
+      '<div class="a-txt">Cada lançamento é enviado sozinho. Os outros aparelhos ' +
+      'veem em <b>1 a 3 minutos</b>, tocando em Atualizar.</div>';
+    return;
+  }
+
+  el.className = 'alerta-conexao';
   el.hidden = false;
   el.innerHTML =
     '<div class="a-tit">Estes números não são compartilhados</div>' +
-    '<div class="a-txt">O banco de dados não está conectado' +
-    (motivoBanco ? ' (<b>' + motivoBanco + '</b>)' : '') + '. ' +
-    'O que você digitar aqui <b>fica só neste aparelho</b> e não aparece nos outros. ' +
-    'Não confie em comparar telas enquanto esta faixa estiver visível.</div>';
+    '<div class="a-txt">O que você digitar aqui <b>fica só neste aparelho</b>. ' +
+    'Para compartilhar, entre no modo administração, abra ' +
+    '<b>Configurações de envio</b> e cole o token do GitHub.' +
+    (motivoBanco ? '<br><br>Banco ao vivo indisponível: <b>' + motivoBanco + '</b>' : '') +
+    '</div>';
 }
 
 function mostrarFonte(){
   const el = document.getElementById('fonteBase');
   if(!el) return;
+  if(!nuvemLigada && cfg && cfg.repo && cfg.token){
+    el.innerHTML = publicadoEm
+      ? `Compartilhado pelo GitHub · último envio ${new Date(publicadoEm).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}`
+      : 'Compartilhado pelo GitHub · aguardando o primeiro envio';
+    return;
+  }
   if(!nuvemLigada && motivoBanco){
-    el.innerHTML = 'Banco fora do ar — <em>' + motivoBanco + '</em>';
+    el.innerHTML = 'Sem banco ao vivo — <em>' + motivoBanco + '</em>';
     return;
   }
 
@@ -1843,7 +1866,7 @@ async function iniciarNuvem(){
    8. ENVIO PARA O GITHUB (reserva)
    Só é usado quando o banco ao vivo não está disponível.
 ========================================================= */
-let cfg = {repo:'', branch:'main', path:'dados.json', token:'', auto:false};
+let cfg = {repo:'leandrinhosliva83-svg/produ-o', branch:'main', path:'dados.json', token:'', auto:true};
 let timerAuto = null;
 
 function carregarCfg(){
