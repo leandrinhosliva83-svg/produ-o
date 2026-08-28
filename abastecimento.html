@@ -1499,6 +1499,15 @@ function mostrarAlerta(){
   }
 
   /* Com o GitHub configurado, o compartilhamento funciona — só não é instantâneo */
+  if(location.protocol === 'file:'){
+    el.hidden = false;
+    el.className = 'alerta-conexao';
+    el.innerHTML =
+      '<div class="a-tit">Você abriu o arquivo, não o site</div>' +
+      '<div class="a-txt">Nada do que digitar aqui vai para o celular. ' +
+      'Feche e abra pelo endereço:<br><b>leandrinhosliva83-svg.github.io/produ-o/abastecimento.html</b></div>';
+    return;
+  }
   if(cfg && cfg.repo && cfg.token){ el.hidden = true; return; }
 
   el.className = 'alerta-conexao';
@@ -1515,6 +1524,14 @@ function mostrarAlerta(){
 function mostrarFonte(){
   const el = document.getElementById('fonteBase');
   if(!el) return;
+
+  /* Aberto do disco: o navegador bloqueia envio e leitura.
+     Não adianta ter token — nada sai daqui. */
+  if(location.protocol === 'file:'){
+    el.innerHTML = '<em>Arquivo do computador</em> — nada é compartilhado. ' +
+                   'Abra pelo endereço do site.';
+    return;
+  }
   if(!nuvemLigada && publicadoEm && lerBaseEmbutida()){
     el.innerHTML = `Base do arquivo publicado · ${new Date(publicadoEm).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}` +
                    (pendente ? ' · <em>alterações não publicadas</em>' : '');
