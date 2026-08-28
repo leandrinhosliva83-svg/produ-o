@@ -1,10 +1,10 @@
 {
-  "publicadoEm": "2026-08-28T18:36:57.934Z",
+  "publicadoEm": "2026-08-28T22:23:22.942Z",
   "metas": {
     "media": 1.2,
     "rendimento": 90
   },
-  "preco": 6.2,
+  "preco": 5.91,
   "lancamentos": [
     {
       "data": "2026-08-26",
@@ -32,6 +32,15 @@
       "litros": 361.2,
       "peso": 70,
       "id": "rmtdal2qk3vuj"
+    },
+    {
+      "data": "2026-08-28",
+      "veiculo": "929250",
+      "kmIni": 57340,
+      "kmFim": 57610,
+      "litros": 293.9,
+      "peso": 70,
+      "id": "rmtdiptx086ji"
     }
   ]
 }
