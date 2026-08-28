@@ -454,6 +454,7 @@
   </div>
 
   <div class="barra-acoes barra-graficos">
+    <button class="ghost" id="btnInicio">Início</button>
     <button class="ghost" id="btnConsumo">Gráfico de consumo</button>
     <button class="ghost" id="btnRendimento">Gráfico de rendimento energético</button>
   </div>
@@ -2275,6 +2276,21 @@ on('btnMais', 'click', () => {
 
 on('selVeiculo', 'change', () => desenharGrafico());
 on('chkFrota', 'change', () => desenharGrafico());
+
+/* Volta para a tela principal: fecha o que estiver aberto e sobe. */
+on('btnInicio', 'click', () => {
+  fecharGrafico();
+  const cfgp = document.getElementById('configEnvio');
+  if(cfgp) cfgp.hidden = true;
+  const mais = document.getElementById('maisOpcoes');
+  if(mais && !mais.hidden){
+    mais.hidden = true;
+    const bm = document.getElementById('btnMais');
+    if(bm){ bm.textContent = 'Mais opções ▾'; bm.classList.remove('aberto'); }
+  }
+  document.querySelectorAll('.quadro[open]').forEach(q => q.open = false);
+  window.scrollTo({top:0, behavior:'smooth'});
+});
 
 /* =========================================================
    9. PERÍODO
