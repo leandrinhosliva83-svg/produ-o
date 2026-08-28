@@ -264,6 +264,27 @@
   .cfg-aviso{font-size:12.5px; color:var(--tinta-2); margin-top:14px; line-height:1.6}
   .cfg-aviso b{color:var(--tinta)}
 
+  .periodo{display:flex; align-items:center; gap:9px; flex-wrap:wrap;
+           background:var(--papel); border:1px solid var(--linha);
+           padding:11px 14px; margin:10px 0 4px}
+  .per-tit{font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:.12em;
+           font-size:11px; color:var(--ambar)}
+  .per-b{padding:6px 12px; font-size:12.5px}
+  .per-campo{display:flex; align-items:center; gap:6px; margin:0;
+             font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--tinta-2)}
+  .per-campo input{width:150px; padding:5px 8px; font-size:13px}
+  #selVeiculo{padding:5px 8px; font-size:13px; background:var(--papel-2);
+              color:var(--tinta); border:1px solid var(--linha); border-radius:3px;
+              font-family:'IBM Plex Mono',monospace}
+  .per-info{margin-left:auto; font-family:'IBM Plex Mono',monospace;
+            font-size:12px; color:var(--tinta-2)}
+  @media (max-width:700px){
+    .periodo{gap:7px; padding:10px}
+    .per-campo{flex:1 1 45%}
+    .per-campo input{width:100%}
+    .per-info{margin-left:0; flex-basis:100%}
+  }
+
   .oculto{display:none}
   .cfg-recolhe{cursor:pointer; list-style:none; margin-bottom:12px}
   .cfg-recolhe::-webkit-details-marker{display:none}
@@ -417,6 +438,19 @@
   </div>
   <div class="fonte-base" id="fonteBase"></div>
   <div class="alerta-conexao" id="alertaConexao" hidden></div>
+
+  <div class="periodo" id="periodo">
+    <span class="per-tit">Período</span>
+    <button class="ghost per-b ativo" data-per="tudo">Tudo</button>
+    <button class="ghost per-b" data-per="semana">Semana atual</button>
+    <button class="ghost per-b" data-per="semanaAnt">Semana passada</button>
+    <button class="ghost per-b" data-per="mes">Mês atual</button>
+    <button class="ghost per-b" data-per="30">Últimos 30 dias</button>
+    <button class="ghost per-b" data-per="ano">Este ano</button>
+    <label class="per-campo">de <input type="date" id="perDe"></label>
+    <label class="per-campo">até <input type="date" id="perAte"></label>
+    <span class="per-info" id="perInfo"></span>
+  </div>
 
   <h2 class="so-adm">Novo lançamento</h2>
   <div class="faixa-edicao so-adm" id="faixaEdicao" hidden></div>
@@ -580,6 +614,15 @@
         <button class="ghost" id="btnFechar" title="Fechar o gráfico">&times;</button>
       </div>
     </div>
+    <div class="grafico-topo" style="margin-top:-6px">
+      <label class="per-campo">Veículo
+        <select id="selVeiculo"><option value="">Todos</option></select>
+      </label>
+      <label class="per-campo" style="cursor:pointer">
+        <input type="checkbox" id="chkFrota" checked style="width:17px;height:17px;accent-color:#E8A33D">
+        mostrar linha da frota
+      </label>
+    </div>
     <div id="areaGrafico"></div>
     <div class="legenda" id="legenda"></div>
   </div>
@@ -730,8 +773,18 @@ function contas(r){
           litrosMeta, custoReal, custoMeta, perda};
 }
 
+/* Período escolhido. Vazio = tudo. */
+var periodo = {de:'', ate:''};
+
+function dentroDoPeriodo(r){
+  if(!r.data) return true;
+  if(periodo.de  && r.data < periodo.de)  return false;
+  if(periodo.ate && r.data > periodo.ate) return false;
+  return true;
+}
+
 function calcular(){
-  return dados.map(contas).sort((a,b) =>
+  return dados.filter(dentroDoPeriodo).map(contas).sort((a,b) =>
     (a.data || '').localeCompare(b.data || '') ||
     a.veiculo.localeCompare(b.veiculo,'pt-BR',{numeric:true}) ||
     a.kmIni - b.kmIni);
@@ -939,6 +992,13 @@ function desenhar(){
   document.getElementById('notaMetaA').textContent = n(metas.media,2);
   document.getElementById('notaMetaB').textContent = n(metas.rendimento,2);
 
+  const info = document.getElementById('perInfo');
+  if(info){
+    const fora = dados.length - linhas.length;
+    info.textContent = (periodo.de || periodo.ate)
+      ? `${linhas.length} de ${dados.length} lançamentos` + (fora ? ` · ${fora} fora do período` : '')
+      : `${dados.length} lançamento${dados.length===1?'':'s'}`;
+  }
   if(typeof mostrarFonte === 'function') mostrarFonte();
   if(typeof mostrarAlerta === 'function') mostrarAlerta();
   if(pendente && typeof salvarNaNuvem === 'function') salvarNaNuvem();
@@ -960,6 +1020,21 @@ function desenharGrafico(){
   const area = document.getElementById('areaGrafico');
   const legenda = document.getElementById('legenda');
   document.getElementById('tituloGrafico').textContent = ROTULOS[metrica] + ' — evolução por data';
+
+  /* mantém a lista do seletor em dia, sem perder a escolha atual */
+  const sel = document.getElementById('selVeiculo');
+  if(sel){
+    const todos = [...new Set(calcular().map(l => l.veiculo))]
+                    .sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true}));
+    const atual = sel.value;
+    const novo = '<option value="">Todos</option>' +
+                 todos.map(v => `<option value="${v}">Veículo ${v}</option>`).join('');
+    if(sel.innerHTML !== novo){
+      sel.innerHTML = novo;
+      sel.value = todos.indexOf(atual) > -1 ? atual : '';
+    }
+  }
+
 
   const linhas = calcular().filter(l => l.data && l[metrica] !== null && !isNaN(l[metrica]));
   if(linhas.length < 1){
@@ -983,7 +1058,7 @@ function desenharGrafico(){
   /* eixo Y: sempre começa no zero, e sempre cabe a meta dentro */
   const meta = metas[metrica];
   const valores = linhas.map(l => l[metrica]);
-  const vMax = Math.max(...valores, meta || 0) * 1.15 || 1;
+  const vMax = Math.max.apply(null, valores.concat([meta || 0])) * 1.15 || 1;
 
   const px = t => mE + (t - tMin) / (tMax - tMin) * larg;
   const py = v => mT + alt - (v / vMax) * alt;
@@ -1007,9 +1082,11 @@ function desenharGrafico(){
                   font-family="IBM Plex Mono" font-size="${fonte}">${dataCurta(d)}</text>`;
   });
 
-  /* uma linha por veículo */
-  const veiculos = [...new Set(linhas.map(l => l.veiculo))]
+  /* uma linha por veículo (ou só o escolhido no seletor) */
+  const escolhido = (document.getElementById('selVeiculo') || {}).value || '';
+  let veiculos = [...new Set(linhas.map(l => l.veiculo))]
                     .sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true}));
+  if(escolhido) veiculos = veiculos.filter(v => v === escolhido);
   veiculos.forEach((v, i) => {
     const cor = CORES[i % CORES.length];
     const pts = linhas.filter(l => l.veiculo === v)
@@ -1026,6 +1103,38 @@ function desenharGrafico(){
               </circle>`;
     });
   });
+
+  /* linha da frota: junta todos os veículos de cada data numa média só.
+     Soma os km e soma os litros do dia e divide — não é média de médias. */
+  const verFrota = (document.getElementById('chkFrota') || {checked:true}).checked;
+  if(verFrota && !escolhido){
+    const porData = {};
+    linhas.forEach(l => {
+      const p = porData[l.data] = porData[l.data] || {km:0, litros:0, rend:0, n:0};
+      p.km += l.kmTotal; p.litros += l.litros; p.rend += l.rendimento || 0; p.n++;
+    });
+    const pts = Object.keys(porData).sort().map(dt => {
+      const p = porData[dt];
+      let v;
+      if(metrica === 'media')       v = p.litros > 0 ? p.km / p.litros : null;
+      else if(metrica === 'litros') v = p.litros;
+      else                          v = p.n > 0 ? p.rend / p.n : null;
+      return v === null ? null : [px(new Date(dt).getTime()), py(v), v, dt];
+    }).filter(Boolean);
+
+    if(pts.length){
+      if(pts.length > 1){
+        svg += `<polyline points="${pts.map(p => p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}"
+                fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-dasharray="6 4"
+                stroke-linejoin="round" opacity="0.85"/>`;
+      }
+      pts.forEach(p => {
+        svg += `<rect x="${(p[0]-3.5).toFixed(1)}" y="${(p[1]-3.5).toFixed(1)}" width="7" height="7"
+                  fill="#0B0F12" stroke="#FFFFFF" stroke-width="2">
+                  <title>Frota · ${dataBR(p[3])} · ${n(p[2],2)}</title></rect>`;
+      });
+    }
+  }
 
   /* eixos */
   svg += `<line x1="${mE}" y1="${mT}" x2="${mE}" y2="${mT+alt}" stroke="#3C4A54"/>
@@ -1045,8 +1154,11 @@ function desenharGrafico(){
       xmlns="http://www.w3.org/2000/svg" role="img"
       aria-label="Evolução de ${ROTULOS[metrica]} por data">${svg}</svg>`;
 
-  legenda.innerHTML = veiculos.map((v,i) =>
-    `<span><i class="chave" style="background:${CORES[i%CORES.length]}"></i>Veículo ${v}</span>`).join('');
+  legenda.innerHTML =
+    ((verFrota && !escolhido)
+      ? '<span><i class="chave" style="background:#FFFFFF"></i><b>Frota (geral)</b></span>' : '') +
+    veiculos.map((v,i) =>
+      `<span><i class="chave" style="background:${CORES[i%CORES.length]}"></i>Veículo ${v}</span>`).join('');
 }
 
 function atualizarPrevia(){
@@ -2157,6 +2269,60 @@ on('btnMais', 'click', () => {
   if(p.hidden) document.getElementById('configEnvio').hidden = true;
 });
 
+on('selVeiculo', 'change', () => desenharGrafico());
+on('chkFrota', 'change', () => desenharGrafico());
+
+/* =========================================================
+   9. PERÍODO
+========================================================= */
+function hojeISO(){ return new Date().toISOString().slice(0,10); }
+
+function aplicarPeriodo(qual){
+  const hoje = new Date();
+  const iso = d => d.toISOString().slice(0,10);
+  if(qual === 'tudo'){ periodo = {de:'', ate:''}; }
+  else if(qual === 'semana' || qual === 'semanaAnt'){
+    /* Semana de segunda a domingo. getDay() dá 0 para domingo,
+       então o domingo é tratado como último dia da semana anterior. */
+    const diaSem = (hoje.getDay() + 6) % 7;          // 0 = segunda
+    const segunda = new Date(hoje);
+    segunda.setDate(segunda.getDate() - diaSem);
+    if(qual === 'semanaAnt') segunda.setDate(segunda.getDate() - 7);
+    const domingo = new Date(segunda);
+    domingo.setDate(domingo.getDate() + 6);
+    periodo = {de: iso(segunda), ate: iso(domingo)};
+  }
+  else if(qual === 'mes'){
+    periodo = {de: iso(new Date(hoje.getFullYear(), hoje.getMonth(), 1)), ate: hojeISO()};
+  }
+  else if(qual === '30'){
+    const d = new Date(hoje); d.setDate(d.getDate() - 29);
+    periodo = {de: iso(d), ate: hojeISO()};
+  }
+  else if(qual === 'ano'){
+    periodo = {de: iso(new Date(hoje.getFullYear(), 0, 1)), ate: hojeISO()};
+  }
+  document.getElementById('perDe').value  = periodo.de;
+  document.getElementById('perAte').value = periodo.ate;
+  document.querySelectorAll('.per-b').forEach(b =>
+    b.classList.toggle('ativo', b.dataset.per === qual));
+  try{ localStorage.setItem('abast_periodo', JSON.stringify({qual, periodo})); }catch(e){}
+  desenhar();
+}
+
+document.querySelectorAll('.per-b').forEach(b =>
+  b.addEventListener('click', () => aplicarPeriodo(b.dataset.per)));
+
+['perDe','perAte'].forEach(id => on(id, 'change', () => {
+  periodo = {
+    de:  document.getElementById('perDe').value,
+    ate: document.getElementById('perAte').value
+  };
+  document.querySelectorAll('.per-b').forEach(b => b.classList.remove('ativo'));
+  try{ localStorage.setItem('abast_periodo', JSON.stringify({qual:'', periodo})); }catch(e){}
+  desenhar();
+}));
+
 /* ---------- início ---------- */
 /* O modo painel é só leitura: ele NUNCA mostra dados guardados neste aparelho.
    Ou vem da base compartilhada, ou fica vazio. Assim o celular não pode
@@ -2197,6 +2363,18 @@ mostrarFonte();
 mostrarAlerta();
 acenderEstado();
 carregarCfg();
+try{
+  const s = localStorage.getItem('abast_periodo');
+  if(s){
+    const g = JSON.parse(s);
+    periodo = g.periodo || {de:'',ate:''};
+    document.getElementById('perDe').value  = periodo.de  || '';
+    document.getElementById('perAte').value = periodo.ate || '';
+    document.querySelectorAll('.per-b').forEach(b =>
+      b.classList.toggle('ativo', !!g.qual && b.dataset.per === g.qual));
+  }
+}catch(e){}
+
 atualizarPrevia();
 desenhar();
 /* Os dois caminhos partem juntos. O dados.json é rápido e quase sempre
