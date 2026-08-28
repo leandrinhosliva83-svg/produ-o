@@ -1,5 +1,5 @@
 {
-  "publicadoEm": "2026-08-28T03:43:05.211Z",
+  "publicadoEm": "2026-08-28T10:45:45.889Z",
   "metas": {
     "media": 1.2,
     "rendimento": 90
@@ -8,21 +8,12 @@
   "lancamentos": [
     {
       "data": "2026-08-28",
-      "veiculo": "5020",
-      "kmIni": 1500,
-      "kmFim": 2000,
-      "litros": 380,
+      "veiculo": "1234",
+      "kmIni": 1200,
+      "kmFim": 1300,
+      "litros": 50,
       "peso": 70,
-      "id": "rmtcdtitdl6u8"
-    },
-    {
-      "data": "2026-08-28",
-      "veiculo": "1983",
-      "kmIni": 5000,
-      "kmFim": 5600,
-      "litros": 500,
-      "peso": 75,
-      "id": "rmtcep4glt147"
+      "id": "rmtctso3y8l8p"
     }
   ]
 }
