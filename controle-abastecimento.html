@@ -260,6 +260,7 @@
   .cfg-campos input{width:190px}
   .cfg-auto{flex-direction:row !important; align-items:center !important; gap:8px !important}
   .cfg-auto input{width:18px !important; height:18px; accent-color:var(--verde); cursor:pointer}
+  .cfg-divisor{height:1px; background:var(--linha); margin:20px 0 18px}
   .cfg-aviso{font-size:12.5px; color:var(--tinta-2); margin-top:14px; line-height:1.6}
   .cfg-aviso b{color:var(--tinta)}
 
@@ -375,6 +376,7 @@
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -475,7 +477,8 @@
   <div class="barra-acoes so-adm">
     <button class="ghost" id="btnConsumo">Gráfico de consumo</button>
     <button class="ghost" id="btnRendimento">Gráfico de rendimento energético</button>
-    <button class="ghost" id="btnConfigEnvio">Conectar banco de dados</button>
+    <button class="ghost" id="btnEnviarGit">Enviar para o GitHub</button>
+    <button class="ghost" id="btnConfigEnvio">Configurações de envio</button>
     <button class="ghost" id="btnPublicar">Baixar cópia (dados.json)</button>
     <button class="ghost" id="btnSenha">Trocar senha</button>
     <button class="ghost" id="btnPainelCelular">Gerar painel do celular</button>
@@ -506,6 +509,36 @@
       Depois clique em Gerar, e suba o <b>firebase-config.json</b> no repositório,
       ao lado do HTML. Isso é feito <b>uma vez só</b> — daí em diante todos os aparelhos
       se conectam sozinhos.
+    </div>
+
+    <div class="cfg-divisor"></div>
+
+    <div class="cfg-tit">Envio para o GitHub</div>
+    <div class="cfg-campos">
+      <label class="meta-campo">Repositório
+        <input id="cfgRepo" placeholder="usuario/repositorio" autocomplete="off">
+      </label>
+      <label class="meta-campo">Branch
+        <input id="cfgBranch" value="main" autocomplete="off">
+      </label>
+      <label class="meta-campo">Arquivo
+        <input id="cfgPath" value="dados.json" autocomplete="off">
+      </label>
+      <label class="meta-campo">Token
+        <input type="password" id="cfgToken" placeholder="github_pat_..." autocomplete="off">
+      </label>
+      <label class="meta-campo cfg-auto">
+        <span>Enviar sozinho</span>
+        <input type="checkbox" id="cfgAuto">
+      </label>
+      <button id="btnSalvarCfg">Salvar</button>
+      <button class="ghost" id="btnApagarToken">Apagar token</button>
+    </div>
+    <div class="cfg-aviso">
+      O token fica guardado <b>só neste navegador</b> e nunca entra no arquivo publicado.
+      Crie em <b>GitHub → Settings → Developer settings → Personal access tokens →
+      Fine-grained</b>, com acesso só a este repositório e permissão
+      <b>Contents: Read and write</b>.
     </div>
   </div>
 
@@ -862,6 +895,7 @@ function desenhar(){
 
   if(typeof mostrarFonte === 'function') mostrarFonte();
   if(pendente && typeof salvarNaNuvem === 'function') salvarNaNuvem();
+  if(pendente && typeof agendarEnvioAuto === 'function') agendarEnvioAuto();
   if(typeof acenderEstado === 'function' &&
      !document.getElementById('btnAtualizar').classList.contains('vermelho') &&
      !document.getElementById('btnAtualizar').classList.contains('buscando')) acenderEstado();
@@ -1577,75 +1611,119 @@ let meuId = 'd' + Math.random().toString(36).slice(2,9);   // identifica este ap
 let timerNuvem = null;
 let recebendo = false;          // trava para não devolver o que acabou de chegar
 
-function ligarBanco(conf){
-  if(!conf || !conf.apiKey || !conf.databaseURL) return false;
+/* Projeto Firebase que a DM Agrícola já usa no sistema de frota.
+   Não precisa criar nada: é o mesmo banco do Grupo Moreno. */
+const FIREBASE_PADRAO = {
+  apiKey: "AIzaSyAjjFMj0qbJlINPspy_mYs1AwJtDI9jRWs",
+  authDomain: "frota-moreno.firebaseapp.com",
+  projectId: "frota-moreno",
+  storageBucket: "frota-moreno.firebasestorage.app",
+  messagingSenderId: "726316011876",
+  appId: "1:726316011876:web:45fd87f747603c417baa71",
+  databaseURL: "https://frota-moreno-default-rtdb.firebaseio.com"
+};
+
+let tipoBanco = '';        // 'firestore' ou 'rtdb'
+let doc = null;            // documento, quando for Firestore
+
+/* Tenta o Firestore primeiro. Se o projeto não tiver Firestore ligado,
+   cai para o Realtime Database. Um dos dois costuma estar disponível. */
+async function ligarBanco(conf){
   if(typeof firebase === 'undefined'){
     estadoBase = 'semsinal'; acenderEstado();
+    avisar('As bibliotecas do Firebase não carregaram · verifique a internet');
     return false;
   }
+  conf = Object.assign({}, FIREBASE_PADRAO, conf || {});
+
+  try{ if(!firebase.apps.length) firebase.initializeApp(conf); }
+  catch(e){ estadoBase = 'semsinal'; acenderEstado(); return false; }
+
+  /* ---------- tentativa 1: Firestore ---------- */
+  if(firebase.firestore){
+    try{
+      doc = firebase.firestore().collection('dm-agricola').doc('abastecimento');
+      await doc.get();                       // se falhar, o Firestore não está disponível
+      doc.onSnapshot(s => aplicarDoBanco(s.exists ? s.data() : null),
+                     () => { estadoBase = 'semsinal'; acenderEstado(); });
+      tipoBanco = 'firestore';
+      nuvemLigada = true;
+      estadoBase = 'ok';
+      acenderEstado();
+      return true;
+    }catch(e){ doc = null; }
+  }
+
+  /* ---------- tentativa 2: Realtime Database ---------- */
   try{
-    if(!firebase.apps.length) firebase.initializeApp(conf);
     ref = firebase.database().ref('dm-agricola/abastecimento');
+    ref.on('value', s => aplicarDoBanco(s.val()),
+                    () => { estadoBase = 'semsinal'; acenderEstado(); });
+    firebase.database().ref('.info/connected').on('value', s => {
+      if(!nuvemLigada) return;
+      estadoBase = s.val() ? 'ok' : 'semsinal';
+      acenderEstado();
+    });
+    tipoBanco = 'rtdb';
+    nuvemLigada = true;
+    estadoBase = 'ok';
+    acenderEstado();
+    return true;
   }catch(e){
     estadoBase = 'semsinal'; acenderEstado();
     return false;
   }
+}
 
-  /* Fica ouvindo o banco. Qualquer mudança, em qualquer aparelho, cai aqui. */
-  ref.on('value', snap => {
-    const pacote = snap.val();
-    if(!pacote || !Array.isArray(pacote.lancamentos)) {
-      nuvemLigada = true; estadoBase = 'ok'; pendente = false; acenderEstado();
-      return;
-    }
-    if(pacote.origem === meuId){          // eco do que eu mesmo mandei
-      nuvemLigada = true; estadoBase = 'ok'; pendente = false;
-      publicadoEm = pacote.atualizadoEm; mostrarFonte(); acenderEstado();
-      return;
-    }
-    recebendo = true;
-    dados = pacote.lancamentos;
-    usandoExemplo = false;
+/* Chega alguma coisa do banco: coloca na tela.
+   Se veio deste próprio aparelho, ignora (senão vira eco). */
+function aplicarDoBanco(pacote){
+  nuvemLigada = true;
+  estadoBase = 'ok';
+  if(!pacote || !Array.isArray(pacote.lancamentos)){
+    pendente = false; acenderEstado(); mostrarFonte();
+    return;
+  }
+  if(pacote.origem === meuId){
     pendente = false;
-    if(pacote.metas) metas = Object.assign(metas, pacote.metas);
-    if(pacote.preco !== undefined) preco = pacote.preco;
-    document.getElementById('metaMedia').value = metas.media;
-    document.getElementById('metaRendimento').value = metas.rendimento;
-    document.getElementById('precoDiesel').value = preco;
     publicadoEm = pacote.atualizadoEm;
-    nuvemLigada = true;
-    estadoBase = 'ok';
-    garantirIds();
-    desenhar();
-    mostrarFonte();
-    acenderEstado();
-    recebendo = false;
-  }, () => {
-    estadoBase = 'semsinal'; acenderEstado();
-  });
-
-  /* Avisa quando o aparelho perde e recupera a ligação com o banco */
-  firebase.database().ref('.info/connected').on('value', s => {
-    if(!nuvemLigada) return;
-    estadoBase = s.val() ? 'ok' : 'semsinal';
-    acenderEstado();
-  });
-
-  return true;
+    mostrarFonte(); acenderEstado();
+    return;
+  }
+  recebendo = true;
+  dados = pacote.lancamentos;
+  usandoExemplo = false;
+  pendente = false;
+  if(pacote.metas) metas = Object.assign(metas, pacote.metas);
+  if(pacote.preco !== undefined) preco = pacote.preco;
+  document.getElementById('metaMedia').value = metas.media;
+  document.getElementById('metaRendimento').value = metas.rendimento;
+  document.getElementById('precoDiesel').value = preco;
+  publicadoEm = pacote.atualizadoEm;
+  garantirIds();
+  desenhar();
+  mostrarFonte();
+  acenderEstado();
+  recebendo = false;
 }
 
 /* Manda para o banco. Espera 700ms parado para não escrever a cada tecla. */
 function salvarNaNuvem(){
-  if(!ref || recebendo || usandoExemplo) return;
+  if((!ref && !doc) || recebendo || usandoExemplo) return;
   clearTimeout(timerNuvem);
   timerNuvem = setTimeout(() => {
-    ref.set({
+    const pacote = {
       atualizadoEm: new Date().toISOString(),
       origem: meuId,
       metas: {media: metas.media, rendimento: metas.rendimento},
       preco: preco,
       lancamentos: dados
-    }).catch(() => { estadoBase = 'semsinal'; acenderEstado(); });
+    };
+    const p = tipoBanco === 'firestore' ? doc.set(pacote) : ref.set(pacote);
+    p.catch(e => {
+      estadoBase = 'semsinal'; acenderEstado();
+      avisar('Não consegui gravar no banco · ' + (e.code || e.message || ''));
+    });
   }, 700);
 }
 
@@ -1671,24 +1749,165 @@ on('btnGerarCfg', 'click', () => {
   avisar('Arquivo gerado · suba o <b>firebase-config.json</b> no repositório');
 });
 
-on('btnTestarCfg', 'click', () => {
-  const conf = montarConf();
-  if(ligarBanco(conf)) avisar('Conectado · os dados começam a sincronizar');
-  else avisar('Não consegui conectar · confira os valores');
+on('btnTestarCfg', 'click', async () => {
+  const ok = await ligarBanco(montarConf());
+  avisar(ok ? 'Conectado ao banco · sincronizando' : 'Não consegui conectar · confira os valores');
 });
 
 /* Procura o firebase-config.json ao abrir. É ele que liga tudo. */
 async function iniciarNuvem(){
-  if(location.protocol === 'file:') return false;
-  try{
+  if(location.protocol === 'file:') return false;    // aberto do disco: o navegador bloqueia
+  let conf = null;
+  try{                                                // permite trocar o projeto sem mexer no código
     const r = await fetch('firebase-config.json?v=' + Date.now(), {cache:'no-store'});
-    if(!r.ok) return false;
-    const conf = await r.json();
-    document.getElementById('fbApiKey').value = conf.apiKey || '';
-    document.getElementById('fbUrl').value    = conf.databaseURL || '';
-    document.getElementById('fbProj').value   = conf.projectId || '';
-    return ligarBanco(conf);
-  }catch(e){ return false; }
+    if(r.ok) conf = await r.json();
+  }catch(e){}
+  const usar = Object.assign({}, FIREBASE_PADRAO, conf || {});
+  document.getElementById('fbApiKey').value = usar.apiKey || '';
+  document.getElementById('fbUrl').value    = usar.databaseURL || '';
+  document.getElementById('fbProj').value   = usar.projectId || '';
+  return await ligarBanco(usar);
+}
+
+/* =========================================================
+   8. ENVIO PARA O GITHUB (reserva)
+   Só é usado quando o banco ao vivo não está disponível.
+========================================================= */
+let cfg = {repo:'', branch:'main', path:'dados.json', token:'', auto:false};
+let timerAuto = null;
+
+function carregarCfg(){
+  try{
+    const s = localStorage.getItem('abast_cfg');
+    if(s) cfg = Object.assign(cfg, JSON.parse(s));
+  }catch(e){}
+  document.getElementById('cfgRepo').value    = cfg.repo;
+  document.getElementById('cfgBranch').value  = cfg.branch;
+  document.getElementById('cfgPath').value    = cfg.path;
+  document.getElementById('cfgToken').value   = cfg.token;
+  document.getElementById('cfgAuto').checked  = !!cfg.auto;
+  atualizarBotaoEnvio();
+}
+
+function atualizarBotaoEnvio(){
+  const b = document.getElementById('btnEnviarGit');
+  if(!b) return;
+  const pronto = cfg.repo && cfg.token && !nuvemLigada;
+  b.disabled = !pronto;
+  b.title = nuvemLigada ? 'Não precisa: o banco ao vivo está ligado'
+          : pronto ? 'Manda o dados.json direto para o repositório'
+          : 'Preencha o repositório e o token primeiro';
+}
+
+on('btnSalvarCfg', 'click', () => {
+  cfg = {
+    repo:   document.getElementById('cfgRepo').value.trim()
+              .replace(/^https?:\/\/github\.com\//,'').replace(/\/$/,''),
+    branch: document.getElementById('cfgBranch').value.trim() || 'main',
+    path:   document.getElementById('cfgPath').value.trim() || 'dados.json',
+    token:  document.getElementById('cfgToken').value.trim(),
+    auto:   document.getElementById('cfgAuto').checked
+  };
+  document.getElementById('cfgRepo').value = cfg.repo;
+  try{ localStorage.setItem('abast_cfg', JSON.stringify(cfg)); }catch(e){}
+  atualizarBotaoEnvio();
+  avisar('Configuração salva');
+});
+
+on('btnApagarToken', 'click', () => {
+  cfg.token = '';
+  document.getElementById('cfgToken').value = '';
+  try{ localStorage.setItem('abast_cfg', JSON.stringify(cfg)); }catch(e){}
+  atualizarBotaoEnvio();
+  avisar('Token apagado deste navegador');
+});
+
+function montarPacote(){
+  const agora = new Date().toISOString();
+  return {agora, json: JSON.stringify({
+    publicadoEm: agora,
+    metas: {media: metas.media, rendimento: metas.rendimento},
+    preco: preco,
+    lancamentos: dados
+  }, null, 2)};
+}
+
+/* A API do GitHub exige o conteúdo em base64.
+   O TextEncoder garante que acento não vire lixo. */
+function paraBase64(texto){
+  const bytes = new TextEncoder().encode(texto);
+  let bin = '';
+  bytes.forEach(b => bin += String.fromCharCode(b));
+  return btoa(bin);
+}
+
+async function enviarGitHub(silencioso){
+  if(nuvemLigada) return;
+  if(!cfg.repo || !cfg.token){ if(!silencioso) avisar('Preencha o repositório e o token primeiro'); return; }
+
+  const b = document.getElementById('btnEnviarGit');
+  const rotulo = b.textContent;
+  b.disabled = true;
+  b.textContent = 'Enviando…';
+  marcarConexao('buscando', 'Enviando…');
+
+  const url = `https://api.github.com/repos/${cfg.repo}/contents/${cfg.path}`;
+  const cab = {
+    'Authorization': 'Bearer ' + cfg.token,
+    'Accept': 'application/vnd.github+json',
+    'Content-Type': 'application/json'
+  };
+
+  try{
+    let sha;
+    const atual = await fetch(`${url}?ref=${cfg.branch}&t=${Date.now()}`, {headers: cab});
+    if(atual.status === 200){ sha = (await atual.json()).sha; }
+    else if(atual.status === 401){ throw new Error('Token inválido ou expirado'); }
+    else if(atual.status === 403){ throw new Error('Token sem permissão de escrita'); }
+    else if(atual.status !== 404){ throw new Error('Erro ' + atual.status + ' ao consultar o repositório'); }
+
+    const {agora, json} = montarPacote();
+    const envio = await fetch(url, {
+      method: 'PUT',
+      headers: cab,
+      body: JSON.stringify({
+        message: `Base de abastecimento — ${new Date().toLocaleString('pt-BR')}`,
+        content: paraBase64(json),
+        branch: cfg.branch,
+        ...(sha ? {sha} : {})
+      })
+    });
+    if(!envio.ok){
+      const erro = await envio.json().catch(() => ({}));
+      throw new Error(erro.message || 'Erro ' + envio.status);
+    }
+
+    publicadoEm = agora;
+    pendente = false;
+    usandoExemplo = false;
+    estadoBase = 'ok';
+    try{ localStorage.setItem('abast_publicado', agora); }catch(e){}
+    mostrarFonte();
+    acenderEstado();
+    avisar(`Enviado · <b>${dados.length}</b> lançamentos · o celular vê em 1 a 3 min`);
+
+  }catch(e){
+    estadoBase = 'semsinal';
+    acenderEstado();
+    avisar('Não deu para enviar · ' + e.message);
+  }finally{
+    b.textContent = rotulo;
+    atualizarBotaoEnvio();
+  }
+}
+
+on('btnEnviarGit', 'click', () => enviarGitHub(false));
+
+function agendarEnvioAuto(){
+  if(nuvemLigada || !cfg.auto || !cfg.repo || !cfg.token) return;
+  clearTimeout(timerAuto);
+  marcarConexao('buscando', 'Enviando em breve…');
+  timerAuto = setTimeout(() => enviarGitHub(true), 6000);
 }
 
 /* ---------- início ---------- */
@@ -1709,6 +1928,7 @@ document.getElementById('data').valueAsDate = new Date();
 try{ publicadoEm = localStorage.getItem('abast_publicado'); }catch(e){}
 mostrarFonte();
 acenderEstado();
+carregarCfg();
 atualizarPrevia();
 desenhar();
 iniciarNuvem().then(ok => { if(!ok) buscarBasePublicada(false); });
