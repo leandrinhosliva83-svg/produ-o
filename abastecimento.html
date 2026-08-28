@@ -1848,6 +1848,17 @@ function aplicarDoBanco(pacote){
     mostrarFonte(); acenderEstado();
     return;
   }
+
+  /* O que está no banco é mais antigo do que o que temos aqui?
+     Então quem está velho é o banco: manda o nosso para lá.
+     Sem isso, uma base antiga no banco sobrescreve lançamentos novos. */
+  if(publicadoEm && pacote.atualizadoEm && pacote.atualizadoEm < publicadoEm && dados.length){
+    pendente = true;
+    salvarNaNuvem();
+    avisar('O banco estava desatualizado · enviando os lançamentos daqui');
+    acenderEstado(); mostrarFonte();
+    return;
+  }
   recebendo = true;
   dados = pacote.lancamentos;
   usandoExemplo = false;
