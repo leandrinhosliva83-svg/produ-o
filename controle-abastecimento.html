@@ -277,6 +277,12 @@
               margin-bottom:6px}
   .fonte-base b{color:var(--verde); font-weight:600}
   .fonte-base em{color:var(--ambar); font-style:normal}
+  .alerta-conexao{border:2px solid var(--vermelho); background:rgba(224,100,79,.12);
+                  padding:14px 16px; margin:10px 0 4px; border-radius:3px}
+  .alerta-conexao .a-tit{font-family:'Oswald',sans-serif; text-transform:uppercase;
+                         letter-spacing:.1em; font-size:14px; color:var(--vermelho); margin-bottom:5px}
+  .alerta-conexao .a-txt{font-size:13.5px; color:#E8C0B8; line-height:1.6}
+  .alerta-conexao b{color:var(--tinta)}
 
   /* ---------- luz do botão Atualizar ---------- */
   #btnAtualizar{display:inline-flex; align-items:center; gap:8px}
@@ -397,6 +403,7 @@
     <span class="modo-nota" id="modoNota"></span>
   </div>
   <div class="fonte-base" id="fonteBase"></div>
+  <div class="alerta-conexao" id="alertaConexao" hidden></div>
 
   <h2 class="so-adm">Novo lançamento</h2>
   <div class="faixa-edicao so-adm" id="faixaEdicao" hidden></div>
@@ -895,6 +902,7 @@ function desenhar(){
   document.getElementById('notaMetaB').textContent = n(metas.rendimento,2);
 
   if(typeof mostrarFonte === 'function') mostrarFonte();
+  if(typeof mostrarAlerta === 'function') mostrarAlerta();
   if(pendente && typeof salvarNaNuvem === 'function') salvarNaNuvem();
   if(pendente && typeof agendarEnvioAuto === 'function') agendarEnvioAuto();
   if(typeof acenderEstado === 'function' &&
@@ -1432,6 +1440,19 @@ let publicadoEm = null;               // data da publicação que está em uso
 var usandoExemplo = false;            // true = ainda são os lançamentos de demonstração
 var pendente = false;                 // true = tem lançamento local ainda não publicado
 var nuvemLigada = false;              // true = conectado ao banco de dados ao vivo
+
+function mostrarAlerta(){
+  const el = document.getElementById('alertaConexao');
+  if(!el) return;
+  if(nuvemLigada){ el.hidden = true; return; }
+  el.hidden = false;
+  el.innerHTML =
+    '<div class="a-tit">Estes números não são compartilhados</div>' +
+    '<div class="a-txt">O banco de dados não está conectado' +
+    (motivoBanco ? ' (<b>' + motivoBanco + '</b>)' : '') + '. ' +
+    'O que você digitar aqui <b>fica só neste aparelho</b> e não aparece nos outros. ' +
+    'Não confie em comparar telas enquanto esta faixa estiver visível.</div>';
+}
 
 function mostrarFonte(){
   const el = document.getElementById('fonteBase');
@@ -1972,7 +1993,7 @@ on('btnSubirBase', 'click', () => {
 });
 
 /* ---------- início ---------- */
-if(!carregar()){ dados = EXEMPLO.slice(); usandoExemplo = true; }
+carregar();   // sem dados de demonstração: melhor vazio do que número errado
 garantirIds();
 carregarMetas();
 
@@ -1988,6 +2009,7 @@ aplicarModo();
 document.getElementById('data').valueAsDate = new Date();
 try{ publicadoEm = localStorage.getItem('abast_publicado'); }catch(e){}
 mostrarFonte();
+mostrarAlerta();
 acenderEstado();
 carregarCfg();
 atualizarPrevia();
