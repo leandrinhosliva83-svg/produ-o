@@ -1435,6 +1435,11 @@ var nuvemLigada = false;              // true = conectado ao banco de dados ao v
 function mostrarFonte(){
   const el = document.getElementById('fonteBase');
   if(!el) return;
+  if(!nuvemLigada && motivoBanco){
+    el.innerHTML = 'Banco fora do ar — <em>' + motivoBanco + '</em>';
+    return;
+  }
+
   if(usandoExemplo){
     el.innerHTML = 'Mostrando <em>dados de demonstração</em> — ainda não recebeu a base publicada';
     return;
@@ -1624,20 +1629,24 @@ const FIREBASE_PADRAO = {
 };
 
 let tipoBanco = '';        // 'firestore' ou 'rtdb'
+let motivoBanco = '';      // por que não conectou, para aparecer na tela
 let doc = null;            // documento, quando for Firestore
 
 /* Tenta o Firestore primeiro. Se o projeto não tiver Firestore ligado,
    cai para o Realtime Database. Um dos dois costuma estar disponível. */
 async function ligarBanco(conf){
   if(typeof firebase === 'undefined'){
-    estadoBase = 'semsinal'; acenderEstado();
-    avisar('As bibliotecas do Firebase não carregaram · verifique a internet');
+    motivoBanco = 'as bibliotecas do Firebase não carregaram (internet ou bloqueio de rede)';
+    estadoBase = 'semsinal'; acenderEstado(); mostrarFonte();
     return false;
   }
   conf = Object.assign({}, FIREBASE_PADRAO, conf || {});
 
   try{ if(!firebase.apps.length) firebase.initializeApp(conf); }
-  catch(e){ estadoBase = 'semsinal'; acenderEstado(); return false; }
+  catch(e){
+    motivoBanco = 'initializeApp: ' + (e.code || e.message);
+    estadoBase = 'semsinal'; acenderEstado(); mostrarFonte(); return false;
+  }
 
   /* ---------- tentativa 1: Firestore ---------- */
   if(firebase.firestore){
@@ -1646,12 +1655,12 @@ async function ligarBanco(conf){
       await doc.get();                       // se falhar, o Firestore não está disponível
       doc.onSnapshot(s => aplicarDoBanco(s.exists ? s.data() : null),
                      () => { estadoBase = 'semsinal'; acenderEstado(); });
-      tipoBanco = 'firestore';
+      tipoBanco = 'firestore'; motivoBanco = '';
       nuvemLigada = true;
       estadoBase = 'ok';
       acenderEstado();
       return true;
-    }catch(e){ doc = null; }
+    }catch(e){ doc = null; motivoBanco = 'Firestore: ' + (e.code || e.message); }
   }
 
   /* ---------- tentativa 2: Realtime Database ---------- */
@@ -1664,13 +1673,14 @@ async function ligarBanco(conf){
       estadoBase = s.val() ? 'ok' : 'semsinal';
       acenderEstado();
     });
-    tipoBanco = 'rtdb';
+    tipoBanco = 'rtdb'; motivoBanco = '';
     nuvemLigada = true;
     estadoBase = 'ok';
     acenderEstado();
     return true;
   }catch(e){
-    estadoBase = 'semsinal'; acenderEstado();
+    motivoBanco += (motivoBanco ? ' · ' : '') + 'Realtime: ' + (e.code || e.message);
+    estadoBase = 'semsinal'; acenderEstado(); mostrarFonte();
     return false;
   }
 }
