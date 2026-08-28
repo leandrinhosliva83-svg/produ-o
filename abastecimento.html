@@ -2159,18 +2159,22 @@ acenderEstado();
 carregarCfg();
 atualizarPrevia();
 desenhar();
-iniciarNuvem().then(ok => { if(!ok) buscarBasePublicada(false); });
+/* Os dois caminhos partem juntos. O dados.json é rápido e quase sempre
+   chega primeiro; se o banco ao vivo conectar depois, ele assume.
+   Antes, o banco travava a fila e o celular ficava em "Verificando…". */
+buscarBasePublicada(false);
+iniciarNuvem();
 
 /* Trava de segurança: se em 12 segundos nada tiver se resolvido, para de
    mostrar "Verificando…" e diz que não conseguiu. */
 setTimeout(() => {
   if(!nuvemLigada && estadoBase === ''){
-    motivoBanco = motivoBanco || 'o banco não respondeu em 12 segundos';
+    motivoBanco = motivoBanco || 'sem resposta do banco';
     estadoBase = 'semsinal';
     acenderEstado();
     mostrarFonte();
   }
-}, 12000);
+}, 8000);
 </script>
 </body>
 </html>
