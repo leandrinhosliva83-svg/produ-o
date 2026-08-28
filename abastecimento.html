@@ -264,6 +264,13 @@
   .cfg-aviso{font-size:12.5px; color:var(--tinta-2); margin-top:14px; line-height:1.6}
   .cfg-aviso b{color:var(--tinta)}
 
+  .oculto{display:none}
+  .cfg-recolhe{cursor:pointer; list-style:none; margin-bottom:12px}
+  .cfg-recolhe::-webkit-details-marker{display:none}
+  .cfg-recolhe::before{content:'▸ '; color:var(--tinta-2)}
+  details[open] > .cfg-recolhe::before{content:'▾ '}
+  #btnMais.aberto{border-color:var(--ambar); color:var(--ambar)}
+
   .dica-rolagem{display:none}
 
   /* =========================================================
@@ -490,22 +497,26 @@
   <div class="barra-acoes so-adm">
     <button class="ghost" id="btnConsumo">Gráfico de consumo</button>
     <button class="ghost" id="btnRendimento">Gráfico de rendimento energético</button>
-    <button class="ghost" id="btnSubirBase">Enviar minha base para o banco</button>
-    <button class="ghost" id="btnLimpar">Limpar este aparelho</button>
-    <button class="ghost" id="btnEnviarGit">Enviar para o GitHub</button>
-    <button class="ghost" id="btnConfigEnvio">Configurações de envio</button>
-    <button id="btnGerarSite">Gerar arquivo do site</button>
-    <button class="ghost" id="btnPublicar">Baixar cópia (dados.json)</button>
-    <button class="ghost" id="btnSenha">Trocar senha</button>
-    <button class="ghost" id="btnPainelCelular">Gerar painel do celular</button>
     <button class="ghost" id="btnCsv">Baixar CSV</button>
-    <button class="ghost" id="btnSalvar">Salvar backup</button>
-    <button class="ghost" id="btnAbrir">Abrir backup</button>
+    <button class="ghost" id="btnMais">Mais opções ▾</button>
     <input type="file" id="arquivo" accept=".json" hidden>
   </div>
 
+  <div class="barra-acoes so-adm" id="maisOpcoes" hidden>
+    <button class="ghost" id="btnEnviarGit">Enviar agora</button>
+    <button class="ghost" id="btnConfigEnvio">Configurações de envio</button>
+    <button class="ghost" id="btnSenha">Trocar senha</button>
+    <button class="ghost" id="btnSalvar">Salvar backup</button>
+    <button class="ghost" id="btnAbrir">Abrir backup</button>
+    <button class="ghost" id="btnLimpar">Limpar este aparelho</button>
+    <button class="ghost oculto" id="btnSubirBase">Enviar base para o banco</button>
+    <button class="ghost oculto" id="btnGerarSite">Gerar arquivo do site</button>
+    <button class="ghost oculto" id="btnPublicar">Baixar cópia (dados.json)</button>
+    <button class="ghost oculto" id="btnPainelCelular">Gerar painel do celular</button>
+  </div>
+
   <div class="config-envio so-adm" id="configEnvio" hidden>
-    <div class="cfg-tit">Conexão com o banco de dados (Firebase)</div>
+    <details><summary class="cfg-tit cfg-recolhe">Conexão com o banco de dados (Firebase)</summary>
     <div class="cfg-campos">
       <label class="meta-campo">apiKey
         <input id="fbApiKey" placeholder="AIzaSy..." autocomplete="off">
@@ -526,6 +537,7 @@
       ao lado do HTML. Isso é feito <b>uma vez só</b> — daí em diante todos os aparelhos
       se conectam sozinhos.
     </div>
+    </details>
 
     <div class="cfg-divisor"></div>
 
@@ -1472,6 +1484,7 @@ function mostrarAlerta(){
   const el = document.getElementById('alertaConexao');
   if(!el) return;
   if(nuvemLigada){ el.hidden = true; return; }
+  if(modo === 'painel'){ el.hidden = true; return; }   // cliente não vê recado interno
 
   if(lerBaseEmbutida() && !pendente){ el.hidden = true; return; }
 
@@ -1486,15 +1499,7 @@ function mostrarAlerta(){
   }
 
   /* Com o GitHub configurado, o compartilhamento funciona — só não é instantâneo */
-  if(cfg && cfg.repo && cfg.token){
-    el.hidden = false;
-    el.className = 'alerta-conexao modo-github';
-    el.innerHTML =
-      '<div class="a-tit">Compartilhando pelo GitHub</div>' +
-      '<div class="a-txt">Cada lançamento é enviado sozinho. Os outros aparelhos ' +
-      'veem em <b>1 a 3 minutos</b>, tocando em Atualizar.</div>';
-    return;
-  }
+  if(cfg && cfg.repo && cfg.token){ el.hidden = true; return; }
 
   el.className = 'alerta-conexao';
   el.hidden = false;
@@ -1519,10 +1524,6 @@ function mostrarFonte(){
     el.innerHTML = publicadoEm
       ? `Compartilhado pelo GitHub · último envio ${new Date(publicadoEm).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}`
       : 'Compartilhado pelo GitHub · aguardando o primeiro envio';
-    return;
-  }
-  if(!nuvemLigada && motivoBanco){
-    el.innerHTML = 'Sem banco ao vivo — <em>' + motivoBanco + '</em>';
     return;
   }
 
@@ -2116,6 +2117,17 @@ function lerBaseEmbutida(){
     return (p && Array.isArray(p.lancamentos)) ? p : null;
   }catch(e){ return null; }
 }
+
+/* Mostra ou esconde os botões menos usados, para a tela não ficar poluída.
+   Os quatro do dia a dia ficam sempre à vista; o resto entra aqui. */
+on('btnMais', 'click', () => {
+  const p = document.getElementById('maisOpcoes');
+  const b = document.getElementById('btnMais');
+  p.hidden = !p.hidden;
+  b.textContent = p.hidden ? 'Mais opções ▾' : 'Menos opções ▴';
+  b.classList.toggle('aberto', !p.hidden);
+  if(p.hidden) document.getElementById('configEnvio').hidden = true;
+});
 
 /* ---------- início ---------- */
 /* O modo painel é só leitura: ele NUNCA mostra dados guardados neste aparelho.
