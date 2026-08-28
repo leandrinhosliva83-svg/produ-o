@@ -488,6 +488,7 @@
     <button class="ghost" id="btnConsumo">Gráfico de consumo</button>
     <button class="ghost" id="btnRendimento">Gráfico de rendimento energético</button>
     <button class="ghost" id="btnSubirBase">Enviar minha base para o banco</button>
+    <button class="ghost" id="btnLimpar">Limpar este aparelho</button>
     <button class="ghost" id="btnEnviarGit">Enviar para o GitHub</button>
     <button class="ghost" id="btnConfigEnvio">Configurações de envio</button>
     <button class="ghost" id="btnPublicar">Baixar cópia (dados.json)</button>
@@ -1362,6 +1363,7 @@ function confirmarModal(){
   /* liberado: fica destravado até fechar a aba */
   try{ sessionStorage.setItem('abast_destravado','1'); }catch(e){}
   modo = 'adm';
+  if(!dados.length){ carregar(); }     // recupera o que estava guardado neste aparelho
   fecharModal();
   aplicarModo();
   desenhar();
@@ -2015,8 +2017,24 @@ on('btnSubirBase', 'click', () => {
   avisar(`Enviando <b>${dados.length}</b> lançamentos · os outros aparelhos atualizam em segundos`);
 });
 
+on('btnLimpar', 'click', () => {
+  if(!confirm('Isto apaga os lançamentos guardados NESTE aparelho.\n\n' +
+              'A base compartilhada não é afetada. Continuar?')) return;
+  try{ localStorage.removeItem('abast_v3'); localStorage.removeItem('abast_publicado'); }catch(e){}
+  dados = []; pendente = false; publicadoEm = null; ultimoSalvo = null;
+  desenhar();
+  avisar('Aparelho limpo · vai receber os dados da base compartilhada');
+});
+
 /* ---------- início ---------- */
-carregar();   // sem dados de demonstração: melhor vazio do que número errado
+/* O modo painel é só leitura: ele NUNCA mostra dados guardados neste aparelho.
+   Ou vem da base compartilhada, ou fica vazio. Assim o celular não pode
+   inventar um número diferente do computador. */
+const souPainel = (() => {
+  try{ return sessionStorage.getItem('abast_destravado') !== '1'; }catch(e){ return true; }
+})();
+if(souPainel) dados = [];
+else carregar();
 garantirIds();
 carregarMetas();
 
