@@ -1445,9 +1445,10 @@ function mostrarFonte(){
     return;
   }
   if(nuvemLigada){
-    el.innerHTML = publicadoEm
+    const qual = tipoBanco === 'firestore' ? 'Firestore' : 'Realtime';
+    el.innerHTML = (publicadoEm
       ? `<b>Ao vivo</b> · última alteração ${new Date(publicadoEm).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}`
-      : '<b>Ao vivo</b> · conectado ao banco de dados';
+      : '<b>Ao vivo</b> · conectado ao banco') + ` · <em>${qual}</em>`;
     return;
   }
   const marca = pendente ? ' · <em>alterações não publicadas</em>' : '';
@@ -1652,7 +1653,21 @@ async function ligarBanco(conf){
   if(firebase.firestore){
     try{
       doc = firebase.firestore().collection('dm-agricola').doc('abastecimento');
-      await doc.get();                       // se falhar, o Firestore não está disponível
+      /* Duas tentativas antes de desistir. Internet lenta não pode fazer um
+         aparelho ir para o Firestore e o outro para o Realtime — se cada um
+         cair num banco diferente, os números nunca batem. */
+      let ultimoErro;
+      let conseguiu = false;
+      for(let tentativa = 1; tentativa <= 2 && !conseguiu; tentativa++){
+        try{
+          await Promise.race([
+            doc.get(),
+            new Promise((_, rej) => setTimeout(() => rej(new Error('sem resposta')), 9000))
+          ]);
+          conseguiu = true;
+        }catch(err){ ultimoErro = err; }
+      }
+      if(!conseguiu) throw ultimoErro;
       doc.onSnapshot(s => aplicarDoBanco(s.exists ? s.data() : null),
                      () => { estadoBase = 'semsinal'; acenderEstado(); });
       tipoBanco = 'firestore'; motivoBanco = '';
@@ -1660,12 +1675,26 @@ async function ligarBanco(conf){
       estadoBase = 'ok';
       acenderEstado();
       return true;
-    }catch(e){ doc = null; motivoBanco = 'Firestore: ' + (e.code || e.message); }
+    }catch(e){
+      doc = null;
+      const cod = e.code || e.message || '';
+      motivoBanco = 'Firestore: ' + cod;
+      /* Erro de permissão significa que o Firestore existe, só está fechado.
+         Nesse caso NÃO caímos para o Realtime — seria arriscar bancos diferentes. */
+      if(String(cod).includes('permission-denied')){
+        estadoBase = 'semsinal'; acenderEstado(); mostrarFonte();
+        return false;
+      }
+    }
   }
 
   /* ---------- tentativa 2: Realtime Database ---------- */
   try{
     ref = firebase.database().ref('dm-agricola/abastecimento');
+    await Promise.race([
+      ref.once('value'),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('demorou demais para responder')), 8000))
+    ]);
     ref.on('value', s => aplicarDoBanco(s.val()),
                     () => { estadoBase = 'semsinal'; acenderEstado(); });
     firebase.database().ref('.info/connected').on('value', s => {
@@ -1942,6 +1971,17 @@ carregarCfg();
 atualizarPrevia();
 desenhar();
 iniciarNuvem().then(ok => { if(!ok) buscarBasePublicada(false); });
+
+/* Trava de segurança: se em 12 segundos nada tiver se resolvido, para de
+   mostrar "Verificando…" e diz que não conseguiu. */
+setTimeout(() => {
+  if(!nuvemLigada && estadoBase === ''){
+    motivoBanco = motivoBanco || 'o banco não respondeu em 12 segundos';
+    estadoBase = 'semsinal';
+    acenderEstado();
+    mostrarFonte();
+  }
+}, 12000);
 </script>
 </body>
 </html>
