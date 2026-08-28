@@ -289,6 +289,8 @@
 
   /* ---------- luz do botão Atualizar ---------- */
   #btnAtualizar{display:inline-flex; align-items:center; gap:8px}
+  body.painel #btnAtualizar{cursor:default; pointer-events:none;
+                            background:transparent; border-color:transparent; padding-left:0}
   .luz{width:9px; height:9px; border-radius:50%; flex:none;
        background:var(--tinta-2); box-shadow:0 0 0 0 transparent}
   @keyframes pisca{0%,100%{opacity:1} 50%{opacity:.12}}
@@ -1623,7 +1625,7 @@ async function buscarBasePublicada(forcar){
   mostrarFonte();
   desenhar();
   acenderEstado();
-  avisar(`Base atualizada · <b>${lista.length}</b> lançamentos`);
+  if(forcar || modo !== 'painel') avisar(`Base atualizada · <b>${lista.length}</b> lançamentos`);
   return true;
 }
 
@@ -1652,7 +1654,10 @@ document.addEventListener('visibilitychange', () => {
 
 setInterval(() => {
   if(!document.hidden && !nuvemLigada) buscarBasePublicada(false);
-}, 60000);   // a cada 1 minuto
+}, 15000);   // a cada 15 segundos
+
+/* Ao voltar para a aba ou destravar o celular, confere na hora */
+window.addEventListener('focus', () => { if(!nuvemLigada) buscarBasePublicada(false); });
 
 /* =========================================================
    7. BANCO DE DADOS AO VIVO (Firebase Realtime Database)
