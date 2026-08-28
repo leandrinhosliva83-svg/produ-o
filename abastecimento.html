@@ -18,6 +18,9 @@
     --ambar:#E8A33D;      /* cor da DM Agrícola */
     --verde:#4FB286;
     --vermelho:#E0644F;
+    --azul:#6FA8DC;
+    --ciano:#5FC2C2;
+    --roxo:#B58BE0;
   }
   *{box-sizing:border-box}
   body{margin:0; background:var(--fundo); color:var(--tinta);
@@ -209,89 +212,52 @@
   }
 
   /* ---------- quadros por veículo (modo painel) ---------- */
-  .grade{display:grid; gap:10px; grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+  .grade{display:grid; gap:8px; grid-template-columns:repeat(auto-fill,minmax(116px,1fr));
          align-items:start}
-  .quadro{background:var(--papel); border:1px solid var(--linha);
-          border-top:3px solid var(--tinta-2); padding:0; overflow:hidden}
-  .quadro.ok{border-top-color:var(--verde)}
-  .quadro.ruim{border-top-color:var(--vermelho)}
-  .quadro summary{list-style:none; cursor:pointer; padding:15px 14px; display:block;
-                  user-select:none; text-align:center}
+  .quadro{background:var(--papel); border:1px solid var(--linha); padding:0; overflow:hidden;
+          border-radius:4px; transition:border-color .15s, background .15s}
+  .quadro summary{list-style:none; cursor:pointer; padding:13px 10px 12px; display:block;
+                  user-select:none; text-align:center; position:relative}
   .quadro summary::-webkit-details-marker{display:none}
   .quadro summary:hover{background:var(--papel-2)}
+  /* faixa fina de status, discreta, no alto do quadro */
+  .quadro summary::before{content:""; position:absolute; top:0; left:0; right:0; height:2px;
+                          background:var(--tinta-2)}
+  .quadro.ok   summary::before{background:var(--verde)}
+  .quadro.ruim summary::before{background:var(--vermelho)}
+  .quadro.ok:hover{border-color:rgba(79,178,134,.5)}
+  .quadro.ruim:hover{border-color:rgba(224,100,79,.5)}
 
-  .q-num{display:block; font-family:'Oswald',sans-serif; font-weight:600; font-size:27px;
-         letter-spacing:.04em; line-height:1.05; color:var(--tinta)}
+  .q-num{display:block; font-family:'Oswald',sans-serif; font-weight:400; font-size:21px;
+         letter-spacing:.09em; line-height:1; color:var(--tinta)}
   .q-pre{display:none}
-  .q-linha{display:block; margin-top:5px}
-  .q-media{font-family:'IBM Plex Mono',monospace; font-size:21px; font-weight:600;
-           color:var(--ambar)}
+  .q-linha{display:block; margin-top:7px}
+  .q-media{font-family:'IBM Plex Mono',monospace; font-size:15px; font-weight:600;
+           color:var(--ambar); letter-spacing:-.01em}
   .q-media.ruim{color:var(--vermelho)}
-  .q-rot{display:block; font-size:10px; letter-spacing:.12em; text-transform:uppercase;
-         color:var(--tinta-2); margin-top:1px}
+  .q-media.ok{color:var(--verde)}
+  .q-rot{display:block; font-size:8.5px; letter-spacing:.16em; text-transform:uppercase;
+         color:#6E828C; margin-top:3px}
   .r-aberto{display:none}
 
   /* ----- aberto: vira o cartão completo ----- */
-  .quadro[open]{grid-column:1 / -1}
-  .quadro[open] summary{text-align:left; padding:16px 16px 14px; background:transparent;
+  .quadro[open]{grid-column:1 / -1; border-color:#3C4A54}
+  .quadro[open] summary{text-align:left; padding:15px 16px 13px; background:transparent;
                         border-bottom:1px solid var(--linha)}
   .quadro[open] summary:hover{background:transparent}
-  .quadro[open] .q-num{font-size:21px}
+  .quadro[open] .q-num{font-size:19px; font-weight:600}
   .quadro[open] .q-pre{display:inline}
-  .quadro[open] .q-linha{display:flex; align-items:baseline; gap:11px; margin-top:4px}
-  .quadro[open] .q-media{font-size:32px}
-  .quadro[open] .q-rot{display:inline; margin:0; font-size:12px; letter-spacing:.02em;
+  .quadro[open] .q-linha{display:flex; align-items:baseline; gap:11px; margin-top:5px}
+  .quadro[open] .q-media{font-size:29px}
+  .quadro[open] .q-rot{display:inline; margin:0; font-size:11.5px; letter-spacing:.02em;
                        text-transform:none; font-family:'IBM Plex Mono',monospace}
   .quadro[open] .r-fechado{display:none}
   .quadro[open] .r-aberto{display:inline}
 
-  .quadro dl{display:grid; grid-template-columns:1fr auto; gap:5px 12px;
-             margin:0; padding:15px 16px; font-size:13.5px}
+  .quadro dl{display:grid; grid-template-columns:1fr auto; gap:6px 12px;
+             margin:0; padding:14px 16px; font-size:13px}
   .quadro dt{color:var(--tinta-2)}
   .quadro dd{margin:0; font-family:'IBM Plex Mono',monospace; text-align:right; font-weight:500}
-
-  /* ---------- envio automático ---------- */
-  .config-envio{background:var(--papel); border:1px solid var(--linha);
-                border-left:3px solid var(--verde); padding:16px 18px; margin-top:14px}
-  .cfg-tit{font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:.1em;
-           font-size:13px; color:var(--verde); margin-bottom:12px}
-  .cfg-campos{display:flex; gap:14px; flex-wrap:wrap; align-items:end}
-  .cfg-campos .meta-campo{flex-direction:column; align-items:flex-start; gap:5px}
-  .cfg-campos input{width:190px}
-  .cfg-auto{flex-direction:row !important; align-items:center !important; gap:8px !important}
-  .cfg-auto input{width:18px !important; height:18px; accent-color:var(--verde); cursor:pointer}
-  .cfg-divisor{height:1px; background:var(--linha); margin:20px 0 18px}
-  .cfg-aviso{font-size:12.5px; color:var(--tinta-2); margin-top:14px; line-height:1.6}
-  .cfg-aviso b{color:var(--tinta)}
-
-  .periodo{display:flex; align-items:center; gap:9px; flex-wrap:wrap;
-           background:var(--papel); border:1px solid var(--linha);
-           padding:11px 14px; margin:10px 0 4px}
-  .per-tit{font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:.12em;
-           font-size:11px; color:var(--ambar)}
-  .per-b{padding:6px 12px; font-size:12.5px}
-  .per-campo{display:flex; align-items:center; gap:6px; margin:0;
-             font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--tinta-2)}
-  .per-campo input{width:150px; padding:5px 8px; font-size:13px}
-  #selVeiculo{padding:5px 8px; font-size:13px; background:var(--papel-2);
-              color:var(--tinta); border:1px solid var(--linha); border-radius:3px;
-              font-family:'IBM Plex Mono',monospace}
-  .per-info{margin-left:auto; font-family:'IBM Plex Mono',monospace;
-            font-size:12px; color:var(--tinta-2)}
-  @media (max-width:700px){
-    .periodo{gap:7px; padding:10px}
-    .per-campo{flex:1 1 45%}
-    .per-campo input{width:100%}
-    .per-info{margin-left:0; flex-basis:100%}
-  }
-
-  .barra-graficos{margin-top:10px}
-  .oculto{display:none}
-  .cfg-recolhe{cursor:pointer; list-style:none; margin-bottom:12px}
-  .cfg-recolhe::-webkit-details-marker{display:none}
-  .cfg-recolhe::before{content:'▸ '; color:var(--tinta-2)}
-  details[open] > .cfg-recolhe::before{content:'▾ '}
-  #btnMais.aberto{border-color:var(--ambar); color:var(--ambar)}
 
   .dica-rolagem{display:none}
 
@@ -394,11 +360,13 @@
     .card dl{font-size:12.5px}
 
     /* quadros do painel: dois por linha, do tamanho do dedo */
-    .grade{grid-template-columns:1fr 1fr; gap:9px}
-    .quadro summary{padding:17px 10px}
-    .q-num{font-size:25px}
-    .q-media{font-size:20px}
-    .quadro dl{font-size:13.5px; padding:13px 12px}
+    .grade{grid-template-columns:repeat(3,1fr); gap:7px}
+    .quadro summary{padding:12px 6px}
+    .q-num{font-size:19px}
+    .q-media{font-size:14px}
+    .q-rot{font-size:8px; letter-spacing:.1em}
+    .quadro[open] .q-media{font-size:26px}
+    .quadro dl{font-size:13px; padding:13px 12px}
 
     .custo-topo{padding:15px}
     .custo-detalhe{gap:8px 16px; font-size:13px}
@@ -454,9 +422,9 @@
   </div>
 
   <div class="barra-acoes barra-graficos">
-    <button class="ghost" id="btnInicio">Início</button>
-    <button class="ghost" id="btnConsumo">Gráfico de consumo</button>
-    <button class="ghost" id="btnRendimento">Gráfico de rendimento energético</button>
+    <button class="ghost c-neutro" id="btnInicio">Início</button>
+    <button class="ghost c-ambar" id="btnConsumo">Gráfico de consumo</button>
+    <button class="ghost c-azul" id="btnRendimento">Gráfico de rendimento energético</button>
   </div>
   <div class="painel-grafico" id="painelGrafico" hidden>
     <div class="grafico-topo">
@@ -558,18 +526,18 @@
   </div>
 
   <div class="barra-acoes so-adm">
-    <button class="ghost" id="btnCsv">Baixar CSV</button>
-    <button class="ghost" id="btnMais">Mais opções ▾</button>
+    <button class="ghost c-ciano" id="btnCsv">Baixar CSV</button>
+    <button class="ghost c-neutro" id="btnMais">Mais opções ▾</button>
     <input type="file" id="arquivo" accept=".json" hidden>
   </div>
 
   <div class="barra-acoes so-adm" id="maisOpcoes" hidden>
-    <button class="ghost" id="btnEnviarGit">Enviar agora</button>
-    <button class="ghost" id="btnConfigEnvio">Configurações de envio</button>
-    <button class="ghost" id="btnSenha">Trocar senha</button>
-    <button class="ghost" id="btnSalvar">Salvar backup</button>
-    <button class="ghost" id="btnAbrir">Abrir backup</button>
-    <button class="ghost" id="btnLimpar">Limpar este aparelho</button>
+    <button class="ghost c-verde" id="btnEnviarGit">Enviar agora</button>
+    <button class="ghost c-azul" id="btnConfigEnvio">Configurações de envio</button>
+    <button class="ghost c-roxo" id="btnSenha">Trocar senha</button>
+    <button class="ghost c-ciano" id="btnSalvar">Salvar backup</button>
+    <button class="ghost c-ciano" id="btnAbrir">Abrir backup</button>
+    <button class="ghost c-vermelho" id="btnLimpar">Limpar este aparelho</button>
     <button class="ghost oculto" id="btnSubirBase">Enviar base para o banco</button>
     <button class="ghost oculto" id="btnGerarSite">Gerar arquivo do site</button>
     <button class="ghost oculto" id="btnPublicar">Baixar cópia (dados.json)</button>
