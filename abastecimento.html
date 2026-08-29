@@ -348,6 +348,14 @@
   .escopo.todos{border-color:rgba(224,100,79,.45); color:var(--vermelho)}
   .escopo b{color:var(--tinta)}
 
+  .campo-meta{gap:7px; padding:3px 9px 3px 10px; border:1px solid rgba(232,163,61,.45);
+              border-radius:4px; background:rgba(232,163,61,.07); color:var(--ambar)}
+  .campo-meta input{width:78px; border-color:rgba(232,163,61,.5);
+                    color:var(--ambar); font-weight:600; text-align:center}
+  .campo-meta input:focus{border-color:var(--ambar)}
+  .meta-un{font-size:9px; letter-spacing:.08em; color:#7E919B; text-transform:none}
+  @media (max-width:760px){ .meta-un{display:none} }
+
   .chip-wrap{position:relative; display:inline-flex}
   .chip-x{position:absolute; top:-7px; right:-7px; width:20px; height:20px; padding:0;
           border-radius:50%; border:1px solid var(--linha); background:var(--papel-2);
@@ -5276,6 +5284,11 @@ CEMMA|5.01.01.0008
     </label>
     <button class="ghost c-neutro" id="pr_btnFrota" style="padding:5px 11px;font-size:12px">Editar frota</button>
     <span class="per-sep"></span>
+    <label class="per-campo campo-meta">Meta diária (t/dia)
+      <input type="number" id="pr_metaDia" step="1" min="0" value="366">
+      <span class="meta-un">toneladas por dia trabalhado</span>
+    </label>
+    <span class="per-sep"></span>
   </div>
 
   <div class="periodo" id="pr_frotaBox" hidden>
@@ -5323,8 +5336,8 @@ CEMMA|5.01.01.0008
     <div class="grafico-topo">
       <div class="titulo" id="pr_tituloGrafico"></div>
       <div class="seletor" id="pr_cmpCtrl" hidden>
-        <button class="ghost cmp ativo" data-cmp="carga">t/carga</button>
-        <button class="ghost cmp" data-cmp="dia">t/dia</button>
+        <button class="ghost cmp ativo" data-cmp="dia">t/dia de produção</button>
+        <button class="ghost cmp" data-cmp="carga">t/carga</button>
         <button class="ghost cmp-dif" id="pr_btnDif">diferença da média</button>
       </div>
       <div class="seletor">
@@ -7197,8 +7210,14 @@ var prCamSel = [];        // vazio = todos os caminhões
 var prUniSel = [];        // vazio = todas as unidades
 var prGranul = 'dia';     // dia | semana | mes
 var prModo = 'evolucao';  // evolucao | comparar
-var prCmpMed = 'carga';   // carga | dia
+var prCmpMed = 'dia';     // dia | carga — a classificação padrão é por dia de produção
 var prCmpDif = false;     // true = mostra a diferença da média
+var META_DIA = 366;       // toneladas por dia trabalhado que a frota deve entregar
+try{
+  const g = localStorage.getItem('prod_metaDia');
+  if(g !== null && g !== '') META_DIA = Number(g);
+}catch(e){}
+
 var MINHA_FROTA = ['929200','929240','929245','929250','929255','929260'];
 try{
   const g = localStorage.getItem('prod_frota');
@@ -7318,6 +7337,7 @@ function prDesenhar(){
                   : (unidades.length > 1 ? 'todas as unidades' : (unidades[0] || ''));
     esc.innerHTML = soM2
       ? `Mostrando <b>a minha frota</b> — ${MINHA_FROTA.length} caminhões · <b>${qualUni}</b>` +
+        (META_DIA > 0 ? ` · meta <b>${n(META_DIA,0)} t/dia</b>` : '') +
         (prCamSel.length ? ` · ${prCamSel.length} selecionado${prCamSel.length===1?'':'s'}` : '')
       : `Mostrando <b>a frota inteira da usina</b> — ${cams.length} caminhões. ` +
         `Marque "só meus caminhões" para ver apenas os seus.`;
@@ -7388,17 +7408,22 @@ function prDesenhar(){
                 (universo.reduce((s,r)=>s+r.cargas,0) || 1);
 
   document.getElementById('pr_chips').innerHTML =
-    `<button class="chip ${prCamSel.length===0?'ativo':''}" data-cam="">Todos
-       <span class="c-med">${n(geral,2)} t/carga</span>
-       <span class="c-dia">${codigos.length? n(universo.reduce((s,r)=>s+r.toneladas,0) /
-          (Object.values(medias).reduce((s,m)=>s+m.nDias,0) || 1), 0) : 0} t/dia · média</span></button>` +
+    (function(){
+      const totDias = Object.values(medias).reduce((s,m)=>s+m.nDias,0) || 1;
+      const mediaDia = universo.reduce((s,r)=>s+r.toneladas,0) / totDias;
+      const cor = META_DIA > 0 ? (mediaDia >= META_DIA ? 'ok' : 'ruim') : '';
+      return `<button class="chip ${prCamSel.length===0?'ativo':''}" data-cam="">Todos
+        <span class="c-med ${cor}">${n(mediaDia,0)} t/dia</span>
+        <span class="c-dia">meta ${n(META_DIA,0)} · ${n(geral,2)} t/carga</span></button>`;
+    })() +
     codigos.map(c => {
       const m = medias[c];
       const md = m.c ? m.t/m.c : 0;
       const porDia = m.nDias ? m.t/m.nDias : 0;
+      const corDia = META_DIA > 0 ? (porDia >= META_DIA ? 'ok' : 'ruim') : '';
       return `<button class="chip ${prCamSel.indexOf(c)>-1?'ativo':''}" data-cam="${c}">${c}
-        <span class="c-med ${md>=geral?'ok':'ruim'}">${n(md,2)} t/carga</span>
-        <span class="c-dia">${n(porDia,0)} t/dia · ${m.nDias} dias</span></button>`;
+        <span class="c-med ${corDia || (md>=geral?'ok':'ruim')}">${n(porDia,0)} t/dia</span>
+        <span class="c-dia">${m.nDias} dias · ${n(md,2)} t/carga</span></button>`;
     }).join('');
 
   /* Clique junta ou tira o caminhão da seleção. "Todos" limpa. */
@@ -7533,6 +7558,19 @@ function prGrafico(){
 
 /* Compara os caminhões lado a lado, em barras horizontais.
    Linha tracejada = média da frota no período escolhido. */
+/* Colocação de cada caminhão. O primeiro leva troféu; os outros,
+   o número da posição. Ouro, prata e bronze nos três primeiros. */
+function posicao(i, y, linhaAlt, fonte){
+  const cy = y + linhaAlt/2;
+  if(i === 0){
+    return `<text x="14" y="${cy+6}" font-size="${fonte+6}">&#127942;</text>`;
+  }
+  const cores = ['#C9D0D6', '#C08457'];            // prata, bronze
+  const cor = cores[i-1] || '#5E7079';
+  return `<text x="22" y="${cy+5}" text-anchor="middle" fill="${cor}"
+            font-family="Oswald" font-size="${fonte+1}" letter-spacing=".5">${i+1}º</text>`;
+}
+
 function prBarras(lista, area, leg){
   const m = {};
   lista.forEach(r => {
@@ -7547,7 +7585,7 @@ function prBarras(lista, area, leg){
   });
 
   const valor  = c => prCmpMed === 'dia' ? c.porDia : c.media;
-  const rotulo = prCmpMed === 'dia' ? 'Toneladas por dia trabalhado' : 'Toneladas por carga';
+  const rotulo = prCmpMed === 'dia' ? 'Toneladas por dia de produção' : 'Toneladas por carga';
   document.getElementById('pr_tituloGrafico').textContent =
     rotulo + ' — comparativo por caminhão' + (prCmpDif ? ' · diferença da média' : '');
 
@@ -7556,11 +7594,16 @@ function prBarras(lista, area, leg){
   const totT = lista.reduce((s,r)=>s+r.toneladas,0);
   const totC = lista.reduce((s,r)=>s+r.cargas,0);
   const totD = cams.reduce((s,c)=>s+c.nDias,0);
-  const ref = prCmpMed === 'dia' ? (totD ? totT/totD : 0) : (totC ? totT/totC : 0);
+  /* Com a meta preenchida, ela é a referência para t/dia — é contra ela que
+     o caminhão é medido, não contra a média dos colegas. */
+  const usaMeta = prCmpMed === 'dia' && META_DIA > 0;
+  const ref = usaMeta ? META_DIA
+            : (prCmpMed === 'dia' ? (totD ? totT/totD : 0) : (totC ? totT/totC : 0));
+  const rotRef = usaMeta ? 'meta' : 'média';
 
   const mobile = window.innerWidth < 700;
-  const linhaAlt = mobile ? 36 : 40;
-  const mE = mobile ? 62 : 76, mD = mobile ? 86 : 116, mT = 12;
+  const linhaAlt = mobile ? 32 : 36;
+  const mE = mobile ? 92 : 118, mD = mobile ? 106 : 138, mT = 12;
   const L = mobile ? 380 : 740;
   const A = mT + cams.length * linhaAlt + 26;
   const larg = L - mE - mD;
@@ -7578,14 +7621,15 @@ function prBarras(lista, area, leg){
     svg += `<line x1="${meio}" y1="${mT}" x2="${meio}" y2="${mT + cams.length*linhaAlt}"
               stroke="#FFFFFF" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.75"/>
             <text x="${meio}" y="${mT + cams.length*linhaAlt + 18}" text-anchor="middle"
-              fill="#FFFFFF" font-family="IBM Plex Mono" font-size="${fonte-1}">média ${n(ref,2)}</text>`;
+              fill="#FFFFFF" font-family="IBM Plex Mono" font-size="${fonte-1}">${rotRef} ${n(ref,2)}</text>`;
 
     cams.forEach((c,i) => {
       const y = mT + i*linhaAlt, d = difs[i];
       const w = Math.abs(d)/maior * (larg/2);
       const cor = d >= 0 ? '#4FB286' : '#E0644F';
       const x = d >= 0 ? meio : meio - w;
-      svg += `<text x="${mE-8}" y="${y+linhaAlt/2+4}" text-anchor="end" fill="#EAF0F3"
+      svg += posicao(i, y, linhaAlt, fonte) +
+             `<text x="${mE-10}" y="${y+linhaAlt/2+4}" text-anchor="end" fill="#EAF0F3"
                 font-family="Oswald" font-size="${fonte+2}" letter-spacing="1">${c.cod}</text>
               <rect x="${x.toFixed(1)}" y="${y+5}" width="${Math.max(2,w).toFixed(1)}"
                 height="${linhaAlt-14}" fill="${cor}" rx="2">
@@ -7593,13 +7637,13 @@ function prBarras(lista, area, leg){
               <text x="${mE+larg+8}" y="${y+linhaAlt/2+4}" fill="${cor}"
                 font-family="IBM Plex Mono" font-size="${fonte}" font-weight="600">${
                   (d>=0?'+':'')+d.toFixed(1)}%</text>
-              <text x="${mE+larg+8}" y="${y+linhaAlt/2+16}" fill="#6E828C"
-                font-family="IBM Plex Mono" font-size="${fonte-2}">${n(valor(c),2)}</text>`;
+              <text x="${mE+larg+mD-12}" y="${y+linhaAlt/2+4}" text-anchor="end" fill="#6E828C"
+                font-family="IBM Plex Mono" font-size="${fonte-1}">${n(valor(c),2)}</text>`;
     });
     leg.innerHTML =
-      '<span><i class="chave" style="background:#4FB286"></i>acima da média</span>' +
-      '<span><i class="chave" style="background:#E0644F"></i>abaixo da média</span>' +
-      `<span><i class="chave" style="background:#FFFFFF"></i>média ${n(ref,2)}</span>`;
+      `<span><i class="chave" style="background:#4FB286"></i>acima da ${rotRef}</span>` +
+      `<span><i class="chave" style="background:#E0644F"></i>abaixo da ${rotRef}</span>` +
+      `<span><i class="chave" style="background:#FFFFFF"></i>${rotRef} ${n(ref,2)}</span>`;
   }
   else {
     /* Barras normais, começando no zero. A escala parte um pouco abaixo do
@@ -7615,16 +7659,18 @@ function prBarras(lista, area, leg){
       const w = Math.max(2, esc(valor(c)));
       const acima = valor(c) >= ref;
       const cor = acima ? '#4FB286' : '#E0644F';
-      svg += `<text x="${mE-8}" y="${y+linhaAlt/2+4}" text-anchor="end" fill="#EAF0F3"
+      svg += posicao(i, y, linhaAlt, fonte) +
+             `<text x="${mE-10}" y="${y+linhaAlt/2+4}" text-anchor="end" fill="#EAF0F3"
                 font-family="Oswald" font-size="${fonte+2}" letter-spacing="1">${c.cod}</text>
               <rect x="${mE}" y="${y+5}" width="${larg}" height="${linhaAlt-14}" fill="#1B232A" rx="2"/>
               <rect x="${mE}" y="${y+5}" width="${w.toFixed(1)}" height="${linhaAlt-14}" fill="${cor}" rx="2">
                 <title>${c.cod} · ${n(valor(c),2)} · ${n(c.ton,0)} t em ${c.nDias} dias</title></rect>
               <text x="${mE+larg+8}" y="${y+linhaAlt/2+4}" fill="${cor}"
                 font-family="IBM Plex Mono" font-size="${fonte}" font-weight="600">${n(valor(c),2)}</text>
-              <text x="${mE+larg+8}" y="${y+linhaAlt/2+16}" fill="#6E828C"
-                font-family="IBM Plex Mono" font-size="${fonte-2}">${
-                  prCmpMed === 'dia' ? n(c.media,2)+' t/carga' : n(c.porDia,0)+' t/dia'}</text>`;
+              <text x="${mE+larg+mD-12}" y="${y+linhaAlt/2+4}" text-anchor="end" fill="${cor}"
+                font-family="IBM Plex Mono" font-size="${fonte-1}" opacity="0.9">${
+                  ref ? (((valor(c)-ref)/ref*100) >= 0 ? '+' : '') +
+                        ((valor(c)-ref)/ref*100).toFixed(1) + '%' : ''}</text>`;
     });
 
     if(ref > 0){
@@ -7632,11 +7678,11 @@ function prBarras(lista, area, leg){
       svg += `<line x1="${x}" y1="${mT}" x2="${x}" y2="${mT + cams.length*linhaAlt}"
                 stroke="#FFFFFF" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.75"/>
               <text x="${x}" y="${mT + cams.length*linhaAlt + 18}" text-anchor="middle"
-                fill="#FFFFFF" font-family="IBM Plex Mono" font-size="${fonte-1}">média ${n(ref,2)}</text>`;
+                fill="#FFFFFF" font-family="IBM Plex Mono" font-size="${fonte-1}">${rotRef} ${n(ref,2)}</text>`;
     }
     leg.innerHTML =
-      '<span><i class="chave" style="background:#4FB286"></i>acima da média</span>' +
-      '<span><i class="chave" style="background:#E0644F"></i>abaixo da média</span>' +
+      `<span><i class="chave" style="background:#4FB286"></i>acima da ${rotRef}</span>` +
+      `<span><i class="chave" style="background:#E0644F"></i>abaixo da ${rotRef}</span>` +
       `<span style="color:#6E828C">escala começa em ${n(base,2)} para destacar a diferença</span>`;
   }
 
@@ -7674,6 +7720,8 @@ on('pr_btnComparar','click',  () => {
   if(!p.hidden && prModo === 'comparar'){ p.hidden = true; return; }
   prModo = 'comparar';
   p.hidden = false;
+  document.querySelectorAll('.cmp').forEach(x =>
+    x.classList.toggle('ativo', x.dataset.cmp === prCmpMed));
   prGrafico();
   p.scrollIntoView({behavior:'smooth', block:'nearest'});
 });
@@ -7727,6 +7775,12 @@ document.querySelectorAll('.prper-b').forEach(b =>
 }));
 
 ['pr_selUnidade','pr_selCaminhao','pr_soMeus'].forEach(id => on(id,'change', prDesenhar));
+
+on('pr_metaDia','input', () => {
+  META_DIA = Number(document.getElementById('pr_metaDia').value) || 0;
+  try{ localStorage.setItem('prod_metaDia', META_DIA); }catch(e){}
+  prDesenhar();
+});
 
 on('pr_soMeus','change', () => {
   try{ localStorage.setItem('prod_soMeus', document.getElementById('pr_soMeus').checked ? '1' : '0'); }catch(e){}
