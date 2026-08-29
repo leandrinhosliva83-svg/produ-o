@@ -341,7 +341,93 @@
   .kpi .k-val.destaque{color:var(--ambar)}
   .kpi .k-sub{font-size:10.5px; color:#6E828C; margin-top:3px; font-family:'IBM Plex Mono',monospace}
   @media (max-width:760px){ .kpis{grid-template-columns:repeat(2,1fr)} }
+  .escopo{font-family:'IBM Plex Mono',monospace; font-size:12.5px; margin-bottom:8px;
+          padding:8px 12px; border-radius:4px; border:1px solid var(--linha);
+          background:var(--papel)}
+  .escopo.minha{border-color:rgba(232,163,61,.45); color:var(--ambar)}
+  .escopo.todos{border-color:rgba(224,100,79,.45); color:var(--vermelho)}
+  .escopo b{color:var(--tinta)}
+
+  .chip-wrap{position:relative; display:inline-flex}
+  .chip-x{position:absolute; top:-7px; right:-7px; width:20px; height:20px; padding:0;
+          border-radius:50%; border:1px solid var(--linha); background:var(--papel-2);
+          color:#7E919B; font-size:13px; line-height:1; cursor:pointer; z-index:2}
+  .chip-x:hover{border-color:var(--vermelho); color:var(--vermelho);
+                background:rgba(224,100,79,.15)}
+  body.painel .chip-x{display:none}
+  .chips-uni .chip{font-size:13px; padding:6px 13px}
+  .chips-uni .chip.ativo{border-color:var(--ciano); color:var(--ciano);
+                         background:rgba(95,194,194,.10)}
+  .chips-uni .chip.ativo .c-med{color:var(--ciano)}
+  .chips{display:flex; gap:6px; flex-wrap:wrap; margin-top:10px}
+  .chip{font-family:'Oswald',sans-serif; letter-spacing:.07em; font-size:14px;
+        padding:7px 14px; border-radius:5px; cursor:pointer; background:transparent;
+        border:1px solid #28323A; color:#B7C6CE; position:relative}
+  .chip:hover{border-color:#4A5A64; color:var(--tinta); background:var(--papel-2)}
+  .chip.ativo{border-color:var(--ambar); color:var(--ambar); background:rgba(232,163,61,.10)}
+  .chip .c-dia{display:block; font-family:'IBM Plex Mono',monospace; font-size:9.5px;
+               letter-spacing:0; color:#5E7079; font-weight:400; margin-top:1px}
+  .chip.ativo .c-dia{color:#8E7A52}
+  .chip .c-med{display:block; font-family:'IBM Plex Mono',monospace; font-size:10.5px;
+               letter-spacing:0; margin-top:2px; color:#6E828C; font-weight:500}
+  .chip.ativo .c-med{color:var(--ambar)}
+  .chip .c-med.ok{color:var(--verde)} .chip .c-med.ruim{color:var(--vermelho)}
+  .cmp, .cmp-dif{padding:5px 11px; font-size:12px}
+  .cmp.ativo, .cmp-dif.ativo{border-color:var(--ambar); color:var(--ambar);
+                             background:rgba(232,163,61,.10)}
+  .gran{padding:5px 11px; font-size:12px}
+  .gran.ativo{border-color:var(--ambar); color:var(--ambar); background:rgba(232,163,61,.10)}
+
+  .importar{background:var(--papel); border:1px solid var(--linha); border-radius:5px;
+            padding:14px 16px; margin-top:10px}
+  .imp-tit{font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:.14em;
+           font-size:10px; color:#6E828C; margin-bottom:10px}
+  .solta{border:1.5px dashed #3C4A54; border-radius:5px; padding:20px 16px; text-align:center;
+         transition:border-color .15s, background .15s}
+  .solta.sobre{border-color:var(--ambar); background:rgba(232,163,61,.07)}
+  .solta-txt{font-size:14px; color:#B7C6CE; margin-bottom:6px}
+  .solta-sub{font-size:12.5px; color:#6E828C}
+  .solta-sub button{padding:5px 11px; font-size:12px}
+  .imp-status{font-size:12.5px; color:#6E828C; margin-top:10px;
+              font-family:'IBM Plex Mono',monospace; line-height:1.6}
+  .imp-status.ok{color:var(--verde)}
+  .imp-status.erro{color:var(--vermelho)}
+
+  .tab-uni{background:var(--papel); border:1px solid var(--linha); border-radius:5px;
+           overflow:auto; margin-bottom:12px}
+  .tab-uni table{width:100%; border-collapse:collapse; min-width:520px}
+  .tab-uni th{font-family:'Oswald',sans-serif; font-weight:400; text-transform:uppercase;
+              letter-spacing:.1em; font-size:9.5px; color:#7E919B; padding:9px 12px;
+              text-align:right; white-space:nowrap; border-bottom:1px solid var(--linha);
+              background:var(--papel-2)}
+  .tab-uni th:first-child, .tab-uni td:first-child{text-align:left}
+  .tab-uni td{padding:8px 12px; border-bottom:1px solid #1E272E; font-size:13px;
+              font-family:'IBM Plex Mono',monospace; text-align:right; color:#C3D0D7}
+  .tab-uni tr:last-child td{border-bottom:none}
+  .tab-uni .uni{font-family:'Oswald',sans-serif; letter-spacing:.08em;
+                font-size:14px; color:var(--ciano)}
+
   .vazio-prod{padding:26px; text-align:center; color:var(--tinta-2); font-size:14px}
+  .tab-prod{background:var(--papel); border:1px solid var(--linha); border-radius:5px;
+            overflow:auto; max-height:70vh}
+  .tab-prod table{width:100%; border-collapse:collapse; min-width:620px}
+  .tab-prod th{position:sticky; top:0; z-index:2; background:var(--papel-2);
+               font-family:'Oswald',sans-serif; font-weight:400; text-transform:uppercase;
+               letter-spacing:.1em; font-size:9.5px; color:#7E919B;
+               padding:9px 12px; text-align:left; white-space:nowrap;
+               border-bottom:1px solid var(--linha)}
+  .tab-prod th.num, .tab-prod td.num{text-align:right}
+  .tab-prod td{padding:7px 12px; border-bottom:1px solid #1E272E; font-size:13px;
+               font-family:'IBM Plex Mono',monospace; white-space:nowrap; color:#C3D0D7}
+  .tab-prod tbody tr:hover td{background:var(--papel-2)}
+  .tab-prod .col-pos{width:38px; color:#5E7079; font-size:11px}
+  .tab-prod .cod{font-family:'Oswald',sans-serif; letter-spacing:.06em;
+                 font-size:14px; color:var(--tinta)}
+  .tab-prod .forte{font-weight:600}
+  .tab-prod .suave{color:#7E919B}
+  .tab-prod tfoot td{position:sticky; bottom:0; background:var(--papel-2);
+                     border-top:1px solid var(--linha); border-bottom:none;
+                     font-weight:600; color:var(--tinta)}
   .prper-b{padding:5px 11px; font-size:12px; border-radius:4px}
   .prper-b.ativo{border-color:var(--ambar); color:var(--ambar); background:rgba(232,163,61,.10)}
 
@@ -369,6 +455,10 @@
   .alerta-conexao.modo-github .a-txt{color:#B9D9CB}
 
   /* ---------- luz do botão Atualizar ---------- */
+  .modo-b{font-family:'Oswald',sans-serif; letter-spacing:.16em; font-size:13px;
+          padding:9px 22px}
+  .modo-b.ativo{border-color:var(--ambar); color:var(--ambar);
+                background:rgba(232,163,61,.12)}
   #btnAtualizar{display:inline-flex; align-items:center; gap:8px}
   body.painel #btnAtualizar{cursor:default; pointer-events:none;
                             background:transparent; border-color:transparent; padding-left:0}
@@ -468,7 +558,7 @@
     .card{flex:0 0 90%}
   }
 </style>
-<script id="baseEmbutida" type="application/json">null</script>
+<script id="baseEmbutida" type="application/json">{"publicadoEm": "2026-08-29T12:59:57.168Z", "metas": {"media": 1.2, "rendimento": 90}, "preco": 5.91, "lancamentos": [{"data": "2026-08-26", "veiculo": "929245", "kmIni": 154840, "kmFim": 155129, "litros": 259.01, "peso": 70, "id": "a1"}, {"data": "2026-08-26", "veiculo": "929250", "kmIni": 56865, "kmFim": 57340, "litros": 436.75, "peso": 70, "id": "a2"}, {"data": "2026-08-26", "veiculo": "929240", "kmIni": 144753, "kmFim": 145073, "litros": 361.2, "peso": 70, "id": "a3"}, {"data": "2026-08-28", "veiculo": "929250", "kmIni": 57340, "kmFim": 57610, "litros": 293.9, "peso": 70, "id": "a4"}, {"data": "2026-08-29", "veiculo": "929255", "kmIni": 52443, "kmFim": 52967, "litros": 321.29, "peso": 70, "id": "a5"}, {"data": "2026-08-29", "veiculo": "929240", "kmIni": 145073, "kmFim": 145300, "litros": 254.34, "peso": 70, "id": "a6"}, {"data": "2026-08-29", "veiculo": "929245", "kmIni": 155129, "kmFim": 155495, "litros": 243.75, "peso": 70, "id": "a7"}, {"data": "2026-08-29", "veiculo": "929200", "kmIni": 240420, "kmFim": null, "litros": 0, "peso": 70, "id": "a8"}, {"data": "2026-08-29", "veiculo": "929250", "kmIni": 57610, "kmFim": 57893, "litros": 326.04, "peso": 70, "id": "a9"}]}</script>
 <script id="baseProducao" type="text/plain">
 CEMMA|5.01.01.0008
 210023,2026-05-10,2,67.62
@@ -4912,6 +5002,7 @@ CEMMA|5.01.01.0008
 940090,2026-07-01,2,67
 954165,2026-06-12,4,150.86
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -4927,6 +5018,15 @@ CEMMA|5.01.01.0008
     <div class="sub">Km total, média e rendimento energético por veículo, acumulando a cada lançamento.</div>
   </header>
 
+  <div class="troca-modo">
+    <button class="ghost modo-b" id="btnPainel">PAINEL</button>
+    <button class="ghost modo-b" id="btnModo">ADM</button>
+    <button class="ghost" id="btnAtualizar" title="Buscar a base publicada agora">
+      <span class="luz" id="luz"></span><span id="txtAtualizar">Atualizar</span>
+    </button>
+    <span class="modo-nota" id="modoNota"></span>
+  </div>
+
   <div class="abas">
     <button class="aba ativa" data-aba="abastecimento">Abastecimento</button>
     <button class="aba" data-aba="producao">Produção por caminhão</button>
@@ -4934,13 +5034,6 @@ CEMMA|5.01.01.0008
 
 
   <div id="abaAbastecimento">
-  <div class="troca-modo">
-    <button class="ghost" id="btnModo">Modo administração</button>
-    <button class="ghost" id="btnAtualizar" title="Buscar a base publicada agora">
-      <span class="luz" id="luz"></span><span id="txtAtualizar">Atualizar</span>
-    </button>
-    <span class="modo-nota" id="modoNota"></span>
-  </div>
   <div class="fonte-base" id="fonteBase"></div>
   <div class="alerta-conexao" id="alertaConexao" hidden></div>
 
@@ -4957,6 +5050,8 @@ CEMMA|5.01.01.0008
     <label class="per-campo">até <input type="date" id="perAte"></label>
     <span class="per-info" id="perInfo"></span>
   </div>
+
+  <div class="chips" id="ab_chips"></div>
 
   <div class="barra-acoes barra-graficos">
     <button class="ghost c-neutro" id="btnInicio">Início</button>
@@ -5171,41 +5266,84 @@ CEMMA|5.01.01.0008
 
   <div class="periodo">
     <span class="per-tit">Filtros</span>
-    <label class="per-campo">Unidade <select id="pr_selUnidade"></select></label>
-    <label class="per-campo">Caminhão <select id="pr_selCaminhao"></select></label>
+    <select id="pr_selUnidade" hidden></select>
+    <select id="pr_selCaminhao" hidden></select>
     <span class="per-sep"></span>
-    <label class="per-campo">Ordenar
-      <select id="pr_selOrdem">
-        <option value="ton">Mais toneladas</option>
-        <option value="media">Melhor média</option>
-        <option value="mediaAsc">Pior média</option>
-        <option value="cargas">Mais cargas</option>
-        <option value="cod">Código</option>
-      </select>
+    <label class="per-campo" style="cursor:pointer">
+      <input type="checkbox" id="pr_soMeus" checked
+             style="width:16px;height:16px;accent-color:#E8A33D">
+      só meus caminhões
     </label>
+    <button class="ghost c-neutro" id="pr_btnFrota" style="padding:5px 11px;font-size:12px">Editar frota</button>
+    <span class="per-sep"></span>
   </div>
+
+  <div class="periodo" id="pr_frotaBox" hidden>
+    <span class="per-tit">Minha frota</span>
+    <input id="pr_frotaLista" style="flex:1 1 340px; padding:5px 8px; font-size:13px"
+           placeholder="929200, 929240, 929245...">
+    <button id="pr_btnSalvarFrota" style="padding:5px 12px;font-size:12px">Salvar</button>
+    <span class="per-info">separe os códigos por vírgula</span>
+  </div>
+
+  <div class="aviso so-adm" id="pr_dicaAdmin" style="margin-top:10px" hidden></div>
+
+  <div class="importar so-adm" id="pr_importar">
+    <div class="imp-tit">Importar relatório do GAtec</div>
+    <div class="solta" id="pr_solta">
+      <div class="solta-txt">Arraste o PDF aqui</div>
+      <div class="solta-sub">ou <button class="ghost c-ambar" id="pr_btnEscolher">escolher arquivo</button></div>
+      <input type="file" id="pr_arquivo" accept=".pdf" hidden>
+    </div>
+    <div class="cfg-campos" style="margin-top:12px">
+      <label class="meta-campo" style="flex-direction:column;align-items:flex-start;gap:5px">
+        <span>Unidade deste PDF</span>
+        <input id="pr_uniNome" placeholder="CEMMA" autocomplete="off" style="width:180px">
+      </label>
+      <button class="ghost c-ciano" id="pr_btnRenomear">Corrigir unidade da base</button>
+      <button class="ghost c-vermelho" id="pr_btnExcluir">Excluir unidade</button>
+      <button class="ghost c-vermelho" id="pr_btnZerar">Zerar tudo e recomeçar</button>
+      <span class="per-info" style="margin-left:0">na importação, deixe em branco para ler do cabeçalho · para renomear, marque a unidade no botão e digite o nome certo</span>
+    </div>
+    <div class="imp-status" id="pr_impStatus">Aceita o "Relatório Diário por Caminhão" em PDF. Os dados entram na base e vão para o site.</div>
+  </div>
+
+  <div class="chips chips-uni" id="pr_uniChips"></div>
+  <div class="chips" id="pr_chips"></div>
 
   <div class="barra-acoes barra-graficos">
     <button class="ghost c-neutro" id="pr_btnInicio">Início</button>
     <button class="ghost c-ambar" id="pr_btnGrafTon">Gráfico de toneladas</button>
     <button class="ghost c-azul" id="pr_btnGrafMedia">Gráfico de média</button>
+    <button class="ghost c-verde" id="pr_btnComparar">Comparar caminhões</button>
     <button class="ghost c-ciano" id="pr_btnCsv">Baixar CSV</button>
   </div>
 
   <div class="painel-grafico" id="pr_painelGrafico" hidden>
     <div class="grafico-topo">
       <div class="titulo" id="pr_tituloGrafico"></div>
-      <div class="seletor"><button class="ghost" id="pr_btnFechar">&times;</button></div>
+      <div class="seletor" id="pr_cmpCtrl" hidden>
+        <button class="ghost cmp ativo" data-cmp="carga">t/carga</button>
+        <button class="ghost cmp" data-cmp="dia">t/dia</button>
+        <button class="ghost cmp-dif" id="pr_btnDif">diferença da média</button>
+      </div>
+      <div class="seletor">
+        <button class="ghost gran ativo" data-gran="dia">Dia</button>
+        <button class="ghost gran" data-gran="semana">Semana</button>
+        <button class="ghost gran" data-gran="mes">Mês</button>
+        <button class="ghost" id="pr_btnFechar">&times;</button>
+      </div>
     </div>
     <div id="pr_areaGrafico"></div>
     <div class="legenda" id="pr_legenda"></div>
   </div>
 
   <h2>Resumo do período</h2>
+  <div class="escopo" id="pr_escopo"></div>
   <div class="kpis" id="pr_kpis"></div>
+  <div id="pr_porUni"></div>
 
-  <h2>Por caminhão</h2>
-  <div class="grade" id="pr_grade"></div>
+  <div id="pr_grade" hidden></div>
 
   </div>
 
@@ -5352,7 +5490,8 @@ function dentroDoPeriodo(r){
 }
 
 function calcular(){
-  return dados.filter(dentroDoPeriodo).map(contas).sort((a,b) =>
+  return dados.filter(r => dentroDoPeriodo(r) && (!veicSel.length || veicSel.indexOf(r.veiculo) > -1))
+              .map(contas).sort((a,b) =>
     (a.data || '').localeCompare(b.data || '') ||
     a.veiculo.localeCompare(b.veiculo,'pt-BR',{numeric:true}) ||
     a.kmIni - b.kmIni);
@@ -5542,6 +5681,22 @@ function desenhar(){
         ${barra}
       </div>`;
 
+  /* Tela vazia não diz nada. Se não há dados, explica o porquê. */
+  if(!dados.length){
+    const naoAchou = (estadoBase === 'sembase' || estadoBase === 'semsinal' || estadoBase === 'demo');
+    const motivo =
+      location.protocol === 'file:'
+        ? 'Você abriu o arquivo do computador. Nada é buscado assim — abra pelo endereço do site.'
+      : naoAchou
+        ? 'Não consegui buscar a base publicada. Se você está vendo isto numa prévia, é normal: prévias não têm internet. Pelo endereço do site os lançamentos aparecem.'
+        : 'Nenhum abastecimento lançado ainda. Entre no modo administração e faça o primeiro.';
+    document.getElementById('resumo').className = 'cards';
+    document.getElementById('resumo').innerHTML =
+      '<div class="vazio-prod" style="grid-column:1/-1;text-align:left;line-height:1.7">' +
+      '<b style="color:var(--ambar)">Sem lançamentos para mostrar</b><br>' + motivo + '</div>';
+    const ch = document.getElementById('ab_chips');
+    if(ch) ch.innerHTML = '';
+  } else
   document.getElementById('resumo').innerHTML = montarCards(resumo, modo === 'painel');
   document.getElementById('resumo').className = modo === 'painel' ? 'grade' : 'cards';
 
@@ -5558,11 +5713,52 @@ function desenhar(){
   document.getElementById('notaMetaA').textContent = n(metas.media,2);
   document.getElementById('notaMetaB').textContent = n(metas.rendimento,2);
 
+  /* Um botão por veículo, com o consumo dele já na frente.
+     Usa a base inteira do período, não a filtrada — senão, ao escolher
+     um veículo, os outros botões sumiriam. */
+  const noPeriodo = dados.filter(dentroDoPeriodo).map(contas);
+  const porVeic = {};
+  noPeriodo.forEach(l => {
+    if(l.aberto) { porVeic[l.veiculo] = porVeic[l.veiculo] || {km:0, litros:0}; return; }
+    const v = porVeic[l.veiculo] = porVeic[l.veiculo] || {km:0, litros:0};
+    v.km += l.kmTotal; v.litros += l.litros;
+  });
+  const codigos = Object.keys(porVeic).sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true}));
+  const kmT = noPeriodo.reduce((s,l)=>s+(l.kmTotal||0),0);
+  const ltT = noPeriodo.reduce((s,l)=>s+(l.aberto?0:l.litros),0);
+  const geral = ltT > 0 ? kmT/ltT : null;
+
+  const chips = document.getElementById('ab_chips');
+  if(chips){
+    chips.innerHTML =
+      `<button class="chip ${veicSel.length===0?'ativo':''}" data-v="">Todos
+         <span class="c-med">${geral===null?'—':n(geral,2)} km/L</span></button>` +
+      codigos.map(v => {
+        const p = porVeic[v];
+        const md = p.litros > 0 ? p.km/p.litros : null;
+        const cor = md === null ? '' : (md >= metas.media ? 'ok' : 'ruim');
+        return `<button class="chip ${veicSel.indexOf(v)>-1?'ativo':''}" data-v="${v}">${v}
+          <span class="c-med ${cor}">${md===null?'—':n(md,2)}</span></button>`;
+      }).join('');
+    /* Clique junta ou tira o veículo da seleção — dá para escolher vários.
+       "Todos" limpa a seleção inteira. */
+    chips.querySelectorAll('.chip').forEach(b =>
+      b.addEventListener('click', () => {
+        const v = b.dataset.v;
+        if(v === '') veicSel = [];
+        else {
+          const i = veicSel.indexOf(v);
+          if(i > -1) veicSel.splice(i,1); else veicSel.push(v);
+        }
+        desenhar();
+      }));
+  }
+
   const info = document.getElementById('perInfo');
   if(info){
     const fora = dados.length - linhas.length;
-    info.textContent = (periodo.de || periodo.ate)
-      ? `${linhas.length} de ${dados.length} lançamentos` + (fora ? ` · ${fora} fora do período` : '')
+    info.textContent = (periodo.de || periodo.ate || veicSel.length)
+      ? `${linhas.length} de ${dados.length} lançamentos` + (fora ? ` · ${fora} fora do filtro` : '')
       : `${dados.length} lançamento${dados.length===1?'':'s'}`;
   }
   if(typeof mostrarFonte === 'function') mostrarFonte();
@@ -6022,10 +6218,10 @@ let acaoModal = 'entrar';   // entrar | trocar
 
 function aplicarModo(){
   document.body.classList.toggle('painel', modo === 'painel');
-  document.getElementById('btnModo').textContent =
-    modo === 'painel' ? 'Modo administração' : 'Ver painel';
+  document.getElementById('btnModo').classList.toggle('ativo', modo !== 'painel');
+  document.getElementById('btnPainel').classList.toggle('ativo', modo === 'painel');
   document.getElementById('modoNota').textContent =
-    modo === 'painel' ? 'Painel — somente leitura' : 'Administração — lançamentos liberados';
+    modo === 'painel' ? 'Painel — só leitura' : 'ADM — lançar consumo e importar produção';
 }
 
 function abrirModal(acao){
@@ -6090,18 +6286,20 @@ on('campoSenha', 'keydown', e => {
 });
 on('btnSenha', 'click', () => abrirModal('trocar'));
 
+/* ADM abre a área de trabalho (pede senha). PAINEL tranca e mostra só resultado. */
 on('btnModo', 'click', () => {
-  if(modo === 'adm'){
-    /* saindo da administração: tranca de novo */
-    modo = 'painel';
-    if(editando) sairEdicao();
-    try{ sessionStorage.removeItem('abast_destravado'); }catch(e){}
-    aplicarModo();
-    desenhar();
-    window.scrollTo({top:0, behavior:'smooth'});
-  }else{
-    abrirModal('entrar');
-  }
+  if(modo === 'adm'){ window.scrollTo({top:0, behavior:'smooth'}); return; }
+  abrirModal('entrar');
+});
+
+on('btnPainel', 'click', () => {
+  if(modo === 'painel'){ window.scrollTo({top:0, behavior:'smooth'}); return; }
+  modo = 'painel';
+  if(editando) sairEdicao();
+  try{ sessionStorage.removeItem('abast_destravado'); }catch(e){}
+  aplicarModo();
+  desenhar();
+  window.scrollTo({top:0, behavior:'smooth'});
 });
 
 /* Gera um arquivo novo, só de leitura, com os números já congelados dentro.
@@ -6156,6 +6354,7 @@ on('btnPainelCelular', 'click', () => {
 let publicadoEm = null;               // data da publicação que está em uso
 var usandoExemplo = false;            // true = ainda são os lançamentos de demonstração
 var pendente = false;                 // true = tem lançamento local ainda não publicado
+var veicSel = [];                     // vazio = todos os veículos
 var nuvemLigada = false;              // true = conectado ao banco de dados ao vivo
 
 function mostrarAlerta(){
@@ -6292,6 +6491,7 @@ async function buscarBasePublicada(forcar){
      o navegador bloqueia a busca. Não é falta de sinal, então não pisca vermelho. */
   if(location.protocol === 'file:'){
     estadoBase = 'arquivo'; acenderEstado();
+    if(!dados.length) desenhar();
     if(forcar) avisar('Aberto como arquivo solto · a base publicada só funciona pelo link na internet');
     return false;
   }
@@ -6304,12 +6504,14 @@ async function buscarBasePublicada(forcar){
     else pacote = await r.json();
   }catch(e){
     estadoBase = 'semsinal'; acenderEstado();
+    if(!dados.length) desenhar();
     if(forcar) avisar('Sem sinal · não consegui falar com o servidor');
     return false;
   }
 
   if(!achou){
     estadoBase = usandoExemplo ? 'demo' : 'sembase'; acenderEstado();
+    if(!dados.length) desenhar();
     if(forcar) avisar('Ainda não existe <b>dados.json</b> no site · publique e suba o arquivo');
     return false;
   }
@@ -6840,6 +7042,8 @@ on('chkFrota', 'change', () => desenharGrafico());
 
 /* Volta para a tela principal: fecha o que estiver aberto e sobe. */
 on('btnInicio', 'click', () => {
+  veicSel = [];
+  desenhar();
   fecharGrafico();
   const cfgp = document.getElementById('configEnvio');
   if(cfgp) cfgp.hidden = true;
@@ -6987,12 +7191,28 @@ var prMetrica = 'ton';
 /* =========================================================
    2. FILTROS
 ========================================================= */
+/* Os caminhões da DM Agrícola dentro do relatório da usina.
+   O relatório traz a frota inteira da CEMMA; aqui separamos a nossa. */
+var prCamSel = [];        // vazio = todos os caminhões
+var prUniSel = [];        // vazio = todas as unidades
+var prGranul = 'dia';     // dia | semana | mes
+var prModo = 'evolucao';  // evolucao | comparar
+var prCmpMed = 'carga';   // carga | dia
+var prCmpDif = false;     // true = mostra a diferença da média
+var MINHA_FROTA = ['929200','929240','929245','929250','929255','929260'];
+try{
+  const g = localStorage.getItem('prod_frota');
+  if(g) MINHA_FROTA = JSON.parse(g);
+}catch(e){}
+
 function prFiltrados(){
-  const uni = document.getElementById('pr_selUnidade').value;
-  const cam = document.getElementById('pr_selCaminhao').value;
+
+
+  const so  = (document.getElementById('pr_soMeus') || {checked:false}).checked;
   return prRegistros.filter(r =>
-    (!uni || r.unidade === uni) &&
-    (!cam || r.caminhao === cam) &&
+    (!prUniSel.length || prUniSel.indexOf(r.unidade) > -1) &&
+    (!prCamSel.length || prCamSel.indexOf(r.caminhao) > -1) &&
+    (!so  || MINHA_FROTA.indexOf(r.caminhao) > -1) &&
     (!prPeriodo.de  || r.data >= prPeriodo.de) &&
     (!prPeriodo.ate || r.data <= prPeriodo.ate));
 }
@@ -7010,6 +7230,24 @@ function prPorCaminhao(lista){
     nDias: Object.keys(c.dias).length}));
 }
 
+/* Agrupa por dia: junta todos os caminhões daquela data. */
+function prPorData(lista){
+  const m = {};
+  lista.forEach(r => {
+    const d = m[r.data] = m[r.data] || {data:r.data, cargas:0, ton:0, cams:{}};
+    d.cargas += r.cargas; d.ton += r.toneladas; d.cams[r.caminhao] = 1;
+  });
+  return Object.values(m).map(d => ({...d,
+    media: d.cargas > 0 ? d.ton / d.cargas : 0,
+    nCams: Object.keys(d.cams).length}));
+}
+
+/* Sem agrupar: cada lançamento do relatório vira uma linha. */
+function prPorAmbos(lista){
+  return lista.map(r => ({...r,
+    media: r.cargas > 0 ? r.toneladas / r.cargas : 0}));
+}
+
 /* =========================================================
    3. TELA
 ========================================================= */
@@ -7017,10 +7255,73 @@ function prDesenhar(){
   const lista = prFiltrados();
   const cams = prPorCaminhao(lista);
 
+  /* Detalhamento por unidade: mostra separado o que é de cada usina.
+     Só aparece quando há mais de uma, senão repetiria os números de cima. */
+  const detUni = {};
+  lista.forEach(r => {
+    const u = detUni[r.unidade] = detUni[r.unidade] || {t:0, c:0, dias:{}, cams:{}, de:r.data, ate:r.data};
+    u.t += r.toneladas; u.c += r.cargas; u.dias[r.data] = 1; u.cams[r.caminhao] = 1;
+    if(r.data < u.de) u.de = r.data;
+    if(r.data > u.ate) u.ate = r.data;
+  });
+  const chavesUni = Object.keys(detUni).sort();
+  const alvoUni = document.getElementById('pr_porUni');
+  if(alvoUni){
+    alvoUni.innerHTML = chavesUni.length < 2 ? '' : `
+      <div class="tab-uni"><table>
+        <thead><tr><th>Unidade</th><th>Período</th><th>Toneladas</th><th>Cargas</th>
+          <th>t/carga</th><th>Dias</th><th>t/dia</th><th>Caminhões</th></tr></thead>
+        <tbody>` + chavesUni.map(u => {
+          const x = detUni[u];
+          const nd = Object.keys(x.dias).length;
+          return `<tr>
+            <td class="uni">${u}</td>
+            <td style="color:#7E919B">${dataBR(x.de)} a ${dataBR(x.ate)}</td>
+            <td>${n(x.t,0)}</td>
+            <td>${n(x.c,0)}</td>
+            <td>${n(x.c ? x.t/x.c : 0,2)}</td>
+            <td>${nd}</td>
+            <td>${n(nd ? x.t/nd : 0,0)}</td>
+            <td>${Object.keys(x.cams).length}</td>
+          </tr>`;
+        }).join('') + `</tbody>
+      </table></div>`;
+  }
+
+  /* Botões de unidade. Cada usina tem o seu, e dá para marcar mais de uma.
+     O período já está aplicado; a frota própria também, se estiver ligada. */
+  const soU = (document.getElementById('pr_soMeus') || {checked:false}).checked;
+  const noPer = prRegistros.filter(r =>
+    (!soU || MINHA_FROTA.indexOf(r.caminhao) > -1) &&
+    (!prPeriodo.de  || r.data >= prPeriodo.de) &&
+    (!prPeriodo.ate || r.data <= prPeriodo.ate));
+
+  const porUni = {};
+  noPer.forEach(r => {
+    const u = porUni[r.unidade] = porUni[r.unidade] || {t:0, c:0, cams:{}};
+    u.t += r.toneladas; u.c += r.cargas; u.cams[r.caminhao] = 1;
+  });
+  const unidades = Object.keys(porUni).sort();
+  const totUni = noPer.reduce((s,r)=>s+r.toneladas,0);
+
+
   const totCargas = lista.reduce((s,r)=>s+r.cargas,0);
   const totTon    = lista.reduce((s,r)=>s+r.toneladas,0);
   const media     = totCargas ? totTon/totCargas : 0;
   const dias      = new Set(lista.map(r=>r.data)).size;
+
+  const soM2 = (document.getElementById('pr_soMeus') || {checked:false}).checked;
+  const esc = document.getElementById('pr_escopo');
+  if(esc){
+    esc.className = 'escopo ' + (soM2 ? 'minha' : 'todos');
+    const qualUni = prUniSel.length ? prUniSel.join(' + ')
+                  : (unidades.length > 1 ? 'todas as unidades' : (unidades[0] || ''));
+    esc.innerHTML = soM2
+      ? `Mostrando <b>a minha frota</b> — ${MINHA_FROTA.length} caminhões · <b>${qualUni}</b>` +
+        (prCamSel.length ? ` · ${prCamSel.length} selecionado${prCamSel.length===1?'':'s'}` : '')
+      : `Mostrando <b>a frota inteira da usina</b> — ${cams.length} caminhões. ` +
+        `Marque "só meus caminhões" para ver apenas os seus.`;
+  }
 
   document.getElementById('pr_kpis').innerHTML = `
     <div class="kpi"><div class="k-rot">Toneladas</div>
@@ -7036,42 +7337,81 @@ function prDesenhar(){
       <div class="k-val">${cams.length}</div>
       <div class="k-sub">${dias?n(totTon/dias,0):'—'} t por dia</div></div>`;
 
-  const ordem = document.getElementById('pr_selOrdem').value;
-  cams.sort((a,b) =>
-    ordem==='media'    ? b.media - a.media :
-    ordem==='mediaAsc' ? a.media - b.media :
-    ordem==='cargas'   ? b.cargas - a.cargas :
-    ordem==='cod'      ? a.cod.localeCompare(b.cod,'pt-BR',{numeric:true}) :
-                         b.ton - a.ton);
+  const uc = document.getElementById('pr_uniChips');
+  if(uc){
+    uc.innerHTML = !unidades.length ? '' :
+      `<button class="chip ${prUniSel.length===0?'ativo':''}" data-uni="">Todas as unidades
+         <span class="c-med">${n(totUni,0)} t</span></button>` +
+      unidades.map(u => {
+        const x = porUni[u];
+        return `<span class="chip-wrap"><button class="chip ${prUniSel.indexOf(u)>-1?'ativo':''}" data-uni="${u}">${u}
+          <span class="c-med">${n(x.t,0)} t</span>
+          <span class="c-dia">${n(x.c,0)} cargas · ${Object.keys(x.cams).length} caminhões</span></button>
+          <button class="chip-x so-adm" data-apagar="${u}" title="Excluir a unidade ${u}">&times;</button></span>`;
+      }).join('');
 
-  const melhor = cams.length ? Math.max(...cams.map(c=>c.media)) : 0;
-  const pior   = cams.length ? Math.min(...cams.map(c=>c.media)) : 0;
+    uc.querySelectorAll('.chip-x').forEach(b =>
+      b.addEventListener('click', e => {
+        e.stopPropagation();
+        if(window.prExcluirUnidade) window.prExcluirUnidade(b.dataset.apagar);
+      }));
 
-  document.getElementById('pr_grade').innerHTML = cams.length ? cams.map((c,i) => {
-    const cor = c.media >= media ? 'ok' : 'ruim';
-    const dif = media ? ((c.media - media)/media*100) : 0;
-    return `<details class="quadro ${cor}">
-      <summary>
-        <span class="q-num"><span class="q-pre">Caminhão </span>${c.cod}</span>
-        <span class="q-linha">
-          <span class="q-media ${cor}">${n(c.media,2)}</span>
-          <span class="q-rot">
-            <span class="r-fechado">t/carga</span>
-            <span class="r-aberto">toneladas por carga</span>
-          </span>
-        </span>
-      </summary>
-      <dl>
-        <dt>Posição</dt><dd>${i+1}º de ${cams.length}</dd>
-        <dt>Toneladas</dt><dd>${n(c.ton,3)}</dd>
-        <dt>Cargas</dt><dd>${n(c.cargas,0)}</dd>
-        <dt>Dias com produção</dt><dd>${c.nDias}</dd>
-        <dt>Toneladas por dia</dt><dd>${n(c.ton/c.nDias,2)}</dd>
-        <dt>Média da frota</dt><dd>${n(media,2)}</dd>
-        <dt>Diferença</dt><dd class="${dif>=0?'ok':'ruim'}">${(dif>=0?'+':'')+dif.toFixed(1)}%</dd>
-      </dl>
-    </details>`;
-  }).join('') : '<div class="vazio-prod">Nenhum registro no período escolhido.</div>';
+    uc.querySelectorAll('.chip').forEach(b =>
+      b.addEventListener('click', () => {
+        const u = b.dataset.uni;
+        if(u === '') prUniSel = [];
+        else {
+          const i = prUniSel.indexOf(u);
+          if(i > -1) prUniSel.splice(i,1); else prUniSel.push(u);
+        }
+        prCamSel = [];          // a lista de caminhões muda com a unidade
+        prDesenhar();
+      }));
+  }
+
+  /* Botões de caminhão. Cada um mostra a média dele no período,
+     para você escolher olhando, sem precisar abrir um por um. */
+  const so = (document.getElementById('pr_soMeus') || {checked:false}).checked;
+  const universo = prRegistros.filter(r =>
+    (!so || MINHA_FROTA.indexOf(r.caminhao) > -1) &&
+    (!prUniSel.length || prUniSel.indexOf(r.unidade) > -1) &&
+    (!prPeriodo.de  || r.data >= prPeriodo.de) &&
+    (!prPeriodo.ate || r.data <= prPeriodo.ate));
+  const medias = {};
+  universo.forEach(r => {
+    const m = medias[r.caminhao] = medias[r.caminhao] || {t:0, c:0, dias:{}};
+    m.t += r.toneladas; m.c += r.cargas; m.dias[r.data] = 1;
+  });
+  Object.values(medias).forEach(m => m.nDias = Object.keys(m.dias).length);
+  const codigos = Object.keys(medias).sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true}));
+  const geral = universo.reduce((s,r)=>s+r.toneladas,0) /
+                (universo.reduce((s,r)=>s+r.cargas,0) || 1);
+
+  document.getElementById('pr_chips').innerHTML =
+    `<button class="chip ${prCamSel.length===0?'ativo':''}" data-cam="">Todos
+       <span class="c-med">${n(geral,2)} t/carga</span>
+       <span class="c-dia">${codigos.length? n(universo.reduce((s,r)=>s+r.toneladas,0) /
+          (Object.values(medias).reduce((s,m)=>s+m.nDias,0) || 1), 0) : 0} t/dia · média</span></button>` +
+    codigos.map(c => {
+      const m = medias[c];
+      const md = m.c ? m.t/m.c : 0;
+      const porDia = m.nDias ? m.t/m.nDias : 0;
+      return `<button class="chip ${prCamSel.indexOf(c)>-1?'ativo':''}" data-cam="${c}">${c}
+        <span class="c-med ${md>=geral?'ok':'ruim'}">${n(md,2)} t/carga</span>
+        <span class="c-dia">${n(porDia,0)} t/dia · ${m.nDias} dias</span></button>`;
+    }).join('');
+
+  /* Clique junta ou tira o caminhão da seleção. "Todos" limpa. */
+  document.querySelectorAll('#pr_chips .chip').forEach(b =>
+    b.addEventListener('click', () => {
+      const c = b.dataset.cam;
+      if(c === '') prCamSel = [];
+      else {
+        const i = prCamSel.indexOf(c);
+        if(i > -1) prCamSel.splice(i,1); else prCamSel.push(c);
+      }
+      prDesenhar();
+    }));
 
   const fora = prRegistros.length - lista.length;
   document.getElementById('pr_perInfo').textContent =
@@ -7088,18 +7428,43 @@ const PR_ROT = {ton:'Toneladas por dia', media:'Média por carga (t)'};
 function prGrafico(){
   const area = document.getElementById('pr_areaGrafico');
   const leg  = document.getElementById('pr_legenda');
-  document.getElementById('pr_tituloGrafico').textContent = PR_ROT[prMetrica] + ' — evolução';
+
+  /* Mostra os controles do modo atual. Isto precisa vir antes de qualquer
+     desvio, senão no comparativo os botões nunca apareciam. */
+  document.querySelectorAll('.gran').forEach(b =>
+    b.style.display = prModo === 'comparar' ? 'none' : '');
+  const ctrl = document.getElementById('pr_cmpCtrl');
+  if(ctrl) ctrl.hidden = prModo !== 'comparar';
+  const rotGran = {dia:'por dia', semana:'por semana', mes:'por mês'}[prGranul];
+  document.getElementById('pr_tituloGrafico').textContent =
+    PR_ROT[prMetrica] + ' — ' + rotGran +
+    (prCamSel.length === 0 ? ' · toda a frota'
+     : prCamSel.length === 1 ? ' · caminhão ' + prCamSel[0]
+     : ' · ' + prCamSel.length + ' caminhões');
 
   const lista = prFiltrados();
   if(!lista.length){
     area.innerHTML = '<div class="vazio-prod">Sem dados no período.</div>';
     leg.innerHTML = ''; return;
   }
+  if(prModo === 'comparar'){ prBarras(lista, area, leg); return; }
 
-  /* junta tudo por data: soma toneladas e cargas do dia */
+  /* Agrupa conforme a segmentação escolhida: dia, semana ou mês.
+     A chave vira a data que representa o período. */
+  function chave(d){
+    if(prGranul === 'mes') return d.slice(0,8) + '01';
+    if(prGranul === 'semana'){
+      const x = new Date(d + 'T12:00:00');
+      x.setDate(x.getDate() - ((x.getDay()+6)%7));     // recua até a segunda
+      return x.toISOString().slice(0,10);
+    }
+    return d;
+  }
+
   const dia = {};
   lista.forEach(r => {
-    const d = dia[r.data] = dia[r.data] || {ton:0, cargas:0};
+    const k = chave(r.data);
+    const d = dia[k] = dia[k] || {ton:0, cargas:0};
     d.ton += r.toneladas; d.cargas += r.cargas;
   });
   const datas = Object.keys(dia).sort();
@@ -7130,8 +7495,9 @@ function prGrafico(){
   const passo = Math.ceil(datas.length / (mobile ? 4 : 8));
   datas.forEach((d,i) => {
     if(i % passo !== 0 && i !== datas.length-1) return;
+    const rot = prGranul === 'mes' ? d.slice(5,7)+'/'+d.slice(2,4) : dataCurta(d);
     svg += `<text x="${px(new Date(d).getTime())}" y="${A-mB+20}" text-anchor="middle"
-              fill="#8FA3AD" font-family="IBM Plex Mono" font-size="${fonte}">${dataCurta(d)}</text>`;
+              fill="#8FA3AD" font-family="IBM Plex Mono" font-size="${fonte}">${rot}</text>`;
   });
 
   const pts = datas.map(d => [px(new Date(d).getTime()), py(val(d)), val(d), d]);
@@ -7146,7 +7512,7 @@ function prGrafico(){
   /* média do período, tracejada, como referência */
   const totT = lista.reduce((s,r)=>s+r.toneladas,0);
   const totC = lista.reduce((s,r)=>s+r.cargas,0);
-  const ref = prMetrica === 'ton' ? totT/datas.length : (totC ? totT/totC : 0);
+  const ref = prMetrica === 'ton' ? totT/(datas.length||1) : (totC ? totT/totC : 0);
   if(ref > 0 && ref <= vMax){
     const y = py(ref);
     svg += `<line x1="${mE}" y1="${y}" x2="${L-mD}" y2="${y}" stroke="#FFFFFF"
@@ -7165,6 +7531,119 @@ function prGrafico(){
                   `<span><i class="chave" style="background:#FFFFFF"></i>Média do período</span>`;
 }
 
+/* Compara os caminhões lado a lado, em barras horizontais.
+   Linha tracejada = média da frota no período escolhido. */
+function prBarras(lista, area, leg){
+  const m = {};
+  lista.forEach(r => {
+    const c = m[r.caminhao] = m[r.caminhao] || {t:0, cargas:0, dias:{}};
+    c.t += r.toneladas; c.cargas += r.cargas; c.dias[r.data] = 1;
+  });
+  const cams = Object.keys(m).map(k => {
+    const nDias = Object.keys(m[k].dias).length;
+    return {cod:k, ton:m[k].t, cargas:m[k].cargas, nDias,
+            media: m[k].cargas ? m[k].t/m[k].cargas : 0,
+            porDia: nDias ? m[k].t/nDias : 0};
+  });
+
+  const valor  = c => prCmpMed === 'dia' ? c.porDia : c.media;
+  const rotulo = prCmpMed === 'dia' ? 'Toneladas por dia trabalhado' : 'Toneladas por carga';
+  document.getElementById('pr_tituloGrafico').textContent =
+    rotulo + ' — comparativo por caminhão' + (prCmpDif ? ' · diferença da média' : '');
+
+  cams.sort((a,b) => valor(b) - valor(a));
+
+  const totT = lista.reduce((s,r)=>s+r.toneladas,0);
+  const totC = lista.reduce((s,r)=>s+r.cargas,0);
+  const totD = cams.reduce((s,c)=>s+c.nDias,0);
+  const ref = prCmpMed === 'dia' ? (totD ? totT/totD : 0) : (totC ? totT/totC : 0);
+
+  const mobile = window.innerWidth < 700;
+  const linhaAlt = mobile ? 36 : 40;
+  const mE = mobile ? 62 : 76, mD = mobile ? 86 : 116, mT = 12;
+  const L = mobile ? 380 : 740;
+  const A = mT + cams.length * linhaAlt + 26;
+  const larg = L - mE - mD;
+  const fonte = mobile ? 11 : 12;
+
+  let svg = '';
+
+  if(prCmpDif){
+    /* Barras que saem do meio: à direita quem está acima da média,
+       à esquerda quem está abaixo. Diferenças pequenas ficam visíveis. */
+    const difs = cams.map(c => ref ? (valor(c)-ref)/ref*100 : 0);
+    const maior = Math.max(1, Math.max.apply(null, difs.map(Math.abs))) * 1.15;
+    const meio = mE + larg/2;
+
+    svg += `<line x1="${meio}" y1="${mT}" x2="${meio}" y2="${mT + cams.length*linhaAlt}"
+              stroke="#FFFFFF" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.75"/>
+            <text x="${meio}" y="${mT + cams.length*linhaAlt + 18}" text-anchor="middle"
+              fill="#FFFFFF" font-family="IBM Plex Mono" font-size="${fonte-1}">média ${n(ref,2)}</text>`;
+
+    cams.forEach((c,i) => {
+      const y = mT + i*linhaAlt, d = difs[i];
+      const w = Math.abs(d)/maior * (larg/2);
+      const cor = d >= 0 ? '#4FB286' : '#E0644F';
+      const x = d >= 0 ? meio : meio - w;
+      svg += `<text x="${mE-8}" y="${y+linhaAlt/2+4}" text-anchor="end" fill="#EAF0F3"
+                font-family="Oswald" font-size="${fonte+2}" letter-spacing="1">${c.cod}</text>
+              <rect x="${x.toFixed(1)}" y="${y+5}" width="${Math.max(2,w).toFixed(1)}"
+                height="${linhaAlt-14}" fill="${cor}" rx="2">
+                <title>${c.cod} · ${n(valor(c),2)} · ${n(c.ton,0)} t em ${c.nDias} dias</title></rect>
+              <text x="${mE+larg+8}" y="${y+linhaAlt/2+4}" fill="${cor}"
+                font-family="IBM Plex Mono" font-size="${fonte}" font-weight="600">${
+                  (d>=0?'+':'')+d.toFixed(1)}%</text>
+              <text x="${mE+larg+8}" y="${y+linhaAlt/2+16}" fill="#6E828C"
+                font-family="IBM Plex Mono" font-size="${fonte-2}">${n(valor(c),2)}</text>`;
+    });
+    leg.innerHTML =
+      '<span><i class="chave" style="background:#4FB286"></i>acima da média</span>' +
+      '<span><i class="chave" style="background:#E0644F"></i>abaixo da média</span>' +
+      `<span><i class="chave" style="background:#FFFFFF"></i>média ${n(ref,2)}</span>`;
+  }
+  else {
+    /* Barras normais, começando no zero. A escala parte um pouco abaixo do
+       menor valor para as diferenças não sumirem. */
+    const vals = cams.map(valor);
+    const vMin = Math.min.apply(null, vals.concat([ref]));
+    const vMax = Math.max.apply(null, vals.concat([ref]));
+    const base = Math.max(0, vMin - (vMax - vMin) * 0.6);
+    const esc = v => (v - base) / ((vMax - base) * 1.06 || 1) * larg;
+
+    cams.forEach((c,i) => {
+      const y = mT + i*linhaAlt;
+      const w = Math.max(2, esc(valor(c)));
+      const acima = valor(c) >= ref;
+      const cor = acima ? '#4FB286' : '#E0644F';
+      svg += `<text x="${mE-8}" y="${y+linhaAlt/2+4}" text-anchor="end" fill="#EAF0F3"
+                font-family="Oswald" font-size="${fonte+2}" letter-spacing="1">${c.cod}</text>
+              <rect x="${mE}" y="${y+5}" width="${larg}" height="${linhaAlt-14}" fill="#1B232A" rx="2"/>
+              <rect x="${mE}" y="${y+5}" width="${w.toFixed(1)}" height="${linhaAlt-14}" fill="${cor}" rx="2">
+                <title>${c.cod} · ${n(valor(c),2)} · ${n(c.ton,0)} t em ${c.nDias} dias</title></rect>
+              <text x="${mE+larg+8}" y="${y+linhaAlt/2+4}" fill="${cor}"
+                font-family="IBM Plex Mono" font-size="${fonte}" font-weight="600">${n(valor(c),2)}</text>
+              <text x="${mE+larg+8}" y="${y+linhaAlt/2+16}" fill="#6E828C"
+                font-family="IBM Plex Mono" font-size="${fonte-2}">${
+                  prCmpMed === 'dia' ? n(c.media,2)+' t/carga' : n(c.porDia,0)+' t/dia'}</text>`;
+    });
+
+    if(ref > 0){
+      const x = mE + esc(ref);
+      svg += `<line x1="${x}" y1="${mT}" x2="${x}" y2="${mT + cams.length*linhaAlt}"
+                stroke="#FFFFFF" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.75"/>
+              <text x="${x}" y="${mT + cams.length*linhaAlt + 18}" text-anchor="middle"
+                fill="#FFFFFF" font-family="IBM Plex Mono" font-size="${fonte-1}">média ${n(ref,2)}</text>`;
+    }
+    leg.innerHTML =
+      '<span><i class="chave" style="background:#4FB286"></i>acima da média</span>' +
+      '<span><i class="chave" style="background:#E0644F"></i>abaixo da média</span>' +
+      `<span style="color:#6E828C">escala começa em ${n(base,2)} para destacar a diferença</span>`;
+  }
+
+  area.innerHTML = `<svg class="grafico" viewBox="0 0 ${L} ${A}"
+      xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${rotulo}">${svg}</svg>`;
+}
+
 function prAbrir(qual){
   const p = document.getElementById('pr_painelGrafico');
   if(!p.hidden && prMetrica === qual){ p.hidden = true; return; }
@@ -7173,9 +7652,40 @@ function prAbrir(qual){
   p.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
-on('pr_btnGrafTon','click', () => prAbrir('ton'));
-on('pr_btnGrafMedia','click', () => prAbrir('media'));
+on('pr_btnGrafTon','click',   () => { prModo = 'evolucao'; prAbrir('ton'); });
+on('pr_btnGrafMedia','click', () => { prModo = 'evolucao'; prAbrir('media'); });
+document.querySelectorAll('.cmp').forEach(b =>
+  b.addEventListener('click', () => {
+    prCmpMed = b.dataset.cmp;
+    document.querySelectorAll('.cmp').forEach(x => x.classList.toggle('ativo', x === b));
+    prModo = 'comparar';
+    document.getElementById('pr_painelGrafico').hidden = false;
+    prGrafico();
+  }));
+
+on('pr_btnDif','click', () => {
+  prCmpDif = !prCmpDif;
+  document.getElementById('pr_btnDif').classList.toggle('ativo', prCmpDif);
+  prGrafico();
+});
+
+on('pr_btnComparar','click',  () => {
+  const p = document.getElementById('pr_painelGrafico');
+  if(!p.hidden && prModo === 'comparar'){ p.hidden = true; return; }
+  prModo = 'comparar';
+  p.hidden = false;
+  prGrafico();
+  p.scrollIntoView({behavior:'smooth', block:'nearest'});
+});
 on('pr_btnFechar','click', () => { document.getElementById('pr_painelGrafico').hidden = true; });
+
+document.querySelectorAll('.gran').forEach(b =>
+  b.addEventListener('click', () => {
+    prModo = 'evolucao';
+    prGranul = b.dataset.gran;
+    document.querySelectorAll('.gran').forEach(x => x.classList.toggle('ativo', x === b));
+    prGrafico();
+  }));
 on('pr_btnInicio','click', () => {
   document.getElementById('pr_painelGrafico').hidden = true;
   document.querySelectorAll('#abaProducao .quadro[open]').forEach(q => q.open = false);
@@ -7216,7 +7726,34 @@ document.querySelectorAll('.prper-b').forEach(b =>
   prDesenhar();
 }));
 
-['pr_selUnidade','pr_selCaminhao','pr_selOrdem'].forEach(id => on(id,'change', prDesenhar));
+['pr_selUnidade','pr_selCaminhao','pr_soMeus'].forEach(id => on(id,'change', prDesenhar));
+
+on('pr_soMeus','change', () => {
+  try{ localStorage.setItem('prod_soMeus', document.getElementById('pr_soMeus').checked ? '1' : '0'); }catch(e){}
+  prCamSel = [];                               // a seleção antiga pode não existir no novo grupo
+  if(window.prMontarListas) window.prMontarListas();
+});
+
+/* restaura a escolha da caixinha */
+try{
+  const g = localStorage.getItem('prod_soMeus');
+  if(g === '0') document.getElementById('pr_soMeus').checked = false;
+}catch(e){}
+
+on('pr_btnFrota','click', () => {
+  const box = document.getElementById('pr_frotaBox');
+  box.hidden = !box.hidden;
+  if(!box.hidden) document.getElementById('pr_frotaLista').value = MINHA_FROTA.join(', ');
+});
+
+on('pr_btnSalvarFrota','click', () => {
+  MINHA_FROTA = document.getElementById('pr_frotaLista').value
+                  .split(',').map(s => s.trim()).filter(Boolean);
+  try{ localStorage.setItem('prod_frota', JSON.stringify(MINHA_FROTA)); }catch(e){}
+  document.getElementById('pr_frotaBox').hidden = true;
+  prDesenhar();
+  avisar(`Frota salva · <b>${MINHA_FROTA.length}</b> caminhões`);
+});
 
 on('pr_btnCsv','click', () => {
   const cab = 'Unidade;Codigo unidade;Caminhao;Data;Cargas;Toneladas;Media t por carga';
@@ -7241,8 +7778,11 @@ on('pr_btnCsv','click', () => {
 
   /* A base vem gravada dentro deste arquivo, em formato compacto:
      primeira linha = unidade, e depois caminhao,data,cargas,toneladas */
+  let zerada = false;
+  try{ zerada = localStorage.getItem('prod_zerada') === '1'; }catch(e){}
+
   const bruto = (document.getElementById('baseProducao') || {textContent:''}).textContent.trim();
-  if(bruto){
+  if(bruto && !zerada){
     const linhas = bruto.split('\n');
     const cab = linhas[0].split('|');
     const uni = cab[0], codUni = cab[1] || '';
@@ -7255,8 +7795,17 @@ on('pr_btnCsv','click', () => {
     }
   }
 
-  /* Se um dia existir um producao.json ao lado, ele tem preferência —
-     é assim que você atualiza sem precisar mexer no HTML. */
+  /* O que você importou neste aparelho vale mais que a base embutida. */
+  try{
+    const g = localStorage.getItem('prod_base');
+    if(g){
+      const j = JSON.parse(g);
+      if(Array.isArray(j) && j.length) prRegistros = j;
+    }
+  }catch(e){}
+
+  /* E o producao.json publicado no site vale mais que tudo —
+     é assim que os outros aparelhos recebem o que você importou. */
   try{
     const r = await fetch('producao.json?v=' + Date.now(), {cache:'no-store'});
     if(r.ok){
@@ -7266,17 +7815,65 @@ on('pr_btnCsv','click', () => {
   }catch(e){}
 
   if(!prRegistros.length){
-    fonte.innerHTML = 'Sem base de produção neste arquivo.';
+    fonte.innerHTML = 'Sem base de produção · importe um PDF no modo ADM.';
     document.getElementById('pr_grade').innerHTML =
       '<div class="vazio-prod">Sem dados de produção.</div>';
     return;
+  }
+
+  window.prObterBase = function(){ return prRegistros; };
+  window.prLimparUnidades = function(){ prUniSel = []; prCamSel = []; };
+  window.prUnidadesSel = function(){ return prUniSel.slice(); };
+
+  window.prAplicarBase = function(lista){
+    prRegistros = lista;
+    if(!prRegistros.length){
+      document.getElementById('pr_fonteBase').innerHTML =
+        'Sem base de produção · importe um PDF no modo ADM.';
+      document.getElementById('pr_uniChips').innerHTML = '';
+      document.getElementById('pr_chips').innerHTML = '';
+      document.getElementById('pr_kpis').innerHTML =
+        '<div class="vazio-prod" style="grid-column:1/-1">Nenhum dado de produção.</div>';
+      document.getElementById('pr_escopo').innerHTML = '';
+      return;
+    }
+    montarListas();
+    prDesenhar();
+  };
+
+  window.prMontarListas = montarListas;
+  function montarListas(){
+    const unis = [...new Set(prRegistros.map(r=>r.unidade))].sort();
+    const selU = document.getElementById('pr_selUnidade');
+    const antU = selU.value;
+    selU.innerHTML = '<option value="">Todas</option>' + unis.map(u=>`<option>${u}</option>`).join('');
+    if(unis.indexOf(antU) > -1) selU.value = antU;
+
+    const so = (document.getElementById('pr_soMeus') || {checked:false}).checked;
+    const cams = [...new Set(prRegistros
+                    .filter(r => !so || MINHA_FROTA.indexOf(r.caminhao) > -1)
+                    .map(r=>r.caminhao))]
+                   .sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true}));
+    const selC = document.getElementById('pr_selCaminhao');
+    const antC = selC.value;
+    selC.innerHTML = '<option value="">Todos</option>' + cams.map(c=>`<option>${c}</option>`).join('');
+    if(cams.indexOf(antC) > -1) selC.value = antC;
+
+    const d1 = prRegistros.reduce((m,r)=> r.data < m ? r.data : m, prRegistros[0].data);
+    const d2 = prRegistros.reduce((m,r)=> r.data > m ? r.data : m, prRegistros[0].data);
+    document.getElementById('pr_fonteBase').innerHTML =
+      `Base de <b>${dataBR(d1)}</b> a <b>${dataBR(d2)}</b> · ` +
+      `${n(prRegistros.length,0)} registros · ${unis.join(', ')}`;
   }
 
   const unis = [...new Set(prRegistros.map(r=>r.unidade))].sort();
   document.getElementById('pr_selUnidade').innerHTML =
     '<option value="">Todas</option>' + unis.map(u=>`<option>${u}</option>`).join('');
 
-  const cams = [...new Set(prRegistros.map(r=>r.caminhao))]
+  const soM = (document.getElementById('pr_soMeus') || {checked:false}).checked;
+  const cams = [...new Set(prRegistros
+                  .filter(r => !soM || MINHA_FROTA.indexOf(r.caminhao) > -1)
+                  .map(r=>r.caminhao))]
                  .sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true}));
   document.getElementById('pr_selCaminhao').innerHTML =
     '<option value="">Todos</option>' + cams.map(c=>`<option>${c}</option>`).join('');
@@ -7287,6 +7884,314 @@ on('pr_btnCsv','click', () => {
                     `${n(prRegistros.length,0)} registros · ${unis.join(', ')}`;
   prDesenhar();
 })();
+
+})();
+
+/* =========================================================
+   11. IMPORTAR O PDF DO GATEC
+   O PDF é lido aqui no navegador. Nada é enviado para fora
+   além do resultado, que vai para o seu próprio repositório.
+========================================================= */
+(function(){
+
+function status(txt, tipo){
+  const el = document.getElementById('pr_impStatus');
+  if(!el) return;
+  el.className = 'imp-status' + (tipo ? ' ' + tipo : '');
+  el.innerHTML = txt;
+}
+
+/* Junta os pedaços de texto do PDF em linhas, usando a altura de cada
+   pedaço. O pdf.js devolve fragmentos soltos, não linhas prontas. */
+function linhasDaPagina(conteudo){
+  const porY = {};
+  conteudo.items.forEach(it => {
+    const y = Math.round(it.transform[5]);
+    (porY[y] = porY[y] || []).push({x: it.transform[4], s: it.str});
+  });
+  return Object.keys(porY)
+    .sort((a,b) => b - a)                       // de cima para baixo
+    .map(y => porY[y].sort((a,b) => a.x - b.x)
+                     .map(o => o.s).join(' ')
+                     .replace(/\s+/g,' ').trim());
+}
+
+const LINHA = /^(\d{6})\s+(\d{2}\/\d{2}\/\d{4})\s+([\d.]+)\s+([\d.,]+)\s+([\d.,]+)$/;
+
+/* Palavras que aparecem no cabeçalho e não são nome de usina. */
+const NAO_UNIDADE = /RELAT|DI[ÁA]RIO|CAMINH|SAFRA|TOTAL|GERAL|PRODU|IN[ÍI]CIO|FIM|DATA|CARGA|TONELADA|M[ÉE]DIA|P[ÁA]GINA|EQUIPAMENTO|C[ÓO]DIGO|EMISS|USU[ÁA]RIO/i;
+
+/* Descobre o nome da usina numa linha do cabeçalho.
+   Ele pode vir grudado no título ("CCT0024 - COPLASA  Relatório...")
+   ou sozinho numa linha só, que é o caso mais comum. */
+function nomeDeUnidade(l){
+  let bruto = null;
+  const m = l.match(/^(.+?)\s+Relat[óo]rio\s+Di[áa]rio\s+por\s+Caminh[ãa]o/i);
+  if(m) bruto = m[1];
+  else if(l.length <= 32 && !NAO_UNIDADE.test(l)) bruto = l;    // linha sozinha
+  if(!bruto) return null;
+
+  let nome = bruto.trim().replace(/\s{2,}/g,' ');
+  nome = nome.replace(/^[A-Z]{2,5}\s*\d{2,}\s*[-–]\s*/i, '');   // tira "CCT0024 - "
+  nome = nome.replace(/^[-–\s]+|[-–\s]+$/g, '').trim();
+
+  if(!nome || nome.length < 3 || nome.length > 30) return null;
+  if(NAO_UNIDADE.test(nome)) return null;
+  if(/^[A-Z]{2,5}\s*\d{2,}$/i.test(nome)) return null;           // só o código
+  if(/\d/.test(nome) && !/[A-ZÁÉÍÓÚ]{3}/i.test(nome)) return null;
+  if(!/[A-ZÁÉÍÓÚÂÊÔÃÕÇ]{3}/i.test(nome)) return null;             // precisa ter letras
+  return nome.toUpperCase();
+}
+const num = s => parseFloat(String(s).replace(/\./g,'').replace(',','.'));
+
+async function lerPdf(arquivo){
+  if(typeof pdfjsLib === 'undefined'){
+    status('A biblioteca de leitura de PDF não carregou. Verifique a internet.', 'erro');
+    return null;
+  }
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  const buf = await arquivo.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+
+  let unidade = '', codUnidade = '';
+  const achados = [];
+
+  for(let p = 1; p <= pdf.numPages; p++){
+    if(p % 10 === 0 || p === 1)
+      status(`Lendo página ${p} de ${pdf.numPages}…`);
+    const pag = await pdf.getPage(p);
+    const linhas = linhasDaPagina(await pag.getTextContent());
+
+    linhas.forEach((l, idx) => {
+      if(!unidade && idx < 12){
+        const cand = nomeDeUnidade(l);
+        if(cand) unidade = cand;
+      }
+      if(!codUnidade){
+        const m = l.match(/\[([\d.]+)\]/);
+        if(m) codUnidade = m[1];
+      }
+      const m = l.match(LINHA);
+      if(m) achados.push({
+        unidade: unidade || 'SEM UNIDADE', codUnidade: codUnidade,
+        caminhao: m[1],
+        data: m[2].split('/').reverse().join('-'),
+        cargas: parseInt(m[3].replace(/\./g,''), 10),
+        toneladas: num(m[4])
+      });
+    });
+  }
+  achados.forEach(r => { if(!r.unidade || r.unidade === 'SEM UNIDADE') r.unidade = unidade || 'SEM UNIDADE';
+                         r.codUnidade = r.codUnidade || codUnidade; });
+  return achados;
+}
+
+/* Junta o que veio do PDF com o que já existe.
+   A chave é unidade + caminhão + data: se repetir, o novo vale. */
+function juntar(atual, novos){
+  const mapa = {};
+  atual.forEach(r => mapa[r.unidade + '|' + r.caminhao + '|' + r.data] = r);
+  let repetidos = 0;
+  novos.forEach(r => {
+    const k = r.unidade + '|' + r.caminhao + '|' + r.data;
+    if(mapa[k]) repetidos++;
+    mapa[k] = r;
+  });
+  return {lista: Object.values(mapa), repetidos};
+}
+
+async function importar(arquivo){
+  if(!arquivo) return;
+  if(!/\.pdf$/i.test(arquivo.name)){
+    status('Só aceito arquivo .pdf', 'erro'); return;
+  }
+  status('Abrindo o PDF…');
+  try{
+    const novos = await lerPdf(arquivo);
+    const digitada = (document.getElementById('pr_uniNome').value || '').trim();
+    if(digitada && novos) novos.forEach(r => r.unidade = digitada);
+    if(!novos) return;
+    if(!novos.length){
+      status('Não encontrei linhas de produção nesse PDF. É o "Relatório Diário por Caminhão"?', 'erro');
+      return;
+    }
+
+    const base = (window.prObterBase && window.prObterBase()) || [];
+    const {lista, repetidos} = juntar(base, novos);
+    lista.sort((a,b) => a.caminhao.localeCompare(b.caminhao,'pt-BR',{numeric:true})
+                     || a.data.localeCompare(b.data));
+
+    window.prAplicarBase(lista);
+    try{
+      localStorage.setItem('prod_base', JSON.stringify(lista));
+      localStorage.removeItem('prod_zerada');
+    }catch(e){}
+
+    const ton = novos.reduce((s,r)=>s+r.toneladas,0);
+    const car = novos.reduce((s,r)=>s+r.cargas,0);
+    status(`<b>${novos.length}</b> registros lidos · ${car.toLocaleString('pt-BR')} cargas · ` +
+           `${ton.toLocaleString('pt-BR',{maximumFractionDigits:0})} t` +
+           (repetidos ? ` · ${repetidos} já existiam e foram atualizados` : '') +
+           ` · base agora com <b>${lista.length}</b> registros`, 'ok');
+
+    publicar(lista);
+  }catch(e){
+    status('Não consegui ler: ' + (e.message || e), 'erro');
+  }
+}
+
+/* Manda a base para o repositório, usando o mesmo token do abastecimento.
+   Assim o celular e o cliente enxergam sem você subir arquivo na mão. */
+let shaProducao = null;      // identificação da última versão gravada
+
+async function publicar(lista){
+  if(typeof cfg === 'undefined' || !cfg.repo || !cfg.token){
+    status(document.getElementById('pr_impStatus').innerHTML +
+           '<br>Configure o token em <b>Configurações de envio</b> para publicar automaticamente.', 'ok');
+    return;
+  }
+  const caminho = (cfg.path.indexOf('/') > -1)
+      ? cfg.path.replace(/[^/]+$/, 'producao.json') : 'producao.json';
+  const url = `https://api.github.com/repos/${cfg.repo}/contents/${caminho}`;
+  const cab = {'Authorization':'Bearer ' + cfg.token,
+               'Accept':'application/vnd.github+json',
+               'Content-Type':'application/json'};
+  const corpo = '[\n' + lista.map(r => JSON.stringify(r)).join(',\n') + '\n]\n';
+
+  async function buscarSha(){
+    const r = await fetch(`${url}?ref=${cfg.branch}&t=${Date.now()}`,
+                          {headers: cab, cache:'no-store'});
+    if(r.status === 200) return (await r.json()).sha;
+    return null;                       // 404 = arquivo ainda não existe
+  }
+
+  try{
+    /* O GitHub exige a identificação da versão atual para substituir o arquivo.
+       Logo após uma gravação essa identificação demora a se propagar, então
+       tentamos algumas vezes, buscando de novo a cada erro de conflito. */
+    let erroFinal = '';
+    for(let tentativa = 1; tentativa <= 4; tentativa++){
+      if(!shaProducao || tentativa > 1) shaProducao = await buscarSha();
+
+      const envio = await fetch(url, {method:'PUT', headers:cab, body: JSON.stringify({
+        message: 'Produção — ' + new Date().toLocaleString('pt-BR'),
+        content: paraBase64(corpo), branch: cfg.branch,
+        ...(shaProducao ? {sha: shaProducao} : {})
+      })});
+
+      if(envio.ok){
+        const resp = await envio.json().catch(() => null);
+        if(resp && resp.content) shaProducao = resp.content.sha;   // guarda para a próxima
+        status(document.getElementById('pr_impStatus').innerHTML +
+               '<br><b>Publicado no site</b> · os outros aparelhos veem em 1 a 3 minutos.', 'ok');
+        return;
+      }
+
+      const e = await envio.json().catch(()=>({}));
+      erroFinal = e.message || ('erro ' + envio.status);
+      const conflito = envio.status === 409 || envio.status === 422 ||
+                       /does not match|sha/i.test(erroFinal);
+      if(!conflito) break;
+      shaProducao = null;
+      await new Promise(r => setTimeout(r, 700 * tentativa));      // espera e tenta de novo
+      status(document.getElementById('pr_impStatus').innerHTML +
+             `<br>Conflito de versão · tentando de novo (${tentativa} de 4)…`);
+    }
+    throw new Error(erroFinal);
+  }catch(e){
+    status(document.getElementById('pr_impStatus').innerHTML +
+           '<br>Base salva neste aparelho, mas não consegui publicar: ' + e.message, 'erro');
+  }
+}
+
+/* Renomeia a unidade dos registros que ficaram sem nome. */
+on('pr_btnRenomear','click', () => {
+  const nome = (document.getElementById('pr_uniNome').value || '').trim();
+  if(!nome){ status('Digite o nome certo da unidade primeiro.', 'erro'); return; }
+
+  /* Renomeia a unidade que estiver selecionada nos botões.
+     Se nenhuma estiver, renomeia a que está com nome errado ou a única existente. */
+  const atual = (window.prObterBase && window.prObterBase()) || [];
+  const existentes = [...new Set(atual.map(r => r.unidade))];
+  const marcadas = (window.prUnidadesSel && window.prUnidadesSel()) || [];
+  let alvos = marcadas.length ? marcadas
+            : existentes.filter(u => !u || u === 'SEM UNIDADE');
+  if(!alvos.length && existentes.length === 1) alvos = existentes;
+  if(!alvos.length){
+    status('Selecione no botão qual unidade quer renomear.', 'erro'); return;
+  }
+
+  const lista = atual.map(r =>
+    alvos.indexOf(r.unidade) > -1 ? {...r, unidade: nome} : r);
+  const quantos = lista.filter((r,i) => r.unidade !== atual[i].unidade).length;
+  if(!quantos){ status('Nada foi alterado.', 'erro'); return; }
+
+  if(window.prLimparUnidades) window.prLimparUnidades();
+  window.prAplicarBase(lista);
+  try{ localStorage.setItem('prod_base', JSON.stringify(lista)); }catch(e){}
+  status(`<b>${quantos}</b> registros de <b>${alvos.join(', ')}</b> agora são <b>${nome}</b>`, 'ok');
+  publicar(lista);
+});
+
+/* Apaga da base todos os registros das unidades marcadas. */
+window.prExcluirUnidade = function(uma){ excluirUnidades(uma ? [uma] : null); };
+
+function excluirUnidades(quais){
+  const atual = (window.prObterBase && window.prObterBase()) || [];
+  const marcadas = quais || (window.prUnidadesSel && window.prUnidadesSel()) || [];
+  if(!marcadas.length){
+    status('Marque no botão qual unidade quer excluir.', 'erro'); return;
+  }
+  const quantos = atual.filter(r => marcadas.indexOf(r.unidade) > -1).length;
+  if(!quantos){ status('Nenhum registro nessa unidade.', 'erro'); return; }
+  if(!confirm(`Apagar ${quantos} registros de ${marcadas.join(', ')}?\n\n` +
+              'Isso vale para todos os aparelhos.')) return;
+
+  const lista = atual.filter(r => marcadas.indexOf(r.unidade) === -1);
+  if(window.prLimparUnidades) window.prLimparUnidades();
+  window.prAplicarBase(lista);
+  try{ localStorage.setItem('prod_base', JSON.stringify(lista)); }catch(e){}
+  status(`<b>${quantos}</b> registros de <b>${marcadas.join(', ')}</b> excluídos · ` +
+         `base agora com <b>${lista.length}</b>`, 'ok');
+  publicar(lista);
+}
+
+on('pr_btnExcluir','click', () => excluirUnidades(null));
+
+/* Apaga toda a base de produção. Serve para recomeçar do zero quando a
+   base ficou bagunçada com importações repetidas ou nomes errados.
+   O abastecimento não é tocado — são bases separadas. */
+on('pr_btnZerar','click', () => {
+  const atual = (window.prObterBase && window.prObterBase()) || [];
+  if(!confirm(`Apagar TODA a base de produção (${atual.length} registros)?\n\n` +
+              'Os abastecimentos não são afetados.\n' +
+              'Depois é só arrastar os PDFs de novo.')) return;
+
+  if(window.prLimparUnidades) window.prLimparUnidades();
+  window.prAplicarBase([]);
+  try{ localStorage.removeItem('prod_base'); localStorage.setItem('prod_zerada','1'); }catch(e){}
+  status('Base de produção zerada · agora arraste o PDF da CEMMA e depois o da COPLASA', 'ok');
+  publicar([]);
+});
+
+/* ---- arrastar e soltar ---- */
+const zona = document.getElementById('pr_solta');
+if(zona){
+  ['dragenter','dragover'].forEach(ev => zona.addEventListener(ev, e => {
+    e.preventDefault(); zona.classList.add('sobre');
+  }));
+  ['dragleave','drop'].forEach(ev => zona.addEventListener(ev, e => {
+    e.preventDefault(); zona.classList.remove('sobre');
+  }));
+  zona.addEventListener('drop', e => {
+    const f = e.dataTransfer && e.dataTransfer.files[0];
+    if(f) importar(f);
+  });
+}
+on('pr_btnEscolher','click', () => document.getElementById('pr_arquivo').click());
+on('pr_arquivo','change', e => { importar(e.target.files[0]); e.target.value = ''; });
 
 })();
 
