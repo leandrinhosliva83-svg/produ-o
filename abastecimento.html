@@ -356,6 +356,30 @@
   .meta-un{font-size:9px; letter-spacing:.08em; color:#7E919B; text-transform:none}
   @media (max-width:760px){ .meta-un{display:none} }
 
+  #pr_relPdf.btn-pdf{background:#C0392B;border-color:#C0392B;color:#FFFFFF;font-weight:600}
+  #pr_relPdf.btn-pdf:hover{background:#D64535;border-color:#D64535}
+  #pr_relShare{border-color:#25D366;color:#25D366}
+  #pr_relShare:hover{background:rgba(37,211,102,.14);border-color:#25D366}
+  .relatorio{background:var(--papel); border:1px solid var(--linha);
+             border-left:3px solid var(--roxo); border-radius:5px;
+             padding:18px 20px; margin-top:12px}
+  .rel-topo{display:flex; justify-content:space-between; align-items:center;
+            gap:12px; flex-wrap:wrap; margin-bottom:14px}
+  .rel-tit{font-family:'Oswald',sans-serif; text-transform:uppercase;
+           letter-spacing:.14em; font-size:12px; color:var(--roxo)}
+  .rel-corpo{font-size:14px; line-height:1.75; color:#C3D0D7}
+  .rel-corpo h4{font-family:'Oswald',sans-serif; text-transform:uppercase;
+                letter-spacing:.12em; font-size:11px; color:#7E919B;
+                margin:18px 0 6px; font-weight:400}
+  .rel-corpo h4:first-child{margin-top:0}
+  .rel-corpo b{color:var(--tinta)}
+  .rel-corpo .v{font-family:'IBM Plex Mono',monospace}
+  .rel-corpo .ok{color:var(--verde)} .rel-corpo .ruim{color:var(--vermelho)}
+  .rel-corpo ul{margin:4px 0 0; padding-left:18px}
+  .rel-corpo li{margin-bottom:3px}
+  .rel-nota{font-size:12px; color:#6E828C; margin-top:16px;
+            border-top:1px solid var(--linha); padding-top:12px; line-height:1.6}
+
   .chip-wrap{position:relative; display:inline-flex}
   .chip-x{position:absolute; top:-7px; right:-7px; width:20px; height:20px; padding:0;
           border-radius:50%; border:1px solid var(--linha); background:var(--papel-2);
@@ -5329,7 +5353,22 @@ CEMMA|5.01.01.0008
     <button class="ghost c-ambar" id="pr_btnGrafTon">Gráfico de toneladas</button>
     <button class="ghost c-azul" id="pr_btnGrafMedia">Gráfico de média</button>
     <button class="ghost c-verde" id="pr_btnComparar">Comparar caminhões</button>
+    <button class="ghost c-roxo" id="pr_btnRelatorio">Gerar relatório</button>
     <button class="ghost c-ciano" id="pr_btnCsv">Baixar CSV</button>
+  </div>
+
+  <div class="relatorio" id="pr_relatorio" hidden>
+    <div class="rel-topo">
+      <div class="rel-tit">Relatório de análise</div>
+      <div class="seletor">
+        <button class="ghost c-ciano" id="pr_relCopiar">Copiar</button>
+        <button class="btn-pdf" id="pr_relPdf">Relatório visual (PDF)</button>
+        <button class="ghost c-azul" id="pr_relWord">Word editável</button>
+        <button class="ghost c-verde" id="pr_relShare">Compartilhar</button>
+        <button class="ghost" id="pr_relFechar">&times;</button>
+      </div>
+    </div>
+    <div class="rel-corpo" id="pr_relCorpo"></div>
   </div>
 
   <div class="painel-grafico" id="pr_painelGrafico" hidden>
@@ -5955,6 +5994,12 @@ function atualizarPrevia(){
     ` &nbsp;·&nbsp; Consumo <b class="${cor(media,metas.media)}">${n(media,2)}</b>` +
     ` &nbsp;·&nbsp; Rendimento energético <b class="${cor(media!==null?media*peso:null,metas.rendimento)}">${media!==null?n(media*peso,2):'—'}</b>`;
 }
+
+/* Deixa a base do abastecimento visível para o relatório. */
+window.abDados = function(){
+  return {lancamentos: dados.filter(dentroDoPeriodo).map(contas),
+          metas: metas, preco: preco, periodo: periodo};
+};
 
 /* =========================================================
    4. AÇÕES DA TELA
@@ -7603,7 +7648,7 @@ function prBarras(lista, area, leg){
 
   const mobile = window.innerWidth < 700;
   const linhaAlt = mobile ? 32 : 36;
-  const mE = mobile ? 92 : 118, mD = mobile ? 106 : 138, mT = 12;
+  const mE = mobile ? 92 : 118, mD = mobile ? 162 : 212, mT = 12;
   const L = mobile ? 380 : 740;
   const A = mT + cams.length * linhaAlt + 26;
   const larg = L - mE - mD;
@@ -7637,8 +7682,10 @@ function prBarras(lista, area, leg){
               <text x="${mE+larg+8}" y="${y+linhaAlt/2+4}" fill="${cor}"
                 font-family="IBM Plex Mono" font-size="${fonte}" font-weight="600">${
                   (d>=0?'+':'')+d.toFixed(1)}%</text>
-              <text x="${mE+larg+mD-12}" y="${y+linhaAlt/2+4}" text-anchor="end" fill="#6E828C"
-                font-family="IBM Plex Mono" font-size="${fonte-1}">${n(valor(c),2)}</text>`;
+              <text x="${mE+larg+mD-84}" y="${y+linhaAlt/2+4}" text-anchor="end" fill="#6E828C"
+                font-family="IBM Plex Mono" font-size="${fonte-1}">${n(valor(c),2)}</text>
+              <text x="${mE+larg+mD-12}" y="${y+linhaAlt/2+4}" text-anchor="end" fill="#7E919B"
+                font-family="IBM Plex Mono" font-size="${fonte-1}">${c.nDias} dias</text>`;
     });
     leg.innerHTML =
       `<span><i class="chave" style="background:#4FB286"></i>acima da ${rotRef}</span>` +
@@ -7667,10 +7714,12 @@ function prBarras(lista, area, leg){
                 <title>${c.cod} · ${n(valor(c),2)} · ${n(c.ton,0)} t em ${c.nDias} dias</title></rect>
               <text x="${mE+larg+8}" y="${y+linhaAlt/2+4}" fill="${cor}"
                 font-family="IBM Plex Mono" font-size="${fonte}" font-weight="600">${n(valor(c),2)}</text>
-              <text x="${mE+larg+mD-12}" y="${y+linhaAlt/2+4}" text-anchor="end" fill="${cor}"
+              <text x="${mE+larg+mD-84}" y="${y+linhaAlt/2+4}" text-anchor="end" fill="${cor}"
                 font-family="IBM Plex Mono" font-size="${fonte-1}" opacity="0.9">${
                   ref ? (((valor(c)-ref)/ref*100) >= 0 ? '+' : '') +
-                        ((valor(c)-ref)/ref*100).toFixed(1) + '%' : ''}</text>`;
+                        ((valor(c)-ref)/ref*100).toFixed(1) + '%' : ''}</text>
+              <text x="${mE+larg+mD-12}" y="${y+linhaAlt/2+4}" text-anchor="end" fill="#7E919B"
+                font-family="IBM Plex Mono" font-size="${fonte-1}">${c.nDias} dias</text>`;
     });
 
     if(ref > 0){
@@ -7686,7 +7735,13 @@ function prBarras(lista, area, leg){
       `<span style="color:#6E828C">escala começa em ${n(base,2)} para destacar a diferença</span>`;
   }
 
-  area.innerHTML = `<svg class="grafico" viewBox="0 0 ${L} ${A}"
+  /* rótulos das colunas da direita */
+  svg = `<text x="${mE+larg+mD-84}" y="${mT-1}" text-anchor="end" fill="#5E7079"
+           font-family="IBM Plex Mono" font-size="${fonte-3}">vs ${rotRef}</text>
+         <text x="${mE+larg+mD-12}" y="${mT-1}" text-anchor="end" fill="#5E7079"
+           font-family="IBM Plex Mono" font-size="${fonte-3}">dias</text>` + svg;
+
+  area.innerHTML = `<svg class="grafico" viewBox="0 -14 ${L} ${A+14}"
       xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${rotulo}">${svg}</svg>`;
 }
 
@@ -7738,6 +7793,1071 @@ on('pr_btnInicio','click', () => {
   document.getElementById('pr_painelGrafico').hidden = true;
   document.querySelectorAll('#abaProducao .quadro[open]').forEach(q => q.open = false);
   window.scrollTo({top:0, behavior:'smooth'});
+});
+
+/* =========================================================
+   4b. RELATÓRIO
+   Lê os números da produção e do abastecimento e escreve o que eles dizem.
+   Nada é inventado: cada frase sai de uma conta feita aqui.
+========================================================= */
+function gerarRelatorio(){
+  const lista = prFiltrados();
+  const corpo = document.getElementById('pr_relCorpo');
+  if(!lista.length){
+    corpo.innerHTML = 'Sem dados de produção no período escolhido.';
+    return;
+  }
+
+  const v = (x, c=2) => `<span class="v">${n(x,c)}</span>`;
+  const pct = x => `<span class="v ${x>=0?'ok':'ruim'}">${(x>=0?'+':'')+x.toFixed(1)}%</span>`;
+  let t = '';
+
+  /* ---------- produção ---------- */
+  const cams = prPorCaminhao(lista).map(c => ({...c,
+    porDia: c.nDias ? c.ton/c.nDias : 0}));
+  cams.sort((a,b) => b.porDia - a.porDia);
+
+  const totT = lista.reduce((s,r)=>s+r.toneladas,0);
+  const totC = lista.reduce((s,r)=>s+r.cargas,0);
+  const totD = cams.reduce((s,c)=>s+c.nDias,0);
+  const mediaDia = totD ? totT/totD : 0;
+  const mediaCarga = totC ? totT/totC : 0;
+  const datas = [...new Set(lista.map(r=>r.data))].sort();
+  const unidades = [...new Set(lista.map(r=>r.unidade))];
+
+  t += `<h4>Período e escopo</h4>
+    De <b>${dataBR(datas[0])}</b> a <b>${dataBR(datas[datas.length-1])}</b>, ` +
+    `${datas.length} dias com produção, ${unidades.join(' e ')}. ` +
+    `${cams.length} caminhões, ${v(totT,0)} toneladas em ${v(totC,0)} cargas.`;
+
+  t += `<h4>Produção por dia trabalhado</h4>
+    A frota entregou ${v(mediaDia,1)} t por dia efetivo`;
+  if(META_DIA > 0){
+    const d = (mediaDia - META_DIA)/META_DIA*100;
+    t += `, contra a meta de ${v(META_DIA,0)} — ${pct(d)}. `;
+    const dentro = cams.filter(c => c.porDia >= META_DIA);
+    t += dentro.length
+      ? `<b>${dentro.length} de ${cams.length}</b> caminhões batem a meta: ` +
+        dentro.map(c=>c.cod).join(', ') + '.'
+      : `<b>Nenhum caminhão bate a meta.</b> O mais próximo é o ${cams[0].cod}, ` +
+        `a ${v(META_DIA - cams[0].porDia,1)} t por dia de distância.`;
+  } else {
+    t += '. Sem meta definida para comparar.';
+  }
+
+  /* ---------- extremos ---------- */
+  const p = cams[0], u = cams[cams.length-1];
+  const dif = p.porDia && u.porDia ? (p.porDia - u.porDia)/u.porDia*100 : 0;
+  t += `<h4>Melhor e pior</h4>
+    <ul>
+      <li>Melhor: <b>${p.cod}</b> com ${v(p.porDia,1)} t/dia em ${p.nDias} dias efetivos.</li>
+      <li>Pior: <b>${u.cod}</b> com ${v(u.porDia,1)} t/dia em ${u.nDias} dias efetivos.</li>
+      <li>O primeiro produz ${pct(dif)} a mais por dia que o último.</li>
+    </ul>`;
+
+  /* ---------- dias parados ---------- */
+  const maxDias = Math.max(...cams.map(c=>c.nDias));
+  const parados = cams.filter(c => maxDias - c.nDias >= 5)
+                      .sort((a,b)=>a.nDias-b.nDias);
+  if(parados.length){
+    t += `<h4>Dias sem produzir</h4>
+      O caminhão mais assíduo trabalhou ${maxDias} dias. Ficaram bem atrás:
+      <ul>` + parados.map(c => {
+        const falta = maxDias - c.nDias;
+        return `<li><b>${c.cod}</b>: ${c.nDias} dias, ${falta} a menos — ` +
+               `deixou de produzir cerca de ${v(falta * c.porDia,0)} t.</li>`;
+      }).join('') + '</ul>';
+  }
+
+  /* ---------- carga x frequência ---------- */
+  const porCarga = cams.slice().sort((a,b)=>b.media-a.media);
+  if(porCarga[0].cod !== cams[0].cod){
+    const x = porCarga[0];
+    t += `<h4>Carrega bem, mas roda pouco</h4>
+      O <b>${x.cod}</b> tem a melhor média por carga (${v(x.media)} t), ` +
+      `mas fica em ${cams.findIndex(c=>c.cod===x.cod)+1}º em produção diária. ` +
+      `São ${x.nDias} dias efetivos contra ${maxDias} do mais assíduo. ` +
+      `O problema dele não é carregar — é rodar.`;
+  }
+
+  /* ---------- abastecimento ---------- */
+  if(window.abDados){
+    const ab = window.abDados();
+    const fechados = ab.lancamentos.filter(l => !l.aberto);
+    if(fechados.length){
+      const km = fechados.reduce((s,l)=>s+l.kmTotal,0);
+      const lt = fechados.reduce((s,l)=>s+l.litros,0);
+      const consumo = lt ? km/lt : 0;
+      const ltMeta = ab.metas.media ? km/ab.metas.media : 0;
+      const perda = (lt - ltMeta) * ab.preco;
+
+      t += `<h4>Consumo de combustível</h4>
+        ${v(km,0)} km rodados com ${v(lt)} litros — ${v(consumo)} km/L, ` +
+        `contra a meta de ${v(ab.metas.media)}. `;
+      t += perda > 0
+        ? `Foram ${v(lt-ltMeta)} litros a mais que o previsto, ` +
+          `<b class="ruim">${R$(perda)}</b> gastos além da meta.`
+        : `Economia de ${v(ltMeta-lt)} litros, ` +
+          `<b class="ok">${R$(-perda)}</b> a menos que o previsto.`;
+
+      const porVeic = {};
+      fechados.forEach(l => {
+        const x = porVeic[l.veiculo] = porVeic[l.veiculo] || {km:0, lt:0};
+        x.km += l.kmTotal; x.lt += l.litros;
+      });
+      const piores = Object.keys(porVeic)
+        .map(k => ({cod:k, c: porVeic[k].lt ? porVeic[k].km/porVeic[k].lt : 0}))
+        .filter(x => ab.metas.media && x.c < ab.metas.media)
+        .sort((a,b)=>a.c-b.c);
+      if(piores.length){
+        t += `<ul>` + piores.map(x =>
+          `<li><b>${x.cod}</b>: ${v(x.c)} km/L, ` +
+          `${pct((x.c-ab.metas.media)/ab.metas.media*100)} da meta.</li>`).join('') + '</ul>';
+      }
+
+      /* cruzamento dos dois lados */
+      const ambos = cams.filter(c => porVeic[c.cod]);
+      if(ambos.length >= 2){
+        const ruimNosDois = ambos.filter(c =>
+          c.porDia < mediaDia &&
+          (porVeic[c.cod].lt ? porVeic[c.cod].km/porVeic[c.cod].lt : 0) < ab.metas.media);
+        if(ruimNosDois.length){
+          t += `<h4>Atenção dupla</h4>
+            Estes estão abaixo da média em produção <b>e</b> abaixo da meta em consumo: ` +
+            ruimNosDois.map(c=>`<b>${c.cod}</b>`).join(', ') +
+            `. São os que mais pesam no custo por tonelada.`;
+        }
+      }
+    }
+  }
+
+  t += `<div class="rel-nota">Gerado em ${new Date().toLocaleString('pt-BR')} ` +
+       `a partir dos filtros aplicados na tela. Os números vêm dos relatórios ` +
+       `importados e dos abastecimentos lançados — o texto apenas os interpreta. ` +
+       `Causas de cada diferença (rota, carga, manutenção, motorista) não estão ` +
+       `nos dados e precisam ser apuradas por você.</div>`;
+
+  corpo.innerHTML = t;
+}
+
+on('pr_btnRelatorio','click', () => {
+  const p = document.getElementById('pr_relatorio');
+  if(!p.hidden){ p.hidden = true; return; }
+  gerarRelatorio();
+  p.hidden = false;
+  p.scrollIntoView({behavior:'smooth', block:'nearest'});
+});
+
+on('pr_relFechar','click', () => { document.getElementById('pr_relatorio').hidden = true; });
+
+/* Gera o relatório em formato MHTML — que é como o Word salva página web
+   com imagem embutida. É o único jeito de a logo aparecer no Word de verdade;
+   base64 dentro do HTML o Word costuma ignorar. */
+on('pr_relWord','click', () => {
+  const lista = prFiltrados();
+  if(!lista.length){ avisar('Sem dados para o relatório'); return; }
+
+  const cams = prPorCaminhao(lista).map(c => ({...c, porDia: c.nDias ? c.ton/c.nDias : 0}));
+  cams.sort((a,b) => b.porDia - a.porDia);
+
+  const totT = lista.reduce((s,r)=>s+r.toneladas,0);
+  const totC = lista.reduce((s,r)=>s+r.cargas,0);
+  const totD = cams.reduce((s,c)=>s+c.nDias,0);
+  const mediaDia = totD ? totT/totD : 0;
+  const datas = [...new Set(lista.map(r=>r.data))].sort();
+  const unidades = [...new Set(lista.map(r=>r.unidade))].join(' e ');
+  const difFrota = META_DIA ? (mediaDia-META_DIA)/META_DIA*100 : 0;
+  const maxDias = Math.max(...cams.map(c=>c.nDias));
+
+  /* consumo por veículo, para entrar na mesma tabela */
+  let porV = {}, ab = null, resumoComb = '', consFrota = null, perdaFrota = null;
+  if(window.abDados){
+    ab = window.abDados();
+    ab.lancamentos.filter(l => !l.aberto).forEach(l => {
+      const x = porV[l.veiculo] = porV[l.veiculo] || {km:0, lt:0};
+      x.km += l.kmTotal; x.lt += l.litros;
+    });
+    const km = Object.values(porV).reduce((s,x)=>s+x.km,0);
+    const lt = Object.values(porV).reduce((s,x)=>s+x.lt,0);
+    if(lt){
+      const cons = km/lt, ltMeta = ab.metas.media ? km/ab.metas.media : 0;
+      const perda = (lt-ltMeta)*ab.preco;
+      consFrota = cons; perdaFrota = perda;
+      resumoComb = `Consumo de ${n(cons,2)} km/L contra meta de ${n(ab.metas.media,2)} — ` +
+        (perda > 0 ? `<b class="r">${R$(perda)}</b> gastos acima do previsto.`
+                   : `<b class="g">${R$(-perda)}</b> economizados.`);
+    }
+  }
+
+  const pcCor = x => x >= 0 ? 'g' : 'r';
+  const pc = x => `<span class="${pcCor(x)}">${(x>=0?'+':'')+x.toFixed(1)}%</span>`;
+
+  const linhas = cams.map((c,i) => {
+    const d = META_DIA ? (c.porDia-META_DIA)/META_DIA*100 : 0;
+    const v = porV[c.cod];
+    const cons = v && v.lt ? v.km/v.lt : null;
+    const dc = (cons !== null && ab && ab.metas.media)
+             ? (cons-ab.metas.media)/ab.metas.media*100 : null;
+    return `<tr${i%2 ? ' class="z" bgcolor="#F6FAF7"' : ''}>
+      <td class="c">${i+1}&#186;</td>
+      <td class="b">${c.cod}</td>
+      <td class="n">${n(c.ton,0)}</td>
+      <td class="n">${n(c.cargas,0)}</td>
+      <td class="n">${n(c.media,2)}</td>
+      <td class="n">${c.nDias}</td>
+      <td class="n b">${n(c.porDia,1)}</td>
+      <td class="n">${META_DIA ? pc(d) : '&#8212;'}</td>
+      <td class="n">${cons !== null ? n(cons,2) : '&#8212;'}</td>
+      <td class="n">${dc !== null ? pc(dc) : '&#8212;'}</td>
+    </tr>`;
+  }).join('');
+
+  const p = cams[0], u = cams[cams.length-1];
+  const parados = cams.filter(c => maxDias - c.nDias >= 5);
+
+  const linhaFoco = META_DIA
+    ? `Atingir e superar a meta diária de ${n(META_DIA,0)} t`
+    : 'Definir a meta diária da frota';
+
+  const corpoHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Relatório de Produção — DM Agrícola</title>
+<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom>
+</w:WordDocument></xml><![endif]-->
+<style>
+@page{size:29.7cm 21cm;mso-page-orientation:landscape;margin:0.9cm 1cm 0.9cm 1cm}
+body{font-family:Calibri,Arial,sans-serif;font-size:9.5pt;color:#243B33;margin:0}
+table{border-collapse:collapse}
+.faixa{width:100%}
+.faixa td{padding:0;border:0;vertical-align:middle}
+.faixa .verde{background:#186B3A;color:#FFFFFF;padding:12pt 16pt;text-align:right;
+              font-size:9.5pt;letter-spacing:1.4pt;font-weight:bold}
+.faixa .logo{padding:8pt 0 8pt 6pt}
+h1{font-size:18pt;color:#12452B;margin:9pt 0 2pt;letter-spacing:.5pt;font-weight:bold}
+.meta{font-size:8.5pt;color:#5D6E67;margin:0 0 10pt}
+.meta b{color:#186B3A}
+.kpis{width:100%}
+.kpis td.k{border:0.75pt solid #D3E0D8;padding:7pt 11pt;width:25%;background:#FBFDFC}
+.kpis td.gap{width:10pt;border:0;background:#FFFFFF}
+.ico{font-size:17pt;text-align:center;vertical-align:middle;padding-right:6pt}
+.ico2{font-size:14pt;text-align:center;vertical-align:middle;padding-right:5pt}
+.krot{font-size:7.5pt;color:#6C7D75;letter-spacing:1.2pt;text-transform:uppercase}
+.kval{font-size:19pt;font-weight:bold;color:#186B3A;line-height:1.15}
+.resumo{width:100%;margin-top:9pt}
+.resumo td{border:0;padding:9pt 14pt;background:#F7F9F5;
+           border-left:4pt solid #E8A33D}
+.rtit{font-size:9pt;font-weight:bold;color:#E8A33D;letter-spacing:1.6pt;
+      text-transform:uppercase;padding-bottom:3pt}
+.resumo p{margin:0 0 2pt;line-height:1.32;font-size:9pt}
+h2{font-size:10pt;color:#12452B;margin:11pt 0 4pt;letter-spacing:.6pt;font-weight:bold}
+.dados{width:100%;margin-bottom:4pt}
+.dados th{background:#186B3A;color:#FFFFFF;font-size:7.5pt;letter-spacing:.7pt;
+          text-transform:uppercase;padding:6pt 6pt;border:0.75pt solid #186B3A;
+          text-align:center}
+.dados td{border:0.75pt solid #DAE4DE;padding:5pt 6pt;font-size:9pt;text-align:center}
+.dados td.esq{text-align:left;font-weight:bold;color:#12452B}
+.dados tr.z td{background:#F6FAF7}
+.dados td.pos{color:#186B3A;font-weight:bold}
+.g{color:#1E7A4C;font-weight:bold} .r{color:#C0392B;font-weight:bold}
+.rod{width:100%;margin-top:8pt}
+.rod td.c{border:0.75pt solid #D3E0D8;background:#FBFDFC;padding:8pt 12pt;width:33%}
+.rod td.gap{width:10pt;border:0}
+.rrot{font-size:7.5pt;color:#6C7D75;letter-spacing:1.1pt;text-transform:uppercase}
+.rval{font-size:13pt;font-weight:bold;color:#186B3A}
+.rsub{font-size:7.5pt;color:#8A9891}
+.nota{margin-top:9pt;font-size:6.5pt;color:#9AA8A1;line-height:1.4}
+</style></head><body>
+
+<table class="faixa" width="100%" cellspacing="0" cellpadding="0"><tr>
+  <td class="logo" width="230"><img src="logo.png" width="200" height="61" alt="DM Agrícola"></td>
+  <td class="verde" bgcolor="#186B3A">GESTÃO DE FROTA &#8226; RELATÓRIO INTERNO</td>
+</tr></table>
+
+<h1>RELATÓRIO DE PRODUÇÃO</h1>
+<p class="meta"><b>${dataBR(datas[0])} a ${dataBR(datas[datas.length-1])}</b>
+  &nbsp;&nbsp;|&nbsp;&nbsp; ${unidades}
+  &nbsp;&nbsp;|&nbsp;&nbsp; ${cams.length} caminhões
+  &nbsp;&nbsp;|&nbsp;&nbsp; ${datas.length} dias com produção</p>
+
+<table class="kpis" width="100%" cellspacing="0" cellpadding="0"><tr>
+  ${[['&#128666;','Toneladas',n(totT,0)],
+     ['&#128230;','Cargas',n(totC,0)],
+     ['&#9201;','Ton / dia trabalhado',n(mediaDia,1)],
+     ['&#127919;','Meta diária',n(META_DIA,0)]]
+    .map((k,idx) => (idx ? '<td class="gap"></td>' : '') +
+      `<td class="k" bgcolor="#FBFDFC">
+        <table width="100%" cellspacing="0" cellpadding="0"><tr>
+          <td width="34" class="ico">${k[0]}</td>
+          <td><div class="krot">${k[1]}</div><div class="kval">${k[2]}</div></td>
+        </tr></table></td>`).join('')}
+</tr></table>
+
+<table class="resumo" width="100%" cellspacing="0" cellpadding="0"><tr><td bgcolor="#F7F9F5">
+  <div class="rtit">&#128200;&nbsp; Resumo executivo</div>
+  <p>A frota entregou <b>${n(mediaDia,1)} t por dia efetivamente trabalhado</b>${
+    META_DIA ? `, ${difFrota>=0?'acima':'abaixo'} da meta de ${n(META_DIA,0)} t (${pc(difFrota)})` : ''}.</p>
+  <p><b>${p.cod}</b> lidera com ${n(p.porDia,1)} t/dia em ${p.nDias} dias;
+     <b>${u.cod}</b> fecha com ${n(u.porDia,1)} t/dia em ${u.nDias} dias
+     &#8212; ${((p.porDia-u.porDia)/u.porDia*100).toFixed(1)}% de diferença.</p>
+  ${resumoComb ? `<p>${resumoComb}</p>` : ''}
+  ${parados.length ? `<p>O mais assíduo trabalhou <b>${maxDias} dias</b>. ` +
+    parados.sort((a,b)=>a.nDias-b.nDias).map(c =>
+      `<b>${c.cod}</b> ficou em ${c.nDias} (${maxDias-c.nDias} a menos, cerca de
+       ${n((maxDias-c.nDias)*c.porDia,0)} t)`).join('; ') + '.</p>' : ''}
+</td></tr></table>
+
+<h2>&#128667;&nbsp; DESEMPENHO POR CAMINHÃO</h2>
+<table class="dados" width="100%" border="1" cellspacing="0" cellpadding="4">
+<tr bgcolor="#186B3A"><th width="34">#</th><th>Caminhão</th><th>Toneladas</th><th>Cargas</th><th>t/carga</th>
+    <th>Dias</th><th>t/dia</th><th>vs meta (t/dia)</th><th>km/L</th><th>vs meta (km/L)</th></tr>
+${linhas}
+</table>
+
+<table class="rod" width="100%" cellspacing="0" cellpadding="0"><tr>
+  <td class="c" bgcolor="#FBFDFC">
+    <table width="100%" cellspacing="0" cellpadding="0"><tr>
+      <td width="30" class="ico2">&#9981;</td><td>
+    <div class="rrot">Consumo médio da frota</div>
+    <div class="rval">${consFrota !== null ? n(consFrota,2) + ' km/L' : '&#8212;'}</div>
+    <div class="rsub">${ab && ab.metas.media ? 'Meta: ' + n(ab.metas.media,2) + ' km/L' : ''}</div>
+    </td></tr></table></td>
+  <td class="gap"></td>
+  <td class="c" bgcolor="#FBFDFC">
+    <table width="100%" cellspacing="0" cellpadding="0"><tr>
+      <td width="30" class="ico2">&#128176;</td><td>
+    <div class="rrot">${perdaFrota > 0 ? 'Gasto acima do previsto' : 'Economia no período'}</div>
+    <div class="rval" style="color:${perdaFrota > 0 ? '#C0392B' : '#1E7A4C'}">${
+      perdaFrota !== null ? R$(Math.abs(perdaFrota)) : '&#8212;'}</div>
+    <div class="rsub">Impacto no período analisado</div>
+    </td></tr></table></td>
+  <td class="gap"></td>
+  <td class="c" bgcolor="#FBFDFC">
+    <table width="100%" cellspacing="0" cellpadding="0"><tr>
+      <td width="30" class="ico2">&#127919;</td><td>
+    <div class="rrot">Foco</div>
+    <div class="rval" style="font-size:10pt">${linhaFoco}</div>
+    <div class="rsub">Reduzir consumo e aumentar dias efetivos</div>
+    </td></tr></table></td>
+</tr></table>
+
+<div class="nota">
+Gerado em ${new Date().toLocaleString('pt-BR')} pelo sistema de gestão de frota da DM Agrícola,
+a partir dos relatórios de produção importados e dos abastecimentos lançados no período filtrado.
+Os números refletem o que foi registrado; as causas das diferenças entre caminhões
+&#8212; rota, tipo de carga, manutenção, condução &#8212; não constam nos dados e devem ser apuradas separadamente.
+</div>
+</body></html>`;
+
+  /* monta o pacote MHTML com a logo como anexo */
+  const src = (document.querySelector('.logo') || {}).src || '';
+  const b64 = src.indexOf(',') > -1 ? src.slice(src.indexOf(',')+1) : '';
+  const quebra = t => (t.match(/.{1,76}/g) || []).join('\r\n');
+  const lim = '----=_NextPart_DM_AGRICOLA';
+
+  const mht =
+    'MIME-Version: 1.0\r\n' +
+    'Content-Type: multipart/related; type="text/html"; boundary="' + lim + '"\r\n\r\n' +
+    '--' + lim + '\r\n' +
+    'Content-Location: file:///C:/dm/relatorio.htm\r\n' +
+    'Content-Type: text/html; charset="utf-8"\r\n\r\n' +
+    corpoHtml + '\r\n\r\n' +
+    (b64 ? ('--' + lim + '\r\n' +
+            'Content-Location: file:///C:/dm/logo.png\r\n' +
+            'Content-Transfer-Encoding: base64\r\n' +
+            'Content-Type: image/png\r\n\r\n' +
+            quebra(b64) + '\r\n\r\n') : '') +
+    '--' + lim + '--\r\n';
+
+  const nome = 'relatorio-producao-' + new Date().toISOString().slice(0,10) + '.doc';
+  const blob = new Blob([mht], {type:'application/msword'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = nome; a.click();
+  URL.revokeObjectURL(a.href);
+  avisar('Relatório em Word baixado');
+});
+
+
+/* Relatório visual: uma página desenhada para impressão, fiel ao modelo.
+   Abre numa aba nova; o próprio navegador salva em PDF (Ctrl+P). */
+on('pr_relPdf','click', () => {
+  const lista = prFiltrados();
+  if(!lista.length){ avisar('Sem dados para o relatório'); return; }
+
+  const cams = prPorCaminhao(lista).map(c => ({...c, porDia: c.nDias ? c.ton/c.nDias : 0}));
+  cams.sort((a,b) => b.porDia - a.porDia);
+  const totT = lista.reduce((s,r)=>s+r.toneladas,0);
+  const totC = lista.reduce((s,r)=>s+r.cargas,0);
+  const totD = cams.reduce((s,c)=>s+c.nDias,0);
+  const mediaDia = totD ? totT/totD : 0;
+  const datas = [...new Set(lista.map(r=>r.data))].sort();
+  const unidades = [...new Set(lista.map(r=>r.unidade))].join(' e ');
+  const dif = META_DIA ? (mediaDia-META_DIA)/META_DIA*100 : 0;
+
+  let porV = {}, ab = null, cons = null, perda = null;
+  if(window.abDados){
+    ab = window.abDados();
+    ab.lancamentos.filter(l => !l.aberto).forEach(l => {
+      const x = porV[l.veiculo] = porV[l.veiculo] || {km:0, lt:0};
+      x.km += l.kmTotal; x.lt += l.litros;
+    });
+    const km = Object.values(porV).reduce((s,x)=>s+x.km,0);
+    const lt = Object.values(porV).reduce((s,x)=>s+x.lt,0);
+    if(lt){ cons = km/lt;
+      perda = (lt - (ab.metas.media ? km/ab.metas.media : 0)) * ab.preco; }
+  }
+
+  const pc = x => `<b class="${x>=0?'g':'r'}">${(x>=0?'+':'')+x.toFixed(1).replace('.',',')}%</b>`;
+
+  /* ---- o que cada caminhão deixou de produzir e quanto custou o consumo ----
+     Só contas: a produção perdida é a distância até a meta multiplicada pelos
+     dias que ele rodou; o excesso de combustível é o que passou da meta em litros. */
+  const maxDias = Math.max(...cams.map(c=>c.nDias));
+  cams.forEach(c => {
+    c.faltaDia   = META_DIA ? Math.max(0, META_DIA - c.porDia) : 0;
+    c.perdaTon   = c.faltaDia * c.nDias;
+    c.diasFalta  = maxDias - c.nDias;
+    c.tonParado  = c.diasFalta * c.porDia;
+    const x = porV[c.cod];
+    c.kmL = x && x.lt ? x.km/x.lt : null;
+    if(c.kmL !== null && ab && ab.metas.media){
+      const ltIdeal = x.km / ab.metas.media;
+      c.ltExtra = x.lt - ltIdeal;
+      c.custoExtra = c.ltExtra * ab.preco;
+      c.km = x.km; c.lt = x.lt;
+    } else { c.ltExtra = null; c.custoExtra = null; }
+  });
+
+  const piorProd = cams.slice().sort((a,b)=>b.perdaTon-a.perdaTon).filter(c=>c.perdaTon>0);
+  const piorComb = cams.filter(c=>c.custoExtra!==null && c.custoExtra>0)
+                       .sort((a,b)=>b.custoExtra-a.custoExtra);
+  const piorDias = cams.slice().sort((a,b)=>b.tonParado-a.tonParado).filter(c=>c.diasFalta>=5);
+  const dobra = cams.filter(c => c.perdaTon > 0 && c.custoExtra > 0);
+  const totalPerdaTon  = cams.reduce((s,c)=>s+c.perdaTon,0);
+  const totalCustoComb = cams.reduce((s,c)=>s+(c.custoExtra>0?c.custoExtra:0),0);
+  const V = '#1B6B3A', VE = '#0E4527';
+
+  const ic = {
+    caminhao:`<svg viewBox="0 0 24 24" fill="none" stroke="${V}" stroke-width="1.7"><path d="M1 6h11v9H1z"/><path d="M12 9h4.5l3 3.5V15H12z"/><circle cx="5" cy="17.5" r="2"/><circle cx="16.5" cy="17.5" r="2"/></svg>`,
+    caixa:`<svg viewBox="0 0 24 24" fill="none" stroke="${V}" stroke-width="1.7"><path d="M12 2.6 21 7v10l-9 4.4L3 17V7z"/><path d="M3 7l9 4.4L21 7M12 11.4V21"/></svg>`,
+    velo:`<svg viewBox="0 0 24 24" fill="none" stroke="${V}" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 12l4.5-3.5"/><circle cx="12" cy="12" r="1.4" fill="${V}"/></svg>`,
+    alvo:`<svg viewBox="0 0 24 24" fill="none" stroke="${V}" stroke-width="1.7"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.6"/><circle cx="12" cy="12" r="1.2" fill="${V}"/></svg>`,
+    grafico:`<svg viewBox="0 0 24 24" fill="none" stroke="#E8A33D" stroke-width="1.8"><path d="M3 20h18"/><path d="M6 16v-4M11 16V8M16 16v-7"/><path d="M4.5 9.5 10 5l4 3 5.5-4.5"/></svg>`,
+    bomba:`<svg viewBox="0 0 24 24" fill="none" stroke="${V}" stroke-width="1.7"><path d="M4 21V4.5A1.5 1.5 0 0 1 5.5 3h6A1.5 1.5 0 0 1 13 4.5V21"/><path d="M3 21h11M5.8 8.5h5.4"/><path d="M16 9h2.5a1.5 1.5 0 0 1 1.5 1.5v6a1.5 1.5 0 0 0 1.5 1.5"/><path d="M16 6l3.5 3"/></svg>`,
+    alerta:`<svg viewBox="0 0 24 24" fill="none" stroke="#C0392B" stroke-width="1.8"><path d="M12 3.5 22 20H2z"/><path d="M12 9.5v5M12 17.2v.1"/></svg>`,
+    plano:`<svg viewBox="0 0 24 24" fill="none" stroke="${V}" stroke-width="1.7"><path d="M5 3h11l3.5 3.5V21H5z"/><path d="M15.5 3v4H20"/><path d="M8.5 12l2 2 4-4.5M8.5 17.5h7"/></svg>`,
+    cifrao:`<svg viewBox="0 0 24 24" fill="none" stroke="#C0392B" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M15 8.7c-.6-.9-1.7-1.4-3-1.4-1.7 0-3 .9-3 2.2 0 3 6 1.4 6 4.4 0 1.4-1.4 2.3-3 2.3-1.4 0-2.6-.6-3.2-1.6M12 5.6v12.8"/></svg>`
+  };
+
+  const linhas = cams.map((c,i) => {
+    const d = META_DIA ? (c.porDia-META_DIA)/META_DIA*100 : null;
+    const x = porV[c.cod];
+    const co = x && x.lt ? x.km/x.lt : null;
+    const dc = (co !== null && ab && ab.metas.media) ? (co-ab.metas.media)/ab.metas.media*100 : null;
+    return `<tr>
+      <td class="pos">${i+1}º</td>
+      <td class="cod">${c.cod}</td>
+      <td>${n(c.ton,0)}</td><td>${n(c.cargas,0)}</td><td>${n(c.media,2)}</td>
+      <td>${c.nDias}</td><td>${n(c.porDia,1)}</td>
+      <td>${d===null?'—':pc(d)}</td>
+      <td>${co===null?'—':n(co,2)}</td>
+      <td>${dc===null?'—':pc(dc)}</td>
+    </tr>`;
+  }).join('');
+
+  /* ---- plano de ação: cada linha nasce de um número, não de um palpite ---- */
+  const itens = [];
+  if(dobra.length) dobra.slice(0,2).forEach(c => itens.push({
+    p:1, acao:`<b>${c.cod}</b> — investigar o caminhão: está abaixo da meta de produção
+      <b>e</b> acima do consumo previsto. Verificar rota, estado mecânico e condução.`,
+    resp:'Manutenção + Operação', prazo:'Imediato',
+    ganho:`${n(c.perdaTon,0)} t + ${R$(c.custoExtra)}`}));
+
+  if(piorComb.length) piorComb.slice(0, dobra.length ? 1 : 2).forEach(c => {
+    if(dobra.some(d=>d.cod===c.cod)) return;
+    itens.push({p:itens.length?2:1,
+      acao:`<b>${c.cod}</b> — revisar consumo: ${n(c.kmL,2)} km/L contra meta de
+        ${n(ab.metas.media,2)}. Conferir bicos, filtros, calibragem e forma de condução.`,
+      resp:'Manutenção', prazo:'15 dias',
+      ganho:`${R$(c.custoExtra)} no período`});
+  });
+
+  if(piorDias.length) piorDias.slice(0,2).forEach(c => itens.push({
+    p:2, acao:`<b>${c.cod}</b> — apurar os ${c.diasFalta} dias sem produção
+      (${c.nDias} contra ${maxDias} do mais assíduo). Levantar se foi manutenção,
+      falta de motorista ou escala.`,
+    resp:'Programação de frota', prazo:'30 dias',
+    ganho:`${n(c.tonParado,0)} t recuperáveis`}));
+
+  if(piorProd.length > 1) itens.push({
+    p:3, acao:`Nivelar a frota pela referência: <b>${cams[0].cod}</b> entrega
+      ${n(cams[0].porDia,1)} t/dia. Levar os demais a esse patamar significa recuperar
+      a maior parte das ${n(totalPerdaTon,0)} t que faltaram para a meta.`,
+    resp:'Gestão de frota', prazo:'Próxima safra',
+    ganho:`até ${n(totalPerdaTon,0)} t`});
+
+  itens.push({p:3, acao:`Acompanhar semanalmente t/dia e km/L por caminhão,
+    comparando com as metas de ${n(META_DIA,0)} t/dia e
+    ${ab && ab.metas.media ? n(ab.metas.media,2)+' km/L' : 'consumo'}.`,
+    resp:'Administrativo', prazo:'Contínuo', ganho:'Correção antes do fechamento'});
+
+  const cp = {1:'#C0392B', 2:'#E8A33D', 3:'#1B6B3A'};
+  const acoes = itens.slice(0,6).map(i => `<tr>
+    <td><span class="pri" style="background:${cp[i.p]}">${i.p}</span></td>
+    <td class="esq">${i.acao}</td>
+    <td>${i.resp}</td><td>${i.prazo}</td>
+    <td><b>${i.ganho}</b></td></tr>`).join('');
+
+  const logo = (document.querySelector('.logo')||{}).src || '';
+
+  const pag = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
+<title>Relatório de Produção — DM Agrícola</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  @page{size:A4 landscape;margin:0}
+  *{box-sizing:border-box;margin:0;padding:0;
+     -webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
+  body{font-family:Barlow,'Segoe UI',Arial,Helvetica,sans-serif;background:#8a8a8a;padding:18px}
+  .folha{width:1160px;min-height:1640px;margin:0 auto;background:#fff;position:relative;
+         padding:0 0 22px}
+  .topo{position:relative;height:124px;overflow:hidden;
+        background:linear-gradient(100deg,${VE} 0%,#17663a 44%,#1f8448 100%)}
+  .topo .placa{position:absolute;left:0;top:0;height:124px;width:430px;background:#fff;
+               clip-path:polygon(0 0,100% 0,calc(100% - 62px) 100%,0 100%)}
+  .topo img{position:absolute;left:34px;top:20px;height:84px}
+  .topo .rot{position:absolute;right:36px;top:38px;text-align:right;color:#fff}
+  .topo .rot b{display:block;font-size:21px;font-weight:700;letter-spacing:3px}
+  .topo .rot span{display:block;font-size:11.5px;letter-spacing:3.6px;
+                  color:#a9dcc0;margin-top:4px}
+  .linhaverde{height:6px;background:#E8A33D;margin:0}
+  .corpo{padding:22px 34px 0}
+  h1{font-size:36px;color:${VE};font-weight:700;letter-spacing:.2px;line-height:1.05}
+  h1 span{color:#E8A33D}
+  .meta{margin:9px 0 18px;font-size:14.5px;color:#2f3b35}
+  .meta .sep{color:#c2cec7}
+  .kpis td.gap{width:16px}
+  .kpi{border:1px solid #dfe8e2;border-radius:12px;background:#fbfdfb;
+       padding:13px 15px;width:25%;vertical-align:middle}
+  .kpi table{width:100%} .kpi .ki{width:52px;vertical-align:middle}
+  .kpi svg{width:40px;height:40px}
+  .kpi .rot{font-size:12.5px;color:#41514a;letter-spacing:.8px;font-weight:600}
+  .kpi .val{font-size:31px;color:${V};font-weight:700;line-height:1.05;margin-top:1px}
+  .res{border-radius:12px;background:#f7f8f4;border-left:5px solid #E8A33D;margin:18px 0 0}
+  .res td{padding:16px 8px 16px 0;vertical-align:top}
+  .res td.rci{width:96px;padding-left:20px;vertical-align:middle;text-align:center}
+  .res .circ{width:58px;height:58px;border-radius:50%;border:2px solid #E8A33D;
+             display:inline-block;text-align:center;line-height:66px}
+  .res .circ svg{width:30px;height:30px;vertical-align:middle}
+  .res h3{color:#E8A33D;font-size:17px;letter-spacing:.8px;margin-bottom:5px}
+  .res p{font-size:14.5px;line-height:1.55;color:#26312c}
+  .tit{margin:20px 0 10px}
+  .tit td{vertical-align:middle;padding:0}
+  .tit svg{width:26px;height:26px;vertical-align:middle}
+  .tit h2{font-size:19px;color:${VE};letter-spacing:.6px;padding-left:10px}
+  .tit .l{height:2px;background:${V};opacity:.5;margin-left:14px}
+  table{width:100%;border-collapse:separate;border-spacing:0;font-size:14px}
+  thead th{background:${VE};color:#fff;font-weight:600;font-size:12.5px;letter-spacing:.7px;
+           padding:11px 8px;text-align:center;border-right:1px solid rgba(255,255,255,.18)}
+  thead th:last-child{border-right:0}
+  tbody td{padding:10px 8px;text-align:center;border-bottom:1px solid #e6ece8;color:#2b3a33}
+  tbody tr:nth-child(even) td{background:#f7faf8}
+  tbody .pos{color:${V};font-weight:700}
+  tbody .cod{font-weight:700;color:${VE}}
+  .g{color:#1E7A4C}.r{color:#C0392B}
+  .rod{border:1px solid #dfe8e2;border-radius:12px;background:#fbfdfb;margin-top:18px}
+  .rod td{padding:14px 6px;vertical-align:middle}
+  .rod td.ri{width:52px;text-align:center;padding-left:14px}
+  .rod td.ri.bd{border-left:1px solid #e4ece7;padding-left:22px}
+  .rod td.it{padding-right:14px}
+  .rod svg{width:34px;height:34px}
+  .rod .r1{font-size:12.5px;color:#41514a;letter-spacing:.7px;font-weight:600}
+  .rod .r2{font-size:20px;font-weight:700;color:${V}}
+  .rod .r2 span{font-size:12px;font-weight:500;color:#5d6e67}
+  .rod .r3{font-size:12px;color:#6d7d75}
+  .vaz{font-size:14px;color:#6d7d75;padding:6px 0 2px}
+  .aten{margin-top:2px}
+  .aten td.at{border:1px solid #dfe8e2;border-radius:10px;background:#fbfdfb;
+              padding:12px 14px;width:25%;vertical-align:top}
+  .aten .a1{font-size:11px;letter-spacing:.9px;color:#6d7d75;font-weight:600}
+  .aten .a2{font-size:22px;font-weight:700;color:${VE};margin:3px 0 4px}
+  .aten .a2.r{color:#C0392B}.aten .a2.g{color:#1E7A4C;font-size:17px}
+  .aten .a3{font-size:12.5px;color:#4a5a53;line-height:1.5}
+  .plano thead th{background:${VE}}
+  .plano td{font-size:13.5px;text-align:center;vertical-align:middle}
+  .plano td.esq{text-align:left;line-height:1.5;color:#2b3a33;font-weight:400}
+  .pri{display:inline-block;width:24px;height:24px;line-height:24px;border-radius:50%;
+       color:#fff;font-weight:700;font-size:13px}
+  .barra{position:fixed;left:0;right:0;bottom:0;background:${VE};color:#fff;padding:10px;
+         text-align:center;font-size:14px}
+  .barra button{border:0;font-weight:700;padding:9px 20px;border-radius:7px;cursor:pointer;
+                font-family:inherit;margin-left:10px;font-size:14px;color:#fff}
+  .barra button.pdf{background:#C0392B}
+  .barra button.pdf:hover{background:#D64535}
+  .barra button.sec{background:#25D366;color:#08301b}
+  .barra button.sec:hover{background:#3ae07a}
+  .barra button.png{background:#E8A33D;color:#12281c}
+  .barra button.png:hover{background:#f2b75c}
+  @media print{
+    html,body{background:#fff;padding:0;margin:0;
+      -webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .folha{width:auto;min-height:auto;box-shadow:none;margin:0}
+    .barra{display:none}
+    .topo,.kpi,.res,.rod,.aten td.at,thead th,.linhaverde,.pri{
+      -webkit-print-color-adjust:exact;print-color-adjust:exact}
+    table{page-break-inside:auto}
+    tr{page-break-inside:avoid}
+    .tit{page-break-after:avoid}
+  }
+</style></head><body>
+<div class="folha">
+  <div class="topo">
+    <div class="placa"></div>
+    ${logo?`<img src="${logo}">`:''}
+    <div class="rot"><b>RELATÓRIO INTERNO</b>
+      <span>GESTÃO DE FROTA &nbsp;•&nbsp; ${unidades}</span></div>
+  </div>
+  <div class="linhaverde"></div>
+  <div class="corpo">
+    <h1>RELATÓRIO DE <span>PRODUÇÃO</span></h1>
+    <div class="meta">${dataBR(datas[0])} a ${dataBR(datas[datas.length-1])}
+      &nbsp;<span class="sep">|</span>&nbsp; ${unidades}
+      &nbsp;<span class="sep">|</span>&nbsp; ${cams.length} caminhões
+      &nbsp;<span class="sep">|</span>&nbsp; ${datas.length} dias com produção</div>
+    <table class="kpis" width="100%" cellspacing="0"><tr>
+      ${[[ic.caminhao,'TONELADAS',n(totT,0)],[ic.caixa,'CARGAS',n(totC,0)],
+         [ic.velo,'TON / DIA TRABALHADO',n(mediaDia,1)],[ic.alvo,'META DIÁRIA',n(META_DIA,0)]]
+        .map((k,idx)=>(idx?'<td class="gap"></td>':'')+
+          `<td class="kpi"><table cellspacing="0"><tr><td class="ki">${k[0]}</td>
+            <td><div class="rot">${k[1]}</div><div class="val">${k[2]}</div></td></tr></table></td>`).join('')}
+    </tr></table>
+    <table class="res" width="100%" cellspacing="0"><tr>
+      <td class="rci"><div class="circ">${ic.grafico}</div></td>
+      <td><h3>RESUMO EXECUTIVO</h3>
+        <p>A frota entregou <b>${n(mediaDia,1)}</b> t por dia efetivamente trabalhado${
+          META_DIA?`, ${dif>=0?'acima':'abaixo'} da meta de ${n(META_DIA,0)} t (${pc(dif)})`:''}.</p>
+        <p><b>${cams[0].cod}</b> lidera com <b>${n(cams[0].porDia,1)}</b> t/dia em ${cams[0].nDias} dias;
+           <b>${cams[cams.length-1].cod}</b> fecha com <b>${n(cams[cams.length-1].porDia,1)}</b> t/dia
+           em ${cams[cams.length-1].nDias} dias — ${((cams[0].porDia-cams[cams.length-1].porDia)/cams[cams.length-1].porDia*100).toFixed(1).replace('.',',')}% de diferença.</p>
+        ${cons!==null?`<p>Consumo de ${n(cons,2)} km/L contra meta de ${n(ab.metas.media,2)} —
+          <b class="${perda>0?'r':'g'}">${R$(Math.abs(perda))}</b>
+          ${perda>0?'gastos acima do previsto':'economizados'}.</p>`:''}
+      </td>
+    </tr></table>
+    <table class="tit" width="100%" cellspacing="0"><tr>
+      <td width="34">${ic.caminhao}</td><td width="290"><h2>DESEMPENHO POR CAMINHÃO</h2></td>
+      <td><div class="l"></div></td></tr></table>
+    <table>
+      <thead><tr><th>#</th><th>CAMINHÃO</th><th>TONELADAS</th><th>CARGAS</th><th>T/CARGA</th>
+        <th>DIAS</th><th>T/DIA</th><th>VS META (T/DIA)</th><th>KM/L</th><th>VS META (KM/L)</th></tr></thead>
+      <tbody>${linhas}</tbody>
+    </table>
+    <table class="tit" width="100%" cellspacing="0"><tr>
+      <td width="34">${ic.bomba}</td><td width="270"><h2>CONSUMO POR VEÍCULO</h2></td>
+      <td><div class="l"></div></td></tr></table>
+    ${cams.filter(c=>c.kmL!==null).length ? `
+    <table>
+      <thead><tr><th>CAMINHÃO</th><th>KM RODADO</th><th>LITROS</th><th>KM/L</th>
+        <th>META</th><th>VS META</th><th>LITROS EM EXCESSO</th><th>CUSTO DO EXCESSO</th></tr></thead>
+      <tbody>${cams.filter(c=>c.kmL!==null)
+        .sort((a,b)=>(b.custoExtra||0)-(a.custoExtra||0)).map(c=>{
+        const d = ab.metas.media ? (c.kmL-ab.metas.media)/ab.metas.media*100 : 0;
+        return `<tr><td class="cod">${c.cod}</td><td>${n(c.km,0)}</td><td>${n(c.lt,2)}</td>
+          <td><b>${n(c.kmL,2)}</b></td><td>${n(ab.metas.media,2)}</td><td>${pc(d)}</td>
+          <td>${c.ltExtra>0?n(c.ltExtra,1):'—'}</td>
+          <td class="${c.custoExtra>0?'r':'g'}"><b>${c.custoExtra>0?R$(c.custoExtra):'—'}</b></td></tr>`;
+      }).join('')}</tbody>
+    </table>` : '<p class="vaz">Sem lançamentos de abastecimento no período.</p>'}
+
+    <table class="tit" width="100%" cellspacing="0"><tr>
+      <td width="34">${ic.alerta}</td><td width="250"><h2>PONTOS DE ATENÇÃO</h2></td>
+      <td><div class="l"></div></td></tr></table>
+    <table class="aten" width="100%" cellspacing="0"><tr>
+      <td class="at">
+        <div class="a1">MAIOR PERDA DE PRODUÇÃO</div>
+        ${piorProd.length ? `<div class="a2">${piorProd[0].cod}</div>
+          <div class="a3">${n(piorProd[0].perdaTon,0)} t abaixo da meta no período<br>
+          ${n(piorProd[0].porDia,1)} t/dia contra ${n(META_DIA,0)} de meta</div>`
+          : '<div class="a2 g">Todos na meta</div>'}
+      </td>
+      <td class="at">
+        <div class="a1">MAIOR CUSTO DE COMBUSTÍVEL</div>
+        ${piorComb.length ? `<div class="a2">${piorComb[0].cod}</div>
+          <div class="a3">${R$(piorComb[0].custoExtra)} acima do previsto<br>
+          ${n(piorComb[0].kmL,2)} km/L contra ${n(ab.metas.media,2)} de meta</div>`
+          : '<div class="a2 g">Nenhum acima</div>'}
+      </td>
+      <td class="at">
+        <div class="a1">MAIS DIAS PARADO</div>
+        ${piorDias.length ? `<div class="a2">${piorDias[0].cod}</div>
+          <div class="a3">${piorDias[0].diasFalta} dias a menos que o mais assíduo<br>
+          cerca de ${n(piorDias[0].tonParado,0)} t deixadas de produzir</div>`
+          : '<div class="a2 g">Frota equilibrada</div>'}
+      </td>
+      <td class="at">
+        <div class="a1">IMPACTO TOTAL DO PERÍODO</div>
+        <div class="a2 r">${n(totalPerdaTon,0)} t</div>
+        <div class="a3">abaixo da meta de produção<br>
+        ${totalCustoComb>0?R$(totalCustoComb)+' em combustível acima do previsto':'combustível dentro da meta'}</div>
+      </td>
+    </tr></table>
+
+    <table class="tit" width="100%" cellspacing="0"><tr>
+      <td width="34">${ic.plano}</td><td width="220"><h2>PLANO DE AÇÃO</h2></td>
+      <td><div class="l"></div></td></tr></table>
+    <table class="plano" width="100%" cellspacing="0">
+      <thead><tr><th width="60">PRIOR.</th><th>AÇÃO</th><th width="150">RESPONSÁVEL</th>
+        <th width="130">PRAZO</th><th width="170">GANHO ESTIMADO</th></tr></thead>
+      <tbody>${acoes}</tbody>
+    </table>
+
+    <table class="rod" width="100%" cellspacing="0"><tr>
+      <td class="ri">${ic.bomba}</td>
+      <td class="it"><div class="r1">CONSUMO MÉDIO DA FROTA</div>
+        <div class="r2">${cons!==null?n(cons,2):'—'} <span>km/L</span></div>
+        <div class="r3">${ab&&ab.metas.media?'Meta: '+n(ab.metas.media,2)+' km/L':''}</div></td>
+      <td class="ri bd">${ic.cifrao}</td>
+      <td class="it"><div class="r1">${perda>0?'GASTO ACIMA DO PREVISTO':'ECONOMIA NO PERÍODO'}</div>
+        <div class="r2" style="color:${perda>0?'#C0392B':'#1E7A4C'}">${perda!==null?R$(Math.abs(perda)):'—'}</div>
+        <div class="r3">Impacto no período analisado</div></td>
+      <td class="ri bd">${ic.alvo}</td>
+      <td class="it"><div class="r1">FOCO</div>
+        <div class="r3" style="font-size:13px;color:#2b3a33;margin-top:3px">
+          ${META_DIA?`Atingir e superar a meta diária de ${n(META_DIA,0)} t`:'Definir a meta diária'}<br>
+          Reduzir consumo e aumentar dias efetivos</div></td>
+    </tr></table>
+  </div>
+</div>
+<div class="barra">Na janela de impressão: <b>Destino: Salvar como PDF</b> &nbsp;·&nbsp;
+  <b>Layout: Paisagem</b> &nbsp;·&nbsp; em <b>Mais definições</b>, marque
+  <b>Gráficos de plano de fundo</b> para sair colorido
+  <button class="png" onclick="baixarImagem()">&#128247; Baixar imagem colorida</button>
+  <button class="pdf" onclick="window.print()">&#11015; Imprimir / PDF</button>
+  <button class="sec" onclick="compartilhar()">&#128172; Compartilhar</button></div>
+<script>
+/* Baixa o relatório como imagem. A cor vira parte do arquivo, então não
+   depende de o navegador aceitar imprimir fundos. */
+function baixarImagem(){
+  /* Desenha o relatório num quadro em branco, linha por linha.
+     Não converte HTML: pinta cada retângulo e cada texto na mão.
+     É mais código, mas funciona em qualquer navegador e sempre sai colorido. */
+  var D = window.__dados;
+  if(!D){ alert('Dados do relatório não encontrados.'); return; }
+
+  var L = 1400, esc = 2;
+  var c = document.createElement('canvas');
+  var x = c.getContext('2d');
+  var VE = '#0E4527', V = '#1B6B3A', AM = '#E8A33D', VM = '#C0392B', VD = '#1E7A4C';
+  var F = "'Segoe UI',Arial,Helvetica,sans-serif";
+
+  function txt(t, px, py, tam, cor, peso, al){
+    x.font = (peso||'400') + ' ' + tam + 'px ' + F;
+    x.fillStyle = cor || '#243B33';
+    x.textAlign = al || 'left';
+    x.fillText(String(t), px, py);
+  }
+  function cx(px, py, l, a, r, fill, borda){
+    r = Math.min(r, l/2, a/2);
+    x.beginPath();
+    x.moveTo(px+r, py); x.lineTo(px+l-r, py); x.quadraticCurveTo(px+l, py, px+l, py+r);
+    x.lineTo(px+l, py+a-r); x.quadraticCurveTo(px+l, py+a, px+l-r, py+a);
+    x.lineTo(px+r, py+a); x.quadraticCurveTo(px, py+a, px, py+a-r);
+    x.lineTo(px, py+r); x.quadraticCurveTo(px, py, px+r, py); x.closePath();
+    if(fill){ x.fillStyle = fill; x.fill(); }
+    if(borda){ x.strokeStyle = borda; x.lineWidth = 1; x.stroke(); }
+  }
+
+  /* mede a altura antes de desenhar */
+  var nCam = D.cams.length, nComb = D.comb.length, nAcao = D.acoes.length;
+  var A = 150 + 40 + 110 + 150 + 60 + (nCam+1)*38 + 70 + (nComb?(nComb+1)*38+70:0)
+          + 150 + 70 + (nAcao+1)*52 + 120;
+
+  c.width = L*esc; c.height = A*esc;
+  x.scale(esc, esc);
+  x.fillStyle = '#FFFFFF'; x.fillRect(0,0,L,A);
+
+  /* ---------- cabeçalho ---------- */
+  var g = x.createLinearGradient(0,0,L,124);
+  g.addColorStop(0, VE); g.addColorStop(.5,'#17663a'); g.addColorStop(1,'#1f8448');
+  x.fillStyle = g; x.fillRect(0,0,L,124);
+  x.fillStyle = '#FFFFFF';
+  x.beginPath(); x.moveTo(0,0); x.lineTo(470,0); x.lineTo(408,124); x.lineTo(0,124);
+  x.closePath(); x.fill();
+  x.fillStyle = AM; x.fillRect(0,124,L,7);
+
+  txt('RELATÓRIO INTERNO', L-36, 62, 22, '#FFFFFF', '700', 'right');
+  txt('GESTÃO DE FROTA  •  ' + D.unidades, L-36, 86, 12, '#a9dcc0', '600', 'right');
+
+  var y = 131;
+  function desenhaResto(){
+    y = 131 + 46;
+    txt('RELATÓRIO DE ', 36, y, 38, VE, '700');
+    var w1 = x.measureText('RELATÓRIO DE ').width;
+    txt('PRODUÇÃO', 36 + w1, y, 38, AM, '700');
+    y += 30;
+    txt(D.periodo + '   |   ' + D.unidades + '   |   ' + nCam + ' caminhões   |   ' +
+        D.dias + ' dias com produção', 36, y, 15, '#2f3b35');
+
+    /* ---------- cartões ---------- */
+    y += 26;
+    var lg = (L - 72 - 3*16)/4;
+    D.kpis.forEach(function(k,i){
+      var px = 36 + i*(lg+16);
+      cx(px, y, lg, 84, 12, '#FBFDFB', '#DFE8E2');
+      txt(k[0], px+18, y+30, 12.5, '#41514A', '600');
+      txt(k[1], px+18, y+66, 30, V, '700');
+    });
+    y += 84 + 22;
+
+    /* ---------- resumo ---------- */
+    var ah = 30 + D.resumo.length*24;
+    cx(36, y, L-72, ah, 12, '#F7F8F4', '#EDEFE7');
+    x.fillStyle = AM; x.fillRect(36, y, 5, ah);
+    txt('RESUMO EXECUTIVO', 62, y+26, 17, AM, '700');
+    D.resumo.forEach(function(t,i){ txt(t, 62, y+52+i*24, 15, '#26312C'); });
+    y += ah + 26;
+
+    /* ---------- tabela de produção ---------- */
+    y = tabela(y, '  DESEMPENHO POR CAMINHÃO', D.colProd, D.cams);
+
+    /* ---------- tabela de consumo ---------- */
+    if(nComb) y = tabela(y, '  CONSUMO POR VEÍCULO', D.colComb, D.comb);
+
+    /* ---------- pontos de atenção ---------- */
+    txt('PONTOS DE ATENÇÃO', 36, y+22, 19, VE, '700');
+    x.strokeStyle = V; x.lineWidth = 2; x.beginPath();
+    x.moveTo(300, y+16); x.lineTo(L-36, y+16); x.stroke();
+    y += 38;
+    var la = (L - 72 - 3*14)/4;
+    D.atencao.forEach(function(a,i){
+      var px = 36 + i*(la+14);
+      cx(px, y, la, 96, 10, '#FBFDFB', '#DFE8E2');
+      txt(a[0], px+14, y+24, 11, '#6D7D75', '600');
+      txt(a[1], px+14, y+52, 21, a[3] || VE, '700');
+      txt(a[2][0], px+14, y+72, 12.5, '#4A5A53');
+      if(a[2][1]) txt(a[2][1], px+14, y+88, 12.5, '#4A5A53');
+    });
+    y += 96 + 30;
+
+    /* ---------- plano de ação ---------- */
+    txt('PLANO DE AÇÃO', 36, y+22, 19, VE, '700');
+    x.strokeStyle = V; x.lineWidth = 2; x.beginPath();
+    x.moveTo(230, y+16); x.lineTo(L-36, y+16); x.stroke();
+    y += 34;
+    x.fillStyle = VE; x.fillRect(36, y, L-72, 34);
+    txt('PRIOR.', 56, y+22, 12.5, '#FFF', '600');
+    txt('AÇÃO', 130, y+22, 12.5, '#FFF', '600');
+    txt('RESPONSÁVEL', L-470, y+22, 12.5, '#FFF', '600');
+    txt('PRAZO', L-300, y+22, 12.5, '#FFF', '600');
+    txt('GANHO ESTIMADO', L-170, y+22, 12.5, '#FFF', '600');
+    y += 34;
+    var cp = {1:VM, 2:AM, 3:V};
+    D.acoes.forEach(function(a,i){
+      var alt = 52;
+      if(i%2) { x.fillStyle = '#F7FAF8'; x.fillRect(36, y, L-72, alt); }
+      x.strokeStyle = '#E6ECE8'; x.lineWidth = 1;
+      x.beginPath(); x.moveTo(36, y+alt); x.lineTo(L-36, y+alt); x.stroke();
+      x.beginPath(); x.arc(66, y+alt/2, 12, 0, 6.284); x.fillStyle = cp[a.p]; x.fill();
+      txt(a.p, 66, y+alt/2+5, 13, '#FFF', '700', 'center');
+      var linhas = quebra(a.acao, 640, 13.5);
+      linhas.slice(0,2).forEach(function(t,k){
+        txt(t, 130, y+alt/2 + (linhas.length>1 ? -4+k*17 : 5), 13.5, '#2B3A33');
+      });
+      txt(a.resp, L-470, y+alt/2+5, 13, '#2B3A33');
+      txt(a.prazo, L-300, y+alt/2+5, 13, '#2B3A33');
+      txt(a.ganho, L-170, y+alt/2+5, 13, VE, '700');
+      y += alt;
+    });
+
+    y += 26;
+    txt(D.rodape, 36, y, 11, '#9AA8A1');
+    txt(D.rodape2, 36, y+16, 11, '#9AA8A1');
+
+    c.toBlob(function(b){
+      var u = URL.createObjectURL(b), t = document.createElement('a');
+      t.href = u; t.download = 'relatorio-producao.png';
+      document.body.appendChild(t); t.click(); t.remove();
+      setTimeout(function(){ URL.revokeObjectURL(u); }, 1500);
+    }, 'image/png');
+  }
+
+  function quebra(t, larg, tam){
+    x.font = '400 ' + tam + 'px ' + F;
+    var p = String(t).split(' '), fora = [], atual = '';
+    p.forEach(function(w){
+      var teste = atual ? atual + ' ' + w : w;
+      if(x.measureText(teste).width > larg && atual){ fora.push(atual); atual = w; }
+      else atual = teste;
+    });
+    if(atual) fora.push(atual);
+    return fora;
+  }
+
+  function tabela(y, titulo, cols, dados){
+    txt(titulo.trim(), 36, y+22, 19, VE, '700');
+    x.strokeStyle = V; x.lineWidth = 2; x.beginPath();
+    x.moveTo(36 + x.measureText(titulo.trim()).width + 24, y+16); x.lineTo(L-36, y+16); x.stroke();
+    y += 34;
+    var lg = (L-72)/cols.length;
+    x.fillStyle = VE; x.fillRect(36, y, L-72, 34);
+    cols.forEach(function(t,i){ txt(t, 36+lg*i+lg/2, y+22, 12, '#FFF', '600', 'center'); });
+    y += 34;
+    dados.forEach(function(lin,k){
+      if(k%2){ x.fillStyle = '#F7FAF8'; x.fillRect(36, y, L-72, 38); }
+      x.strokeStyle = '#E6ECE8'; x.lineWidth = 1;
+      x.beginPath(); x.moveTo(36, y+38); x.lineTo(L-36, y+38); x.stroke();
+      lin.forEach(function(cel,i){
+        var cor = '#2B3A33', peso = '400';
+        if(typeof cel === 'object'){ cor = cel.c; peso = '700'; cel = cel.t; }
+        else if(i === 1){ cor = VE; peso = '700'; }
+        else if(i === 0){ cor = V; peso = '700'; }
+        txt(cel, 36+lg*i+lg/2, y+25, 13.5, cor, peso, 'center');
+      });
+      y += 38;
+    });
+    return y + 26;
+  }
+
+  /* a logo entra primeiro; o resto é desenhado depois que ela carrega */
+  if(D.logo){
+    var im = new Image();
+    im.onload = function(){
+      var alt = 88, larg = im.width * (alt/im.height);
+      x.drawImage(im, 34, 18, larg, alt);
+      desenhaResto();
+    };
+    im.onerror = desenhaResto;
+    im.src = D.logo;
+  } else desenhaResto();
+}
+
+function compartilhar(){
+  var t = document.getElementById('resumoTexto').value;
+  if(navigator.share){ navigator.share({title:'Relatório de Produção — DM Agrícola', text:t}); return; }
+  window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank');
+}
+<\/script>
+<textarea id="resumoTexto" style="display:none">${resumoTexto().replace(/</g,'&lt;')}</textarea>
+<script>window.__dados = ${JSON.stringify({
+  logo: logo,
+  unidades: unidades,
+  periodo: dataBR(datas[0]) + ' a ' + dataBR(datas[datas.length-1]),
+  dias: datas.length,
+  kpis: [['TONELADAS', n(totT,0)], ['CARGAS', n(totC,0)],
+         ['TON / DIA TRABALHADO', n(mediaDia,1)], ['META DIÁRIA', n(META_DIA,0)]],
+  resumo: [
+    'A frota entregou ' + n(mediaDia,1) + ' t por dia efetivamente trabalhado' +
+      (META_DIA ? ', ' + (dif>=0?'acima':'abaixo') + ' da meta de ' + n(META_DIA,0) +
+       ' t (' + (dif>=0?'+':'') + dif.toFixed(1).replace('.',',') + '%).' : '.'),
+    cams[0].cod + ' lidera com ' + n(cams[0].porDia,1) + ' t/dia em ' + cams[0].nDias +
+      ' dias; ' + cams[cams.length-1].cod + ' fecha com ' + n(cams[cams.length-1].porDia,1) +
+      ' t/dia em ' + cams[cams.length-1].nDias + ' dias.',
+    cons !== null ? ('Consumo de ' + n(cons,2) + ' km/L contra meta de ' + n(ab.metas.media,2) +
+      ' — ' + R$(Math.abs(perda)) + (perda>0 ? ' gastos acima do previsto.' : ' economizados.')) : ''
+  ].filter(Boolean),
+  colProd: ['#','CAMINHÃO','TONELADAS','CARGAS','T/CARGA','DIAS','T/DIA','VS META','KM/L'],
+  cams: cams.map(function(c,i){
+    var d = META_DIA ? (c.porDia-META_DIA)/META_DIA*100 : null;
+    return [ (i+1)+'º', c.cod, n(c.ton,0), n(c.cargas,0), n(c.media,2), c.nDias, n(c.porDia,1),
+      d===null ? '—' : {t:(d>=0?'+':'')+d.toFixed(1).replace('.',',')+'%', c:(d>=0?'#1E7A4C':'#C0392B')},
+      c.kmL===null ? '—' : n(c.kmL,2) ];
+  }),
+  colComb: ['CAMINHÃO','KM RODADO','LITROS','KM/L','META','VS META','LITROS EXCESSO','CUSTO EXCESSO'],
+  comb: cams.filter(function(c){return c.kmL!==null;})
+    .sort(function(a,b){return (b.custoExtra||0)-(a.custoExtra||0);}).map(function(c){
+    var d = ab.metas.media ? (c.kmL-ab.metas.media)/ab.metas.media*100 : 0;
+    return ['', c.cod, n(c.km,0), n(c.lt,2), n(c.kmL,2), n(ab.metas.media,2),
+      {t:(d>=0?'+':'')+d.toFixed(1).replace('.',',')+'%', c:(d>=0?'#1E7A4C':'#C0392B')},
+      c.custoExtra>0 ? {t:R$(c.custoExtra), c:'#C0392B'} : '—'].slice(1);
+  }),
+  atencao: [
+    ['MAIOR PERDA DE PRODUÇÃO', piorProd.length?piorProd[0].cod:'—',
+     piorProd.length?[n(piorProd[0].perdaTon,0)+' t abaixo da meta',
+       n(piorProd[0].porDia,1)+' t/dia contra '+n(META_DIA,0)]:['Todos na meta',''], '#C0392B'],
+    ['MAIOR CUSTO DE COMBUSTÍVEL', piorComb.length?piorComb[0].cod:'—',
+     piorComb.length?[R$(piorComb[0].custoExtra)+' acima do previsto',
+       n(piorComb[0].kmL,2)+' km/L contra '+n(ab.metas.media,2)]:['Nenhum acima',''], '#C0392B'],
+    ['MAIS DIAS PARADO', piorDias.length?piorDias[0].cod:'—',
+     piorDias.length?[piorDias[0].diasFalta+' dias a menos que o líder',
+       'cerca de '+n(piorDias[0].tonParado,0)+' t perdidas']:['Frota equilibrada',''], '#C0392B'],
+    ['IMPACTO TOTAL DO PERÍODO', n(totalPerdaTon,0)+' t',
+     ['abaixo da meta de produção',
+      totalCustoComb>0 ? R$(totalCustoComb)+' em combustível' : 'combustível na meta'], '#C0392B']
+  ],
+  acoes: itens.slice(0,5).map(function(i){
+    return {p:i.p, acao:i.acao.replace(/<[^>]+>/g,''), resp:i.resp, prazo:i.prazo, ganho:i.ganho};
+  }),
+  rodape: 'Gerado em ' + new Date().toLocaleString('pt-BR') +
+    ' pelo sistema de gestão de frota da DM Agrícola.',
+  rodape2: 'As causas das diferenças — rota, carga, manutenção, condução — não constam nos dados e devem ser apuradas.'
+})};<\/script>
+</body></html>`;
+
+  const w2 = window.open('', '_blank');
+  if(!w2){ avisar('O navegador bloqueou a nova aba · libere os pop-ups'); return; }
+  w2.document.write(pag);
+  w2.document.close();
+});
+
+/* Monta um resumo curto em texto, do jeito que se manda no WhatsApp. */
+function resumoTexto(){
+  const lista = prFiltrados();
+  if(!lista.length) return '';
+  const cams = prPorCaminhao(lista).map(c => ({...c, porDia: c.nDias ? c.ton/c.nDias : 0}));
+  cams.sort((a,b) => b.porDia - a.porDia);
+  const totT = lista.reduce((s,r)=>s+r.toneladas,0);
+  const totC = lista.reduce((s,r)=>s+r.cargas,0);
+  const totD = cams.reduce((s,c)=>s+c.nDias,0);
+  const md = totD ? totT/totD : 0;
+  const datas = [...new Set(lista.map(r=>r.data))].sort();
+  const unis = [...new Set(lista.map(r=>r.unidade))].join(' e ');
+  const dif = META_DIA ? (md-META_DIA)/META_DIA*100 : 0;
+
+  let t = `*DM AGRÍCOLA — RELATÓRIO DE PRODUÇÃO*\n`;
+  t += `${dataBR(datas[0])} a ${dataBR(datas[datas.length-1])} · ${unis}\n\n`;
+  t += `Toneladas: ${n(totT,0)}\nCargas: ${n(totC,0)}\n`;
+  t += `Média: ${n(md,1)} t/dia trabalhado`;
+  t += META_DIA ? ` (meta ${n(META_DIA,0)}, ${(dif>=0?'+':'')+dif.toFixed(1)}%)\n\n` : '\n\n';
+  t += `*Classificação por t/dia*\n`;
+  cams.forEach((c,i) => {
+    t += `${i+1}º ${c.cod} — ${n(c.porDia,1)} t/dia · ${c.nDias} dias\n`;
+  });
+  if(window.abDados){
+    const ab = window.abDados();
+    const f = ab.lancamentos.filter(l=>!l.aberto);
+    if(f.length){
+      const km = f.reduce((s,l)=>s+l.kmTotal,0), lt = f.reduce((s,l)=>s+l.litros,0);
+      if(lt){
+        const cons = km/lt, perda = (lt - (ab.metas.media?km/ab.metas.media:0))*ab.preco;
+        t += `\n*Combustível*\n${n(cons,2)} km/L (meta ${n(ab.metas.media,2)})\n`;
+        t += perda > 0 ? `${R$(perda)} acima do previsto\n` : `${R$(-perda)} economizados\n`;
+      }
+    }
+  }
+  return t;
+}
+
+on('pr_relShare','click', async () => {
+  const txt = resumoTexto();
+  if(!txt){ avisar('Sem dados para compartilhar'); return; }
+  const titulo = 'Relatório de Produção — DM Agrícola';
+
+  /* No celular abre a folha de compartilhamento do próprio aparelho.
+     No computador, cai no WhatsApp Web. */
+  if(navigator.share){
+    try{ await navigator.share({title: titulo, text: txt}); return; }catch(e){ if(e.name === 'AbortError') return; }
+  }
+  const url = 'https://wa.me/?text=' + encodeURIComponent(txt);
+  const nova = window.open(url, '_blank');
+  if(!nova){
+    if(navigator.clipboard) navigator.clipboard.writeText(txt);
+    avisar('Resumo copiado · cole onde quiser');
+  }
+});
+
+on('pr_relCopiar','click', () => {
+  const txt = document.getElementById('pr_relCorpo').innerText;
+  if(navigator.clipboard) navigator.clipboard.writeText(txt);
+  avisar('Relatório copiado');
 });
 
 /* =========================================================
