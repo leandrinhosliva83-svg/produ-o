@@ -1,5 +1,5 @@
 {
-  "publicadoEm": "2026-09-02T00:25:06.807Z",
+  "publicadoEm": "2026-09-02T01:31:42.667Z",
   "metas": {
     "media": 1.2,
     "rendimento": 90
@@ -44,6 +44,15 @@
     },
     {
       "data": "2026-08-29",
+      "veiculo": "929255",
+      "kmIni": 52443,
+      "kmFim": 52967,
+      "litros": 321.29,
+      "peso": 70,
+      "id": "a5"
+    },
+    {
+      "data": "2026-08-29",
       "veiculo": "929240",
       "kmIni": 145073,
       "kmFim": 145300,
@@ -53,30 +62,30 @@
     },
     {
       "data": "2026-08-29",
+      "veiculo": "929245",
+      "kmIni": 155129,
+      "kmFim": 155495,
+      "litros": 243.75,
+      "peso": 70,
+      "id": "a7"
+    },
+    {
+      "data": "2026-08-29",
+      "veiculo": "929200",
+      "kmIni": 240420,
+      "kmFim": null,
+      "litros": 0,
+      "peso": 70,
+      "id": "a8"
+    },
+    {
+      "data": "2026-08-29",
       "veiculo": "929250",
       "kmIni": 57610,
       "kmFim": 57893,
       "litros": 326.04,
       "peso": 70,
       "id": "a9"
-    },
-    {
-      "data": "2026-09-02",
-      "veiculo": "929245",
-      "kmIni": 156256,
-      "kmFim": 156575,
-      "litros": 326.64,
-      "peso": 70,
-      "id": "rmtjcn1qmx7qm"
-    },
-    {
-      "data": "2026-09-02",
-      "veiculo": "929250",
-      "kmIni": 58607,
-      "kmFim": 58990,
-      "litros": 402.92,
-      "peso": 70,
-      "id": "rmtjcoubnlhbs"
     }
   ]
 }
