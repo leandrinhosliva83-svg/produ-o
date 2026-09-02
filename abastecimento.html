@@ -356,6 +356,8 @@
   .meta-un{font-size:9px; letter-spacing:.08em; color:#7E919B; text-transform:none}
   @media (max-width:760px){ .meta-un{display:none} }
 
+  #abRelPdf{background:#C0392B;border-color:#C0392B;color:#FFF;font-weight:600}
+  #abRelPdf:hover{background:#D64535;border-color:#D64535}
   #pr_relPdf.btn-pdf{background:#C0392B;border-color:#C0392B;color:#FFFFFF;font-weight:600}
   #pr_relPdf.btn-pdf:hover{background:#D64535;border-color:#D64535}
   #pr_relShare{border-color:#25D366;color:#25D366}
@@ -404,6 +406,14 @@
                letter-spacing:0; margin-top:2px; color:#6E828C; font-weight:500}
   .chip.ativo .c-med{color:var(--ambar)}
   .chip .c-med.ok{color:var(--verde)} .chip .c-med.ruim{color:var(--vermelho)}
+  .mm{padding:5px 11px; font-size:12px}
+  .mm.ativo{border-color:var(--ambar); color:var(--ambar); background:rgba(232,163,61,.10)}
+  .cmp, .cmp-dif, .cmpv, .cmpv-dif{padding:5px 11px; font-size:12px}
+  #btnConsumo.ativo{border-color:var(--ambar); color:var(--ambar); background:rgba(232,163,61,.12)}
+  #btnRendimento.ativo{border-color:var(--azul); color:var(--azul); background:rgba(111,168,220,.12)}
+  #btnCompararVeic.ativo{border-color:var(--verde); color:var(--verde); background:rgba(79,178,134,.12)}
+  .cmpv.ativo, .cmpv-dif.ativo{border-color:var(--ambar); color:var(--ambar);
+                               background:rgba(232,163,61,.10)}
   .cmp, .cmp-dif{padding:5px 11px; font-size:12px}
   .cmp.ativo, .cmp-dif.ativo{border-color:var(--ambar); color:var(--ambar);
                              background:rgba(232,163,61,.10)}
@@ -5087,16 +5097,54 @@ CEMMA|5.01.01.0008
 
   <div class="barra-acoes barra-graficos">
     <button class="ghost c-neutro" id="btnInicio">Início</button>
-    <button class="ghost c-ambar" id="btnConsumo">Gráfico de consumo</button>
-    <button class="ghost c-azul" id="btnRendimento">Gráfico de rendimento energético</button>
+    <button class="ghost c-ambar" id="btnConsumo">Consumo km/L</button>
+    <button class="ghost c-azul" id="btnRendimento">Rendimento energético</button>
+    <button class="ghost c-verde" id="btnCompararVeic">Comparar veículos</button>
+    <button class="ghost c-roxo" id="btnRelAbast">Relatório de consumo</button>
   </div>
+  <div class="relatorio" id="relAbast" hidden>
+    <div class="rel-topo">
+      <div class="rel-tit">Relatório de consumo</div>
+      <div class="seletor">
+        <button class="btn-pdf" id="abRelPdf">Baixar PDF</button>
+        <button class="ghost c-ambar" id="abRelPng">PNG</button>
+        <button class="ghost c-verde" id="abRelShare">Compartilhar</button>
+        <button class="ghost" id="abRelFechar">&times;</button>
+      </div>
+    </div>
+    <div class="rel-corpo" id="abRelCorpo"></div>
+  </div>
+
   <div class="painel-grafico" id="painelGrafico" hidden>
     <div class="grafico-topo">
       <div class="titulo" id="tituloGrafico">Evolução por data</div>
       <div class="seletor">
-        <button class="ghost ativo" data-metrica="media">Consumo</button>
-        <button class="ghost" data-metrica="rendimento">Rendimento energético</button>
-        <button class="ghost" data-metrica="litros">Litros</button>
+
+        <label class="per-campo" style="margin-right:6px">Veículo
+          <select id="selVeicGraf"><option value="">Todos</option></select>
+        </label>
+        <label class="per-campo est" style="margin-right:6px">Mês
+          <select id="selMesGraf"><option value="">Todo o período</option></select>
+        </label>
+        <label class="per-campo est" style="margin-right:6px">Eixo
+          <select id="selEixo">
+            <option value="data">Por data</option>
+            <option value="ordem">Por ordem</option>
+          </select>
+        </label>
+        <label class="per-campo est" style="margin-right:6px">Modelo
+          <select id="selEstilo">
+            <option value="linha">Linha</option>
+            <option value="area">Área</option>
+            <option value="barras">Barras</option>
+            <option value="pontos">Pontos</option>
+          </select>
+        </label>
+        <button class="ghost cmpv" data-cmpv="consumo">km/L</button>
+        <button class="ghost cmpv" data-cmpv="rend">Rendimento</button>
+        <button class="ghost cmpv-dif" id="btnDifVeic">diferença da meta</button>
+        <button class="ghost c-vermelho" id="btnGrafPdf">PDF</button>
+        <button class="ghost c-ambar" id="btnGrafPng">PNG</button>
         <button class="ghost" id="btnFechar" title="Fechar o gráfico">&times;</button>
       </div>
     </div>
@@ -5353,6 +5401,7 @@ CEMMA|5.01.01.0008
     <button class="ghost c-ambar" id="pr_btnGrafTon">Gráfico de toneladas</button>
     <button class="ghost c-azul" id="pr_btnGrafMedia">Gráfico de média</button>
     <button class="ghost c-verde" id="pr_btnComparar">Comparar caminhões</button>
+    <button class="ghost c-roxo" id="pr_btnMensal">Mês a mês</button>
     <button class="ghost c-roxo" id="pr_btnRelatorio">Gerar relatório</button>
     <button class="ghost c-ciano" id="pr_btnCsv">Baixar CSV</button>
   </div>
@@ -5374,15 +5423,23 @@ CEMMA|5.01.01.0008
   <div class="painel-grafico" id="pr_painelGrafico" hidden>
     <div class="grafico-topo">
       <div class="titulo" id="pr_tituloGrafico"></div>
+      <div class="seletor" id="pr_mesCtrl" hidden>
+        <button class="ghost mm ativo" data-mm="ton">Toneladas</button>
+        <button class="ghost mm" data-mm="dia">t/dia</button>
+        <button class="ghost mm" data-mm="carga">t/carga</button>
+      </div>
       <div class="seletor" id="pr_cmpCtrl" hidden>
         <button class="ghost cmp ativo" data-cmp="dia">t/dia de produção</button>
         <button class="ghost cmp" data-cmp="carga">t/carga</button>
         <button class="ghost cmp-dif" id="pr_btnDif">diferença da média</button>
       </div>
       <div class="seletor">
-        <button class="ghost gran ativo" data-gran="dia">Dia</button>
-        <button class="ghost gran" data-gran="semana">Semana</button>
-        <button class="ghost gran" data-gran="mes">Mês</button>
+        <label class="per-campo" style="margin-right:6px">Mês
+          <select id="pr_selMes"><option value="">Todo o período</option></select>
+        </label>
+
+        <button class="ghost c-vermelho" id="pr_btnGrafPdf">PDF</button>
+        <button class="ghost c-ambar" id="pr_btnGrafPng">PNG</button>
         <button class="ghost" id="pr_btnFechar">&times;</button>
       </div>
     </div>
@@ -5434,6 +5491,94 @@ window.addEventListener('error', function(ev){
     cx.insertBefore(d, cx.firstChild);
   }catch(e){}
 });
+
+/* Exporta o gráfico que está na tela. Como o desenho é vetorial e sem HTML
+   dentro, a conversão é direta: pinta num quadro e salva.
+   O PDF é montado na mão, com a imagem dentro — sai colorido sempre. */
+function salvarArquivo(nome, blob){
+  const u = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = u; a.download = nome;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(u), 1500);
+}
+
+function exportarGrafico(idPainel, nomeBase, formato){
+  const painel = document.getElementById(idPainel);
+  const svg = painel && painel.querySelector('svg.grafico');
+  if(!svg){ avisar('Abra um gráfico primeiro'); return; }
+
+  const vb = (svg.getAttribute('viewBox') || '0 0 740 320').split(/\s+/).map(Number);
+  const l = vb[2], a = vb[3];
+  const titulo = (painel.querySelector('.titulo') || {}).textContent || nomeBase;
+  const legenda = (painel.querySelector('.legenda') || {}).textContent || '';
+
+  /* refaz o desenho com fundo e título, para o arquivo não sair solto */
+  const margemT = 46, margemB = legenda ? 34 : 16;
+  const copia = svg.cloneNode(true);
+  copia.setAttribute('x', 16); copia.setAttribute('y', margemT);
+  copia.setAttribute('width', l); copia.setAttribute('height', a);
+
+  const esc = t => String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const doc = `<svg xmlns="http://www.w3.org/2000/svg" width="${l+32}" height="${a+margemT+margemB}">
+    <rect width="100%" height="100%" fill="#0B0F12"/>
+    <text x="18" y="28" fill="#EAF0F3" font-family="Arial,Helvetica,sans-serif"
+      font-size="17" font-weight="600">${esc(titulo)}</text>
+    ${new XMLSerializer().serializeToString(copia)}
+    ${legenda ? `<text x="18" y="${a+margemT+20}" fill="#8FA3AD"
+      font-family="Arial,Helvetica,sans-serif" font-size="12">${esc(legenda)}</text>` : ''}
+    <text x="${l+14}" y="${a+margemT+20}" text-anchor="end" fill="#5E7079"
+      font-family="Arial,Helvetica,sans-serif" font-size="11">DM Agrícola · ${
+        new Date().toLocaleDateString('pt-BR')}</text>
+  </svg>`;
+
+  const img = new Image();
+  img.onload = function(){
+    const k = 2;
+    const c = document.createElement('canvas');
+    c.width = (l+32)*k; c.height = (a+margemT+margemB)*k;
+    const x = c.getContext('2d');
+    x.fillStyle = '#0B0F12'; x.fillRect(0,0,c.width,c.height);
+    x.drawImage(img, 0, 0, c.width, c.height);
+
+    if(formato === 'png'){
+      c.toBlob(b => salvarArquivo(nomeBase + '.png', b), 'image/png');
+      avisar('Gráfico salvo em imagem');
+      return;
+    }
+
+    /* ---- PDF montado na mão, com o desenho como imagem ---- */
+    const jpg = c.toDataURL('image/jpeg', 0.94).split(',')[1];
+    const bin = atob(jpg);
+    const pw = 780, ph = Math.round(780 * c.height / c.width);
+    const fluxo = `q ${pw} 0 0 ${ph} 0 0 cm /Im0 Do Q`;
+    const objs = [null,
+      '<< /Type /Catalog /Pages 2 0 R >>',
+      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>`,
+      `<< /Length ${fluxo.length} >>\nstream\n${fluxo}\nendstream`];
+
+    let saida = '%PDF-1.4\n', pos = [];
+    for(let i = 1; i <= 5; i++){
+      pos[i] = saida.length;
+      if(i === 5){
+        saida += `5 0 obj\n<< /Type /XObject /Subtype /Image /Width ${c.width} /Height ${c.height}`
+              +  ` /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode`
+              +  ` /Length ${bin.length} >>\nstream\n` + bin + '\nendstream\nendobj\n';
+      } else saida += `${i} 0 obj\n${objs[i]}\nendobj\n`;
+    }
+    const ini = saida.length;
+    saida += 'xref\n0 6\n0000000000 65535 f \n';
+    for(let i = 1; i <= 5; i++) saida += ('0000000000'+pos[i]).slice(-10) + ' 00000 n \n';
+    saida += `trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${ini}\n%%EOF`;
+
+    const bytes = new Uint8Array(saida.length);
+    for(let i = 0; i < saida.length; i++) bytes[i] = saida.charCodeAt(i) & 0xff;
+    salvarArquivo(nomeBase + '.pdf', new Blob([bytes], {type:'application/pdf'}));
+    avisar('Gráfico salvo em PDF');
+  };
+  img.onerror = function(){ avisar('Não consegui converter este gráfico'); };
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(doc);
+}
 
 /* Liga um evento a um elemento. Se o elemento não existir, avisa no console
    e segue em frente — um botão faltando não pode derrubar a página inteira. */
@@ -5830,7 +5975,378 @@ function desenhar(){
 --------------------------------------------------------- */
 const ROTULOS = {media:'Consumo (km/L)', rendimento:'Rendimento energético', litros:'Litros abastecidos'};
 
+var estiloGraf = 'linha';    // linha | area | barras | pontos
+var eixoGraf = 'data';       // data | ordem
+var medidaCurva = 'media';   // media (km/L) | rendimento
+var mesGraf = '';            // '' = todo o período; senão 'aaaa-mm'
+var modoVeic = 'evolucao';   // evolucao | comparar
+var cmpVeic  = 'consumo';    // consumo | rend
+var cmpVeicDif = false;
+
+/* Colocação: troféu no primeiro, prata e bronze depois. */
+/* Curva de cada abastecimento, um ponto por lançamento.
+   Serve para ver se o consumo do caminhão está caindo, subindo ou oscilando. */
+function curvaAbastecimentos(){
+  const area = document.getElementById('areaGrafico');
+  const leg  = document.getElementById('legenda');
+  const escolhido = (document.getElementById('selVeicGraf') || {}).value || '';
+  const linhas = calcular()
+    .filter(l => !l.aberto && l[medidaCurva] !== null &&
+                 (!escolhido || l.veiculo === escolhido) &&
+                 (!mesGraf || (l.data||'').slice(0,7) === mesGraf))
+    .sort((a,b) => (a.data||'').localeCompare(b.data||''));
+  if(!linhas.length){
+    area.innerHTML = '<div class="nada">Sem abastecimentos fechados no período.</div>';
+    leg.innerHTML = ''; return;
+  }
+
+  const porV = {};
+  linhas.forEach(l => (porV[l.veiculo] = porV[l.veiculo] || []).push(l));
+  const veics = Object.keys(porV).sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true}));
+  const maxN = Math.max(...veics.map(v => porV[v].length));
+  const um = veics.length === 1;
+
+  const nomesM = ['janeiro','fevereiro','março','abril','maio','junho','julho',
+                  'agosto','setembro','outubro','novembro','dezembro'];
+  document.getElementById('tituloGrafico').textContent =
+    (medidaCurva === 'media' ? 'Consumo por abastecimento' : 'Rendimento por abastecimento') +
+    (um ? ' · veículo ' + veics[0] : '') +
+    (mesGraf ? ' · ' + nomesM[+mesGraf.slice(5,7)-1] + ' de ' + mesGraf.slice(0,4) : '');
+
+  const mobile = window.innerWidth < 700;
+  const L = mobile ? 380 : 740, A = mobile ? 290 : 320;
+  const mE = mobile ? 40 : 48, mD = mobile ? 16 : 20, mT = 34, mB = mobile ? 34 : 38;
+  const fonte = mobile ? 11 : 11;
+  const larg = L - mE - mD, alt = A - mT - mB;
+
+  /* escala apertada em torno dos valores: a variação fica visível.
+     Guardo a meta dentro da faixa para ela nunca sair da tela. */
+  const metaC = medidaCurva === 'rendimento' ? metas.rendimento : metas.media;
+  const vals = linhas.map(l => l[medidaCurva]).concat(metaC ? [metaC] : []);
+  let lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+  const folga = (hi - lo) * 0.35 || 0.2;
+  lo = Math.max(0, lo - folga); hi = hi + folga;
+
+  /* No eixo por data, a distância entre os pontos vale: dois abastecimentos
+     seguidos no mesmo dia ficam colados; um intervalo de 20 dias fica largo.
+     No eixo por ordem, todos ficam igualmente espaçados. */
+  const DIA = 86400000;
+  let tMin, tMax;
+  if(mesGraf){
+    /* Mês escolhido: o eixo cobre o mês inteiro, do dia 1 ao último,
+       mesmo nos dias em que não houve abastecimento. */
+    const ano = +mesGraf.slice(0,4), mes = +mesGraf.slice(5,7);
+    tMin = new Date(ano, mes-1, 1, 12).getTime();
+    tMax = new Date(ano, mes, 0, 12).getTime();
+  } else {
+    const tempos = linhas.map(l => new Date(l.data + 'T12:00:00').getTime());
+    tMin = Math.min.apply(null, tempos); tMax = Math.max.apply(null, tempos);
+    if(tMin === tMax){ tMin -= DIA; tMax += DIA; }
+  }
+  const nDiasEixo = Math.round((tMax - tMin)/DIA) + 1;
+
+  const px = (i, l) => eixoGraf === 'data'
+    ? mE + ((new Date(l.data + 'T12:00:00').getTime() - tMin)/(tMax - tMin))*larg
+    : (maxN > 1 ? mE + (i/(maxN-1))*larg : mE + larg/2);
+  const py = v => mT + alt - ((v-lo)/((hi-lo)||1))*alt;
+
+  let svg = '';
+
+  /* faixa da meta: tudo abaixo dela fica levemente marcado */
+  if(metaC > 0){
+    const ym = py(metaC);
+    svg += `<rect x="${mE}" y="${ym}" width="${larg}" height="${(mT+alt-ym).toFixed(1)}"
+              fill="#E0644F" opacity="0.055"/>
+            <line x1="${mE}" y1="${ym}" x2="${L-mD}" y2="${ym}" stroke="#8FA3AD"
+              stroke-width="1" stroke-dasharray="4 4" opacity="0.9"/>
+            <text x="${L-mD}" y="${ym-6}" text-anchor="end" fill="#8FA3AD"
+              font-family="IBM Plex Mono" font-size="${fonte-1}">meta ${n(metaC,2)}</text>`;
+  }
+
+  /* só dois valores no eixo: o menor e o maior. O resto é ruído. */
+  [lo, hi].forEach(v => {
+    svg += `<text x="${mE-8}" y="${(py(v)+4).toFixed(1)}" text-anchor="end" fill="#5E7079"
+              font-family="IBM Plex Mono" font-size="${fonte-1}">${n(v,2)}</text>`;
+  });
+
+  veics.forEach((v,vi) => {
+    const cor = um ? '#E8A33D' : CORES[vi % CORES.length];
+    const pts = porV[v].map((l,i) => [px(i, l), py(l[medidaCurva]), l]);
+
+    /* cada modelo desenha o mesmo dado de um jeito diferente */
+    if(estiloGraf === 'barras'){
+      const lb = eixoGraf === 'data'
+        ? Math.max(4, Math.min(22, larg/Math.max(1, linhas.length) * 0.7))
+        : Math.max(6, Math.min(30, (larg/Math.max(1,maxN)) * 0.55));
+      pts.forEach(p => {
+        const abaixo = metaC && p[2][medidaCurva] < metaC;
+        const y0 = mT + alt;
+        svg += `<rect x="${(p[0]-lb/2).toFixed(1)}" y="${p[1].toFixed(1)}"
+                  width="${lb.toFixed(1)}" height="${Math.max(1,(y0-p[1])).toFixed(1)}"
+                  rx="2" fill="${abaixo ? '#E0644F' : cor}" opacity="${abaixo?0.95:0.8}">
+                  <title>${v} · ${dataBR(p[2].data)} · ${n(p[2][medidaCurva],2)} km/L</title></rect>`;
+      });
+    } else {
+      if(pts.length > 1 && (estiloGraf === 'area' || (estiloGraf === 'linha' && um))){
+        svg += `<path d="M${pts[0][0].toFixed(1)},${(mT+alt)} ` +
+               pts.map(p=>`L${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ') +
+               ` L${pts[pts.length-1][0].toFixed(1)},${(mT+alt)} Z"
+                fill="${cor}" opacity="${estiloGraf === 'area' ? 0.22 : 0.10}"/>`;
+      }
+      if(pts.length > 1 && estiloGraf !== 'pontos'){
+        svg += `<polyline points="${pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}"
+                fill="none" stroke="${cor}" stroke-width="2.4"
+                stroke-linejoin="round" stroke-linecap="round"/>`;
+      }
+    }
+
+    /* pontos discretos; só os que ficaram abaixo da meta ganham destaque */
+    const valores = pts.map(p => p[2][medidaCurva]);
+    const iMax = valores.indexOf(Math.max.apply(null, valores));
+    const iMin = valores.indexOf(Math.min.apply(null, valores));
+    pts.forEach((p,i) => {
+      const abaixo = metaC && p[2][medidaCurva] < metaC;
+      if(estiloGraf !== 'barras')
+      svg += `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}"
+                r="${estiloGraf === 'pontos' ? (abaixo?6:5) : (abaixo?4.5:3.2)}"
+                fill="${abaixo ? '#E0644F' : '#0B0F12'}" stroke="${abaixo ? '#E0644F' : cor}"
+                stroke-width="2">
+                <title>${v} · ${i+1}º · ${dataBR(p[2].data)}
+${n(p[2][medidaCurva],2)} ${medidaCurva==='media'?'km/L':''} · ${n(p[2].kmTotal,0)} km com ${n(p[2].litros)} L</title></circle>`;
+      /* rótulo só no melhor, no pior e no último — não em todos */
+      if(um && (i === iMax || i === iMin || i === pts.length-1)){
+        const acima = p[1] > mT + 24;
+        svg += `<text x="${p[0].toFixed(1)}" y="${(p[1] + (acima ? -12 : 18)).toFixed(1)}"
+                  text-anchor="middle" fill="${abaixo ? '#E0644F' : '#C3D0D7'}"
+                  font-family="IBM Plex Mono" font-size="${fonte}"
+                  font-weight="600">${n(p[2][medidaCurva],2)}</text>`;
+      }
+    });
+  });
+
+  /* eixo horizontal enxuto: primeiro, meio e último */
+  if(eixoGraf === 'data'){
+    /* Percorre o calendário dia a dia — não só os dias com abastecimento.
+       Assim 01, 02, 03… aparecem em sequência, com os vazios no lugar certo. */
+    const soMes = nDiasEixo <= 31;
+    const cabe = Math.max(2, Math.floor(larg / (mobile ? 26 : 22)));
+    const passoD = Math.max(1, Math.ceil(nDiasEixo / cabe));
+    const comDado = new Set(linhas.map(l => l.data));
+    for(let k = 0; k < nDiasEixo; k++){
+      const dt = new Date(tMin + k*DIA);
+      const iso = dt.getFullYear() + '-' +
+                  String(dt.getMonth()+1).padStart(2,'0') + '-' +
+                  String(dt.getDate()).padStart(2,'0');
+      const marcar = (k % passoD === 0) || k === nDiasEixo-1;
+      const xx = mE + ((dt.getTime() - tMin)/((tMax-tMin)||1))*larg;
+      if(comDado.has(iso)){
+        svg += `<line x1="${xx.toFixed(1)}" y1="${mT}" x2="${xx.toFixed(1)}" y2="${mT+alt}"
+                  stroke="#2A3843" stroke-width="1"/>`;
+      } else if(marcar){
+        svg += `<line x1="${xx.toFixed(1)}" y1="${mT+alt-4}" x2="${xx.toFixed(1)}"
+                  y2="${mT+alt}" stroke="#243039" stroke-width="1"/>`;
+      }
+      if(!marcar) continue;
+      svg += `<text x="${xx.toFixed(1)}" y="${A-mB+20}" text-anchor="middle"
+                fill="${comDado.has(iso) ? '#8FA3AD' : '#4A5A64'}"
+                font-family="IBM Plex Mono" font-size="${fonte-1}">${
+                  soMes ? String(dt.getDate()).padStart(2,'0') : dataCurta(iso)}</text>`;
+    }
+    if(soMes){
+      const dt0 = new Date(tMin);
+      svg += `<text x="${mE}" y="${A-mB+36}" fill="#4A5A64" font-family="IBM Plex Mono"
+                font-size="${fonte-2}">dias de ${String(dt0.getMonth()+1).padStart(2,'0')}/${dt0.getFullYear()}</text>`;
+    }
+  } else {
+    const cabeO = Math.max(2, Math.floor(larg / (mobile ? 46 : 40)));
+    const passoO = Math.max(1, Math.ceil(maxN / cabeO));
+    for(let i = 0; i < maxN; i++){
+      if(i % passoO !== 0 && i !== maxN-1) continue;
+      svg += `<text x="${px(i,{data:linhas[0].data})}" y="${A-mB+20}" text-anchor="middle"
+                fill="#5E7079" font-family="IBM Plex Mono" font-size="${fonte-1}">${i+1}º</text>`;
+    }
+  }
+
+  /* resumo no alto, onde o olho bate primeiro */
+  const md = medidaCurva === 'media'
+    ? linhas.reduce((s,l)=>s+l.kmTotal,0) / (linhas.reduce((s,l)=>s+l.litros,0)||1)
+    : linhas.reduce((s,l)=>s+(l.rendimento||0),0) / linhas.length;
+  const fora = linhas.filter(l => metaC && l[medidaCurva] < metaC).length;
+  svg += `<text x="${mE}" y="16" fill="#7E919B" font-family="IBM Plex Mono"
+            font-size="${fonte}">média ${n(md,2)}${medidaCurva==='media'?' km/L':''}</text>
+          <text x="${mE+126}" y="16" fill="${fora ? '#E0644F' : '#4FB286'}"
+            font-family="IBM Plex Mono" font-size="${fonte}">${
+              fora ? fora + ' de ' + linhas.length + ' abaixo da meta'
+                   : 'todos na meta'}</text>`;
+
+  area.innerHTML = `<svg class="grafico" viewBox="0 0 ${L} ${A}"
+      xmlns="http://www.w3.org/2000/svg" role="img"
+      aria-label="Consumo por abastecimento">${svg}</svg>`;
+
+  leg.innerHTML = um
+    ? '<span style="color:#6E828C">cada ponto é um abastecimento &middot; ' +
+      (eixoGraf === 'data' ? 'espaçados pela data real' : 'igualmente espaçados, na ordem') + '</span>'
+    : veics.map((v,i) => `<span><i class="chave" style="background:${CORES[i%CORES.length]}"></i>${v}
+        <b style="color:#7E919B">(${porV[v].length})</b></span>`).join('');
+}
+
+function posicaoVeic(i, y, linhaAlt, fonte){
+  const cy = y + linhaAlt/2;
+  if(i === 0) return `<text x="14" y="${cy+6}" font-size="${fonte+6}">&#127942;</text>`;
+  const cores = ['#C9D0D6', '#C08457'];
+  const cor = cores[i-1] || '#5E7079';
+  return `<text x="22" y="${cy+5}" text-anchor="middle" fill="${cor}"
+            font-family="Oswald" font-size="${fonte+1}" letter-spacing=".5">${i+1}º</text>`;
+}
+
+/* Compara os veículos lado a lado no consumo, com a meta como referência. */
+function barrasVeiculos(){
+  const area = document.getElementById('areaGrafico');
+  const leg  = document.getElementById('legenda');
+  const esc2 = (document.getElementById('selVeicGraf') || {}).value || '';
+  const linhas = calcular().filter(l => !l.aberto && (!esc2 || l.veiculo === esc2));
+  if(!linhas.length){
+    area.innerHTML = '<div class="nada">Sem lançamentos fechados no período.</div>';
+    leg.innerHTML = ''; return;
+  }
+
+  const m = {};
+  linhas.forEach(l => {
+    const v = m[l.veiculo] = m[l.veiculo] || {km:0, lt:0, rend:0, n:0};
+    v.km += l.kmTotal; v.lt += l.litros; v.rend += l.rendimento || 0; v.n++;
+  });
+  const veics = Object.keys(m).map(k => ({
+    cod:k, km:m[k].km, lt:m[k].lt, n:m[k].n,
+    consumo: m[k].lt ? m[k].km/m[k].lt : 0,
+    rend: m[k].n ? m[k].rend/m[k].n : 0
+  }));
+
+  const valor = v => cmpVeic === 'rend' ? v.rend : v.consumo;
+  const meta  = cmpVeic === 'rend' ? metas.rendimento : metas.media;
+  const rotulo = cmpVeic === 'rend' ? 'Rendimento energético' : 'Consumo (km/L)';
+  document.getElementById('tituloGrafico').textContent =
+    rotulo + ' — comparativo por veículo' + (cmpVeicDif ? ' · diferença da meta' : '');
+
+  veics.sort((a,b) => valor(b) - valor(a));
+
+  const mobile = window.innerWidth < 700;
+  const linhaAlt = mobile ? 32 : 36;
+  const mE = mobile ? 92 : 118, mD = mobile ? 150 : 200, mT = 12;
+  const L = mobile ? 380 : 740;
+  const A = mT + veics.length*linhaAlt + 26;
+  const larg = L - mE - mD;
+  const fonte = mobile ? 11 : 12;
+  const ref = meta || (veics.reduce((s,v)=>s+valor(v),0)/veics.length);
+
+  let svg = `<text x="${mE+larg+mD-84}" y="${mT-1}" text-anchor="end" fill="#5E7079"
+      font-family="IBM Plex Mono" font-size="${fonte-3}">vs meta</text>
+    <text x="${mE+larg+mD-12}" y="${mT-1}" text-anchor="end" fill="#5E7079"
+      font-family="IBM Plex Mono" font-size="${fonte-3}">litros</text>`;
+
+  if(cmpVeicDif){
+    const difs = veics.map(v => ref ? (valor(v)-ref)/ref*100 : 0);
+    const maior = Math.max(1, Math.max.apply(null, difs.map(Math.abs))) * 1.15;
+    const meio = mE + larg/2;
+    svg += `<line x1="${meio}" y1="${mT}" x2="${meio}" y2="${mT+veics.length*linhaAlt}"
+              stroke="#FFFFFF" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.75"/>
+            <text x="${meio}" y="${mT+veics.length*linhaAlt+18}" text-anchor="middle"
+              fill="#FFFFFF" font-family="IBM Plex Mono" font-size="${fonte-1}">meta ${n(ref,2)}</text>`;
+    veics.forEach((v,i) => {
+      const y = mT + i*linhaAlt, d = difs[i];
+      const w = Math.abs(d)/maior * (larg/2);
+      const cor = d >= 0 ? '#4FB286' : '#E0644F';
+      const px = d >= 0 ? meio : meio - w;
+      svg += posicaoVeic(i, y, linhaAlt, fonte) +
+        `<text x="${mE-10}" y="${y+linhaAlt/2+4}" text-anchor="end" fill="#EAF0F3"
+           font-family="Oswald" font-size="${fonte+2}" letter-spacing="1">${v.cod}</text>
+         <rect x="${px.toFixed(1)}" y="${y+5}" width="${Math.max(2,w).toFixed(1)}"
+           height="${linhaAlt-14}" fill="${cor}" rx="2">
+           <title>${v.cod} · ${n(valor(v),2)} · ${n(v.km,0)} km com ${n(v.lt,0)} L</title></rect>
+         <text x="${mE+larg+mD-84}" y="${y+linhaAlt/2+4}" text-anchor="end" fill="${cor}"
+           font-family="IBM Plex Mono" font-size="${fonte}" font-weight="600">${
+             (d>=0?'+':'')+d.toFixed(1)}%</text>
+         <text x="${mE+larg+mD-12}" y="${y+linhaAlt/2+4}" text-anchor="end" fill="#7E919B"
+           font-family="IBM Plex Mono" font-size="${fonte-1}">${n(v.lt,0)} L</text>`;
+    });
+  } else {
+    const vals = veics.map(valor);
+    const vMin = Math.min.apply(null, vals.concat([ref]));
+    const vMax = Math.max.apply(null, vals.concat([ref]));
+    const base = Math.max(0, vMin - (vMax-vMin)*0.6);
+    const esc = x => (x-base)/((vMax-base)*1.06 || 1) * larg;
+    veics.forEach((v,i) => {
+      const y = mT + i*linhaAlt;
+      const w = Math.max(2, esc(valor(v)));
+      const cor = valor(v) >= ref ? '#4FB286' : '#E0644F';
+      const d = ref ? (valor(v)-ref)/ref*100 : 0;
+      svg += posicaoVeic(i, y, linhaAlt, fonte) +
+        `<text x="${mE-10}" y="${y+linhaAlt/2+4}" text-anchor="end" fill="#EAF0F3"
+           font-family="Oswald" font-size="${fonte+2}" letter-spacing="1">${v.cod}</text>
+         <rect x="${mE}" y="${y+5}" width="${larg}" height="${linhaAlt-14}" fill="#1B232A" rx="2"/>
+         <rect x="${mE}" y="${y+5}" width="${w.toFixed(1)}" height="${linhaAlt-14}" fill="${cor}" rx="2">
+           <title>${v.cod} · ${n(valor(v),2)} · ${n(v.km,0)} km com ${n(v.lt,0)} L</title></rect>
+         <text x="${mE+larg+8}" y="${y+linhaAlt/2+4}" fill="${cor}"
+           font-family="IBM Plex Mono" font-size="${fonte}" font-weight="600">${n(valor(v),2)}</text>
+         <text x="${mE+larg+mD-84}" y="${y+linhaAlt/2+4}" text-anchor="end" fill="${cor}"
+           font-family="IBM Plex Mono" font-size="${fonte-1}" opacity="0.9">${
+             (d>=0?'+':'')+d.toFixed(1)}%</text>
+         <text x="${mE+larg+mD-12}" y="${y+linhaAlt/2+4}" text-anchor="end" fill="#7E919B"
+           font-family="IBM Plex Mono" font-size="${fonte-1}">${n(v.lt,0)} L</text>`;
+    });
+    if(ref > 0){
+      const px = mE + esc(ref);
+      svg += `<line x1="${px}" y1="${mT}" x2="${px}" y2="${mT+veics.length*linhaAlt}"
+                stroke="#FFFFFF" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.75"/>
+              <text x="${px}" y="${mT+veics.length*linhaAlt+18}" text-anchor="middle"
+                fill="#FFFFFF" font-family="IBM Plex Mono" font-size="${fonte-1}">meta ${n(ref,2)}</text>`;
+    }
+  }
+
+  area.innerHTML = `<svg class="grafico" viewBox="0 -14 ${L} ${A+14}"
+      xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${rotulo}">${svg}</svg>`;
+  leg.innerHTML =
+    '<span><i class="chave" style="background:#4FB286"></i>na meta ou acima</span>' +
+    '<span><i class="chave" style="background:#E0644F"></i>abaixo da meta</span>' +
+    `<span><i class="chave" style="background:#FFFFFF"></i>meta ${n(ref,2)}</span>`;
+}
+
 function desenharGrafico(){
+  /* lista de veículos do seletor, sem perder a escolha atual */
+  const selg = document.getElementById('selVeicGraf');
+  if(selg){
+    const todos = [...new Set(dados.filter(dentroDoPeriodo).map(r => r.veiculo))]
+                    .sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true}));
+    const antes = selg.value;
+    const novo = '<option value="">Todos</option>' +
+                 todos.map(v => `<option value="${v}">Veículo ${v}</option>`).join('');
+    if(selg.innerHTML !== novo){
+      selg.innerHTML = novo;
+      selg.value = todos.indexOf(antes) > -1 ? antes : '';
+    }
+  }
+  document.querySelectorAll('.cmpv, .cmpv-dif').forEach(b =>
+    b.style.display = modoVeic === 'comparar' ? '' : 'none');
+  document.querySelectorAll('#painelGrafico .gran').forEach(b =>
+    b.style.display = modoVeic === 'evolucao' ? '' : 'none');
+  document.querySelectorAll('#painelGrafico .est').forEach(b =>
+    b.style.display = modoVeic === 'curva' ? '' : 'none');
+
+  const selm = document.getElementById('selMesGraf');
+  if(selm){
+    const nomes = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    const meses = [...new Set(dados.filter(dentroDoPeriodo).map(r => (r.data||'').slice(0,7)))]
+                    .filter(Boolean).sort();
+    const antes = selm.value;
+    const novo = '<option value="">Todo o período</option>' + meses.map(m =>
+      `<option value="${m}">${nomes[+m.slice(5,7)-1]}/${m.slice(2,4)}</option>`).join('');
+    if(selm.innerHTML !== novo){
+      selm.innerHTML = novo;
+      selm.value = meses.indexOf(antes) > -1 ? antes : '';
+      mesGraf = selm.value;
+    }
+  }
+  document.querySelectorAll('#painelGrafico .seletor button[data-metrica]').forEach(b =>
+    b.style.display = modoVeic === 'comparar' ? 'none' : '');
   const area = document.getElementById('areaGrafico');
   const legenda = document.getElementById('legenda');
   document.getElementById('tituloGrafico').textContent = ROTULOS[metrica] + ' — evolução por data';
@@ -5849,6 +6365,9 @@ function desenharGrafico(){
     }
   }
 
+
+  if(modoVeic === 'comparar'){ barrasVeiculos(); return; }
+  if(modoVeic === 'curva'){ curvaAbastecimentos(); return; }
 
   const linhas = calcular().filter(l => l.data && l[metrica] !== null && !isNaN(l[metrica]));
   if(linhas.length < 1){
@@ -6180,18 +6699,102 @@ function abrirGrafico(qual){
 }
 
 function fecharGrafico(){
+  ['btnConsumo','btnRendimento','btnCompararVeic'].forEach(function(id){
+    const b = document.getElementById(id); if(b) b.classList.remove('ativo');
+  });
   graficoAberto = false;
   document.getElementById('painelGrafico').hidden = true;
   document.getElementById('btnConsumo').classList.remove('ativo');
   document.getElementById('btnRendimento').classList.remove('ativo');
 }
 
-on('btnConsumo', 'click', () => abrirGrafico('media'));
-on('btnRendimento', 'click', () => abrirGrafico('rendimento'));
+function abrirCurva(medida){
+  const p = document.getElementById('painelGrafico');
+  if(!p.hidden && modoVeic === 'curva' && medidaCurva === medida){ fecharGrafico(); return; }
+  medidaCurva = medida;
+  modoVeic = 'curva';
+  graficoAberto = true;
+  p.hidden = false;
+  document.getElementById('btnConsumo').classList.toggle('ativo', medida === 'media');
+  document.getElementById('btnRendimento').classList.toggle('ativo', medida === 'rendimento');
+  desenharGrafico();
+  p.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+on('btnConsumo', 'click', () => abrirCurva('media'));
+on('btnRendimento', 'click', () => abrirCurva('rendimento'));
+
+on('btnGrafPdf', 'click', () => exportarGrafico('painelGrafico','grafico-consumo','pdf'));
+on('btnGrafPng', 'click', () => exportarGrafico('painelGrafico','grafico-consumo','png'));
+
+on('btnCompararVeic', 'click', () => {
+  const p = document.getElementById('painelGrafico');
+  if(!p.hidden && modoVeic === 'comparar'){ fecharGrafico(); return; }
+  document.getElementById('btnConsumo').classList.remove('ativo');
+  document.getElementById('btnRendimento').classList.remove('ativo');
+  document.getElementById('btnCompararVeic').classList.add('ativo');
+  modoVeic = 'comparar';
+  graficoAberto = true;
+  p.hidden = false;
+  document.querySelectorAll('.cmpv').forEach(b =>
+    b.classList.toggle('ativo', b.dataset.cmpv === cmpVeic));
+  desenharGrafico();
+  p.scrollIntoView({behavior:'smooth', block:'nearest'});
+});
+
+document.querySelectorAll('.cmpv').forEach(b =>
+  b.addEventListener('click', () => {
+    cmpVeic = b.dataset.cmpv;
+    document.querySelectorAll('.cmpv').forEach(x => x.classList.toggle('ativo', x === b));
+    modoVeic = 'comparar';
+    desenharGrafico();
+  }));
+
+on('selVeicGraf', 'change', () => desenharGrafico());
+on('selMesGraf', 'change', () => {
+  mesGraf = document.getElementById('selMesGraf').value;
+  desenharGrafico();
+});
+
+on('selEixo', 'change', () => {
+  eixoGraf = document.getElementById('selEixo').value;
+  try{ localStorage.setItem('abast_eixo', eixoGraf); }catch(e){}
+  desenharGrafico();
+});
+try{
+  const e = localStorage.getItem('abast_eixo');
+  if(e){ eixoGraf = e; document.getElementById('selEixo').value = e; }
+}catch(e){}
+
+on('selEstilo', 'change', () => {
+  estiloGraf = document.getElementById('selEstilo').value;
+  try{ localStorage.setItem('abast_estilo', estiloGraf); }catch(e){}
+  desenharGrafico();
+});
+try{
+  const g = localStorage.getItem('abast_estilo');
+  if(g){ estiloGraf = g; document.getElementById('selEstilo').value = g; }
+}catch(e){}
+
+on('btnCurva', 'click', () => {
+  const p = document.getElementById('painelGrafico');
+  if(!p.hidden && modoVeic === 'curva'){ fecharGrafico(); return; }
+  modoVeic = 'curva';
+  graficoAberto = true;
+  p.hidden = false;
+  desenharGrafico();
+  p.scrollIntoView({behavior:'smooth', block:'nearest'});
+});
+
+on('btnDifVeic', 'click', () => {
+  cmpVeicDif = !cmpVeicDif;
+  document.getElementById('btnDifVeic').classList.toggle('ativo', cmpVeicDif);
+  desenharGrafico();
+});
 on('btnFechar', 'click', fecharGrafico);
 
 document.querySelectorAll('.seletor button[data-metrica]').forEach(b =>
-  b.addEventListener('click', () => abrirGrafico(b.dataset.metrica)));
+  b.addEventListener('click', () => { modoVeic = 'evolucao'; abrirGrafico(b.dataset.metrica); }));
 
 function baixar(nome, texto, tipo){
   const url = URL.createObjectURL(new Blob([texto], {type:tipo}));
@@ -7254,7 +7857,9 @@ var prMetrica = 'ton';
 var prCamSel = [];        // vazio = todos os caminhões
 var prUniSel = [];        // vazio = todas as unidades
 var prGranul = 'dia';     // dia | semana | mes
-var prModo = 'evolucao';  // evolucao | comparar
+var prMes = '';           // '' = todo o período; senão 'aaaa-mm'
+var prModo = 'evolucao';  // evolucao | comparar | mensal
+var prMedMes = 'ton';     // ton | dia | carga
 var prCmpMed = 'dia';     // dia | carga — a classificação padrão é por dia de produção
 var prCmpDif = false;     // true = mostra a diferença da média
 var META_DIA = 366;       // toneladas por dia trabalhado que a frota deve entregar
@@ -7277,6 +7882,7 @@ function prFiltrados(){
     (!prUniSel.length || prUniSel.indexOf(r.unidade) > -1) &&
     (!prCamSel.length || prCamSel.indexOf(r.caminhao) > -1) &&
     (!so  || MINHA_FROTA.indexOf(r.caminhao) > -1) &&
+    (!prMes || (r.data||'').slice(0,7) === prMes) &&
     (!prPeriodo.de  || r.data >= prPeriodo.de) &&
     (!prPeriodo.ate || r.data <= prPeriodo.ate));
 }
@@ -7502,9 +8108,27 @@ function prGrafico(){
   /* Mostra os controles do modo atual. Isto precisa vir antes de qualquer
      desvio, senão no comparativo os botões nunca apareciam. */
   document.querySelectorAll('.gran').forEach(b =>
-    b.style.display = prModo === 'comparar' ? 'none' : '');
+    b.style.display = prModo === 'evolucao' ? '' : 'none');
   const ctrl = document.getElementById('pr_cmpCtrl');
   if(ctrl) ctrl.hidden = prModo !== 'comparar';
+  const ctrlM = document.getElementById('pr_mesCtrl');
+  if(ctrlM) ctrlM.hidden = prModo !== 'mensal';
+
+  const selm = document.getElementById('pr_selMes');
+  if(selm){
+    selm.parentElement.style.display = (prModo === 'comparar' || prModo === 'mensal') ? 'none' : '';
+    const nomes = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    const meses = [...new Set(prRegistros.map(r => (r.data||'').slice(0,7)))]
+                    .filter(Boolean).sort();
+    const antes = selm.value;
+    const novo = '<option value="">Todo o período</option>' + meses.map(m =>
+      `<option value="${m}">${nomes[+m.slice(5,7)-1]}/${m.slice(2,4)}</option>`).join('');
+    if(selm.innerHTML !== novo){
+      selm.innerHTML = novo;
+      selm.value = meses.indexOf(antes) > -1 ? antes : '';
+      prMes = selm.value;
+    }
+  }
   const rotGran = {dia:'por dia', semana:'por semana', mes:'por mês'}[prGranul];
   document.getElementById('pr_tituloGrafico').textContent =
     PR_ROT[prMetrica] + ' — ' + rotGran +
@@ -7518,6 +8142,7 @@ function prGrafico(){
     leg.innerHTML = ''; return;
   }
   if(prModo === 'comparar'){ prBarras(lista, area, leg); return; }
+  if(prModo === 'mensal'){ prMensal(lista, area, leg); return; }
 
   /* Agrupa conforme a segmentação escolhida: dia, semana ou mês.
      A chave vira a data que representa o período. */
@@ -7547,8 +8172,20 @@ function prGrafico(){
   const fonte = mobile ? 13 : 11;
   const larg = L - mE - mD, alt = A - mT - mB;
 
-  let tMin = new Date(datas[0]).getTime(), tMax = new Date(datas[datas.length-1]).getTime();
-  if(tMin === tMax){ tMin -= 86400000; tMax += 86400000; }
+  const DIA = 86400000;
+  let tMin, tMax;
+  if(prMes && prGranul === 'dia'){
+    /* Mês escolhido: o eixo cobre o mês inteiro, dia 1 ao último,
+       inclusive os dias em que não houve produção. */
+    var anoM = +prMes.slice(0,4), mesM = +prMes.slice(5,7);
+    tMin = new Date(anoM, mesM-1, 1, 12).getTime();
+    tMax = new Date(anoM, mesM, 0, 12).getTime();
+  } else {
+    tMin = new Date(datas[0] + 'T12:00:00').getTime();
+    tMax = new Date(datas[datas.length-1] + 'T12:00:00').getTime();
+    if(tMin === tMax){ tMin -= DIA; tMax += DIA; }
+  }
+  const nDiasEixo = Math.round((tMax - tMin)/DIA) + 1;
   const vMax = Math.max.apply(null, datas.map(val)) * 1.15 || 1;
 
   const px = t => mE + (t - tMin)/(tMax - tMin) * larg;
@@ -7562,15 +8199,40 @@ function prGrafico(){
                   font-family="IBM Plex Mono" font-size="${fonte}">${n(v, v>=100?0:2)}</text>`;
   }
 
-  const passo = Math.ceil(datas.length / (mobile ? 4 : 8));
-  datas.forEach((d,i) => {
-    if(i % passo !== 0 && i !== datas.length-1) return;
-    const rot = prGranul === 'mes' ? d.slice(5,7)+'/'+d.slice(2,4) : dataCurta(d);
-    svg += `<text x="${px(new Date(d).getTime())}" y="${A-mB+20}" text-anchor="middle"
-              fill="#8FA3AD" font-family="IBM Plex Mono" font-size="${fonte}">${rot}</text>`;
-  });
+  if(prGranul === 'dia' && nDiasEixo <= 62){
+    /* Percorre o calendário dia a dia: 01, 02, 03… inclusive os vazios. */
+    const soMes = nDiasEixo <= 31;
+    const cabe = Math.max(2, Math.floor(larg / (mobile ? 26 : 22)));
+    const passoD = Math.max(1, Math.ceil(nDiasEixo / cabe));
+    const comDado = new Set(datas);
+    for(let k = 0; k < nDiasEixo; k++){
+      const dt = new Date(tMin + k*DIA);
+      const iso = dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') +
+                  '-' + String(dt.getDate()).padStart(2,'0');
+      const marcar = (k % passoD === 0) || k === nDiasEixo-1;
+      const xx = mE + ((dt.getTime() - tMin)/((tMax-tMin)||1))*larg;
+      if(comDado.has(iso)){
+        svg += `<line x1="${xx.toFixed(1)}" y1="${mT}" x2="${xx.toFixed(1)}" y2="${mT+alt}"
+                  stroke="#2A3843" stroke-width="1"/>`;
+      }
+      if(!marcar) continue;
+      svg += `<text x="${xx.toFixed(1)}" y="${A-mB+20}" text-anchor="middle"
+                fill="${comDado.has(iso) ? '#8FA3AD' : '#4A5A64'}"
+                font-family="IBM Plex Mono" font-size="${fonte}">${
+                  soMes ? String(dt.getDate()).padStart(2,'0') : dataCurta(iso)}</text>`;
+    }
+  } else {
+    const passo = Math.ceil(datas.length / (mobile ? 4 : 8));
+    datas.forEach((d,i) => {
+      if(i % passo !== 0 && i !== datas.length-1) return;
+      const rot = prGranul === 'mes' ? d.slice(5,7)+'/'+d.slice(2,4) : dataCurta(d);
+      svg += `<text x="${px(new Date(d + 'T12:00:00').getTime())}" y="${A-mB+20}"
+                text-anchor="middle" fill="#8FA3AD" font-family="IBM Plex Mono"
+                font-size="${fonte}">${rot}</text>`;
+    });
+  }
 
-  const pts = datas.map(d => [px(new Date(d).getTime()), py(val(d)), val(d), d]);
+  const pts = datas.map(d => [px(new Date(d + 'T12:00:00').getTime()), py(val(d)), val(d), d]);
   svg += `<polyline points="${pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}"
           fill="none" stroke="#E8A33D" stroke-width="2" stroke-linejoin="round"/>`;
   pts.forEach(p => {
@@ -7614,6 +8276,109 @@ function posicao(i, y, linhaAlt, fonte){
   const cor = cores[i-1] || '#5E7079';
   return `<text x="22" y="${cy+5}" text-anchor="middle" fill="${cor}"
             font-family="Oswald" font-size="${fonte+1}" letter-spacing=".5">${i+1}º</text>`;
+}
+
+/* Barras agrupadas: um bloco por mês, uma barra por caminhão dentro dele.
+   Serve para ver quem cresceu e quem caiu de um mês para o outro. */
+function prMensal(lista, area, leg){
+  const nomes = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+
+  /* soma por mês e por caminhão */
+  const dados = {};
+  lista.forEach(r => {
+    const m = (r.data||'').slice(0,7);
+    const d = dados[m] = dados[m] || {};
+    const c = d[r.caminhao] = d[r.caminhao] || {ton:0, cargas:0, dias:{}};
+    c.ton += r.toneladas; c.cargas += r.cargas; c.dias[r.data] = 1;
+  });
+  const meses = Object.keys(dados).sort();
+  const cams = [...new Set(lista.map(r => r.caminhao))]
+                 .sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true}));
+  if(!meses.length || !cams.length){
+    area.innerHTML = '<div class="vazio-prod">Sem dados no período.</div>';
+    leg.innerHTML = ''; return;
+  }
+
+  const valor = (m,c) => {
+    const x = dados[m] && dados[m][c];
+    if(!x) return 0;
+    if(prMedMes === 'dia')   return Object.keys(x.dias).length ? x.ton/Object.keys(x.dias).length : 0;
+    if(prMedMes === 'carga') return x.cargas ? x.ton/x.cargas : 0;
+    return x.ton;
+  };
+  const rot = {ton:'Toneladas', dia:'Toneladas por dia trabalhado', carga:'Toneladas por carga'}[prMedMes];
+  document.getElementById('pr_tituloGrafico').textContent = rot + ' — mês a mês por caminhão';
+
+  const mobile = window.innerWidth < 700;
+  const L = mobile ? 380 : 760;
+  const mE = mobile ? 46 : 62, mD = 14, mT = 16, mB = 46;
+  const alt = (mobile ? 250 : 300);
+  const A = mT + alt + mB;
+  const larg = L - mE - mD;
+  const fonte = mobile ? 10 : 11;
+
+  let vMax = 0;
+  meses.forEach(m => cams.forEach(c => { const v = valor(m,c); if(v > vMax) vMax = v; }));
+  vMax = vMax * 1.12 || 1;
+
+  const lgGrupo = larg / meses.length;
+  const vaoGrupo = lgGrupo * 0.18;
+  const lgBarra = Math.max(3, (lgGrupo - vaoGrupo) / cams.length - 2);
+  const py = v => mT + alt - (v/vMax)*alt;
+
+  let svg = '';
+  for(let k = 0; k <= 4; k++){
+    const v = vMax*k/4, y = py(v);
+    svg += `<line x1="${mE}" y1="${y}" x2="${L-mD}" y2="${y}" stroke="#232D35"/>
+            <text x="${mE-8}" y="${y+4}" text-anchor="end" fill="#7E919B"
+              font-family="IBM Plex Mono" font-size="${fonte}">${n(v, vMax>=1000?0:2)}</text>`;
+  }
+
+  /* meta só faz sentido quando a medida é por dia */
+  if(prMedMes === 'dia' && META_DIA > 0 && META_DIA <= vMax){
+    const y = py(META_DIA);
+    svg += `<line x1="${mE}" y1="${y}" x2="${L-mD}" y2="${y}" stroke="#FFFFFF"
+              stroke-width="1.5" stroke-dasharray="6 4" opacity="0.8"/>
+            <text x="${L-mD-4}" y="${y-6}" text-anchor="end" fill="#FFFFFF"
+              font-family="IBM Plex Mono" font-size="${fonte}">META ${n(META_DIA,0)}</text>`;
+  }
+
+  meses.forEach((m, mi) => {
+    const x0 = mE + mi*lgGrupo + vaoGrupo/2;
+    cams.forEach((c, ci) => {
+      const v = valor(m, c);
+      if(!v) return;
+      const px = x0 + ci*(lgBarra + 2);
+      const y = py(v);
+      const cor = CORES[ci % CORES.length];
+      svg += `<rect x="${px.toFixed(1)}" y="${y.toFixed(1)}" width="${lgBarra.toFixed(1)}"
+                height="${Math.max(1, mT+alt-y).toFixed(1)}" fill="${cor}" rx="2" opacity="0.92">
+                <title>${c} · ${nomes[+m.slice(5,7)-1]}/${m.slice(0,4)} · ${n(v,2)}</title></rect>`;
+    });
+    /* linha separando os meses e o nome embaixo */
+    if(mi > 0){
+      const xs = mE + mi*lgGrupo;
+      svg += `<line x1="${xs}" y1="${mT}" x2="${xs}" y2="${mT+alt}" stroke="#1E272E"/>`;
+    }
+    svg += `<text x="${(mE + mi*lgGrupo + lgGrupo/2).toFixed(1)}" y="${mT+alt+20}"
+              text-anchor="middle" fill="#C3D0D7" font-family="Oswald"
+              font-size="${fonte+3}" letter-spacing="1">${nomes[+m.slice(5,7)-1]}/${m.slice(2,4)}</text>`;
+    /* total do mês, discreto */
+    const totMes = cams.reduce((s,c)=>s+(dados[m][c] ? dados[m][c].ton : 0), 0);
+    svg += `<text x="${(mE + mi*lgGrupo + lgGrupo/2).toFixed(1)}" y="${mT+alt+36}"
+              text-anchor="middle" fill="#5E7079" font-family="IBM Plex Mono"
+              font-size="${fonte-1}">${n(totMes,0)} t</text>`;
+  });
+
+  svg += `<line x1="${mE}" y1="${mT+alt}" x2="${L-mD}" y2="${mT+alt}" stroke="#3C4A54"/>`;
+
+  area.innerHTML = `<svg class="grafico" viewBox="0 0 ${L} ${A}"
+      xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${rot}">${svg}</svg>`;
+
+  leg.innerHTML = cams.map((c,i) =>
+    `<span><i class="chave" style="background:${CORES[i%CORES.length]}"></i>${c}</span>`).join('') +
+    (prMedMes === 'dia' && META_DIA
+      ? `<span><i class="chave" style="background:#FFFFFF"></i>meta ${n(META_DIA,0)}</span>` : '');
 }
 
 function prBarras(lista, area, leg){
@@ -7770,6 +8535,27 @@ on('pr_btnDif','click', () => {
   prGrafico();
 });
 
+on('pr_btnGrafPdf','click', () => exportarGrafico('pr_painelGrafico','grafico-producao','pdf'));
+on('pr_btnGrafPng','click', () => exportarGrafico('pr_painelGrafico','grafico-producao','png'));
+
+on('pr_btnMensal','click', () => {
+  const p = document.getElementById('pr_painelGrafico');
+  if(!p.hidden && prModo === 'mensal'){ p.hidden = true; return; }
+  prModo = 'mensal';
+  p.hidden = false;
+  prGrafico();
+  p.scrollIntoView({behavior:'smooth', block:'nearest'});
+});
+
+document.querySelectorAll('.mm').forEach(b =>
+  b.addEventListener('click', () => {
+    prMedMes = b.dataset.mm;
+    document.querySelectorAll('.mm').forEach(x => x.classList.toggle('ativo', x === b));
+    prModo = 'mensal';
+    document.getElementById('pr_painelGrafico').hidden = false;
+    prGrafico();
+  }));
+
 on('pr_btnComparar','click',  () => {
   const p = document.getElementById('pr_painelGrafico');
   if(!p.hidden && prModo === 'comparar'){ p.hidden = true; return; }
@@ -7781,6 +8567,12 @@ on('pr_btnComparar','click',  () => {
   p.scrollIntoView({behavior:'smooth', block:'nearest'});
 });
 on('pr_btnFechar','click', () => { document.getElementById('pr_painelGrafico').hidden = true; });
+
+on('pr_selMes','change', () => {
+  prMes = document.getElementById('pr_selMes').value;
+  prDesenhar();
+  if(!document.getElementById('pr_painelGrafico').hidden) prGrafico();
+});
 
 document.querySelectorAll('.gran').forEach(b =>
   b.addEventListener('click', () => {
@@ -7844,6 +8636,90 @@ function gerarRelatorio(){
   } else {
     t += '. Sem meta definida para comparar.';
   }
+
+  /* ---------- desvios: o que fugiu do padrão, medido ---------- */
+  const desvios = [];
+  const cams2 = cams.map(c => ({...c, porDia: c.nDias ? c.ton/c.nDias : 0}));
+  const mediaFrota = mediaDia;
+
+  cams2.forEach(c => {
+    const dp = mediaFrota ? (c.porDia - mediaFrota)/mediaFrota*100 : 0;
+    if(Math.abs(dp) >= 8) desvios.push({
+      grau: Math.abs(dp), cod: c.cod, tipo: dp < 0 ? 'ruim' : 'bom',
+      txt: `<b>${c.cod}</b> está ${pct(dp)} em relação à média da frota em produção diária
+            (${v(c.porDia,1)} contra ${v(mediaFrota,1)} t/dia).`
+    });
+  });
+
+  if(META_DIA > 0) cams2.forEach(c => {
+    const dm = (c.porDia - META_DIA)/META_DIA*100;
+    if(dm <= -10) desvios.push({
+      grau: Math.abs(dm)+5, cod: c.cod, tipo:'ruim',
+      txt: `<b>${c.cod}</b> ficou ${pct(dm)} da meta de ${v(META_DIA,0)} t/dia — são
+            ${v((META_DIA-c.porDia)*c.nDias,0)} t que deixaram de sair no período.`
+    });
+  });
+
+  const maxD = Math.max(...cams2.map(c=>c.nDias));
+  cams2.forEach(c => {
+    const falta = maxD - c.nDias;
+    if(falta >= 5) desvios.push({
+      grau: falta*2, cod: c.cod, tipo:'ruim',
+      txt: `<b>${c.cod}</b> trabalhou ${c.nDias} dias contra ${maxD} do mais assíduo —
+            ${falta} dias parados, cerca de ${v(falta*c.porDia,0)} t não produzidas.`
+    });
+  });
+
+  if(window.abDados){
+    const abx = window.abDados();
+    const fx = abx.lancamentos.filter(l => !l.aberto);
+    const pv = {};
+    fx.forEach(l => { const x = pv[l.veiculo] = pv[l.veiculo] || {km:0,lt:0};
+                      x.km += l.kmTotal; x.lt += l.litros; });
+    Object.keys(pv).forEach(k => {
+      const co = pv[k].lt ? pv[k].km/pv[k].lt : 0;
+      if(!abx.metas.media || !co) return;
+      const dc = (co - abx.metas.media)/abx.metas.media*100;
+      if(dc <= -10){
+        const extra = pv[k].lt - pv[k].km/abx.metas.media;
+        desvios.push({grau: Math.abs(dc)+8, cod:k, tipo:'ruim',
+          txt: `<b>${k}</b> consumiu ${pct(dc)} abaixo da meta de combustível
+                (${v(co,2)} contra ${v(abx.metas.media,2)} km/L) —
+                <b class="ruim">${R$(extra*abx.preco)}</b> a mais no período.`});
+      }
+    });
+  }
+
+  desvios.sort((a,b) => b.grau - a.grau);
+
+  if(desvios.length){
+    t += `<h4>Desvios encontrados</h4><ul>` +
+      desvios.slice(0,7).map(d => `<li>${d.txt}</li>`).join('') + '</ul>';
+  } else {
+    t += `<h4>Desvios encontrados</h4>
+      <p>Nenhum caminhão fugiu mais de 8% da média da frota nem 10% das metas.
+      A operação está homogênea no período.</p>`;
+  }
+
+  /* ---------- o norte: uma frase que orienta a decisão ---------- */
+  const piorD = desvios.find(d => d.tipo === 'ruim');
+  const quantosRuins = new Set(desvios.filter(d=>d.tipo==='ruim').map(d=>d.cod)).size;
+  t += `<h4>Para onde olhar primeiro</h4><p>`;
+  if(!desvios.length){
+    t += `Com a frota equilibrada, o ganho não está em corrigir um caminhão específico —
+      está em subir o patamar de todos. O melhor entrega ${v(cams2[0].porDia,1)} t/dia;
+      levar a frota inteira a esse nível vale ${v((cams2[0].porDia - mediaFrota)*totD,0)} t no período.`;
+  } else if(quantosRuins === 1){
+    t += `O problema está concentrado no <b>${piorD.cod}</b>. Resolver esse caminhão
+      elimina a maior parte do desvio da frota — é o caso mais barato de atacar,
+      porque é um só e o retorno é imediato.`;
+  } else {
+    t += `${quantosRuins} caminhões apresentam desvio relevante, com destaque para o
+      <b>${piorD.cod}</b>. Como não é caso isolado, vale checar antes o que é comum a eles
+      — mesma frente de serviço, mesmo turno, mesma equipe de manutenção — antes de
+      tratar caminhão por caminhão.`;
+  }
+  t += `</p>`;
 
   /* ---------- extremos ---------- */
   const p = cams[0], u = cams[cams.length-1];
@@ -8265,6 +9141,78 @@ on('pr_relPdf','click', () => {
     </tr>`;
   }).join('');
 
+  /* ---- observações: leituras que os números permitem, sem inventar causa ---- */
+  const obs = [];
+
+  /* tendência: primeira metade do período contra a segunda */
+  const meio = datas[Math.floor(datas.length/2)];
+  const ini = lista.filter(r => r.data < meio), fim = lista.filter(r => r.data >= meio);
+  function tdia(arr){
+    const dias = new Set(arr.map(r=>r.data)).size || 1;
+    return arr.reduce((s,r)=>s+r.toneladas,0) / dias;
+  }
+  if(ini.length && fim.length){
+    const a1 = tdia(ini), a2 = tdia(fim);
+    const v = a1 ? (a2-a1)/a1*100 : 0;
+    obs.push(Math.abs(v) < 3
+      ? `<b>Ritmo estável.</b> A produção diária da segunda metade do período
+         (${n(a2,0)} t) ficou praticamente igual à da primeira (${n(a1,0)} t).`
+      : `<b>Tendência de ${v>0?'alta':'queda'}.</b> A segunda metade do período rendeu
+         ${n(a2,0)} t/dia contra ${n(a1,0)} t/dia da primeira — ${pc(v)}.`);
+  }
+
+  /* regularidade: quem oscila mais de um dia para o outro */
+  const irreg = cams.map(c => {
+    const seus = lista.filter(r => r.caminhao === c.cod);
+    const porDia = {};
+    seus.forEach(r => porDia[r.data] = (porDia[r.data]||0) + r.toneladas);
+    const vs = Object.values(porDia);
+    if(vs.length < 3) return null;
+    const m = vs.reduce((s,v)=>s+v,0)/vs.length;
+    const dp = Math.sqrt(vs.reduce((s,v)=>s+(v-m)*(v-m),0)/vs.length);
+    return {cod:c.cod, cv: m ? dp/m*100 : 0};
+  }).filter(Boolean).sort((a,b)=>b.cv-a.cv);
+  if(irreg.length){
+    obs.push(`<b>Regularidade.</b> O ${irreg[0].cod} é o mais irregular
+      (oscila ${irreg[0].cv.toFixed(0)}% em torno da própria média diária);
+      o ${irreg[irreg.length-1].cod} é o mais constante
+      (${irreg[irreg.length-1].cv.toFixed(0)}%). Caminhão irregular costuma
+      indicar parada, troca de frente ou variação de carga.`);
+  }
+
+  /* melhor e pior dia da frota */
+  const porDiaFrota = {};
+  lista.forEach(r => porDiaFrota[r.data] = (porDiaFrota[r.data]||0) + r.toneladas);
+  const dd = Object.keys(porDiaFrota).sort((a,b)=>porDiaFrota[b]-porDiaFrota[a]);
+  if(dd.length > 1){
+    obs.push(`<b>Amplitude diária.</b> O melhor dia foi ${dataBR(dd[0])} com
+      ${n(porDiaFrota[dd[0]],0)} t; o mais fraco, ${dataBR(dd[dd.length-1])} com
+      ${n(porDiaFrota[dd[dd.length-1]],0)} t. A distância entre eles mostra
+      quanto a operação ainda varia.`);
+  }
+
+  /* concentração: quanto o melhor caminhão representa do total */
+  const share = totT ? cams[0].ton/totT*100 : 0;
+  obs.push(`<b>Distribuição.</b> O ${cams[0].cod} respondeu por ${share.toFixed(1)}% das
+    toneladas do período. Com ${cams.length} caminhões, a divisão equilibrada seria
+    ${(100/cams.length).toFixed(1)}% para cada.`);
+
+  /* custo do combustível por tonelada produzida */
+  if(totalCustoComb > 0 && totT){
+    obs.push(`<b>Custo do desperdício.</b> O excesso de combustível equivale a
+      ${R$(totalCustoComb/totT*1000)} a cada 1.000 t produzidas — é o que se ganha
+      apenas colocando a frota na meta de consumo, sem produzir uma tonelada a mais.`);
+  }
+
+  /* quem não tem lançamento de abastecimento */
+  const semComb = cams.filter(c => c.kmL === null).map(c => c.cod);
+  if(semComb.length){
+    obs.push(`<b>Falta informação.</b> ${semComb.join(', ')}
+      ${semComb.length>1?'não têm':'não tem'} abastecimento lançado no período,
+      então ${semComb.length>1?'ficam':'fica'} de fora da análise de consumo.
+      Sem esse dado não dá para saber o custo real por tonelada.`);
+  }
+
   /* ---- plano de ação: cada linha nasce de um número, não de um palpite ---- */
   const itens = [];
   if(dobra.length) dobra.slice(0,2).forEach(c => itens.push({
@@ -8289,20 +9237,34 @@ on('pr_relPdf','click', () => {
     resp:'Programação de frota', prazo:'30 dias',
     ganho:`${n(c.tonParado,0)} t recuperáveis`}));
 
+  if(irreg.length && irreg[0].cv > 25) itens.push({
+    p:2, acao:`<b>${irreg[0].cod}</b> — produção irregular (oscila ${irreg[0].cv.toFixed(0)}%
+      de um dia para o outro). Cruzar os dias fracos com escala, manutenção e frente
+      de serviço para achar o padrão.`,
+    resp:'Programação de frota', prazo:'30 dias',
+    ganho:'regularidade = previsibilidade'});
+
+  if(semComb.length) itens.push({
+    p:2, acao:`Lançar os abastecimentos de <b>${semComb.join(', ')}</b>.
+      Sem km inicial, km final e litros, esses caminhões ficam fora do controle
+      de custo e podem estar gastando mais sem ninguém ver.`,
+    resp:'Administrativo', prazo:'15 dias',
+    ganho:'visibilidade do custo real'});
+
   if(piorProd.length > 1) itens.push({
     p:3, acao:`Nivelar a frota pela referência: <b>${cams[0].cod}</b> entrega
-      ${n(cams[0].porDia,1)} t/dia. Levar os demais a esse patamar significa recuperar
+      ${n(cams[0].porDia,1)} t/dia. Levar os demais a esse patamar recupera
       a maior parte das ${n(totalPerdaTon,0)} t que faltaram para a meta.`,
     resp:'Gestão de frota', prazo:'Próxima safra',
     ganho:`até ${n(totalPerdaTon,0)} t`});
 
-  itens.push({p:3, acao:`Acompanhar semanalmente t/dia e km/L por caminhão,
-    comparando com as metas de ${n(META_DIA,0)} t/dia e
-    ${ab && ab.metas.media ? n(ab.metas.media,2)+' km/L' : 'consumo'}.`,
-    resp:'Administrativo', prazo:'Contínuo', ganho:'Correção antes do fechamento'});
+  itens.push({p:3, acao:`Acompanhar semanalmente t/dia e km/L por caminhão contra as metas
+    de ${n(META_DIA,0)} t/dia e ${ab && ab.metas.media ? n(ab.metas.media,2)+' km/L' : 'consumo'}.
+    Corrigir no meio do mês custa menos que descobrir no fechamento.`,
+    resp:'Administrativo', prazo:'Semanal', ganho:'correção antes do prejuízo'});
 
   const cp = {1:'#C0392B', 2:'#E8A33D', 3:'#1B6B3A'};
-  const acoes = itens.slice(0,6).map(i => `<tr>
+  const acoes = itens.slice(0,7).map(i => `<tr>
     <td><span class="pri" style="background:${cp[i.p]}">${i.p}</span></td>
     <td class="esq">${i.acao}</td>
     <td>${i.resp}</td><td>${i.prazo}</td>
@@ -8318,7 +9280,7 @@ on('pr_relPdf','click', () => {
   *{box-sizing:border-box;margin:0;padding:0;
      -webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
   body{font-family:Barlow,'Segoe UI',Arial,Helvetica,sans-serif;background:#8a8a8a;padding:18px}
-  .folha{width:1160px;min-height:1640px;margin:0 auto;background:#fff;position:relative;
+  .folha{width:1160px;min-height:1980px;margin:0 auto;background:#fff;position:relative;
          padding:0 0 22px}
   .topo{position:relative;height:124px;overflow:hidden;
         background:linear-gradient(100deg,${VE} 0%,#17663a 44%,#1f8448 100%)}
@@ -8382,6 +9344,10 @@ on('pr_relPdf','click', () => {
   .aten .a2{font-size:22px;font-weight:700;color:${VE};margin:3px 0 4px}
   .aten .a2.r{color:#C0392B}.aten .a2.g{color:#1E7A4C;font-size:17px}
   .aten .a3{font-size:12.5px;color:#4a5a53;line-height:1.5}
+  .obs{margin-bottom:4px}
+  .obs td{padding:5px 6px;font-size:13.5px;line-height:1.5;color:#3a4a43;vertical-align:top}
+  .obs td.bullet{width:16px;color:#E8A33D;font-size:9px;padding-top:9px}
+  .obs b{color:${VE}}
   .plano thead th{background:${VE}}
   .plano td{font-size:13.5px;text-align:center;vertical-align:middle}
   .plano td.esq{text-align:left;line-height:1.5;color:#2b3a33;font-weight:400}
@@ -8501,6 +9467,14 @@ on('pr_relPdf','click', () => {
       </td>
     </tr></table>
 
+    ${obs.length ? `
+    <table class="tit" width="100%" cellspacing="0"><tr>
+      <td width="34">${ic.grafico}</td><td width="240"><h2>OBSERVAÇÕES</h2></td>
+      <td><div class="l"></div></td></tr></table>
+    <table class="obs" width="100%" cellspacing="0">
+      ${obs.map(o => `<tr><td class="bullet">&bull;</td><td>${o}</td></tr>`).join('')}
+    </table>` : ''}
+
     <table class="tit" width="100%" cellspacing="0"><tr>
       <td width="34">${ic.plano}</td><td width="220"><h2>PLANO DE AÇÃO</h2></td>
       <td><div class="l"></div></td></tr></table>
@@ -8527,16 +9501,14 @@ on('pr_relPdf','click', () => {
     </tr></table>
   </div>
 </div>
-<div class="barra">Na janela de impressão: <b>Destino: Salvar como PDF</b> &nbsp;·&nbsp;
-  <b>Layout: Paisagem</b> &nbsp;·&nbsp; em <b>Mais definições</b>, marque
-  <b>Gráficos de plano de fundo</b> para sair colorido
-  <button class="png" onclick="baixarImagem()">&#128247; Baixar imagem colorida</button>
-  <button class="pdf" onclick="window.print()">&#11015; Imprimir / PDF</button>
+<div class="barra">O PDF e a imagem já saem coloridos, sem depender de configuração de impressão.
+  <button class="pdf" onclick="baixarPDF()">&#11015; Baixar PDF colorido</button>
+  <button class="png" onclick="baixarImagem()">&#128247; Baixar imagem</button>
   <button class="sec" onclick="compartilhar()">&#128172; Compartilhar</button></div>
 <script>
 /* Baixa o relatório como imagem. A cor vira parte do arquivo, então não
    depende de o navegador aceitar imprimir fundos. */
-function baixarImagem(){
+function desenharRelatorio(pronto){
   /* Desenha o relatório num quadro em branco, linha por linha.
      Não converte HTML: pinta cada retângulo e cada texto na mão.
      É mais código, mas funciona em qualquer navegador e sempre sai colorido. */
@@ -8672,12 +9644,7 @@ function baixarImagem(){
     txt(D.rodape, 36, y, 11, '#9AA8A1');
     txt(D.rodape2, 36, y+16, 11, '#9AA8A1');
 
-    c.toBlob(function(b){
-      var u = URL.createObjectURL(b), t = document.createElement('a');
-      t.href = u; t.download = 'relatorio-producao.png';
-      document.body.appendChild(t); t.click(); t.remove();
-      setTimeout(function(){ URL.revokeObjectURL(u); }, 1500);
-    }, 'image/png');
+    pronto(c, L, A);
   }
 
   function quebra(t, larg, tam){
@@ -8728,6 +9695,69 @@ function baixarImagem(){
     im.onerror = desenhaResto;
     im.src = D.logo;
   } else desenhaResto();
+}
+
+function baixar(nome, blob){
+  var u = URL.createObjectURL(blob), t = document.createElement('a');
+  t.href = u; t.download = nome;
+  document.body.appendChild(t); t.click(); t.remove();
+  setTimeout(function(){ URL.revokeObjectURL(u); }, 1500);
+}
+
+function baixarImagem(){
+  desenharRelatorio(function(c){
+    c.toBlob(function(b){ baixar('relatorio-producao.png', b); }, 'image/png');
+  });
+}
+
+/* Monta um PDF na mão, com o desenho dentro como imagem.
+   Sem biblioteca: um PDF é texto com objetos numerados e uma tabela de posições.
+   Como a cor está na imagem, ele sai colorido em qualquer visualizador. */
+function baixarPDF(){
+  desenharRelatorio(function(c, L, A){
+    var jpg = c.toDataURL('image/jpeg', 0.92).split(',')[1];
+    var bin = atob(jpg);
+
+    /* página com a mesma proporção do desenho, largura A4 paisagem */
+    var pw = 842, ph = Math.round(842 * A / L);
+
+    var objs = [];
+    objs[1] = '<< /Type /Catalog /Pages 2 0 R >>';
+    objs[2] = '<< /Type /Pages /Kids [3 0 R] /Count 1 >>';
+    objs[3] = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + pw + ' ' + ph + ']' +
+              ' /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>';
+    var fluxo = 'q ' + pw + ' 0 0 ' + ph + ' 0 0 cm /Im0 Do Q';
+    objs[4] = '<< /Length ' + fluxo.length + ' >>\nstream\n' + fluxo + '\nendstream';
+
+    var partes = [], pos = [], total = 0;
+    function juntar(s){ partes.push(s); total += s.length; }
+
+    juntar('%PDF-1.4\n%\u00e2\u00e3\u00cf\u00d3\n');
+    for(var i = 1; i <= 5; i++){
+      pos[i] = total;
+      if(i === 5){
+        var cab = '5 0 obj\n<< /Type /XObject /Subtype /Image /Width ' + c.width +
+                  ' /Height ' + c.height + ' /ColorSpace /DeviceRGB /BitsPerComponent 8' +
+                  ' /Filter /DCTDecode /Length ' + bin.length + ' >>\nstream\n';
+        juntar(cab); juntar(bin); juntar('\nendstream\nendobj\n');
+      } else {
+        juntar(i + ' 0 obj\n' + objs[i] + '\nendobj\n');
+      }
+    }
+    var inicioXref = total;
+    var xref = 'xref\n0 6\n0000000000 65535 f \n';
+    for(var k = 1; k <= 5; k++){
+      xref += ('0000000000' + pos[k]).slice(-10) + ' 00000 n \n';
+    }
+    xref += 'trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n' + inicioXref + '\n%%EOF';
+    juntar(xref);
+
+    /* converte tudo para bytes, respeitando o conteúdo binário da imagem */
+    var texto = partes.join('');
+    var bytes = new Uint8Array(texto.length);
+    for(var b = 0; b < texto.length; b++) bytes[b] = texto.charCodeAt(b) & 0xff;
+    baixar('relatorio-producao.pdf', new Blob([bytes], {type:'application/pdf'}));
+  });
 }
 
 function compartilhar(){
@@ -8783,7 +9813,7 @@ function compartilhar(){
      ['abaixo da meta de produção',
       totalCustoComb>0 ? R$(totalCustoComb)+' em combustível' : 'combustível na meta'], '#C0392B']
   ],
-  acoes: itens.slice(0,5).map(function(i){
+  acoes: itens.slice(0,7).map(function(i){
     return {p:i.p, acao:i.acao.replace(/<[^>]+>/g,''), resp:i.resp, prazo:i.prazo, ganho:i.ganho};
   }),
   rodape: 'Gerado em ' + new Date().toLocaleString('pt-BR') +
