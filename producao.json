@@ -324,6 +324,8 @@
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929245","data":"2026-08-29","cargas":12,"toneladas":462.28},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929245","data":"2026-08-30","cargas":10,"toneladas":377.64},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929245","data":"2026-08-31","cargas":10,"toneladas":382.8},
+{"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929245","data":"2026-09-01","cargas":2,"toneladas":79.98},
+{"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929245","data":"2026-09-02","cargas":8,"toneladas":309.48},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929250","data":"2026-05-02","cargas":8,"toneladas":302.82},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929250","data":"2026-05-03","cargas":8,"toneladas":323.44},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929250","data":"2026-05-04","cargas":12,"toneladas":446.6},
@@ -439,6 +441,7 @@
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929250","data":"2026-08-29","cargas":12,"toneladas":478.88},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929250","data":"2026-08-30","cargas":20,"toneladas":787.4},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929250","data":"2026-08-31","cargas":12,"toneladas":463.88},
+{"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929250","data":"2026-09-02","cargas":4,"toneladas":149.4},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929255","data":"2026-05-01","cargas":4,"toneladas":158.4},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929255","data":"2026-05-02","cargas":4,"toneladas":137.86},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929255","data":"2026-05-03","cargas":14,"toneladas":550.4},
@@ -553,6 +556,8 @@
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929255","data":"2026-08-29","cargas":12,"toneladas":483.26},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929255","data":"2026-08-30","cargas":10,"toneladas":400.04},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929255","data":"2026-08-31","cargas":10,"toneladas":386.8},
+{"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929255","data":"2026-09-01","cargas":2,"toneladas":74.28},
+{"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929255","data":"2026-09-02","cargas":8,"toneladas":300.6},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929260","data":"2026-05-01","cargas":2,"toneladas":67.02},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929260","data":"2026-05-02","cargas":10,"toneladas":378.66},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929260","data":"2026-05-03","cargas":8,"toneladas":306.18},
@@ -667,5 +672,7 @@
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929260","data":"2026-08-28","cargas":8,"toneladas":300.58},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929260","data":"2026-08-29","cargas":12,"toneladas":458.08},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929260","data":"2026-08-30","cargas":10,"toneladas":394.32},
-{"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929260","data":"2026-08-31","cargas":12,"toneladas":468.9}
+{"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929260","data":"2026-08-31","cargas":12,"toneladas":468.9},
+{"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929260","data":"2026-09-01","cargas":2,"toneladas":68.08},
+{"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929260","data":"2026-09-02","cargas":4,"toneladas":161.72}
 ]
