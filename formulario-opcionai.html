@@ -186,6 +186,7 @@
       <p class="ajuda" id="statusBase" style="margin:12px 0 0"></p>
       <div style="height:12px"></div>
       <button id="btnGerarBase">Gerar arquivo base.json</button>
+      <div class="linha-botoes"><button class="secundario" id="btnZerarBase">Zerar base deste aparelho</button></div>
       <p class="ajuda" id="statusGerar" style="margin:10px 0 0">Depois de gerar, envie o base.json para o GitHub, na mesma pasta do formulário.</p>
     </section>
 
@@ -302,7 +303,7 @@ document.getElementById('arq2').onchange = e => lerPlanilha(e.target.files[0]);
 /* ============================================================
    2b. BASE ONLINE (base.json) - nomes embaralhados
    ============================================================ */
-const SAL = 'frota-glpi-2026', ITER = 60000;
+const SAL = 'frota-glpi-2026', ITER = 25000;
 const codificador = new TextEncoder(), decodificador = new TextDecoder();
 let baseOnline = null;
 
@@ -351,21 +352,52 @@ async function buscarNome(mat){
 
 // gera o base.json a partir da planilha carregada
 async function gerarBase(){
-  const mats = Object.keys(baseNomes);
-  if(!mats.length){ alert('Suba a planilha primeiro.'); return; }
-  if(!window.crypto || !crypto.subtle){ alert('Gere o arquivo pelo link https, não abrindo o arquivo direto do computador.'); return; }
-  const st = document.getElementById('statusGerar');
-  const saida = {};
-  for(let i=0; i<mats.length; i++){
-    const m = mats[i];
-    saida[await idDe(m)] = await cifrar(baseNomes[m], m);
-    if(i % 50 === 0) { st.textContent = 'Gerando... ' + i + ' de ' + mats.length; await new Promise(r=>setTimeout(r)); }
+  const st  = document.getElementById('statusGerar');
+  const btn = document.getElementById('btnGerarBase');
+  try{
+    if(!window.crypto || !crypto.subtle){
+      st.textContent = 'Erro: abra pelo link https do GitHub, não pelo arquivo salvo no computador.';
+      return;
+    }
+    const mats = Object.keys(baseNomes).filter(m => /^\d+$/.test(m));
+    if(!mats.length){ st.textContent = 'Suba a planilha primeiro.'; return; }
+
+    btn.disabled = true;
+    const saida = {};
+    const inicio = Date.now();
+    for(let i=0; i<mats.length; i++){
+      const m = mats[i];
+      saida[await idDe(m)] = await cifrar(baseNomes[m], m);
+      if(i % 25 === 0){
+        const falta = Math.round((Date.now()-inicio)/(i+1) * (mats.length-i) / 1000);
+        st.textContent = 'Gerando ' + i + ' de ' + mats.length + '  (faltam ~' + falta + 's)';
+        await new Promise(r => setTimeout(r));
+      }
+    }
+
+    const blob = new Blob([JSON.stringify(saida)], {type:'application/json'});
+    const url  = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'base.json';
+    document.body.appendChild(a);      // alguns navegadores exigem estar na página
+    a.click();
+    document.body.removeChild(a);
+
+    st.innerHTML = 'Pronto: ' + mats.length + ' matrículas. Se o download não começou, ' +
+      '<a href="'+url+'" download="base.json" style="color:#A8CF45">toque aqui para baixar</a>. ' +
+      'Depois envie o base.json para o GitHub, na mesma pasta do formulário.';
+  }catch(err){
+    st.textContent = 'Erro ao gerar: ' + (err && err.message ? err.message : err);
+  }finally{
+    btn.disabled = false;
   }
-  const blob = new Blob([JSON.stringify(saida)], {type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = 'base.json'; a.click();
-  st.textContent = 'Pronto: ' + mats.length + ' matrículas. Envie o base.json para o GitHub, na mesma pasta do formulário.';
 }
+document.getElementById('btnZerarBase').onclick = function(){
+  if(!confirm('Apagar a base de matrículas deste aparelho?')) return;
+  baseNomes = {}; salvarBase(); mostrarStatusBase();
+  document.getElementById('arq1').value = '';
+  document.getElementById('arq2').value = '';
+};
 document.getElementById('btnGerarBase').onclick = gerarBase;
 
 /* ============================================================
