@@ -145,6 +145,7 @@
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929200","data":"2026-08-28","cargas":8,"toneladas":306.32},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929200","data":"2026-08-29","cargas":6,"toneladas":219.76},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929200","data":"2026-08-30","cargas":4,"toneladas":144.94},
+{"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929200","data":"2026-09-04","cargas":6,"toneladas":229.56},
 {"unidade":"COPLASA","codUnidade":"5.01.01.0008","caminhao":"929240","data":"2026-04-07","cargas":6,"toneladas":214.3},
 {"unidade":"COPLASA","codUnidade":"5.01.01.0008","caminhao":"929240","data":"2026-04-08","cargas":2,"toneladas":69},
 {"unidade":"COPLASA","codUnidade":"5.01.01.0008","caminhao":"929240","data":"2026-04-10","cargas":4,"toneladas":159.24},
@@ -427,6 +428,7 @@
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929245","data":"2026-09-02","cargas":8,"toneladas":309.48},
 {"unidade":"COPLASA","codUnidade":"5.01.01.0008","caminhao":"929245","data":"2026-09-02","cargas":2,"toneladas":64.42},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929245","data":"2026-09-03","cargas":8,"toneladas":313.62},
+{"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929245","data":"2026-09-04","cargas":16,"toneladas":617.74},
 {"unidade":"COPLASA","codUnidade":"5.01.01.0008","caminhao":"929250","data":"2026-04-07","cargas":6,"toneladas":218.68},
 {"unidade":"COPLASA","codUnidade":"5.01.01.0008","caminhao":"929250","data":"2026-04-10","cargas":6,"toneladas":209.2},
 {"unidade":"COPLASA","codUnidade":"5.01.01.0008","caminhao":"929250","data":"2026-04-11","cargas":6,"toneladas":218.1},
@@ -582,6 +584,7 @@
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929250","data":"2026-08-31","cargas":12,"toneladas":463.88},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929250","data":"2026-09-02","cargas":4,"toneladas":149.4},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929250","data":"2026-09-03","cargas":12,"toneladas":457.62},
+{"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929250","data":"2026-09-04","cargas":16,"toneladas":609.7},
 {"unidade":"COPLASA","codUnidade":"5.01.01.0008","caminhao":"929255","data":"2026-04-08","cargas":2,"toneladas":83.46},
 {"unidade":"COPLASA","codUnidade":"5.01.01.0008","caminhao":"929255","data":"2026-04-10","cargas":4,"toneladas":144.62},
 {"unidade":"COPLASA","codUnidade":"5.01.01.0008","caminhao":"929255","data":"2026-04-11","cargas":4,"toneladas":131.94},
@@ -740,6 +743,7 @@
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929255","data":"2026-09-02","cargas":8,"toneladas":300.6},
 {"unidade":"COPLASA","codUnidade":"5.01.01.0008","caminhao":"929255","data":"2026-09-02","cargas":2,"toneladas":69.28},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929255","data":"2026-09-03","cargas":10,"toneladas":375.82},
+{"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929255","data":"2026-09-04","cargas":14,"toneladas":539.54},
 {"unidade":"COPLASA","codUnidade":"5.01.01.0008","caminhao":"929260","data":"2026-04-07","cargas":8,"toneladas":304.42},
 {"unidade":"COPLASA","codUnidade":"5.01.01.0008","caminhao":"929260","data":"2026-04-08","cargas":4,"toneladas":133.64},
 {"unidade":"COPLASA","codUnidade":"5.01.01.0008","caminhao":"929260","data":"2026-04-10","cargas":10,"toneladas":373.4},
@@ -892,5 +896,6 @@
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929260","data":"2026-08-31","cargas":12,"toneladas":468.9},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929260","data":"2026-09-01","cargas":2,"toneladas":68.08},
 {"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929260","data":"2026-09-02","cargas":4,"toneladas":161.72},
-{"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929260","data":"2026-09-03","cargas":6,"toneladas":219.88}
+{"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929260","data":"2026-09-03","cargas":6,"toneladas":219.88},
+{"unidade":"CEMMA","codUnidade":"5.01.01.0008","caminhao":"929260","data":"2026-09-04","cargas":12,"toneladas":428.78}
 ]
