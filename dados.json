@@ -1,5 +1,5 @@
 {
-  "publicadoEm": "2026-09-05T16:41:44.758Z",
+  "publicadoEm": "2026-09-05T16:42:21.933Z",
   "metas": {
     "media": 1.2,
     "rendimento": 90
@@ -134,12 +134,12 @@
     },
     {
       "data": "2026-09-01",
-      "veiculo": "929245",
-      "kmIni": 156256,
-      "kmFim": 156575,
-      "litros": 326.64,
+      "veiculo": "929250",
+      "kmIni": 58990,
+      "kmFim": null,
+      "litros": 0,
       "peso": 70,
-      "id": "rmtom1aqtdito"
+      "id": "rmtom23cddoj0"
     }
   ]
 }
