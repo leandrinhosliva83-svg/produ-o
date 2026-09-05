@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Abastecimento — registro</title>
+<style>
+  /* ---------- CONFIGURAÇÃO VISUAL — DM AGRÍCOLA ---------- */
+  :root{
+    --asfalto:#0a0b0c;      /* fundo da página */
+    --chapa:#15181b;        /* fundo dos blocos */
+    --chapa-alta:#1d2126;
+    --linha:#2c3238;
+    --texto:#f1f3f4;
+    --texto-fraco:#8d979f;
+    --laranja:#f5a623;      /* destaque do banner */
+    --laranja-forte:#ff7a00;
+    --verde:#8cc63f;        /* verde do logo */
+    --erro:#ff5a4d;
+    --alerta:#f5a623;
+    --ok:#8cc63f;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:0 0 56px;
+    background:var(--asfalto); color:var(--texto);
+    font-family:"Segoe UI",Roboto,system-ui,sans-serif;
+    font-size:17px; line-height:1.45;
+    background-image:
+      radial-gradient(120% 60% at 50% 0%, #1b1f24 0%, var(--asfalto) 62%);
+  }
+  .folha{max-width:540px;margin:0 auto;padding:0 14px}
+
+  /* ---------- CABEÇALHO ---------- */
+  .capa{
+    position:relative;overflow:hidden;
+    background:#000;
+    border-bottom:4px solid var(--laranja-forte);
+    padding:22px 14px 20px;margin-bottom:22px;
+  }
+  /* estrada saindo do canto: faixa central tracejada em fuga */
+  .capa::before{
+    content:"";position:absolute;right:-70px;top:-40px;width:280px;height:260px;
+    background:repeating-linear-gradient(180deg,
+      #ffffff14 0 26px, transparent 26px 52px);
+    transform:rotate(24deg);pointer-events:none;
+  }
+  .capa-conteudo{position:relative;max-width:512px;margin:0 auto}
+  .marca{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .marca-sigla{
+    font-size:26px;font-weight:900;letter-spacing:-.03em;color:var(--laranja);
+    border-left:4px solid var(--verde);padding-left:9px;line-height:1;
+  }
+  .marca-nome{font-size:14px;font-weight:700;letter-spacing:.06em;color:#fff;line-height:1.25}
+  .marca-nome span{display:block;font-size:11px;font-weight:600;color:var(--texto-fraco);letter-spacing:.16em}
+  h1{
+    font-family:"Arial Narrow","Helvetica Neue Condensed",Impact,sans-serif;
+    font-size:clamp(34px,10vw,52px);font-weight:900;text-transform:uppercase;
+    letter-spacing:-.01em;line-height:.95;margin:0 0 10px;color:#fff;
+  }
+  h1 em{font-style:normal;color:var(--laranja)}
+  .sub{color:#9fb0ba;font-size:14.5px;margin:0;max-width:44ch}
+
+  /* faixa de sinalização */
+  .faixa{height:10px;background:repeating-linear-gradient(-45deg,
+    var(--laranja-forte) 0 14px, #000 14px 28px);}
+
+  .cartao{
+    background:var(--chapa);border:1px solid var(--linha);border-left:4px solid var(--linha);
+    border-radius:4px;padding:18px 16px;margin-bottom:14px;
+  }
+
+  label{display:block;font-size:14px;color:var(--texto-fraco);margin-bottom:6px;letter-spacing:.02em}
+  input{
+    width:100%;padding:14px 12px;font-size:23px;font-weight:600;
+    font-variant-numeric:tabular-nums;
+    border:1.5px solid var(--linha);border-radius:3px;
+    background:var(--chapa-alta);color:var(--texto);
+  }
+  input::placeholder{color:#5a646c;font-weight:400}
+  input:focus{outline:2px solid var(--laranja);outline-offset:1px;border-color:var(--laranja)}
+  input.ruim{border-color:var(--erro);background:#2a1512}
+  .campo{margin-bottom:18px}
+  .aviso-campo{font-size:14px;margin-top:6px;color:var(--erro);display:none}
+  .aviso-campo.ver{display:block}
+
+  /* histórico */
+  .hist-titulo{font-size:12px;color:var(--texto-fraco);margin:0 0 10px;letter-spacing:.14em;text-transform:uppercase}
+  .linha-hist{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--linha);font-size:15px;color:#b9c3ca}
+  .linha-hist:last-child{border-bottom:0}
+  .linha-hist b{font-variant-numeric:tabular-nums;font-weight:700;color:var(--texto)}
+  .vazio{color:var(--texto-fraco);font-size:15px;margin:0}
+
+  /* caixa de status */
+  .status{border-radius:3px;padding:12px 14px;font-size:15px;margin-bottom:16px;display:none;border-left:4px solid}
+  .status.ver{display:block}
+  .status.erro{background:#2a1512;border-color:var(--erro);color:#ffb3ab}
+  .status.alerta{background:#2b2110;border-color:var(--alerta);color:#f3cc80}
+  .status.ok{background:#17250f;border-color:var(--ok);color:#c3e39a}
+  .status ul{margin:6px 0 0 18px;padding:0}
+
+  button{
+    width:100%;padding:17px;font-size:17px;font-weight:800;
+    text-transform:uppercase;letter-spacing:.06em;
+    background:var(--laranja-forte);color:#000;border:0;border-radius:3px;cursor:pointer;
+  }
+  button:hover{background:var(--laranja)}
+  button:disabled{background:#3a4046;color:#7d868d;cursor:not-allowed}
+  .linha-botoes{display:flex;gap:10px}
+  .linha-botoes #btn{flex:1}
+  .btn-limpar{width:auto;flex:0 0 110px;background:transparent;color:var(--texto-fraco);border:1.5px solid var(--linha)}
+  .btn-limpar:hover{background:var(--chapa-alta);color:var(--texto)}
+
+  /* identificação do motorista */
+  #cartao-motorista{border-left-color:var(--verde)}
+  .ident{display:none;align-items:center;justify-content:space-between;gap:12px}
+  .ident.ver{display:flex}
+  .rot{display:block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--texto-fraco)}
+  .ident b{font-size:22px;font-weight:800;letter-spacing:.01em;color:var(--verde);text-transform:uppercase}
+  .btn-mini{width:auto;padding:9px 16px;font-size:12px;background:transparent;color:var(--texto-fraco);border:1.5px solid var(--linha)}
+  .btn-mini:hover{background:var(--chapa-alta);color:var(--texto)}
+  .dono{font-size:13px;color:var(--texto-fraco);margin-top:8px}
+  .dono b{color:var(--texto)}
+  .calc{font-size:15px;color:var(--texto-fraco);margin:0 0 16px;font-variant-numeric:tabular-nums}
+
+  /* desempenho do último abastecimento */
+  .desempenho{margin-top:16px;border-radius:3px;padding:16px;border:1px solid var(--linha);border-left:5px solid var(--linha);display:none;background:var(--chapa-alta)}
+  .desempenho.ver{display:block}
+  .desempenho.verde{background:#16240f;border-color:var(--verde)}
+  .desempenho.vermelho{background:#2a1512;border-color:var(--erro)}
+  .desempenho .numero{
+    font-family:"Arial Narrow",Impact,sans-serif;
+    font-size:46px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1;letter-spacing:-.01em;
+  }
+  .desempenho.verde .numero{color:var(--verde)}
+  .desempenho.vermelho .numero{color:var(--erro)}
+  .desempenho .conta{font-size:13.5px;color:#9aa4ac;margin-top:6px;font-variant-numeric:tabular-nums}
+  .desempenho .veredito{font-size:15px;font-weight:800;margin-top:10px;text-transform:uppercase;letter-spacing:.05em}
+  .desempenho.verde .veredito{color:var(--verde)}
+  .desempenho.vermelho .veredito{color:var(--erro)}
+
+  /* área ADM */
+  .adm summary{cursor:pointer;font-size:13px;color:var(--texto-fraco);padding:4px 0;letter-spacing:.12em;text-transform:uppercase}
+  .adm-corpo{padding-top:16px}
+  .adm input{font-size:19px;padding:11px}
+  .adm .dupla{display:flex;gap:10px}
+  .adm .dupla > div{flex:1}
+  .btn-secundario{background:transparent;color:var(--laranja);border:1.5px solid var(--laranja)}
+  .btn-secundario:hover{background:var(--laranja);color:#000}
+  .adm-msg{font-size:14px;color:var(--ok);margin:10px 0 0;min-height:18px}
+</style>
+</head>
+<body>
+
+<header class="capa">
+  <div class="capa-conteudo">
+    <div class="marca">
+      <div class="marca-sigla">DM</div>
+      <div class="marca-nome">DM AGRÍCOLA<span>GESTÃO DE FROTA</span></div>
+    </div>
+    <h1>Controle de <em>abastecimento</em></h1>
+    <p class="sub">Km total, média e rendimento por veículo, acumulando a cada lançamento.</p>
+  </div>
+</header>
+<div class="faixa"></div>
+
+<div class="folha" style="margin-top:22px">
+
+  <div class="cartao">
+    <div class="campo">
+      <label for="caminhao">Número do caminhão</label>
+      <input id="caminhao" inputmode="numeric" autocomplete="off" placeholder="ex.: 1042">
+      <div class="aviso-campo" id="err-caminhao"></div>
+    </div>
+
+    <p class="hist-titulo">Últimos registros deste caminhão</p>
+    <div id="historico"><p class="vazio">Digite o número do caminhão para carregar.</p></div>
+
+    <div class="desempenho" id="desempenho">
+      <div class="numero" id="desemp-numero">—</div>
+      <div class="conta" id="desemp-conta"></div>
+      <div class="veredito" id="desemp-veredito"></div>
+    </div>
+  </div>
+
+  <div class="cartao">
+    <div class="campo">
+      <label for="km">Hodômetro (km)</label>
+      <input id="km" inputmode="numeric" autocomplete="off" placeholder="0">
+      <div class="aviso-campo" id="err-km"></div>
+    </div>
+
+    <div class="campo">
+      <label for="litros">Litros abastecidos</label>
+      <input id="litros" inputmode="decimal" autocomplete="off" placeholder="0">
+      <div class="aviso-campo" id="err-litros"></div>
+    </div>
+
+    <p class="calc" id="calc"></p>
+    <div class="status" id="status"></div>
+    <div class="linha-botoes">
+      <button id="btn" disabled>Salvar abastecimento</button>
+      <button id="btn-limpar" class="btn-limpar">Limpar</button>
+    </div>
+  </div>
+
+  <details class="cartao adm">
+    <summary>Configurar meta (ADM)</summary>
+    <div class="adm-corpo">
+      <div class="campo">
+        <label for="adm-meta">Meta da frota (km/l) — vale para todos os caminhões</label>
+        <input id="adm-meta" inputmode="decimal" autocomplete="off" placeholder="2,5">
+      </div>
+      <button id="adm-btn" class="btn-secundario">Salvar meta</button>
+      <p class="adm-msg" id="adm-msg"></p>
+    </div>
+  </details>
+
+</div>
+
+<script>
+/* =====================================================================
+   1) CONFIGURAÇÃO — cole aqui a URL do seu Web App do Google Apps Script.
+   Enquanto estiver vazio, a tela roda em MODO DEMONSTRAÇÃO com dados fictícios.
+   ===================================================================== */
+const API_URL = "https://script.google.com/macros/s/AKfycbzetZaIFp_etY4ySrSAATdRD81dVPwiY_eE7OUDpzyQhALMZf-JYpfFzFX62BZSqOQR/exec";
+
+/* Regras de validação (ajuste os números conforme sua frota) */
+const REGRAS = {
+  saltoMaximoKm: 3000,   // acima disso, provável erro de digitação
+  litrosMaximo: 1000,    // capacidade máxima do tanque
+  consumoMin: 0.8,       // km/l -> abaixo disso é suspeito (aviso)
+  consumoMax: 6.0,       // km/l -> acima disso é suspeito (aviso)
+  consumoAbsurdoMin: 0.2,// bloqueia
+  consumoAbsurdoMax: 15  // bloqueia
+};
+
+/* Meta usada quando o caminhão ainda não tem meta própria cadastrada */
+const META_PADRAO = 2.5;
+
+/* Base fictícia usada só no modo demonstração */
+const DEMO = {
+  "1042":[{data:"2026-08-28",km:412300,litros:180},{data:"2026-09-01",km:413050,litros:195}],
+  "1108":[{data:"2026-08-30",km:98700,litros:150},{data:"2026-09-02",km:99310,litros:162}]
+};
+let DEMO_META = 3.8;   // meta única usada no modo demonstração
+
+/* Atalhos para os elementos da tela */
+const el = id => document.getElementById(id);
+const $caminhao=el("caminhao"), $km=el("km"), $litros=el("litros");
+const $btn=el("btn"), $status=el("status"), $hist=el("historico"), $calc=el("calc");
+
+let historico = [];   // [penúltimo, último] — sempre do veículo informado
+let meta = META_PADRAO;
+let carregando = false;
+
+/* ---------- 2) BUSCAR HISTÓRICO ---------- */
+async function carregarHistorico(){
+  const num = $caminhao.value.trim();
+  historico = [];
+  if(!num){
+    $hist.innerHTML='<p class="vazio">Digite o número do caminhão para carregar.</p>';
+    el("desempenho").className="desempenho";
+    validar(); return;
+  }
+
+  carregando = true;
+  $hist.innerHTML='<p class="vazio">Carregando…</p>';
+  validar();
+
+  try{
+    if(API_URL){
+      const r = await fetch(API_URL + "?acao=historico&caminhao=" + encodeURIComponent(num));
+      const j = await r.json();
+      historico = j.registros || [];
+      meta = Number(j.meta) > 0 ? Number(j.meta) : META_PADRAO;
+    }else{
+      await new Promise(r=>setTimeout(r,300));           // simula a rede
+      historico = DEMO[num] ? DEMO[num].slice() : [];
+      meta = DEMO_META;
+    }
+  }catch(e){
+    $hist.innerHTML='<p class="vazio">Não foi possível carregar o histórico. Verifique a internet.</p>';
+    carregando=false; validar(); return;
+  }
+
+  carregando = false;
+  desenharHistorico();
+  desenharDesempenho();
+  el("adm-meta").value = String(meta).replace(".", ",");
+  validar();
+}
+
+function desenharHistorico(){
+  if(historico.length===0){
+    $hist.innerHTML='<p class="vazio">Nenhum registro anterior. Este será o primeiro.</p>';
+    return;
+  }
+  const rotulos = historico.length>1 ? ["Penúltimo","Último"] : ["Último"];
+  $hist.innerHTML = historico.map((h,i)=>`
+    <div class="linha-hist">
+      <span>${rotulos[i]} · ${formatarData(h.data)}</span>
+      <span><b>${Number(h.km).toLocaleString("pt-BR")}</b> km · <b>${Number(h.litros).toLocaleString("pt-BR")}</b> L</span>
+    </div>`).join("");
+}
+
+/* Desempenho do ÚLTIMO abastecimento:
+   (km do último - km do penúltimo) / litros do último */
+function desenharDesempenho(){
+  const box=el("desempenho");
+  box.className="desempenho";
+
+  if(historico.length<2){
+    if(historico.length===1){
+      box.classList.add("ver");
+      el("desemp-numero").textContent="—";
+      el("desemp-conta").textContent="Só há um registro. O desempenho aparece a partir do segundo abastecimento.";
+      el("desemp-veredito").textContent="";
+      el("desemp-conta").textContent += ` Meta atual: ${meta.toFixed(2).replace(".",",")} km/l.`;
+    }
+    return;
+  }
+
+  const penultimo=historico[historico.length-2];
+  const ultimo=historico[historico.length-1];
+  const rodou=Number(ultimo.km)-Number(penultimo.km);
+  const litros=Number(ultimo.litros);
+  if(!(litros>0) || !(rodou>0)) return;
+
+  const feito=rodou/litros;
+  const bateu=feito>=meta;
+
+  box.classList.add("ver", bateu ? "verde" : "vermelho");
+  el("desemp-numero").textContent=feito.toFixed(2).replace(".",",")+" km/l";
+  el("desemp-conta").textContent=
+    `${Number(ultimo.km).toLocaleString("pt-BR")} − ${Number(penultimo.km).toLocaleString("pt-BR")} = `+
+    `${rodou.toLocaleString("pt-BR")} km ÷ ${litros.toLocaleString("pt-BR")} L · meta ${meta.toFixed(2).replace(".",",")} km/l`;
+  el("desemp-veredito").textContent = bateu
+    ? `Dentro da meta (+${(feito-meta).toFixed(2).replace(".",",")} km/l)`
+    : `Abaixo da meta (−${(meta-feito).toFixed(2).replace(".",",")} km/l)`;
+}
+
+function formatarData(d){
+  if(!d) return "—";
+  const p = String(d).slice(0,10).split("-");
+  return p.length===3 ? `${p[2]}/${p[1]}` : d;
+}
+
+/* ---------- 3) VALIDAÇÃO ---------- */
+function validar(){
+  const erros=[], avisos=[];
+  const num=$caminhao.value.trim();
+  const km=parseFloat($km.value.replace(",", "."));
+  const litros=parseFloat($litros.value.replace(",", "."));
+  const ultimo = historico.length ? historico[historico.length-1] : null;
+
+  marcar($caminhao,"err-caminhao","");
+  marcar($km,"err-km","");
+  marcar($litros,"err-litros","");
+
+  if(!num) erros.push("Informe o número do caminhão.");
+
+  if($km.value==="" || isNaN(km)){
+    erros.push("Informe o hodômetro.");
+  }else if(km<=0){
+    marcar($km,"err-km","O hodômetro deve ser maior que zero."); erros.push("Hodômetro inválido.");
+  }else if(ultimo && km < Number(ultimo.km)){
+    marcar($km,"err-km",`Menor que o último registro (${Number(ultimo.km).toLocaleString("pt-BR")} km). O hodômetro não anda para trás.`);
+    erros.push("Hodômetro menor que o anterior.");
+  }else if(ultimo && km === Number(ultimo.km)){
+    marcar($km,"err-km","Igual ao último registro. Confira o valor no painel.");
+    erros.push("Hodômetro repetido.");
+  }else if(ultimo && (km - Number(ultimo.km)) > REGRAS.saltoMaximoKm){
+    marcar($km,"err-km",`Salto de ${(km-Number(ultimo.km)).toLocaleString("pt-BR")} km desde o último abastecimento. Confira a digitação.`);
+    erros.push("Salto de quilometragem fora do esperado.");
+  }
+
+  if($litros.value==="" || isNaN(litros)){
+    erros.push("Informe os litros.");
+  }else if(litros<=0){
+    marcar($litros,"err-litros","Os litros devem ser maiores que zero."); erros.push("Litros inválidos.");
+  }else if(litros>REGRAS.litrosMaximo){
+    marcar($litros,"err-litros",`Acima do limite de ${REGRAS.litrosMaximo} L.`); erros.push("Litros acima do limite.");
+  }
+
+  /* consumo km/l entre este abastecimento e o anterior */
+  let consumo=null;
+  if(ultimo && km>Number(ultimo.km) && litros>0){
+    consumo=(km-Number(ultimo.km))/litros;
+    if(consumo<REGRAS.consumoAbsurdoMin || consumo>REGRAS.consumoAbsurdoMax){
+      erros.push(`Consumo calculado de ${consumo.toFixed(2)} km/l é impossível. Revise km e litros.`);
+    }else if(consumo<REGRAS.consumoMin || consumo>REGRAS.consumoMax){
+      avisos.push(`Consumo de ${consumo.toFixed(2)} km/l está fora da média (${REGRAS.consumoMin} a ${REGRAS.consumoMax} km/l).`);
+    }
+  }
+
+  if(consumo){
+    const situacao = consumo>=meta ? "dentro da meta" : "ABAIXO DA META";
+    $calc.textContent = `Este lançamento: ${(km-Number(ultimo.km)).toLocaleString("pt-BR")} km ÷ ${litros} L = `+
+      `${consumo.toFixed(2).replace(".",",")} km/l · meta ${meta.toFixed(2).replace(".",",")} · ${situacao}`;
+    $calc.style.color = consumo>=meta ? "var(--ok)" : "var(--erro)";
+  }else{
+    $calc.textContent="";
+  }
+
+  const telaVazia = !num && $km.value==="" && $litros.value==="";
+  mostrarStatus(telaVazia?[]:erros, telaVazia?[]:avisos);
+  $btn.disabled = erros.length>0 || carregando;
+  return {erros,avisos,dados:{caminhao:num,km,litros,consumo}};
+}
+
+function marcar(input,idErro,msg){
+  const box=el(idErro);
+  box.textContent=msg;
+  box.classList.toggle("ver",!!msg);
+  input.classList.toggle("ruim",!!msg);
+}
+
+function mostrarStatus(erros,avisos){
+  if(erros.length){
+    $status.className="status erro ver";
+    $status.innerHTML="Envio bloqueado:<ul>"+erros.map(e=>`<li>${e}</li>`).join("")+"</ul>";
+  }else if(avisos.length){
+    $status.className="status alerta ver";
+    $status.innerHTML="Confira antes de salvar:<ul>"+avisos.map(a=>`<li>${a}</li>`).join("")+"</ul>";
+  }else{
+    $status.className="status";
+    $status.innerHTML="";
+  }
+}
+
+/* ---------- 4) ENVIO ---------- */
+async function salvar(){
+  const v=validar();
+  if(v.erros.length) return;
+
+  $btn.disabled=true; $btn.textContent="Salvando…";
+  const registro={
+    acao:"salvar",
+    caminhao:v.dados.caminhao,
+    km:v.dados.km,
+    litros:v.dados.litros,
+    consumo:v.dados.consumo ? Number(v.dados.consumo.toFixed(2)) : "",
+    dataHora:new Date().toISOString()
+  };
+
+  try{
+    if(API_URL){
+      const r=await fetch(API_URL,{
+        method:"POST",
+        headers:{"Content-Type":"text/plain;charset=utf-8"}, // evita bloqueio de CORS
+        body:JSON.stringify(registro)
+      });
+      const j=await r.json();
+      if(!j.ok) throw new Error(j.erro||"Falha ao salvar");
+    }else{
+      await new Promise(r=>setTimeout(r,400));
+      (DEMO[registro.caminhao]=DEMO[registro.caminhao]||[]).push({
+        data:new Date().toISOString().slice(0,10),km:registro.km,litros:registro.litros
+      });
+    }
+
+    $status.className="status ok ver";
+    $status.textContent=`Salvo: caminhão ${registro.caminhao}, ${registro.km.toLocaleString("pt-BR")} km, ${registro.litros} L.`;
+    $km.value=""; $litros.value=""; $calc.textContent="";
+    await carregarHistorico();
+  }catch(e){
+    $status.className="status erro ver";
+    $status.textContent="Não foi possível salvar: "+e.message+". Tente de novo.";
+  }finally{
+    $btn.textContent="Salvar abastecimento";
+    validar();
+  }
+}
+
+/* ---------- 5) ADM: META ÚNICA DA FROTA ---------- */
+async function salvarMeta(){
+  const valor=parseFloat(el("adm-meta").value.replace(",", "."));
+  const msg=el("adm-msg");
+
+  if(!(valor>0)){ msg.style.color="var(--erro)"; msg.textContent="Meta inválida."; return; }
+
+  msg.style.color="var(--texto-fraco)";
+  msg.textContent="Salvando…";
+
+  try{
+    if(API_URL){
+      const r=await fetch(API_URL,{
+        method:"POST",
+        headers:{"Content-Type":"text/plain;charset=utf-8"},
+        body:JSON.stringify({acao:"salvarMeta",meta:valor})
+      });
+      const j=await r.json();
+      if(!j.ok) throw new Error(j.erro||"Falha ao salvar");
+    }else{
+      await new Promise(r=>setTimeout(r,300));
+      DEMO_META=valor;
+    }
+    msg.style.color="var(--ok)";
+    msg.textContent=`Meta da frota salva: ${valor.toFixed(2).replace(".",",")} km/l.`;
+    meta=valor; desenharDesempenho(); validar();
+  }catch(e){
+    msg.style.color="var(--erro)";
+    msg.textContent="Não foi possível salvar: "+e.message;
+  }
+}
+
+/* ---------- 6) LIMPAR A TELA ---------- */
+function limparTela(){
+  $caminhao.value=""; $km.value=""; $litros.value="";
+  historico=[];
+  $hist.innerHTML='<p class="vazio">Digite o número do caminhão para carregar.</p>';
+  el("desempenho").className="desempenho";
+  $calc.textContent="";
+  $status.className="status"; $status.innerHTML="";
+  el("adm-msg").textContent="";
+  validar();
+  $caminhao.focus();
+}
+
+/* ---------- 7) LIGAÇÕES ---------- */
+el("adm-btn").addEventListener("click",salvarMeta);
+el("btn-limpar").addEventListener("click",limparTela);
+$caminhao.addEventListener("change",carregarHistorico);
+$caminhao.addEventListener("blur",carregarHistorico);
+$km.addEventListener("input",validar);
+$litros.addEventListener("input",validar);
+$btn.addEventListener("click",salvar);
+el("adm-meta").value = String(meta).replace(".", ",");
+validar();
+</script>
+</body>
+</html>
