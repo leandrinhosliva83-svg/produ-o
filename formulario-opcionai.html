@@ -184,6 +184,9 @@
       <label class="campo" style="margin-top:12px">Planilha 2</label>
       <input type="file" id="arq2" accept=".xlsx,.xlsm,.xls,.csv">
       <p class="ajuda" id="statusBase" style="margin:12px 0 0"></p>
+      <div style="height:12px"></div>
+      <button id="btnGerarBase">Gerar arquivo base.json</button>
+      <p class="ajuda" id="statusGerar" style="margin:10px 0 0">Depois de gerar, envie o base.json para o GitHub, na mesma pasta do formulário.</p>
     </section>
 
     <section class="bloco">
@@ -295,27 +298,103 @@ function mostrarStatusBase(){
 document.getElementById('arq1').onchange = e => lerPlanilha(e.target.files[0]);
 document.getElementById('arq2').onchange = e => lerPlanilha(e.target.files[0]);
 
+
+/* ============================================================
+   2b. BASE ONLINE (base.json) - nomes embaralhados
+   ============================================================ */
+const SAL = 'frota-glpi-2026', ITER = 60000;
+const codificador = new TextEncoder(), decodificador = new TextDecoder();
+let baseOnline = null;
+
+const paraB64 = b => btoa(String.fromCharCode.apply(null, new Uint8Array(b)));
+const deB64 = t => Uint8Array.from(atob(t), c => c.charCodeAt(0));
+
+async function chaveDe(mat){
+  const km = await crypto.subtle.importKey('raw', codificador.encode(String(mat)), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    {name:'PBKDF2', salt:codificador.encode(SAL), iterations:ITER, hash:'SHA-256'},
+    km, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+}
+async function idDe(mat){
+  const h = await crypto.subtle.digest('SHA-256', codificador.encode(SAL + '|' + mat));
+  return Array.from(new Uint8Array(h)).slice(0,8).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function cifrar(nome, mat){
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, await chaveDe(mat), codificador.encode(nome));
+  return paraB64(iv) + '.' + paraB64(ct);
+}
+async function decifrar(txt, mat){
+  const [a,b] = txt.split('.');
+  const p = await crypto.subtle.decrypt({name:'AES-GCM', iv:deB64(a)}, await chaveDe(mat), deB64(b));
+  return decodificador.decode(p);
+}
+
+// baixa a base publicada junto com a página
+(async function carregarBaseOnline(){
+  try{
+    const r = await fetch('base.json?v=' + Date.now());
+    if(r.ok) baseOnline = await r.json();
+  }catch(e){}
+})();
+
+// procura o nome: primeiro na base online, depois na planilha local
+async function buscarNome(mat){
+  if(baseOnline && window.crypto && crypto.subtle){
+    try{
+      const registro = baseOnline[await idDe(mat)];
+      if(registro) return await decifrar(registro, mat);
+    }catch(e){}
+  }
+  return baseNomes[mat] || baseNomes[String(Number(mat))] || '';
+}
+
+// gera o base.json a partir da planilha carregada
+async function gerarBase(){
+  const mats = Object.keys(baseNomes);
+  if(!mats.length){ alert('Suba a planilha primeiro.'); return; }
+  if(!window.crypto || !crypto.subtle){ alert('Gere o arquivo pelo link https, não abrindo o arquivo direto do computador.'); return; }
+  const st = document.getElementById('statusGerar');
+  const saida = {};
+  for(let i=0; i<mats.length; i++){
+    const m = mats[i];
+    saida[await idDe(m)] = await cifrar(baseNomes[m], m);
+    if(i % 50 === 0) { st.textContent = 'Gerando... ' + i + ' de ' + mats.length; await new Promise(r=>setTimeout(r)); }
+  }
+  const blob = new Blob([JSON.stringify(saida)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'base.json'; a.click();
+  st.textContent = 'Pronto: ' + mats.length + ' matrículas. Envie o base.json para o GitHub, na mesma pasta do formulário.';
+}
+document.getElementById('btnGerarBase').onclick = gerarBase;
+
 /* ============================================================
    3. MATRÍCULA -> NOME AUTOMÁTICO
    ============================================================ */
 const campoMat = document.getElementById('matricula');
 const boxNome  = document.getElementById('resultadoNome');
 
+let temporizador = null;
 campoMat.addEventListener('input', function(){
   const mat = this.value.trim();
-  atual.matricula = mat;
-  if(!mat){ atual.nome = ''; boxNome.innerHTML = ''; atualizarEnvio(); return; }
-  const nome = baseNomes[mat] || baseNomes[String(Number(mat))];
-  if(nome){
-    atual.nome = nome;
-    boxNome.innerHTML = '<div class="nome-achado">'+nome+'</div>';
-  }else{
-    atual.nome = '';
-    boxNome.innerHTML = Object.keys(baseNomes).length
-      ? '<div class="nome-erro">Matrícula não encontrada.</div>'
-      : '<div class="nome-erro">Base de matrículas não carregada. Peça ao administrador.</div>';
-  }
+  atual.matricula = mat; atual.nome = '';
   atualizarEnvio();
+  clearTimeout(temporizador);
+  if(!mat){ boxNome.innerHTML = ''; return; }
+  boxNome.innerHTML = '<div class="nome-erro" style="opacity:.7">Procurando...</div>';
+  temporizador = setTimeout(async ()=>{
+    const nome = await buscarNome(mat);
+    if(campoMat.value.trim() !== mat) return;   // já digitou outra coisa
+    if(nome){
+      atual.nome = nome;
+      boxNome.innerHTML = '<div class="nome-achado">'+nome+'</div>';
+    }else{
+      boxNome.innerHTML = (baseOnline || Object.keys(baseNomes).length)
+        ? '<div class="nome-erro">Matrícula não encontrada.</div>'
+        : '<div class="nome-erro">Base de matrículas não carregada. Peça ao administrador.</div>';
+    }
+    atualizarEnvio();
+  }, 450);
 });
 
 /* ============================================================
