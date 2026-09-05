@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Opcionais da Frota</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --azul:#3E4095;
+    --azul-esc:#1c1d44;
+    --verde:#00A859;
+    --limao:#A8CF45;
+    --texto:#F5F7FB;
+    --texto2:#a9b0d6;
+    --alerta:#ff8a6b;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    margin:0;padding:0 0 50px;
+    color:var(--texto);
+    font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size:17px;line-height:1.5;
+    background:
+      radial-gradient(720px 420px at 8% 0%, rgba(168,207,69,.30), transparent 62%),
+      radial-gradient(640px 460px at 100% 12%, rgba(0,168,89,.28), transparent 60%),
+      radial-gradient(700px 520px at 50% 108%, rgba(62,64,149,.55), transparent 65%),
+      repeating-linear-gradient(135deg, rgba(255,255,255,.025) 0 16px, transparent 16px 38px),
+      linear-gradient(180deg,#2b2d6b 0%, #22245a 40%, #15163a 100%);
+    background-attachment:fixed;
+    min-height:100vh;
+  }
+  header{
+    padding:30px 20px 26px;
+    background:linear-gradient(180deg, rgba(0,168,89,.22), transparent);
+    border-bottom:2px solid var(--limao);
+    position:relative;overflow:hidden;
+  }
+  header::after{
+    content:"";position:absolute;inset:auto 0 0 0;height:6px;
+    background:linear-gradient(90deg,var(--limao) 0 33%,var(--verde) 33% 66%,var(--azul) 66% 100%);
+  }
+  header h1{
+    margin:0;font-size:34px;font-weight:800;letter-spacing:-1.2px;
+    text-transform:uppercase;line-height:1;
+  }
+  header h1 span{display:block;color:var(--limao)}
+  header p{margin:10px 0 0;font-size:14px;color:var(--texto2)}
+  main{max-width:620px;margin:0 auto;padding:20px 16px}
+  .bloco{
+    background:linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.02));
+    border:1px solid rgba(255,255,255,.10);
+    border-left:4px solid var(--limao);
+    border-radius:4px;padding:20px;margin-bottom:16px;
+    backdrop-filter:blur(6px);
+    box-shadow:0 18px 40px rgba(10,11,40,.45);
+  }
+  .bloco h2{margin:0 0 4px;font-size:20px;font-weight:800;letter-spacing:-.3px}
+  .bloco .ajuda{margin:0 0 14px;font-size:14px;color:var(--texto2)}
+  label.campo{display:block;font-size:14px;margin-bottom:6px;color:var(--texto2)}
+  input[type=text],input[type=password],input[type=file]{
+    width:100%;padding:14px;font-size:18px;font-family:inherit;
+    border:1px solid rgba(255,255,255,.16);border-radius:4px;
+    background:rgba(0,0,0,.35);color:var(--texto);
+  }
+  input[type=text]:focus,input[type=password]:focus{
+    outline:none;border-color:var(--limao);box-shadow:0 0 0 3px rgba(168,207,69,.22);
+  }
+  input[type=file]{padding:11px;font-size:14px;color:var(--texto2)}
+  button{
+    font-family:inherit;font-size:17px;font-weight:800;
+    padding:15px 18px;border-radius:4px;border:none;
+    background:var(--verde);color:#fff;width:100%;cursor:pointer;
+    letter-spacing:.2px;
+  }
+  button:active{transform:translateY(1px)}
+  button.secundario{
+    background:transparent;color:var(--texto);
+    border:1px solid rgba(255,255,255,.22);font-weight:600;
+  }
+  button:disabled{background:rgba(255,255,255,.10);color:#7d84ad;cursor:not-allowed}
+  .nome-achado{
+    margin-top:14px;padding:16px;border-radius:4px;
+    background:rgba(0,168,89,.18);border-left:4px solid var(--verde);
+    font-size:20px;font-weight:800;
+  }
+  .nome-erro{
+    margin-top:14px;padding:14px;border-radius:4px;
+    background:rgba(255,107,82,.12);border-left:4px solid var(--alerta);
+    color:var(--alerta);font-size:15px;
+  }
+  .item{border-top:1px solid rgba(255,255,255,.08);padding:16px 0}
+  .item:first-of-type{border-top:none;padding-top:4px}
+  .item .titulo{font-weight:700;margin-bottom:11px;font-size:17px}
+  .opcoes{display:flex;gap:10px}
+  .opcoes button{
+    flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.18);
+    color:var(--texto);font-weight:600;padding:13px;
+  }
+  .opcoes button.ativo{
+    background:var(--limao);border-color:var(--limao);color:#16173a;font-weight:800;
+    box-shadow:0 0 22px rgba(168,207,69,.40);
+  }
+  canvas#assinatura{
+    width:100%;height:190px;border:1px dashed rgba(168,207,69,.55);
+    border-radius:4px;background:#f7f7f4;touch-action:none;display:block;
+  }
+  .oculto{display:none}
+  .legenda{display:flex;gap:18px;justify-content:center;font-size:14px;color:var(--texto2);margin:6px 0 16px}
+  .legenda i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px}
+  .linha-botoes{display:flex;gap:10px;margin-top:10px}
+  .barra{margin:12px 0}
+  .barra .rotulo{display:flex;justify-content:space-between;font-size:14px;margin-bottom:5px}
+  .barra .rotulo span:last-child{color:var(--limao);font-weight:700}
+  .barra .trilho{background:rgba(255,255,255,.08);border-radius:2px;height:16px;overflow:hidden}
+  .barra .preenchido{
+    background:linear-gradient(90deg,var(--verde),var(--limao));height:100%;
+  }
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:8px 5px;border-bottom:1px solid rgba(255,255,255,.08)}
+  th{color:var(--limao);font-weight:700}
+  .rodape-adm{text-align:center;margin-top:10px}
+  .rodape-adm a{color:var(--texto2);font-size:13px;text-decoration:underline}
+  .aviso{font-size:13px;color:var(--texto2);margin-top:10px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Opcionais<span>da Frota</span></h1>
+  <p>Preencha, assine e envie pelo celular</p>
+</header>
+
+<main>
+
+  <!-- ===== TELA DO FUNCIONÁRIO ===== -->
+  <div id="telaFuncionario">
+
+    <section class="bloco">
+      <h2>Identificação</h2>
+      <p class="ajuda">Digite sua matrícula. O nome aparece sozinho.</p>
+      <label class="campo">Matrícula</label>
+      <input type="text" id="matricula" inputmode="numeric" autocomplete="off" placeholder="Ex.: 10234">
+      <div id="resultadoNome"></div>
+    </section>
+
+    <section class="bloco">
+      <h2>Itens do veículo</h2>
+      <p class="ajuda">Responda todos os itens.</p>
+      <div id="listaItens"></div>
+      <div class="item">
+        <div class="titulo">Podemos trocar os veículos Strada por Saveiro?</div>
+        <div class="opcoes" data-pergunta="saveiro">
+          <button type="button" data-valor="Sim">Sim</button>
+          <button type="button" data-valor="Não">Não</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="bloco">
+      <h2>Assinatura</h2>
+      <p class="ajuda">Assine com o dedo no quadro abaixo.</p>
+      <canvas id="assinatura"></canvas>
+      <div class="linha-botoes">
+        <button class="secundario" id="btnLimpar">Limpar assinatura</button>
+      </div>
+      <div style="height:14px"></div>
+      <button id="btnEnviar" disabled>Enviar respostas</button>
+      <p class="aviso" id="avisoEnvio">Preencha a matrícula, responda tudo e assine para liberar o envio.</p>
+    </section>
+
+    <div class="rodape-adm"><a href="#" id="linkAdm">Acesso administrativo</a></div>
+  </div>
+
+  <!-- ===== TELA ADM ===== -->
+  <div id="telaAdm" class="oculto">
+
+    <section class="bloco">
+      <h2>Base de matrículas</h2>
+      <p class="ajuda">O sistema procura as colunas MATRICULA e NOME DO COLABORADOR sozinho. Aceita .xlsx, .xlsm ou .csv.</p>
+      <label class="campo">Planilha 1</label>
+      <input type="file" id="arq1" accept=".xlsx,.xlsm,.xls,.csv">
+      <label class="campo" style="margin-top:12px">Planilha 2</label>
+      <input type="file" id="arq2" accept=".xlsx,.xlsm,.xls,.csv">
+      <p class="ajuda" id="statusBase" style="margin:12px 0 0"></p>
+    </section>
+
+    <section class="bloco">
+      <h2>Resultados</h2>
+      <div class="linha-botoes" style="margin:0 0 14px">
+        <button class="secundario" id="btnGrafico">Ver gráfico</button>
+      </div>
+      <div id="painelGrafico" class="oculto">
+        <canvas id="grafico" style="width:100%;display:block"></canvas>
+        <div class="legenda">
+          <span><i style="background:linear-gradient(90deg,#00A859,#A8CF45)"></i>Responderam Sim</span>
+          <span><i style="background:rgba(255,255,255,.14)"></i>Responderam Não</span>
+        </div>
+      </div>
+      <div id="graficos"></div>
+      <div style="overflow-x:auto"><table id="tabela"></table></div>
+      <div style="height:14px"></div>
+      <button id="btnPdf">Baixar PDF</button>
+      <div class="linha-botoes">
+        <button class="secundario" id="btnVoltar">Voltar ao formulário</button>
+        <button class="secundario" id="btnApagar">Apagar respostas</button>
+      </div>
+    </section>
+  </div>
+
+</main>
+<script>
+/* ============================================================
+   1. DADOS
+   ============================================================ */
+const ITENS = [
+  {id:'multimidia', nome:'Kit multimídia'},
+  {id:'insulfilm',  nome:'Insulfilm'},
+  {id:'capota',     nome:'Capota marítima'},
+  {id:'calotas',    nome:'Calotas'}
+];
+const PERGUNTAS = ITENS.concat([{id:'saveiro', nome:'Trocar Strada por Saveiro'}]);
+const SENHA_ADM = '1234';   // troque aqui a senha do painel
+
+let baseNomes = {};   // { "10234": "JOÃO DA SILVA" }
+let respostas = [];   // lista de envios
+let atual = {matricula:'', nome:'', itens:{}, saveiro:null};
+
+function salvar(){ try{ localStorage.setItem('respostasFrota', JSON.stringify(respostas)); }catch(e){} }
+function salvarBase(){ try{ localStorage.setItem('baseFrota', JSON.stringify(baseNomes)); }catch(e){} }
+function carregar(){
+  try{
+    const d = localStorage.getItem('respostasFrota'); if(d) respostas = JSON.parse(d);
+    const b = localStorage.getItem('baseFrota');      if(b) baseNomes = JSON.parse(b);
+  }catch(e){ respostas = []; baseNomes = {}; }
+}
+carregar();
+
+/* ============================================================
+   2. PLANILHAS (só no painel adm)
+   ============================================================ */
+function lerPlanilha(arquivo){
+  if(!arquivo) return;
+  const leitor = new FileReader();
+  leitor.onload = function(e){
+    try{
+      const wb = XLSX.read(e.target.result, {type:'array'});
+      let achou = 0;
+
+      wb.SheetNames.forEach(nomeAba=>{
+        const linhas = XLSX.utils.sheet_to_json(wb.Sheets[nomeAba], {header:1, raw:false, defval:''});
+
+        // procura a linha de cabeçalho e as colunas de matrícula e nome
+        let colMat = -1, colNome = -1, linhaCab = -1;
+        for(let i=0; i<Math.min(linhas.length, 40); i++){
+          const l = linhas[i] || [];
+          for(let c=0; c<l.length; c++){
+            const t = String(l[c]||'').trim().toUpperCase();
+            if(colMat  < 0 && /^MATR[IÍ]CULA$/.test(t))            colMat = c;
+            if(colNome < 0 && /^NOME DO COLABORADOR$/.test(t))      colNome = c;
+          }
+          if(colMat >= 0 && colNome >= 0){ linhaCab = i; break; }
+          colMat = -1; colNome = -1;
+        }
+        // se não tiver cabeçalho, usa coluna 1 e 2
+        if(linhaCab < 0){ colMat = 0; colNome = 1; linhaCab = 0; }
+
+        for(let i = linhaCab + 1; i < linhas.length; i++){
+          const l = linhas[i] || [];
+          const mat  = String(l[colMat]  || '').trim();
+          const nome = String(l[colNome] || '').trim();
+          if(!mat || !nome || mat === '0' || nome === '0') continue;
+          if(/VAGA A PREENCHER/i.test(nome)) continue;
+          if(!/\d/.test(mat)) continue;
+          baseNomes[mat] = nome;
+          achou++;
+        }
+      });
+
+      salvarBase();
+      mostrarStatusBase();
+      if(!achou) alert('Não encontrei matrículas nessa planilha. Confira se existem as colunas MATRICULA e NOME DO COLABORADOR.');
+    }catch(err){
+      alert('Não consegui ler o arquivo. Salve como .xlsx ou .csv e tente de novo.');
+    }
+  };
+  leitor.readAsArrayBuffer(arquivo);
+}
+function mostrarStatusBase(){
+  const n = Object.keys(baseNomes).length;
+  document.getElementById('statusBase').textContent =
+    n ? n + ' matrículas na base deste aparelho.' : 'Nenhuma planilha carregada.';
+}
+document.getElementById('arq1').onchange = e => lerPlanilha(e.target.files[0]);
+document.getElementById('arq2').onchange = e => lerPlanilha(e.target.files[0]);
+
+/* ============================================================
+   3. MATRÍCULA -> NOME AUTOMÁTICO
+   ============================================================ */
+const campoMat = document.getElementById('matricula');
+const boxNome  = document.getElementById('resultadoNome');
+
+campoMat.addEventListener('input', function(){
+  const mat = this.value.trim();
+  atual.matricula = mat;
+  if(!mat){ atual.nome = ''; boxNome.innerHTML = ''; atualizarEnvio(); return; }
+  const nome = baseNomes[mat] || baseNomes[String(Number(mat))];
+  if(nome){
+    atual.nome = nome;
+    boxNome.innerHTML = '<div class="nome-achado">'+nome+'</div>';
+  }else{
+    atual.nome = '';
+    boxNome.innerHTML = Object.keys(baseNomes).length
+      ? '<div class="nome-erro">Matrícula não encontrada.</div>'
+      : '<div class="nome-erro">Base de matrículas não carregada. Peça ao administrador.</div>';
+  }
+  atualizarEnvio();
+});
+
+/* ============================================================
+   4. PERGUNTAS SIM / NÃO
+   ============================================================ */
+const lista = document.getElementById('listaItens');
+ITENS.forEach(it=>{
+  lista.insertAdjacentHTML('beforeend',
+    '<div class="item"><div class="titulo">'+it.nome+'</div>'+
+    '<div class="opcoes" data-pergunta="'+it.id+'">'+
+    '<button type="button" data-valor="Sim">Sim</button>'+
+    '<button type="button" data-valor="Não">Não</button></div></div>');
+});
+document.querySelectorAll('.opcoes button').forEach(b=>{
+  b.onclick = function(){
+    const grupo = this.parentElement;
+    grupo.querySelectorAll('button').forEach(x=>x.classList.remove('ativo'));
+    this.classList.add('ativo');
+    const p = grupo.dataset.pergunta;
+    if(p === 'saveiro') atual.saveiro = this.dataset.valor;
+    else atual.itens[p] = this.dataset.valor;
+    atualizarEnvio();
+  };
+});
+
+/* ============================================================
+   5. ASSINATURA
+   ============================================================ */
+const cv = document.getElementById('assinatura');
+const ctx = cv.getContext('2d');
+let assinou = false, desenhando = false;
+
+function ajustarCanvas(){
+  const r = cv.getBoundingClientRect();
+  const img = cv.width ? cv.toDataURL() : null;
+  cv.width = r.width; cv.height = r.height;
+  ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.strokeStyle = '#12151a';
+}
+window.addEventListener('resize', ajustarCanvas);
+setTimeout(ajustarCanvas, 300);
+
+function ponto(ev){
+  const r = cv.getBoundingClientRect();
+  return {x: ev.clientX - r.left, y: ev.clientY - r.top};
+}
+cv.addEventListener('pointerdown', e=>{
+  desenhando = true; assinou = true;
+  const p = ponto(e); ctx.beginPath(); ctx.moveTo(p.x, p.y);
+  atualizarEnvio();
+});
+cv.addEventListener('pointermove', e=>{
+  if(!desenhando) return;
+  e.preventDefault();
+  const p = ponto(e); ctx.lineTo(p.x, p.y); ctx.stroke();
+});
+cv.addEventListener('pointerup',    ()=> desenhando = false);
+cv.addEventListener('pointerleave', ()=> desenhando = false);
+
+document.getElementById('btnLimpar').onclick = function(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  assinou = false; atualizarEnvio();
+};
+
+/* ============================================================
+   6. LIBERAR O ENVIO
+   ============================================================ */
+function atualizarEnvio(){
+  const temNome  = !!atual.nome;
+  const respTodas = ITENS.every(i => atual.itens[i.id]) && !!atual.saveiro;
+  const ok = temNome && respTodas && assinou;
+  document.getElementById('btnEnviar').disabled = !ok;
+
+  let msg;
+  if(!temNome)        msg = 'Digite uma matrícula válida.';
+  else if(!respTodas) msg = 'Responda todos os itens.';
+  else if(!assinou)   msg = 'Falta assinar.';
+  else                msg = 'Pronto para enviar.';
+  document.getElementById('avisoEnvio').textContent = msg;
+}
+
+document.getElementById('btnEnviar').onclick = function(){
+  respostas.push({
+    matricula: atual.matricula,
+    nome: atual.nome,
+    itens: Object.assign({}, atual.itens),
+    saveiro: atual.saveiro,
+    assinatura: cv.toDataURL('image/png'),
+    dataHora: new Date().toLocaleString('pt-BR')
+  });
+  salvar();
+  alert('Respostas enviadas. Obrigado, ' + atual.nome + '!');
+  location.reload();
+};
+
+/* ============================================================
+   7. PAINEL ADM
+   ============================================================ */
+function trocarTela(mostrarAdm){
+  document.getElementById('telaAdm').classList.toggle('oculto', !mostrarAdm);
+  document.getElementById('telaFuncionario').classList.toggle('oculto', mostrarAdm);
+  window.scrollTo(0,0);
+}
+document.getElementById('linkAdm').onclick = function(e){
+  e.preventDefault();
+  const s = prompt('Senha do administrador:');
+  if(s !== SENHA_ADM){ if(s !== null) alert('Senha incorreta.'); return; }
+  montarAdm(); trocarTela(true);
+};
+document.getElementById('btnVoltar').onclick = ()=> location.reload();
+document.getElementById('btnApagar').onclick = function(){
+  if(confirm('Apagar todas as respostas? A base de matrículas continua salva.')){
+    respostas = []; salvar(); montarAdm();
+  }
+};
+
+function montarAdm(){
+  mostrarStatusBase();
+  const total = respostas.length;
+  const g = document.getElementById('graficos');
+  g.innerHTML = '<p class="ajuda">'+total+' pessoa(s) assinaram.</p>';
+
+  let html = '<tr><th>Matrícula</th><th>Nome</th>';
+  PERGUNTAS.forEach(p=> html += '<th>'+p.nome.split(' ')[0]+'</th>');
+  html += '<th>Data</th><th>Assinatura</th></tr>';
+  respostas.forEach(r=>{
+    html += '<tr><td>'+r.matricula+'</td><td>'+r.nome+'</td>';
+    PERGUNTAS.forEach(p=> html += '<td>'+(valor(r,p.id)||'-')+'</td>');
+    html += '<td>'+r.dataHora+'</td>'+
+            '<td><img src="'+r.assinatura+'" style="height:34px;background:#fff;border-radius:3px"></td></tr>';
+  });
+  document.getElementById('tabela').innerHTML = html;
+  if(!document.getElementById('painelGrafico').classList.contains('oculto')) desenharGrafico();
+}
+
+/* ============================================================
+   7b. GRÁFICO EM BARRAS
+   ============================================================ */
+document.getElementById('btnGrafico').onclick = function(){
+  const painel = document.getElementById('painelGrafico');
+  const abrir = painel.classList.contains('oculto');
+  painel.classList.toggle('oculto', !abrir);
+  this.textContent = abrir ? 'Esconder gráfico' : 'Ver gráfico';
+  if(abrir) desenharGrafico();
+};
+window.addEventListener('resize', ()=>{
+  if(!document.getElementById('painelGrafico').classList.contains('oculto')) desenharGrafico();
+});
+
+function desenharGrafico(){
+  const cvg = document.getElementById('grafico');
+  const g = cvg.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const larg = cvg.clientWidth;
+  const alturaLinha = 52;
+  const alt = PERGUNTAS.length * alturaLinha + 16;
+
+  cvg.style.height = alt + 'px';
+  cvg.width = larg * dpr; cvg.height = alt * dpr;
+  g.setTransform(dpr,0,0,dpr,0,0);
+  g.clearRect(0,0,larg,alt);
+
+  const total = respostas.length;
+  if(!total){
+    g.fillStyle = '#a9b0d6'; g.font = '15px Helvetica'; g.textAlign = 'center';
+    g.fillText('Nenhuma resposta enviada ainda.', larg/2, 40);
+    return;
+  }
+
+  const trilhoAltura = 20;
+
+  PERGUNTAS.forEach((p,i)=>{
+    const sim = respostas.filter(r => valor(r,p.id) === 'Sim').length;
+    const nao = total - sim;
+    const y = i * alturaLinha + 8;
+
+    // nome da pergunta e contagem
+    g.textAlign = 'left';
+    g.fillStyle = '#F5F7FB'; g.font = '600 14px Helvetica';
+    g.fillText(p.nome, 0, y + 12);
+    g.textAlign = 'right';
+    g.fillStyle = '#a9b0d6'; g.font = '13px Helvetica';
+    g.fillText(sim + ' sim  /  ' + nao + ' não', larg, y + 12);
+
+    // trilho
+    const topoBarra = y + 20;
+    const raio = trilhoAltura/2;
+    g.fillStyle = 'rgba(255,255,255,.08)';
+    barraArredondada(g, 0, topoBarra, larg, trilhoAltura, raio);
+
+    // parte do "sim"
+    const wSim = larg * (sim/total);
+    if(wSim > 1){
+      const grad = g.createLinearGradient(0,0,larg,0);
+      grad.addColorStop(0,'#00A859'); grad.addColorStop(1,'#A8CF45');
+      g.fillStyle = grad;
+      barraArredondada(g, 0, topoBarra, Math.max(wSim, raio*2), trilhoAltura, raio);
+    }
+
+    // porcentagem dentro da barra
+    const pct = Math.round(sim/total*100) + '%';
+    g.font = 'bold 12px Helvetica';
+    if(wSim > 46){ g.textAlign='right'; g.fillStyle='#16173a'; g.fillText(pct, wSim-9, topoBarra+14); }
+    else          { g.textAlign='left';  g.fillStyle='#a9b0d6'; g.fillText(pct, wSim+9, topoBarra+14); }
+  });
+}
+
+function barraArredondada(g,x,y,w,h,r){
+  r = Math.min(r, w/2);
+  g.beginPath();
+  g.moveTo(x+r,y);
+  g.arcTo(x+w,y,x+w,y+h,r);
+  g.arcTo(x+w,y+h,x,y+h,r);
+  g.arcTo(x,y+h,x,y,r);
+  g.arcTo(x,y,x+w,y,r);
+  g.closePath(); g.fill();
+}
+
+function valor(r, id){ return id === 'saveiro' ? r.saveiro : r.itens[id]; }
+
+/* ============================================================
+   8. PDF
+   ============================================================ */
+document.getElementById('btnPdf').onclick = function(){
+  if(!respostas.length){ alert('Não há respostas para gerar o PDF.'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  let y = 18;
+
+  doc.setFontSize(16); doc.text('Opcionais da Frota - Respostas assinadas', 14, y); y += 8;
+  doc.setFontSize(10);
+  doc.text('Total de assinaturas: ' + respostas.length, 14, y); y += 8;
+  PERGUNTAS.forEach(p=>{
+    const sim = respostas.filter(r => valor(r,p.id) === 'Sim').length;
+    doc.text(p.nome + ': ' + sim + ' Sim / ' + (respostas.length - sim) + ' Nao', 14, y);
+    y += 6;
+  });
+
+  respostas.forEach(r=>{
+    if(y > 235){ doc.addPage(); y = 18; }
+    y += 6;
+    doc.setDrawColor(200); doc.line(14, y, 196, y); y += 8;
+    doc.setFontSize(12); doc.text(r.matricula + ' - ' + r.nome, 14, y); y += 6;
+    doc.setFontSize(10);
+    PERGUNTAS.forEach(p=>{ doc.text('- ' + p.nome + ': ' + (valor(r,p.id)||'-'), 18, y); y += 5; });
+    doc.text('Enviado em ' + r.dataHora, 18, y); y += 4;
+    try{ doc.addImage(r.assinatura, 'PNG', 18, y, 60, 20); }catch(e){}
+    y += 24;
+  });
+
+  doc.save('opcionais-frota.pdf');
+};
+
+atualizarEnvio();
+</script>
+</body>
+</html>
