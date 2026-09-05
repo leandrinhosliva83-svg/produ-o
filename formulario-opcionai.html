@@ -170,7 +170,10 @@
       <p class="aviso" id="avisoEnvio">Preencha a matrícula, responda tudo e assine para liberar o envio.</p>
     </section>
 
-    <div class="rodape-adm"><a href="#" id="linkAdm">Acesso administrativo</a></div>
+    <div class="rodape-adm">
+      <a href="#" id="linkAdm">Acesso administrativo</a>
+      <p class="ajuda" id="statusOnline" style="margin:8px 0 0;font-size:12px">versão 4 · verificando base...</p>
+    </div>
   </div>
 
   <!-- ===== TELA ADM ===== -->
@@ -333,10 +336,18 @@ async function decifrar(txt, mat){
 
 // baixa a base publicada junto com a página
 (async function carregarBaseOnline(){
+  const st = document.getElementById('statusOnline');
   try{
-    const r = await fetch('base.json?v=' + Date.now());
-    if(r.ok) baseOnline = await r.json();
-  }catch(e){}
+    const r = await fetch('base.json?v=' + Date.now(), {cache:'no-store'});
+    if(r.ok){
+      baseOnline = await r.json();
+      st.textContent = 'versão 4 · base online: ' + Object.keys(baseOnline).length + ' matrículas';
+      return;
+    }
+    st.textContent = 'versão 4 · base online não encontrada (erro ' + r.status + ')';
+  }catch(e){
+    st.textContent = 'versão 4 · falha ao baixar a base: ' + e.message;
+  }
 })();
 
 // procura o nome: primeiro na base online, depois na planilha local
