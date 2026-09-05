@@ -172,7 +172,7 @@
 
     <div class="rodape-adm">
       <a href="#" id="linkAdm">Acesso administrativo</a>
-      <p class="ajuda" id="statusOnline" style="margin:8px 0 0;font-size:12px">versão 4 · verificando base...</p>
+      <p class="ajuda" id="statusOnline" style="margin:8px 0 0;font-size:12px">versão 7 · verificando base...</p>
     </div>
   </div>
 
@@ -218,6 +218,13 @@
 
 </main>
 <script>
+/* ============================================================
+   0. ONDE AS RESPOSTAS SÃO GUARDADAS
+   Cole entre as aspas o endereço do app da Google Planilhas.
+   Enquanto estiver vazio, tudo fica só neste aparelho.
+   ============================================================ */
+const URL_PLANILHA = "https://script.google.com/macros/s/AKfycbwOrxfllvQgV3l5Y1B9DeWEdTs2hF3uyqcfPq6jCnNKpFy9-87HI4z2q5vTOMHomjVy/exec";
+
 /* ============================================================
    1. DADOS
    ============================================================ */
@@ -341,14 +348,23 @@ async function decifrar(txt, mat){
     const r = await fetch('base.json?v=' + Date.now(), {cache:'no-store'});
     if(r.ok){
       baseOnline = await r.json();
-      st.textContent = 'versão 4 · base online: ' + Object.keys(baseOnline).length + ' matrículas';
+      st.textContent = 'versão 7 · base online: ' + Object.keys(baseOnline).length + ' matrículas';
+      mostrarStatusBanco();
       return;
     }
-    st.textContent = 'versão 4 · base online não encontrada (erro ' + r.status + ')';
+    st.textContent = 'versão 7 · base online não encontrada (erro ' + r.status + ')';
   }catch(e){
-    st.textContent = 'versão 4 · falha ao baixar a base: ' + e.message;
+    st.textContent = 'versão 7 · falha ao baixar a base: ' + e.message;
   }
 })();
+
+function mostrarStatusBanco(){
+  const st = document.getElementById('statusOnline');
+  st.textContent += URL_PLANILHA
+    ? ' · planilha ligada'
+    : ' · planilha desligada (respostas ficam neste aparelho)';
+}
+setTimeout(mostrarStatusBanco, 2500);
 
 // procura o nome: primeiro na base online, depois na planilha local
 async function buscarNome(mat){
@@ -518,16 +534,38 @@ function atualizarEnvio(){
   document.getElementById('avisoEnvio').textContent = msg;
 }
 
-document.getElementById('btnEnviar').onclick = function(){
-  respostas.push({
+document.getElementById('btnEnviar').onclick = async function(){
+  const btn = this;
+  btn.disabled = true; btn.textContent = 'Enviando...';
+  const registro = {
     matricula: atual.matricula,
     nome: atual.nome,
     itens: Object.assign({}, atual.itens),
     saveiro: atual.saveiro,
     assinatura: cv.toDataURL('image/png'),
-    dataHora: new Date().toLocaleString('pt-BR')
-  });
-  salvar();
+    dataHora: new Date().toLocaleString('pt-BR'),
+    enviadoEm: new Date().toISOString()
+  };
+
+  if(URL_PLANILHA){
+    try{
+      const r = await fetch(URL_PLANILHA, {
+        method: 'POST',
+        headers: {'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify(registro)
+      });
+      const resposta = await r.json();
+      if(!resposta.ok) throw new Error(resposta.erro || 'recusado pela planilha');
+    }catch(err){
+      respostas.push(registro); salvar();      // não perde a resposta
+      btn.disabled = false; btn.textContent = 'Enviar respostas';
+      alert('Não consegui enviar agora (' + err.message + '). A resposta ficou salva neste aparelho e você pode tentar de novo.');
+      return;
+    }
+  }else{
+    respostas.push(registro); salvar();
+  }
+
   alert('Respostas enviadas. Obrigado, ' + atual.nome + '!');
   location.reload();
 };
@@ -540,14 +578,27 @@ function trocarTela(mostrarAdm){
   document.getElementById('telaFuncionario').classList.toggle('oculto', mostrarAdm);
   window.scrollTo(0,0);
 }
-document.getElementById('linkAdm').onclick = function(e){
+document.getElementById('linkAdm').onclick = async function(e){
   e.preventDefault();
-  const s = prompt('Senha do administrador:');
-  if(s !== SENHA_ADM){ if(s !== null) alert('Senha incorreta.'); return; }
+  const senha = prompt('Senha do administrador:');
+  if(senha !== SENHA_ADM){ if(senha !== null) alert('Senha incorreta.'); return; }
+
+  if(URL_PLANILHA){
+    try{
+      const r = await fetch(URL_PLANILHA + '?ler=1&t=' + Date.now());
+      const daNuvem = await r.json();
+      const locais = respostas.filter(r2 => !daNuvem.some(n => n.enviadoEm === r2.enviadoEm));
+      respostas = daNuvem.concat(locais)
+        .sort((a,b) => (a.enviadoEm||'').localeCompare(b.enviadoEm||''));
+    }catch(err){
+      alert('Não consegui ler a planilha (' + err.message + '). Mostrando só o que está neste aparelho.');
+    }
+  }
   montarAdm(); trocarTela(true);
 };
 document.getElementById('btnVoltar').onclick = ()=> location.reload();
 document.getElementById('btnApagar').onclick = function(){
+  if(URL_PLANILHA){ alert('Com a planilha ligada, apague as linhas direto na planilha do Google.'); return; }
   if(confirm('Apagar todas as respostas? A base de matrículas continua salva.')){
     respostas = []; salvar(); montarAdm();
   }
