@@ -148,6 +148,21 @@
   .btn-secundario{background:transparent;color:var(--laranja);border:1.5px solid var(--laranja)}
   .btn-secundario:hover{background:var(--laranja);color:#000}
   .adm-msg{font-size:14px;color:var(--ok);margin:10px 0 0;min-height:18px}
+  .adm .div{border:0;border-top:1px solid var(--linha);margin:22px 0 16px}
+  .rot2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--laranja);margin:0 0 4px}
+  .dica{font-size:13.5px;color:var(--texto-fraco);margin:0 0 12px}
+  .adm textarea{
+    width:100%;padding:12px;font-size:16px;font-family:Consolas,"Courier New",monospace;
+    background:var(--chapa-alta);color:var(--texto);border:1.5px solid var(--linha);border-radius:3px;
+    margin-bottom:12px;resize:vertical;
+  }
+  .adm textarea:focus{outline:2px solid var(--laranja);border-color:var(--laranja)}
+  .adm .dupla .campo{margin-bottom:12px}
+  .adm .dupla button{margin-top:0}
+  .meta-linha{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--linha);font-size:15px}
+  .meta-linha:last-child{border-bottom:0}
+  .meta-linha b{font-variant-numeric:tabular-nums;color:var(--verde)}
+  .meta-linha.geral b{color:var(--laranja)}
 </style>
 </head>
 <body>
@@ -205,14 +220,43 @@
   </div>
 
   <details class="cartao adm">
-    <summary>Configurar meta (ADM)</summary>
+    <summary>Metas (ADM)</summary>
     <div class="adm-corpo">
-      <div class="campo">
-        <label for="adm-meta">Meta da frota (km/l) — vale para todos os caminhões</label>
-        <input id="adm-meta" inputmode="decimal" autocomplete="off" placeholder="2,5">
+
+      <p class="rot2">Meta geral da frota</p>
+      <p class="dica">Vale para todo caminhão que não tiver meta própria.</p>
+      <div class="dupla">
+        <div class="campo"><input id="adm-meta" inputmode="decimal" placeholder="2,5"></div>
+        <div class="campo"><button id="adm-btn" class="btn-secundario">Salvar geral</button></div>
       </div>
-      <button id="adm-btn" class="btn-secundario">Salvar meta</button>
+
+      <hr class="div">
+
+      <p class="rot2">Meta de um caminhão</p>
+      <div class="dupla">
+        <div class="campo">
+          <label for="adm-cam">Caminhão</label>
+          <input id="adm-cam" inputmode="numeric" placeholder="1042">
+        </div>
+        <div class="campo">
+          <label for="adm-cam-meta">Meta (km/l)</label>
+          <input id="adm-cam-meta" inputmode="decimal" placeholder="3,8">
+        </div>
+      </div>
+      <button id="adm-btn-cam" class="btn-secundario">Salvar este caminhão</button>
+
+      <hr class="div">
+
+      <p class="rot2">Várias de uma vez</p>
+      <p class="dica">Na sua planilha, selecione as duas colunas (caminhão e meta), copie e cole aqui embaixo. Uma linha por caminhão.</p>
+      <textarea id="adm-massa" rows="6" placeholder="1042&#9;3,8&#10;1108&#9;4,0&#10;1215&#9;3,5"></textarea>
+      <button id="adm-btn-massa" class="btn-secundario">Aplicar lista</button>
+
       <p class="adm-msg" id="adm-msg"></p>
+
+      <hr class="div">
+      <p class="rot2">Metas cadastradas</p>
+      <div id="adm-lista"><p class="vazio">Carregando…</p></div>
     </div>
   </details>
 
@@ -243,7 +287,8 @@ const DEMO = {
   "1042":[{data:"2026-08-28",km:412300,litros:180},{data:"2026-09-01",km:413050,litros:195}],
   "1108":[{data:"2026-08-30",km:98700,litros:150},{data:"2026-09-02",km:99310,litros:162}]
 };
-let DEMO_META = 3.8;   // meta única usada no modo demonstração
+let DEMO_META = 2.5;                              // meta geral do modo demonstração
+let DEMO_METAS = { "1042":3.8, "1108":4.0 };      // metas individuais do modo demonstração
 
 /* Atalhos para os elementos da tela */
 const el = id => document.getElementById(id);
@@ -277,7 +322,7 @@ async function carregarHistorico(){
     }else{
       await new Promise(r=>setTimeout(r,300));           // simula a rede
       historico = DEMO[num] ? DEMO[num].slice() : [];
-      meta = DEMO_META;
+      meta = DEMO_METAS[num] || DEMO_META;
     }
   }catch(e){
     $hist.innerHTML='<p class="vazio">Não foi possível carregar o histórico. Verifique a internet.</p>';
@@ -287,7 +332,6 @@ async function carregarHistorico(){
   carregando = false;
   desenharHistorico();
   desenharDesempenho();
-  el("adm-meta").value = String(meta).replace(".", ",");
   validar();
 }
 
@@ -473,36 +517,123 @@ async function salvar(){
   }
 }
 
-/* ---------- 5) ADM: META ÚNICA DA FROTA ---------- */
-async function salvarMeta(){
-  const valor=parseFloat(el("adm-meta").value.replace(",", "."));
-  const msg=el("adm-msg");
+/* ---------- 5) ADM: METAS ---------- */
 
-  if(!(valor>0)){ msg.style.color="var(--erro)"; msg.textContent="Meta inválida."; return; }
+/* Converte "3,8" ou "3.8" em número. Devolve 0 se não for válido. */
+function numero(txt){
+  const n = parseFloat(String(txt).replace(",", ".").trim());
+  return n > 0 ? n : 0;
+}
 
-  msg.style.color="var(--texto-fraco)";
-  msg.textContent="Salvando…";
-
-  try{
-    if(API_URL){
-      const r=await fetch(API_URL,{
-        method:"POST",
-        headers:{"Content-Type":"text/plain;charset=utf-8"},
-        body:JSON.stringify({acao:"salvarMeta",meta:valor})
-      });
-      const j=await r.json();
-      if(!j.ok) throw new Error(j.erro||"Falha ao salvar");
-    }else{
-      await new Promise(r=>setTimeout(r,300));
-      DEMO_META=valor;
+/* Envia um pedido ao Apps Script e devolve a resposta já lida. */
+async function pedir(corpo){
+  if(!API_URL){                       // modo demonstração
+    await new Promise(r=>setTimeout(r,250));
+    if(corpo.acao==="salvarMeta"){
+      if(corpo.caminhao) DEMO_METAS[corpo.caminhao]=corpo.meta; else DEMO_META=corpo.meta;
     }
-    msg.style.color="var(--ok)";
-    msg.textContent=`Meta da frota salva: ${valor.toFixed(2).replace(".",",")} km/l.`;
-    meta=valor; desenharDesempenho(); validar();
-  }catch(e){
-    msg.style.color="var(--erro)";
-    msg.textContent="Não foi possível salvar: "+e.message;
+    if(corpo.acao==="salvarMetasEmMassa"){
+      corpo.lista.forEach(i=>{ DEMO_METAS[i.caminhao]=i.meta; });
+    }
+    return {ok:true};
   }
+  const r = await fetch(API_URL,{
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify(corpo)
+  });
+  const j = await r.json();
+  if(!j.ok) throw new Error(j.erro||"Falha ao salvar");
+  return j;
+}
+
+function aviso(texto, cor){
+  const m = el("adm-msg");
+  m.style.color = cor;
+  m.textContent = texto;
+}
+
+/* Lê todas as metas e desenha a lista */
+async function carregarMetas(){
+  try{
+    let geral, lista;
+    if(API_URL){
+      const r = await fetch(API_URL + "?acao=metas");
+      const j = await r.json();
+      geral = Number(j.geral) || META_PADRAO;
+      lista = j.lista || [];
+    }else{
+      geral = DEMO_META;
+      lista = Object.keys(DEMO_METAS).map(c=>({caminhao:c, meta:DEMO_METAS[c]}));
+    }
+    el("adm-meta").value = String(geral).replace(".", ",");
+    lista.sort((a,b)=>String(a.caminhao).localeCompare(String(b.caminhao),"pt-BR",{numeric:true}));
+    el("adm-lista").innerHTML =
+      `<div class="meta-linha geral"><span>Geral (padrão)</span><b>${geral.toFixed(2).replace(".",",")} km/l</b></div>` +
+      (lista.length
+        ? lista.map(i=>`<div class="meta-linha"><span>Caminhão ${i.caminhao}</span><b>${Number(i.meta).toFixed(2).replace(".",",")} km/l</b></div>`).join("")
+        : `<p class="vazio" style="padding-top:8px">Nenhuma meta individual. Todos usam a geral.</p>`);
+  }catch(e){
+    el("adm-lista").innerHTML = '<p class="vazio">Não foi possível carregar as metas.</p>';
+  }
+}
+
+async function salvarMetaGeral(){
+  const valor = numero(el("adm-meta").value);
+  if(!valor){ aviso("Meta geral inválida.","var(--erro)"); return; }
+  aviso("Salvando…","var(--texto-fraco)");
+  try{
+    await pedir({acao:"salvarMeta", caminhao:"", meta:valor});
+    aviso(`Meta geral salva: ${valor.toFixed(2).replace(".",",")} km/l.`,"var(--ok)");
+    await carregarMetas();
+    if($caminhao.value.trim()) await carregarHistorico();
+  }catch(e){ aviso("Erro: "+e.message,"var(--erro)"); }
+}
+
+async function salvarMetaCaminhao(){
+  const num = el("adm-cam").value.trim();
+  const valor = numero(el("adm-cam-meta").value);
+  if(!num){ aviso("Informe o caminhão.","var(--erro)"); return; }
+  if(!valor){ aviso("Meta inválida.","var(--erro)"); return; }
+  aviso("Salvando…","var(--texto-fraco)");
+  try{
+    await pedir({acao:"salvarMeta", caminhao:num, meta:valor});
+    aviso(`Caminhão ${num}: meta ${valor.toFixed(2).replace(".",",")} km/l.`,"var(--ok)");
+    el("adm-cam").value=""; el("adm-cam-meta").value="";
+    await carregarMetas();
+    if($caminhao.value.trim()) await carregarHistorico();
+  }catch(e){ aviso("Erro: "+e.message,"var(--erro)"); }
+}
+
+/* Lê o texto colado da planilha: uma linha por caminhão,
+   colunas separadas por tabulação, ponto e vírgula ou espaço. */
+function lerColagem(texto){
+  const boas=[], ruins=[];
+  texto.split(/\r?\n/).forEach(linha=>{
+    if(!linha.trim()) return;                       // pula linha em branco
+    const partes = linha.split(/[\t;]+|\s{2,}|\s+/).filter(p=>p!=="");
+    if(partes.length < 2){ ruins.push(linha.trim()); return; }
+    const caminhao = partes[0].trim();
+    const valor = numero(partes[partes.length-1]);
+    if(!caminhao || !valor){ ruins.push(linha.trim()); return; }
+    boas.push({caminhao, meta:valor});
+  });
+  return {boas, ruins};
+}
+
+async function aplicarMassa(){
+  const {boas, ruins} = lerColagem(el("adm-massa").value);
+  if(!boas.length){ aviso("Nada reconhecido. Cole duas colunas: caminhão e meta.","var(--erro)"); return; }
+  aviso(`Salvando ${boas.length} caminhões…`,"var(--texto-fraco)");
+  try{
+    await pedir({acao:"salvarMetasEmMassa", lista:boas});
+    let msg = `${boas.length} metas gravadas.`;
+    if(ruins.length) msg += ` ${ruins.length} linha(s) ignorada(s): ${ruins.slice(0,3).join(" / ")}`;
+    aviso(msg, ruins.length ? "var(--alerta)" : "var(--ok)");
+    el("adm-massa").value="";
+    await carregarMetas();
+    if($caminhao.value.trim()) await carregarHistorico();
+  }catch(e){ aviso("Erro: "+e.message,"var(--erro)"); }
 }
 
 /* ---------- 6) LIMPAR A TELA ---------- */
@@ -519,14 +650,16 @@ function limparTela(){
 }
 
 /* ---------- 7) LIGAÇÕES ---------- */
-el("adm-btn").addEventListener("click",salvarMeta);
+el("adm-btn").addEventListener("click",salvarMetaGeral);
+el("adm-btn-cam").addEventListener("click",salvarMetaCaminhao);
+el("adm-btn-massa").addEventListener("click",aplicarMassa);
 el("btn-limpar").addEventListener("click",limparTela);
 $caminhao.addEventListener("change",carregarHistorico);
 $caminhao.addEventListener("blur",carregarHistorico);
 $km.addEventListener("input",validar);
 $litros.addEventListener("input",validar);
 $btn.addEventListener("click",salvar);
-el("adm-meta").value = String(meta).replace(".", ",");
+carregarMetas();
 validar();
 </script>
 </body>
