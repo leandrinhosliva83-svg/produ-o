@@ -167,6 +167,18 @@
   @keyframes pisca-texto{0%,100%{opacity:1}50%{opacity:.25}}
   .calc.piscando{animation:pisca-texto .65s ease-in-out infinite;font-weight:700}
 
+
+  /* botão de silenciar o alarme */
+  .btn-alarme{
+    width:100%;margin-top:12px;padding:13px;font-size:15px;font-weight:800;
+    background:var(--erro);color:#fff;border:0;border-radius:3px;
+    text-transform:uppercase;letter-spacing:.08em;display:none;
+  }
+  .desempenho.vermelho .btn-alarme{display:block}
+  /* a tela inteira dá um leve flash vermelho enquanto o alarme toca */
+  @keyframes flash-tela{0%,100%{box-shadow:inset 0 0 0 0 transparent}50%{box-shadow:inset 0 0 90px 12px #ff000055}}
+  body.em-alarme{animation:flash-tela .7s ease-in-out infinite}
+
   /* área ADM */
   .adm summary{cursor:pointer;font-size:13px;color:var(--texto-fraco);padding:4px 0;letter-spacing:.12em;text-transform:uppercase}
   .adm-corpo{padding-top:16px}
@@ -223,6 +235,7 @@
       <div class="numero" id="desemp-numero">—</div>
       <div class="conta" id="desemp-conta"></div>
       <div class="veredito" id="desemp-veredito"></div>
+      <button id="btn-alarme" class="btn-alarme">Silenciar alarme</button>
     </div>
   </div>
 
@@ -337,6 +350,7 @@ async function carregarHistorico(){
     validar(); return;
   }
 
+  alarmeParar();
   carregando = true;
   $hist.innerHTML='<p class="vazio">Carregando…</p>';
   validar();
@@ -403,7 +417,7 @@ function desenharDesempenho(){
   const bateu=feito>=meta;
 
   box.classList.add("ver", bateu ? "verde" : "vermelho", "piscando");
-  if(!bateu) apitar(3);
+  if(bateu) palmas(); else alarmeLigar();
   el("desemp-numero").textContent=feito.toFixed(2).replace(".",",")+" km/l";
   el("desemp-conta").textContent=
     `${Number(ultimo.km).toLocaleString("pt-BR")} − ${Number(penultimo.km).toLocaleString("pt-BR")} = `+
@@ -420,27 +434,130 @@ function formatarData(d){
 }
 
 
-/* ---------- APITO E VIBRAÇÃO (alerta de abaixo da meta) ---------- */
+/* ---------- ALARME DE ALERTA (abaixo da meta) ----------
+   Sirene com varredura subindo e descendo, sem parar, até:
+   - o motorista tocar em SILENCIAR
+   - trocar de caminhão ou limpar a tela
+   - passar o tempo máximo de segurança                                */
 let somCtx = null;
-function apitar(vezes){
-  vezes = vezes || 2;
+let alarmeNos = null;      // peças de som em funcionamento
+let alarmeRelogio = null;  // agendador
+let alarmeAte = 0;         // hora limite
+let proximaVarredura = 0;
+
+const ALARME_SEGUNDOS = 120;   // tempo máximo tocando
+
+function agendarVarredura(){
+  if(!alarmeNos) return;
+  const agora = somCtx.currentTime;
+  if(proximaVarredura < agora) proximaVarredura = agora + 0.05;
+
+  // agenda as próximas subidas e descidas de tom
+  while(proximaVarredura < agora + 4){
+    const t = proximaVarredura;
+    alarmeNos.osciladores.forEach(function(osc, i){
+      const base = i === 0 ? 0 : 11;                 // segundo tom desafinado: som áspero
+      osc.frequency.setValueAtTime(420 + base, t);
+      osc.frequency.linearRampToValueAtTime(1550 + base, t + 0.85);   // sobe
+      osc.frequency.linearRampToValueAtTime(420 + base, t + 1.75);    // desce
+    });
+    proximaVarredura += 1.75;
+  }
+
+  try{ if(navigator.vibrate) navigator.vibrate([700,120,700,120]); }catch(e){}
+  if(somCtx.currentTime > alarmeAte) alarmeParar();
+}
+
+function alarmeLigar(){
   try{
     somCtx = somCtx || new (window.AudioContext || window.webkitAudioContext)();
     if(somCtx.state === "suspended") somCtx.resume();
-    for(let i=0;i<vezes;i++){
-      const t = somCtx.currentTime + i*0.35;
+    alarmeAte = somCtx.currentTime + ALARME_SEGUNDOS;
+    if(alarmeNos) return;                    // já está tocando
+
+    const saida = somCtx.createGain();
+    saida.gain.value = 1.0;                  // volume no máximo
+    saida.connect(somCtx.destination);
+
+    // tremor rápido no volume: dá o efeito pulsante de sirene
+    const tremor = somCtx.createOscillator();
+    const tremorVol = somCtx.createGain();
+    tremor.frequency.value = 9;
+    tremorVol.gain.value = 0.4;
+    tremor.connect(tremorVol); tremorVol.connect(saida.gain);
+    tremor.start();
+
+    const osciladores = [0,1].map(function(){
       const osc = somCtx.createOscillator();
-      const vol = somCtx.createGain();
-      osc.type = "square";
-      osc.frequency.value = 880;                       // tom agudo, corta o barulho do posto
-      vol.gain.setValueAtTime(0.0001, t);
-      vol.gain.exponentialRampToValueAtTime(0.3, t+0.02);
-      vol.gain.exponentialRampToValueAtTime(0.0001, t+0.28);
-      osc.connect(vol); vol.connect(somCtx.destination);
-      osc.start(t); osc.stop(t+0.3);
-    }
-  }catch(e){ /* navegador sem som: segue sem apitar */ }
-  try{ if(navigator.vibrate) navigator.vibrate([180,90,180]); }catch(e){}
+      osc.type = "sawtooth";                 // onda serrilhada, bem cortante
+      osc.connect(saida);
+      osc.start();
+      return osc;
+    });
+
+    alarmeNos = { saida, tremor, osciladores };
+    proximaVarredura = 0;
+    agendarVarredura();
+    alarmeRelogio = setInterval(agendarVarredura, 2000);
+    document.body.classList.add("em-alarme");
+  }catch(e){ /* navegador sem som: fica só o pisca e a vibração */ }
+}
+
+function alarmeParar(){
+  document.body.classList.remove("em-alarme");
+  if(alarmeRelogio){ clearInterval(alarmeRelogio); alarmeRelogio = null; }
+  if(!alarmeNos) return;
+  try{
+    const t = somCtx.currentTime;
+    alarmeNos.saida.gain.cancelScheduledValues(t);
+    alarmeNos.saida.gain.setValueAtTime(alarmeNos.saida.gain.value, t);
+    alarmeNos.saida.gain.linearRampToValueAtTime(0.0001, t + 0.12);
+    alarmeNos.osciladores.forEach(o=>o.stop(t + 0.15));
+    alarmeNos.tremor.stop(t + 0.15);
+  }catch(e){}
+  alarmeNos = null;
+  try{ if(navigator.vibrate) navigator.vibrate(0); }catch(e){}
+}
+
+function apitar(){ alarmeLigar(); }   // nome antigo, mantido por compatibilidade
+
+/* ---------- SOM DE PARABÉNS (bateu a meta) ----------
+   Fanfarra em sinos: quatro notas subindo e um acorde final.          */
+function nota(freq, inicio, duracao, forca){
+  // duas ondas por nota: uma redonda e uma harmônica, dá corpo de sino
+  [[1, "triangle", 1.0], [2, "sine", 0.35], [3, "sine", 0.14]].forEach(function(camada){
+    const osc = somCtx.createOscillator();
+    const vol = somCtx.createGain();
+    osc.type = camada[1];
+    osc.frequency.setValueAtTime(freq * camada[0], inicio);
+    vol.gain.setValueAtTime(0.0001, inicio);
+    vol.gain.exponentialRampToValueAtTime(forca * camada[2], inicio + 0.015);
+    vol.gain.exponentialRampToValueAtTime(0.0001, inicio + duracao);
+    osc.connect(vol); vol.connect(somCtx.destination);
+    osc.start(inicio); osc.stop(inicio + duracao + 0.05);
+  });
+}
+
+function palmas(){
+  alarmeParar();                                   // nunca os dois ao mesmo tempo
+  try{
+    somCtx = somCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if(somCtx.state === "suspended") somCtx.resume();
+    const t0 = somCtx.currentTime + 0.04;
+
+    // dó - mi - sol - dó agudo, subindo
+    const subida = [523.25, 659.25, 783.99, 1046.50];
+    subida.forEach(function(f, i){
+      nota(f, t0 + i*0.13, 0.42, 0.34);
+    });
+
+    // acorde final, mais demorado, som de "conseguiu"
+    [523.25, 659.25, 783.99, 1046.50].forEach(function(f){
+      nota(f, t0 + 0.58, 1.5, 0.26);
+    });
+  }catch(e){ /* sem som: fica só o pisca verde */ }
+
+  try{ if(navigator.vibrate) navigator.vibrate([90,70,90,70,200]); }catch(e){}
 }
 
 let alertaAnterior = "";   // evita apitar a cada tecla digitada
@@ -501,7 +618,9 @@ function validar(){
     const abaixo = consumo < meta;
     $calc.classList.toggle("piscando", abaixo);
     const marcaAtual = `${num}|${km}|${litros}|${abaixo}`;
-    if(abaixo && marcaAtual !== alertaAnterior) apitar(2);
+    if(marcaAtual !== alertaAnterior){
+      if(abaixo) alarmeLigar(); else palmas();
+    }
     alertaAnterior = marcaAtual;
   }else{
     $calc.textContent="";
@@ -705,6 +824,7 @@ function limparTela(){
   $calc.textContent=""; $calc.classList.remove("piscando"); alertaAnterior="";
   $status.className="status"; $status.innerHTML="";
   el("adm-msg").textContent="";
+  alarmeParar();
   validar();
   $caminhao.focus();
 }
@@ -714,6 +834,7 @@ el("adm-btn").addEventListener("click",salvarMetaGeral);
 el("adm-btn-cam").addEventListener("click",salvarMetaCaminhao);
 el("adm-btn-massa").addEventListener("click",aplicarMassa);
 el("btn-limpar").addEventListener("click",limparTela);
+el("btn-alarme").addEventListener("click",alarmeParar);
 $caminhao.addEventListener("change",carregarHistorico);
 $caminhao.addEventListener("blur",carregarHistorico);
 $km.addEventListener("input",validar);
