@@ -405,7 +405,7 @@ function desenharDesempenho(){
   const bateu=feito>=meta;
 
   box.classList.add("ver", bateu ? "verde" : "vermelho", "piscando");
-  if(!bateu) apitar(3);
+  if(!bateu) apitar(12);
   el("desemp-numero").textContent=feito.toFixed(2).replace(".",",")+" km/l";
   el("desemp-conta").textContent=
     `${Number(ultimo.km).toLocaleString("pt-BR")} − ${Number(penultimo.km).toLocaleString("pt-BR")} = `+
@@ -422,27 +422,40 @@ function formatarData(d){
 }
 
 
-/* ---------- APITO E VIBRAÇÃO (alerta de abaixo da meta) ---------- */
+/* ---------- ALARME (abaixo da meta) ---------- */
 let somCtx = null;
 function apitar(vezes){
-  vezes = vezes || 2;
+  vezes = vezes || 6;                                  // cada "vez" é um toque da sirene
   try{
     somCtx = somCtx || new (window.AudioContext || window.webkitAudioContext)();
     if(somCtx.state === "suspended") somCtx.resume();
+
+    const geral = somCtx.createGain();                 // volume geral, no talo
+    geral.gain.value = 1.0;
+    geral.connect(somCtx.destination);
+
     for(let i=0;i<vezes;i++){
-      const t = somCtx.currentTime + i*0.35;
-      const osc = somCtx.createOscillator();
-      const vol = somCtx.createGain();
-      osc.type = "square";
-      osc.frequency.value = 880;                       // tom agudo, corta o barulho do posto
-      vol.gain.setValueAtTime(0.0001, t);
-      vol.gain.exponentialRampToValueAtTime(0.3, t+0.02);
-      vol.gain.exponentialRampToValueAtTime(0.0001, t+0.28);
-      osc.connect(vol); vol.connect(somCtx.destination);
-      osc.start(t); osc.stop(t+0.3);
+      const t = somCtx.currentTime + i*0.34;
+      const alto = (i % 2 === 0);                      // alterna grave/agudo: som de sirene
+
+      // duas ondas juntas, levemente desafinadas, para o som ficar áspero e cortante
+      [0, 7].forEach(function(desafino){
+        const osc = somCtx.createOscillator();
+        const vol = somCtx.createGain();
+        osc.type = "sawtooth";                         // onda serrilhada, bem mais agressiva
+        osc.frequency.setValueAtTime((alto ? 1200 : 800) + desafino, t);
+        vol.gain.setValueAtTime(0.0001, t);
+        vol.gain.exponentialRampToValueAtTime(0.9, t + 0.015);
+        vol.gain.setValueAtTime(0.9, t + 0.24);
+        vol.gain.exponentialRampToValueAtTime(0.0001, t + 0.30);
+        osc.connect(vol); vol.connect(geral);
+        osc.start(t); osc.stop(t + 0.32);
+      });
     }
   }catch(e){ /* navegador sem som: segue sem apitar */ }
-  try{ if(navigator.vibrate) navigator.vibrate([180,90,180]); }catch(e){}
+
+  // vibração longa, no ritmo da sirene
+  try{ if(navigator.vibrate) navigator.vibrate([300,80,300,80,300,80,300]); }catch(e){}
 }
 
 let alertaAnterior = "";   // evita apitar a cada tecla digitada
@@ -503,7 +516,7 @@ function validar(){
     const abaixo = consumo < meta;
     $calc.classList.toggle("piscando", abaixo);
     const marcaAtual = `${num}|${km}|${litros}|${abaixo}`;
-    if(abaixo && marcaAtual !== alertaAnterior) apitar(2);
+    if(abaixo && marcaAtual !== alertaAnterior) apitar(6);
     alertaAnterior = marcaAtual;
   }else{
     $calc.textContent="";
