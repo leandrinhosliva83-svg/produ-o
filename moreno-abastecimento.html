@@ -523,38 +523,21 @@ function alarmeParar(){
 
 function apitar(){ alarmeLigar(); }   // nome antigo, mantido por compatibilidade
 
-/* ---------- PALMAS (bateu a meta) ----------
-   Cada palma é um estalo curto de ruído filtrado. Sorteando dezenas
-   deles em tempos e volumes diferentes, sai o som de uma plateia.     */
-let ruidoPronto = null;
-
-function bufferDeRuido(){
-  if(ruidoPronto) return ruidoPronto;
-  const amostras = somCtx.sampleRate * 0.4;
-  const buffer = somCtx.createBuffer(1, amostras, somCtx.sampleRate);
-  const dados = buffer.getChannelData(0);
-  for(let i=0;i<amostras;i++) dados[i] = Math.random()*2 - 1;   // chiado
-  ruidoPronto = buffer;
-  return buffer;
-}
-
-function umaPalma(t, forca){
-  const fonte = somCtx.createBufferSource();
-  fonte.buffer = bufferDeRuido();
-  fonte.playbackRate.value = 0.8 + Math.random()*0.6;
-
-  const filtro = somCtx.createBiquadFilter();          // deixa o estalo mais seco
-  filtro.type = "bandpass";
-  filtro.frequency.value = 1100 + Math.random()*2200;
-  filtro.Q.value = 0.9;
-
-  const vol = somCtx.createGain();
-  vol.gain.setValueAtTime(0.0001, t);
-  vol.gain.exponentialRampToValueAtTime(forca, t + 0.004);   // ataque seco
-  vol.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);   // cai rápido
-
-  fonte.connect(filtro); filtro.connect(vol); vol.connect(somCtx.destination);
-  fonte.start(t); fonte.stop(t + 0.12);
+/* ---------- SOM DE PARABÉNS (bateu a meta) ----------
+   Fanfarra em sinos: quatro notas subindo e um acorde final.          */
+function nota(freq, inicio, duracao, forca){
+  // duas ondas por nota: uma redonda e uma harmônica, dá corpo de sino
+  [[1, "triangle", 1.0], [2, "sine", 0.35], [3, "sine", 0.14]].forEach(function(camada){
+    const osc = somCtx.createOscillator();
+    const vol = somCtx.createGain();
+    osc.type = camada[1];
+    osc.frequency.setValueAtTime(freq * camada[0], inicio);
+    vol.gain.setValueAtTime(0.0001, inicio);
+    vol.gain.exponentialRampToValueAtTime(forca * camada[2], inicio + 0.015);
+    vol.gain.exponentialRampToValueAtTime(0.0001, inicio + duracao);
+    osc.connect(vol); vol.connect(somCtx.destination);
+    osc.start(inicio); osc.stop(inicio + duracao + 0.05);
+  });
 }
 
 function palmas(){
@@ -562,22 +545,22 @@ function palmas(){
   try{
     somCtx = somCtx || new (window.AudioContext || window.webkitAudioContext)();
     if(somCtx.state === "suspended") somCtx.resume();
-    const inicio = somCtx.currentTime + 0.05;
-    const duracao = 2.6;
+    const t0 = somCtx.currentTime + 0.04;
 
-    for(let i=0;i<90;i++){
-      const quando = inicio + Math.random()*duracao;
-      // começa forte e vai diminuindo, como plateia se acalmando
-      const desvanece = 1 - ((quando - inicio) / duracao) * 0.65;
-      umaPalma(quando, (0.10 + Math.random()*0.28) * desvanece);
-    }
-    // três palmas destacadas na frente, para o som "entrar" bem
-    [0, 0.13, 0.27].forEach(function(d){ umaPalma(inicio + d, 0.45); });
+    // dó - mi - sol - dó agudo, subindo
+    const subida = [523.25, 659.25, 783.99, 1046.50];
+    subida.forEach(function(f, i){
+      nota(f, t0 + i*0.13, 0.42, 0.34);
+    });
+
+    // acorde final, mais demorado, som de "conseguiu"
+    [523.25, 659.25, 783.99, 1046.50].forEach(function(f){
+      nota(f, t0 + 0.58, 1.5, 0.26);
+    });
   }catch(e){ /* sem som: fica só o pisca verde */ }
 
-  try{ if(navigator.vibrate) navigator.vibrate([60,60,60,60,60]); }catch(e){}
+  try{ if(navigator.vibrate) navigator.vibrate([90,70,90,70,200]); }catch(e){}
 }
-
 
 let alertaAnterior = "";   // evita apitar a cada tecla digitada
 
