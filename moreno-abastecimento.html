@@ -419,7 +419,7 @@ function desenharDesempenho(){
   const bateu=feito>=meta;
 
   box.classList.add("ver", bateu ? "verde" : "vermelho", "piscando");
-  if(!bateu) alarmeLigar();
+  if(bateu) palmas(); else alarmeLigar();
   el("desemp-numero").textContent=feito.toFixed(2).replace(".",",")+" km/l";
   el("desemp-conta").textContent=
     `${Number(ultimo.km).toLocaleString("pt-BR")} − ${Number(penultimo.km).toLocaleString("pt-BR")} = `+
@@ -523,6 +523,62 @@ function alarmeParar(){
 
 function apitar(){ alarmeLigar(); }   // nome antigo, mantido por compatibilidade
 
+/* ---------- PALMAS (bateu a meta) ----------
+   Cada palma é um estalo curto de ruído filtrado. Sorteando dezenas
+   deles em tempos e volumes diferentes, sai o som de uma plateia.     */
+let ruidoPronto = null;
+
+function bufferDeRuido(){
+  if(ruidoPronto) return ruidoPronto;
+  const amostras = somCtx.sampleRate * 0.4;
+  const buffer = somCtx.createBuffer(1, amostras, somCtx.sampleRate);
+  const dados = buffer.getChannelData(0);
+  for(let i=0;i<amostras;i++) dados[i] = Math.random()*2 - 1;   // chiado
+  ruidoPronto = buffer;
+  return buffer;
+}
+
+function umaPalma(t, forca){
+  const fonte = somCtx.createBufferSource();
+  fonte.buffer = bufferDeRuido();
+  fonte.playbackRate.value = 0.8 + Math.random()*0.6;
+
+  const filtro = somCtx.createBiquadFilter();          // deixa o estalo mais seco
+  filtro.type = "bandpass";
+  filtro.frequency.value = 1100 + Math.random()*2200;
+  filtro.Q.value = 0.9;
+
+  const vol = somCtx.createGain();
+  vol.gain.setValueAtTime(0.0001, t);
+  vol.gain.exponentialRampToValueAtTime(forca, t + 0.004);   // ataque seco
+  vol.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);   // cai rápido
+
+  fonte.connect(filtro); filtro.connect(vol); vol.connect(somCtx.destination);
+  fonte.start(t); fonte.stop(t + 0.12);
+}
+
+function palmas(){
+  alarmeParar();                                   // nunca os dois ao mesmo tempo
+  try{
+    somCtx = somCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if(somCtx.state === "suspended") somCtx.resume();
+    const inicio = somCtx.currentTime + 0.05;
+    const duracao = 2.6;
+
+    for(let i=0;i<90;i++){
+      const quando = inicio + Math.random()*duracao;
+      // começa forte e vai diminuindo, como plateia se acalmando
+      const desvanece = 1 - ((quando - inicio) / duracao) * 0.65;
+      umaPalma(quando, (0.10 + Math.random()*0.28) * desvanece);
+    }
+    // três palmas destacadas na frente, para o som "entrar" bem
+    [0, 0.13, 0.27].forEach(function(d){ umaPalma(inicio + d, 0.45); });
+  }catch(e){ /* sem som: fica só o pisca verde */ }
+
+  try{ if(navigator.vibrate) navigator.vibrate([60,60,60,60,60]); }catch(e){}
+}
+
+
 let alertaAnterior = "";   // evita apitar a cada tecla digitada
 
 /* ---------- 3) VALIDAÇÃO ---------- */
@@ -581,7 +637,9 @@ function validar(){
     const abaixo = consumo < meta;
     $calc.classList.toggle("piscando", abaixo);
     const marcaAtual = `${num}|${km}|${litros}|${abaixo}`;
-    if(abaixo && marcaAtual !== alertaAnterior) alarmeLigar();
+    if(marcaAtual !== alertaAnterior){
+      if(abaixo) alarmeLigar(); else palmas();
+    }
     alertaAnterior = marcaAtual;
   }else{
     $calc.textContent="";
