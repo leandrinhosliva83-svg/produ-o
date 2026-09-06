@@ -96,7 +96,7 @@
   .opcoes{display:flex;gap:10px}
   .opcoes button{
     flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.18);
-    color:var(--texto);font-weight:600;padding:13px;
+    color:var(--texto);font-weight:600;padding:13px 6px;font-size:16px;
   }
   .opcoes button.ativo{
     background:var(--limao);border-color:var(--limao);color:#16173a;font-weight:800;
@@ -154,6 +154,7 @@
         <div class="opcoes" data-pergunta="saveiro">
           <button type="button" data-valor="Sim">Sim</button>
           <button type="button" data-valor="Não">Não</button>
+          <button type="button" data-valor="N/A">N/A</button>
         </div>
       </div>
     </section>
@@ -172,7 +173,7 @@
 
     <div class="rodape-adm">
       <a href="#" id="linkAdm">Acesso administrativo</a>
-      <p class="ajuda" id="statusOnline" style="margin:8px 0 0;font-size:12px">versão 7 · verificando base...</p>
+      <p class="ajuda" id="statusOnline" style="margin:8px 0 0;font-size:12px">versão 9 · verificando base...</p>
     </div>
   </div>
 
@@ -202,7 +203,7 @@
         <canvas id="grafico" style="width:100%;display:block"></canvas>
         <div class="legenda">
           <span><i style="background:linear-gradient(90deg,#00A859,#A8CF45)"></i>Responderam Sim</span>
-          <span><i style="background:rgba(255,255,255,.14)"></i>Responderam Não</span>
+          <span><i style="background:rgba(255,255,255,.14)"></i>Não ou N/A</span>
         </div>
       </div>
       <div id="graficos"></div>
@@ -211,7 +212,10 @@
       <button id="btnPdf">Baixar PDF</button>
       <div class="linha-botoes">
         <button class="secundario" id="btnVoltar">Voltar ao formulário</button>
-        <button class="secundario" id="btnApagar">Apagar respostas</button>
+        <button class="secundario" id="btnApagar">Limpar este aparelho</button>
+      </div>
+      <div class="linha-botoes">
+        <button class="secundario" id="btnReenviar">Reenviar presas para a planilha</button>
       </div>
     </section>
   </div>
@@ -348,13 +352,13 @@ async function decifrar(txt, mat){
     const r = await fetch('base.json?v=' + Date.now(), {cache:'no-store'});
     if(r.ok){
       baseOnline = await r.json();
-      st.textContent = 'versão 7 · base online: ' + Object.keys(baseOnline).length + ' matrículas';
+      st.textContent = 'versão 9 · base online: ' + Object.keys(baseOnline).length + ' matrículas';
       mostrarStatusBanco();
       return;
     }
-    st.textContent = 'versão 7 · base online não encontrada (erro ' + r.status + ')';
+    st.textContent = 'versão 9 · base online não encontrada (erro ' + r.status + ')';
   }catch(e){
-    st.textContent = 'versão 7 · falha ao baixar a base: ' + e.message;
+    st.textContent = 'versão 9 · falha ao baixar a base: ' + e.message;
   }
 })();
 
@@ -465,7 +469,8 @@ ITENS.forEach(it=>{
     '<div class="item"><div class="titulo">'+it.nome+'</div>'+
     '<div class="opcoes" data-pergunta="'+it.id+'">'+
     '<button type="button" data-valor="Sim">Sim</button>'+
-    '<button type="button" data-valor="Não">Não</button></div></div>');
+    '<button type="button" data-valor="Não">Não</button>'+
+    '<button type="button" data-valor="N/A">N/A</button></div></div>');
 });
 document.querySelectorAll('.opcoes button').forEach(b=>{
   b.onclick = function(){
@@ -586,37 +591,66 @@ document.getElementById('linkAdm').onclick = async function(e){
   if(URL_PLANILHA){
     try{
       const r = await fetch(URL_PLANILHA + '?ler=1&t=' + Date.now());
-      const daNuvem = await r.json();
-      const locais = respostas.filter(r2 => !daNuvem.some(n => n.enviadoEm === r2.enviadoEm));
-      respostas = daNuvem.concat(locais)
-        .sort((a,b) => (a.enviadoEm||'').localeCompare(b.enviadoEm||''));
+      const daNuvem = (await r.json()).map(x => Object.assign({}, x, {origem:'planilha'}));
+      const codigos = daNuvem.map(n => String(n.enviadoEm));
+      // o que está preso neste aparelho e ainda não chegou na planilha
+      pendentes = respostas.filter(r2 => !codigos.includes(String(r2.enviadoEm)))
+                           .map(x => Object.assign({}, x, {origem:'aparelho'}));
+      respostas = daNuvem.concat(pendentes)
+        .sort((a,b) => String(a.enviadoEm||'').localeCompare(String(b.enviadoEm||'')));
     }catch(err){
       alert('Não consegui ler a planilha (' + err.message + '). Mostrando só o que está neste aparelho.');
     }
   }
   montarAdm(); trocarTela(true);
 };
+
+let pendentes = [];
+
+// manda para a planilha o que ficou preso no aparelho
+document.getElementById('btnReenviar').onclick = async function(){
+  if(!URL_PLANILHA){ alert('A planilha não está ligada.'); return; }
+  if(!pendentes.length){ alert('Não há respostas presas neste aparelho.'); return; }
+  this.disabled = true; this.textContent = 'Reenviando...';
+  let enviadas = 0;
+  for(const reg of pendentes){
+    try{
+      const copia = Object.assign({}, reg); delete copia.origem;
+      const r = await fetch(URL_PLANILHA, {method:'POST',
+        headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(copia)});
+      if((await r.json()).ok) enviadas++;
+    }catch(e){}
+  }
+  respostas = []; salvar();
+  alert(enviadas + ' de ' + pendentes.length + ' enviadas para a planilha.');
+  location.reload();
+};
 document.getElementById('btnVoltar').onclick = ()=> location.reload();
 document.getElementById('btnApagar').onclick = function(){
-  if(URL_PLANILHA){ alert('Com a planilha ligada, apague as linhas direto na planilha do Google.'); return; }
-  if(confirm('Apagar todas as respostas? A base de matrículas continua salva.')){
-    respostas = []; salvar(); montarAdm();
-  }
+  if(!confirm('Isso apaga só as respostas guardadas NESTE aparelho. O que já está na planilha do Google não é tocado. Continuar?')) return;
+  respostas = respostas.filter(r => r.origem === 'planilha');
+  pendentes = [];
+  try{ localStorage.removeItem('respostasFrota'); }catch(e){}
+  montarAdm();
+  alert('Limpo. O que aparece agora vem da planilha.');
 };
 
 function montarAdm(){
   mostrarStatusBase();
   const total = respostas.length;
   const g = document.getElementById('graficos');
-  g.innerHTML = '<p class="ajuda">'+total+' pessoa(s) assinaram.</p>';
+  const naPlanilha = respostas.filter(r => r.origem === 'planilha').length;
+  const noAparelho = respostas.filter(r => r.origem === 'aparelho').length;
+  g.innerHTML = '<p class="ajuda">' + total + ' resposta(s): ' + naPlanilha + ' na planilha' +
+    (noAparelho ? ' e <b>' + noAparelho + ' presa(s) neste aparelho</b> (use o botão reenviar)' : '') + '.</p>';
 
   let html = '<tr><th>Matrícula</th><th>Nome</th>';
   PERGUNTAS.forEach(p=> html += '<th>'+p.nome.split(' ')[0]+'</th>');
-  html += '<th>Data</th><th>Assinatura</th></tr>';
+  html += '<th>Data</th><th>Onde está</th><th>Assinatura</th></tr>';
   respostas.forEach(r=>{
     html += '<tr><td>'+r.matricula+'</td><td>'+r.nome+'</td>';
     PERGUNTAS.forEach(p=> html += '<td>'+(valor(r,p.id)||'-')+'</td>');
-    html += '<td>'+r.dataHora+'</td>'+
+    html += '<td>'+r.dataHora+'</td><td>'+(r.origem === 'planilha' ? 'planilha' : 'aparelho')+'</td>'+
             '<td><img src="'+r.assinatura+'" style="height:34px;background:#fff;border-radius:3px"></td></tr>';
   });
   document.getElementById('tabela').innerHTML = html;
@@ -661,7 +695,8 @@ function desenharGrafico(){
 
   PERGUNTAS.forEach((p,i)=>{
     const sim = respostas.filter(r => valor(r,p.id) === 'Sim').length;
-    const nao = total - sim;
+    const na  = respostas.filter(r => valor(r,p.id) === 'N/A').length;
+    const nao = total - sim - na;
     const y = i * alturaLinha + 8;
 
     // nome da pergunta e contagem
@@ -670,7 +705,7 @@ function desenharGrafico(){
     g.fillText(p.nome, 0, y + 12);
     g.textAlign = 'right';
     g.fillStyle = '#a9b0d6'; g.font = '13px Helvetica';
-    g.fillText(sim + ' sim  /  ' + nao + ' não', larg, y + 12);
+    g.fillText(sim + ' sim / ' + nao + ' não' + (na ? ' / ' + na + ' N/A' : ''), larg, y + 12);
 
     // trilho
     const topoBarra = y + 20;
@@ -722,7 +757,8 @@ document.getElementById('btnPdf').onclick = function(){
   doc.text('Total de assinaturas: ' + respostas.length, 14, y); y += 8;
   PERGUNTAS.forEach(p=>{
     const sim = respostas.filter(r => valor(r,p.id) === 'Sim').length;
-    doc.text(p.nome + ': ' + sim + ' Sim / ' + (respostas.length - sim) + ' Nao', 14, y);
+    const na  = respostas.filter(r => valor(r,p.id) === 'N/A').length;
+    doc.text(p.nome + ': ' + sim + ' Sim / ' + (respostas.length - sim - na) + ' Nao / ' + na + ' N/A', 14, y);
     y += 6;
   });
 
