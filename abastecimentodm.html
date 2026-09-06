@@ -139,6 +139,34 @@
   .desempenho.verde .veredito{color:var(--verde)}
   .desempenho.vermelho .veredito{color:var(--erro)}
 
+
+  /* ---------- CAMPOS DE DIGITAÇÃO EM AMARELO ---------- */
+  #caminhao,#km,#litros{
+    background:#f7f0c0;color:#14171a;border-color:#c9bd6e;font-weight:700;
+  }
+  #caminhao::placeholder,#km::placeholder,#litros::placeholder{color:#8d8253;font-weight:400}
+  #caminhao:focus,#km:focus,#litros:focus{
+    background:#fffce3;border-color:#e0c500;outline:3px solid #e0c50055;
+  }
+  #caminhao.ruim,#km.ruim,#litros.ruim{
+    background:#ffd9d4;color:#5c1811;border-color:var(--erro);
+  }
+
+  /* ---------- PISCA-PISCA DO RESULTADO ---------- */
+  @keyframes pisca-vermelho{
+    0%,100%{background:#2a1512;border-color:var(--erro)}
+    50%    {background:#6d1d13;border-color:#ff9c92}
+  }
+  @keyframes pisca-verde{
+    0%,100%{background:#16240f;border-color:var(--verde)}
+    50%    {background:#2e4a1c;border-color:#c6f08a}
+  }
+  .desempenho.vermelho.piscando{animation:pisca-vermelho .65s ease-in-out infinite}
+  .desempenho.verde.piscando{animation:pisca-verde .65s ease-in-out 5}
+
+  @keyframes pisca-texto{0%,100%{opacity:1}50%{opacity:.25}}
+  .calc.piscando{animation:pisca-texto .65s ease-in-out infinite;font-weight:700}
+
   /* área ADM */
   .adm summary{cursor:pointer;font-size:13px;color:var(--texto-fraco);padding:4px 0;letter-spacing:.12em;text-transform:uppercase}
   .adm-corpo{padding-top:16px}
@@ -374,7 +402,8 @@ function desenharDesempenho(){
   const feito=rodou/litros;
   const bateu=feito>=meta;
 
-  box.classList.add("ver", bateu ? "verde" : "vermelho");
+  box.classList.add("ver", bateu ? "verde" : "vermelho", "piscando");
+  if(!bateu) apitar(3);
   el("desemp-numero").textContent=feito.toFixed(2).replace(".",",")+" km/l";
   el("desemp-conta").textContent=
     `${Number(ultimo.km).toLocaleString("pt-BR")} − ${Number(penultimo.km).toLocaleString("pt-BR")} = `+
@@ -389,6 +418,32 @@ function formatarData(d){
   const p = String(d).slice(0,10).split("-");
   return p.length===3 ? `${p[2]}/${p[1]}` : d;
 }
+
+
+/* ---------- APITO E VIBRAÇÃO (alerta de abaixo da meta) ---------- */
+let somCtx = null;
+function apitar(vezes){
+  vezes = vezes || 2;
+  try{
+    somCtx = somCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if(somCtx.state === "suspended") somCtx.resume();
+    for(let i=0;i<vezes;i++){
+      const t = somCtx.currentTime + i*0.35;
+      const osc = somCtx.createOscillator();
+      const vol = somCtx.createGain();
+      osc.type = "square";
+      osc.frequency.value = 880;                       // tom agudo, corta o barulho do posto
+      vol.gain.setValueAtTime(0.0001, t);
+      vol.gain.exponentialRampToValueAtTime(0.3, t+0.02);
+      vol.gain.exponentialRampToValueAtTime(0.0001, t+0.28);
+      osc.connect(vol); vol.connect(somCtx.destination);
+      osc.start(t); osc.stop(t+0.3);
+    }
+  }catch(e){ /* navegador sem som: segue sem apitar */ }
+  try{ if(navigator.vibrate) navigator.vibrate([180,90,180]); }catch(e){}
+}
+
+let alertaAnterior = "";   // evita apitar a cada tecla digitada
 
 /* ---------- 3) VALIDAÇÃO ---------- */
 function validar(){
@@ -443,6 +498,11 @@ function validar(){
     $calc.textContent = `Este lançamento: ${(km-Number(ultimo.km)).toLocaleString("pt-BR")} km ÷ ${litros} L = `+
       `${consumo.toFixed(2).replace(".",",")} km/l · meta ${meta.toFixed(2).replace(".",",")} · ${situacao}`;
     $calc.style.color = consumo>=meta ? "var(--ok)" : "var(--erro)";
+    const abaixo = consumo < meta;
+    $calc.classList.toggle("piscando", abaixo);
+    const marcaAtual = `${num}|${km}|${litros}|${abaixo}`;
+    if(abaixo && marcaAtual !== alertaAnterior) apitar(2);
+    alertaAnterior = marcaAtual;
   }else{
     $calc.textContent="";
   }
@@ -642,7 +702,7 @@ function limparTela(){
   historico=[];
   $hist.innerHTML='<p class="vazio">Digite o número do caminhão para carregar.</p>';
   el("desempenho").className="desempenho";
-  $calc.textContent="";
+  $calc.textContent=""; $calc.classList.remove("piscando"); alertaAnterior="";
   $status.className="status"; $status.innerHTML="";
   el("adm-msg").textContent="";
   validar();
