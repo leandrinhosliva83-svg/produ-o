@@ -1,0 +1,12 @@
+{
+  "name": "proxy-axiagro",
+  "version": "1.0.0",
+  "description": "Proxy CORS para a API interna da Usina Moreno",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
