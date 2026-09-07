@@ -260,44 +260,63 @@
     </div>
   </div>
 
+  
+
   <details class="cartao adm">
     <summary>Metas (ADM)</summary>
     <div class="adm-corpo">
-
-      <p class="rot2">Meta geral da frota</p>
-      <p class="dica">Vale para todo caminhão que não tiver meta própria.</p>
-      <div class="dupla">
-        <div class="campo"><input id="adm-meta" inputmode="decimal" placeholder="2,5"></div>
-        <div class="campo"><button id="adm-btn" class="btn-secundario">Salvar geral</button></div>
+      <div id="adm-porta">
+        <p class="dica">Área restrita. Informe a senha para acessar as metas.</p>
+        <div class="campo">
+          <input id="adm-senha" type="password" inputmode="numeric" placeholder="Senha">
+        </div>
+        <button id="adm-entrar" class="btn-secundario">Entrar</button>
+        <p class="adm-msg" id="adm-porta-msg"></p>
       </div>
 
-      <hr class="div">
-
-      <p class="rot2">Meta de um caminhão</p>
-      <div class="dupla">
-        <div class="campo">
-          <label for="adm-cam">Caminhão</label>
-          <input id="adm-cam" inputmode="numeric" placeholder="1042">
+      <div id="adm-cofre" style="display:none">
+        <p class="rot2">Meta geral da frota</p>
+        <p class="dica">Vale para todo caminhão que não tiver meta própria.</p>
+        <div class="dupla">
+          <div class="campo"><input id="adm-meta" inputmode="decimal" placeholder="2,5"></div>
+          <div class="campo"><button id="adm-btn" class="btn-secundario">Salvar geral</button></div>
         </div>
-        <div class="campo">
-          <label for="adm-cam-meta">Meta (km/l)</label>
-          <input id="adm-cam-meta" inputmode="decimal" placeholder="3,8">
+
+        <hr class="div">
+
+        <p class="rot2">Meta de um caminhão</p>
+        <div class="dupla">
+          <div class="campo">
+            <label for="adm-cam">Caminhão</label>
+            <input id="adm-cam" inputmode="numeric" placeholder="1042">
+          </div>
+          <div class="campo">
+            <label for="adm-cam-meta">Meta (km/l)</label>
+            <input id="adm-cam-meta" inputmode="decimal" placeholder="3,8">
+          </div>
+        </div>
+        <button id="adm-btn-cam" class="btn-secundario">Salvar este caminhão</button>
+
+        <hr class="div">
+
+        <p class="rot2">Várias de uma vez</p>
+        <p class="dica">Na sua planilha, selecione as duas colunas (caminhão e meta), copie e cole aqui embaixo.</p>
+        <textarea id="adm-massa" rows="6" placeholder="1042&#9;3,8&#10;1108&#9;4,0"></textarea>
+        <button id="adm-btn-massa" class="btn-secundario">Aplicar lista</button>
+
+        <p class="adm-msg" id="adm-msg"></p>
+
+        <hr class="div">
+        <p class="rot2">Metas cadastradas</p>
+        <div id="adm-lista"><p class="vazio">Carregando…</p></div>
+
+        <hr class="div">
+        <p class="rot2">Trocar a senha</p>
+        <div class="dupla">
+          <div class="campo"><input id="adm-nova-senha" type="password" placeholder="Nova senha"></div>
+          <div class="campo"><button id="adm-btn-senha" class="btn-secundario">Trocar</button></div>
         </div>
       </div>
-      <button id="adm-btn-cam" class="btn-secundario">Salvar este caminhão</button>
-
-      <hr class="div">
-
-      <p class="rot2">Várias de uma vez</p>
-      <p class="dica">Na sua planilha, selecione as duas colunas (caminhão e meta), copie e cole aqui embaixo. Uma linha por caminhão.</p>
-      <textarea id="adm-massa" rows="6" placeholder="1042&#9;3,8&#10;1108&#9;4,0&#10;1215&#9;3,5"></textarea>
-      <button id="adm-btn-massa" class="btn-secundario">Aplicar lista</button>
-
-      <p class="adm-msg" id="adm-msg"></p>
-
-      <hr class="div">
-      <p class="rot2">Metas cadastradas</p>
-      <div id="adm-lista"><p class="vazio">Carregando…</p></div>
     </div>
   </details>
 
@@ -696,7 +715,9 @@ async function salvar(){
   }
 }
 
-/* ---------- 5) ADM: METAS ---------- */
+/* ---------- 5) ADM: METAS (protegido por senha) ---------- */
+const SENHA_DEMO = "1234";
+let senhaAdm = "";
 
 /* Converte "3,8" ou "3.8" em número. Devolve 0 se não for válido. */
 function numero(txt){
@@ -704,18 +725,14 @@ function numero(txt){
   return n > 0 ? n : 0;
 }
 
-/* Envia um pedido ao Apps Script e devolve a resposta já lida. */
+function aviso(texto, cor){
+  const m = el("adm-msg"); m.style.color = cor; m.textContent = texto;
+}
+
+/* Envia um pedido ao Apps Script, sempre com a senha junto. */
 async function pedir(corpo){
-  if(!API_URL){                       // modo demonstração
-    await new Promise(r=>setTimeout(r,250));
-    if(corpo.acao==="salvarMeta"){
-      if(corpo.caminhao) DEMO_METAS[corpo.caminhao]=corpo.meta; else DEMO_META=corpo.meta;
-    }
-    if(corpo.acao==="salvarMetasEmMassa"){
-      corpo.lista.forEach(i=>{ DEMO_METAS[i.caminhao]=i.meta; });
-    }
-    return {ok:true};
-  }
+  if(!API_URL){ await new Promise(r=>setTimeout(r,200)); return {ok:true}; }
+  corpo.senha = senhaAdm;
   const r = await fetch(API_URL,{
     method:"POST",
     headers:{"Content-Type":"text/plain;charset=utf-8"},
@@ -726,25 +743,48 @@ async function pedir(corpo){
   return j;
 }
 
-function aviso(texto, cor){
-  const m = el("adm-msg");
-  m.style.color = cor;
-  m.textContent = texto;
+/* ---------- ENTRADA ---------- */
+async function entrarAdm(){
+  const digitada = el("adm-senha").value.trim();
+  const msg = el("adm-porta-msg");
+  if(!digitada){ msg.style.color="var(--erro)"; msg.textContent="Digite a senha."; return; }
+  msg.style.color="var(--texto-fraco)"; msg.textContent="Conferindo…";
+  try{
+    if(API_URL){
+      const r = await fetch(API_URL,{
+        method:"POST",
+        headers:{"Content-Type":"text/plain;charset=utf-8"},
+        body:JSON.stringify({acao:"verificarSenha", senha:digitada})
+      });
+      const j = await r.json();
+      if(!j.ok) throw new Error(j.erro||"Senha incorreta");
+    }else if(digitada !== SENHA_DEMO){ throw new Error("Senha incorreta"); }
+    senhaAdm = digitada;
+    el("adm-senha").value=""; msg.textContent="";
+    el("adm-porta").style.display="none";
+    el("adm-cofre").style.display="block";
+    carregarMetas();
+  }catch(e){ msg.style.color="var(--erro)"; msg.textContent=e.message; }
 }
 
-/* Lê todas as metas e desenha a lista */
+async function trocarSenha(){
+  const nova = el("adm-nova-senha").value.trim();
+  if(nova.length < 4){ aviso("A nova senha precisa de ao menos 4 caracteres.","var(--erro)"); return; }
+  aviso("Trocando…","var(--texto-fraco)");
+  try{
+    await pedir({acao:"trocarSenha", nova:nova});
+    senhaAdm = nova; el("adm-nova-senha").value="";
+    aviso("Senha trocada. Anote em lugar seguro.","var(--ok)");
+  }catch(e){ aviso("Erro: "+e.message,"var(--erro)"); }
+}
+
+/* ---------- METAS ---------- */
 async function carregarMetas(){
   try{
-    let geral, lista;
-    if(API_URL){
-      const r = await fetch(API_URL + "?acao=metas");
-      const j = await r.json();
-      geral = Number(j.geral) || META_PADRAO;
-      lista = j.lista || [];
-    }else{
-      geral = DEMO_META;
-      lista = Object.keys(DEMO_METAS).map(c=>({caminhao:c, meta:DEMO_METAS[c]}));
-    }
+    const r = await fetch(API_URL + "?acao=metas");
+    const j = await r.json();
+    const geral = Number(j.geral) || 2.5;
+    const lista = j.lista || [];
     el("adm-meta").value = String(geral).replace(".", ",");
     lista.sort((a,b)=>String(a.caminhao).localeCompare(String(b.caminhao),"pt-BR",{numeric:true}));
     el("adm-lista").innerHTML =
@@ -764,8 +804,8 @@ async function salvarMetaGeral(){
   try{
     await pedir({acao:"salvarMeta", caminhao:"", meta:valor});
     aviso(`Meta geral salva: ${valor.toFixed(2).replace(".",",")} km/l.`,"var(--ok)");
-    await carregarMetas();
-    if($caminhao.value.trim()) await carregarHistorico();
+    carregarMetas();
+    if($caminhao.value.trim()) carregarHistorico();
   }catch(e){ aviso("Erro: "+e.message,"var(--erro)"); }
 }
 
@@ -779,17 +819,16 @@ async function salvarMetaCaminhao(){
     await pedir({acao:"salvarMeta", caminhao:num, meta:valor});
     aviso(`Caminhão ${num}: meta ${valor.toFixed(2).replace(".",",")} km/l.`,"var(--ok)");
     el("adm-cam").value=""; el("adm-cam-meta").value="";
-    await carregarMetas();
-    if($caminhao.value.trim()) await carregarHistorico();
+    carregarMetas();
+    if($caminhao.value.trim()) carregarHistorico();
   }catch(e){ aviso("Erro: "+e.message,"var(--erro)"); }
 }
 
-/* Lê o texto colado da planilha: uma linha por caminhão,
-   colunas separadas por tabulação, ponto e vírgula ou espaço. */
+/* Lê o texto colado da planilha: uma linha por caminhão. */
 function lerColagem(texto){
   const boas=[], ruins=[];
   texto.split(/\r?\n/).forEach(linha=>{
-    if(!linha.trim()) return;                       // pula linha em branco
+    if(!linha.trim()) return;
     const partes = linha.split(/[\t;]+|\s{2,}|\s+/).filter(p=>p!=="");
     if(partes.length < 2){ ruins.push(linha.trim()); return; }
     const caminhao = partes[0].trim();
@@ -810,10 +849,11 @@ async function aplicarMassa(){
     if(ruins.length) msg += ` ${ruins.length} linha(s) ignorada(s): ${ruins.slice(0,3).join(" / ")}`;
     aviso(msg, ruins.length ? "var(--alerta)" : "var(--ok)");
     el("adm-massa").value="";
-    await carregarMetas();
-    if($caminhao.value.trim()) await carregarHistorico();
+    carregarMetas();
+    if($caminhao.value.trim()) carregarHistorico();
   }catch(e){ aviso("Erro: "+e.message,"var(--erro)"); }
 }
+
 
 /* ---------- 6) LIMPAR A TELA ---------- */
 function limparTela(){
@@ -823,24 +863,25 @@ function limparTela(){
   el("desempenho").className="desempenho";
   $calc.textContent=""; $calc.classList.remove("piscando"); alertaAnterior="";
   $status.className="status"; $status.innerHTML="";
-  el("adm-msg").textContent="";
   alarmeParar();
   validar();
   $caminhao.focus();
 }
 
 /* ---------- 7) LIGAÇÕES ---------- */
+el("btn-limpar").addEventListener("click",limparTela);
+el("btn-alarme").addEventListener("click",alarmeParar);
+el("adm-entrar").addEventListener("click",entrarAdm);
+el("adm-senha").addEventListener("keydown",e=>{ if(e.key==="Enter") entrarAdm(); });
 el("adm-btn").addEventListener("click",salvarMetaGeral);
 el("adm-btn-cam").addEventListener("click",salvarMetaCaminhao);
 el("adm-btn-massa").addEventListener("click",aplicarMassa);
-el("btn-limpar").addEventListener("click",limparTela);
-el("btn-alarme").addEventListener("click",alarmeParar);
+el("adm-btn-senha").addEventListener("click",trocarSenha);
 $caminhao.addEventListener("change",carregarHistorico);
 $caminhao.addEventListener("blur",carregarHistorico);
 $km.addEventListener("input",validar);
 $litros.addEventListener("input",validar);
 $btn.addEventListener("click",salvar);
-carregarMetas();
 validar();
 </script>
 </body>
