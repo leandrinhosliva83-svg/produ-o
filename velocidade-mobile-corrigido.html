@@ -11,16 +11,15 @@ const ORIGENS_PERMITIDAS = [
 ];
 
 function origemPermitida(origem) {
-  if (!origem) return true;            // sem origem (teste direto no navegador)
-  if (origem === 'null') return true;  // arquivo aberto do PC (file://)
-  return ORIGENS_PERMITIDAS.includes(origem);
+se (!origem) retornam verdadeiro;
+retorno ORIGENS_PERMITIDAS.inclui (origem);
 }
 
 function cabecalhosCors(origem) {
   return {
     'Access-Control-Allow-Origin': origem || '*',
-    'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+    'Acesso-Controle-Permitir-Origem': origem || '*',
+'Métodos de Controle-Acesso Permite': 'OBTER, POSTAR, COLOCAR, EXCLUIR, OPÇÕES',
     'Access-Control-Max-Age': '86400',
   };
 }
