@@ -65,6 +65,11 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--bg)
 .chip { background: var(--surface); border: 1.5px solid var(--border); color: var(--muted); border-radius: 20px; padding: 5px 14px; font-size: 12px; font-weight: 600; white-space: nowrap; cursor: pointer; flex-shrink: 0; }
 .chip.ativo { background: rgba(59,130,246,0.1); border-color: var(--accent); color: var(--accent); }
 .ocultar-btn { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border-bottom: 1px solid var(--border); cursor: pointer; color: var(--muted); font-size: 12px; font-weight: 600; flex-shrink: 0; }
+.acoes-bar { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.acao-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 8px; cursor: pointer; color: var(--muted); font-size: 12px; font-weight: 600; }
+.acao-btn:active { background: var(--surface); }
+.acao-btn + .acao-btn { border-left: 1px solid var(--border); }
+.acao-btn.ativo { color: var(--accent); }
 
 /* Cards */
 .lista-container { flex: 1; overflow-y: auto; }
@@ -72,6 +77,12 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--bg)
 .agrupar-bar { display: flex; align-items: center; gap: 6px; padding: 0 14px 10px; flex-shrink: 0; }
 .chip-qtd { display: inline-block; background: rgba(255,255,255,0.12); border-radius: 20px; padding: 1px 6px; font-size: 10px; font-weight: 700; margin-left: 3px; }
 .subfiltro-bar { display: none; gap: 6px; padding: 0 14px 10px; flex-shrink: 0; }
+.detalhe-bar { display: none; align-items: center; gap: 10px; padding: 0 14px 10px; flex-shrink: 0; }
+.detalhe-bar.visivel { display: flex; }
+.voltar-btn { background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; color: var(--text); padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.voltar-btn:active { opacity: 0.7; }
+.detalhe-titulo { font-size: 17px; font-weight: 800; color: var(--accent); }
+.detalhe-sub { font-size: 11px; color: var(--muted); }
 .subfiltro-bar.visivel { display: flex; }
 .sub-btn { background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; color: var(--muted); padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer; flex: 1; }
 .sub-btn.ativo { background: var(--purple); border-color: var(--purple); color: #fff; }
@@ -220,7 +231,7 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--bg)
 
   <!-- MONITOR -->
   <div class="tab-content ativo" id="tab-monitor">
-    <div class="resumo-grid">
+    <div class="resumo-grid" id="resumo-grid">
       <div class="resumo-card ativo" id="card-todos" onclick="setFiltroStatus('todos')">
         <div class="resumo-num" id="r-total" style="color:var(--text)">-</div>
         <div class="resumo-label">Total</div>
@@ -254,14 +265,20 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--bg)
       <input class="search-input" id="busca" placeholder="🔍 Buscar equipamento..." oninput="renderizar()">
     </div>
     <div class="filtros-scroll" id="filtros"></div>
+    <div class="detalhe-bar" id="detalhe-frente"></div>
     <div class="subfiltro-bar" id="subfiltro"></div>
     <div class="agrupar-bar">
       <span class="agrupar-label">Agrupar por</span>
       <button class="agrupar-btn" id="btn-agrupar-classe" onclick="setAgrupamento('classe')">Classe</button>
       <button class="agrupar-btn" id="btn-agrupar-frente" onclick="setAgrupamento('frente')">Frente</button>
     </div>
-    <div class="ocultar-btn" onclick="toggleLista()">
-      <span id="ocultar-icon">▲</span> <span id="ocultar-txt">Ocultar lista</span>
+    <div class="acoes-bar">
+      <div class="acao-btn" onclick="toggleLista()">
+        <span id="ocultar-icon">▲</span> <span id="ocultar-txt">Ocultar lista</span>
+      </div>
+      <div class="acao-btn" id="btn-expandir" onclick="toggleExpandir()">
+        <span id="expandir-icon">⛶</span> <span id="expandir-txt">Expandir</span>
+      </div>
     </div>
     <div id="secao-lista" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
       <div class="lista-container" id="lista">
@@ -352,6 +369,12 @@ let limites = JSON.parse(localStorage.getItem('mv-limites') || '{}');
 let popupsAtivos = new Set();
 let listaVisivel = true;
 
+// Modo expandido: esconde os cartões de resumo e a busca para a lista
+// de equipamentos ocupar a tela inteira. Útil no celular.
+// IMPORTANTE: precisa ser declarado aqui em cima, antes do mostrarApp() que
+// roda na carga da página — senão dá "Cannot access before initialization".
+let expandido = localStorage.getItem('mv-expandido') === '1';
+
 if (token) mostrarApp();
 
 function toggleSenha() {
@@ -382,6 +405,7 @@ function mostrarApp() {
   document.getElementById('tela-login').style.display = 'none';
   document.getElementById('tela-app').style.display = 'flex';
   atualizarBotoesAgrupamento();
+  aplicarExpandir();
   buscarDados();
 }
 
@@ -635,6 +659,7 @@ async function buscarDados() {
 
     const classes = [...new Set(equipamentos.map(e => e.classe))].sort();
     montarChips();
+    montarDetalhe();
     montarSubfiltro();
 
     // Atualizar select do relatório
@@ -662,6 +687,7 @@ function setAgrupamento(modo) {
   else { filtroFrente = 'todos'; filtroTipo = 'todos'; }
   atualizarBotoesAgrupamento();
   montarChips();
+  montarDetalhe();
   montarSubfiltro();
   renderizar();
 }
@@ -706,6 +732,87 @@ function montarChips() {
 
 // Barra de colhedora/transbordo. Só aparece quando uma frente está escolhida.
 // Nem toda frente tem os dois, então o botão sem máquinas fica desabilitado.
+// Quando uma frente está aberta, a barra de frentes some e entra o cabeçalho
+// com o nome da frente e o botão de voltar.
+function aplicarExpandir() {
+  const esconder = expandido;
+  const resumo = document.getElementById('resumo-grid');
+  if (resumo) resumo.style.display = esconder ? 'none' : '';
+  const busca = document.querySelector('.search-bar');
+  if (busca) busca.style.display = esconder ? 'none' : '';
+  const agrupar = document.querySelector('.agrupar-bar');
+  if (agrupar) agrupar.style.display = esconder ? 'none' : '';
+
+  const icon = document.getElementById('expandir-icon');
+  const txt = document.getElementById('expandir-txt');
+  const btn = document.getElementById('btn-expandir');
+  if (icon) icon.textContent = esconder ? '⛝' : '⛶';
+  if (txt) txt.textContent = esconder ? 'Reduzir' : 'Expandir';
+  if (btn) btn.classList.toggle('ativo', esconder);
+
+  // Expandir sem a lista visível não faria sentido
+  if (esconder && !listaVisivel) toggleLista();
+}
+
+function toggleExpandir() {
+  expandido = !expandido;
+  localStorage.setItem('mv-expandido', expandido ? '1' : '0');
+  aplicarExpandir();
+}
+
+function montarDetalhe() {
+  const bar = document.getElementById('detalhe-frente');
+  const chips = document.getElementById('filtros');
+  if (!bar) return;
+
+  const aberto = agruparPor === 'frente' && filtroFrente !== 'todos';
+  bar.classList.toggle('visivel', aberto);
+  if (chips) chips.style.display = aberto ? 'none' : '';
+
+  // Ao entrar na frente, esconde os cartões de resumo e o seletor de
+  // agrupamento. Se o modo expandir já estiver ligado, ele manda.
+  const esconder = aberto || expandido;
+  const resumo = document.getElementById('resumo-grid');
+  if (resumo) resumo.style.display = esconder ? 'none' : '';
+  const agrupar = document.querySelector('.agrupar-bar');
+  if (agrupar) agrupar.style.display = esconder ? 'none' : '';
+  const busca = document.querySelector('.search-bar');
+  if (busca) busca.style.display = expandido ? 'none' : '';
+
+  // Se a lista estava escondida, reabre — senão a frente abriria vazia
+  if (aberto && !listaVisivel) toggleLista();
+
+  if (!aberto) { bar.innerHTML = ''; return; }
+
+  const daFrente = equipamentos.filter(e => (e.frente || '-') === filtroFrente);
+  const nColh = daFrente.filter(ehColhedora).length;
+  const nTrans = daFrente.filter(ehTransbordo).length;
+  const media = daFrente.length
+    ? (daFrente.reduce((s, e) => s + e.vel, 0) / daFrente.length).toFixed(1) : '0';
+  const detalhe = [
+    daFrente.length + ' máq.',
+    nColh ? nColh + ' colh.' : null,
+    nTrans ? nTrans + ' transb.' : null,
+    'média ' + media + ' km/h',
+  ].filter(Boolean).join(' · ');
+
+  bar.innerHTML = `
+    <button class="voltar-btn" onclick="voltarFrentes()">← Voltar</button>
+    <div style="flex:1;min-width:0">
+      <div class="detalhe-titulo">${nomeFrente(filtroFrente)}</div>
+      <div class="detalhe-sub">${detalhe}</div>
+    </div>`;
+}
+
+function voltarFrentes() {
+  filtroFrente = 'todos';
+  filtroTipo = 'todos';
+  montarChips();
+  montarDetalhe();
+  montarSubfiltro();
+  renderizar();
+}
+
 function montarSubfiltro() {
   const el = document.getElementById('subfiltro');
   if (!el) return;
@@ -773,6 +880,7 @@ function fecharFrentes() {
     filtroTipo = 'todos';
   }
   montarChips();
+  montarDetalhe();
   montarSubfiltro();
   renderizar();
 }
@@ -787,6 +895,7 @@ function setFiltroFrente(f) {
   filtroFrente = f;
   filtroTipo = 'todos';   // ao trocar de frente, volta a mostrar tudo
   montarChips();
+  montarDetalhe();
   montarSubfiltro();
   renderizar();
 }
@@ -825,20 +934,31 @@ function renderizar() {
     return pc && pf && pt && pb && ps;
   });
 
-  if (!filtrados.length) { lista.innerHTML = '<div class="empty">Nenhum equipamento encontrado</div>';
-    setTexto('r-media', '0');
+  if (!filtrados.length) {
+    lista.innerHTML = '<div class="empty">Nenhum equipamento encontrado</div>';
+    ['r-media','r-total','r-parados','r-lentos','r-normais','r-alertas','r-sem-apontamento']
+      .forEach(id => setTexto(id, '0'));
     return;
   }
 
-  // Atualizar média conforme filtro atual
+  // Os cartões do topo passam a refletir o filtro atual, não o total geral.
+  // Antes só a média era filtrada, o que gerava números incoerentes entre si.
   const mediaFiltrada = filtrados.length > 0
     ? (filtrados.reduce((s,e) => s+e.vel, 0) / filtrados.length).toFixed(1) : '0';
   setTexto('r-media', mediaFiltrada);
+  setTexto('r-total', filtrados.length);
+  setTexto('r-parados', filtrados.filter(e => getStatus(e.vel).tipo === 'parado').length);
+  setTexto('r-lentos', filtrados.filter(e => getStatus(e.vel).tipo === 'lento').length);
+  setTexto('r-normais', filtrados.filter(e => getStatus(e.vel).tipo === 'normal' && !emAlerta(e)).length);
+  setTexto('r-alertas', filtrados.filter(e => emAlerta(e)).length);
+  setTexto('r-sem-apontamento', filtrados.filter(e => e.sem_apontamento).length);
 
-  // Agrupa pela chave escolhida: classe do equipamento ou frente de colheita
+  // Dentro de uma frente, agrupar por frente repetiria o mesmo título em tudo.
+  // Nessa visão os grupos passam a ser as classes (colhedora, transbordo...).
+  const dentroDaFrente = agruparPor === 'frente' && filtroFrente !== 'todos';
   const grupos = {};
   filtrados.forEach(eq => {
-    const chave = agruparPor === 'frente' ? (eq.frente || '-') : eq.classe;
+    const chave = (agruparPor === 'frente' && !dentroDaFrente) ? (eq.frente || '-') : eq.classe;
     if (!grupos[chave]) grupos[chave] = [];
     grupos[chave].push(eq);
   });
@@ -854,7 +974,7 @@ function renderizar() {
     const itens = grupos[classe];
     // Os limites são cadastrados por CLASSE. Ao agrupar por frente, o grupo
     // mistura classes, então não existe um limite único do grupo.
-    const l = agruparPor === 'frente' ? null : limites[classe];
+    const l = (agruparPor === 'frente' && !dentroDaFrente) ? null : limites[classe];
     const cards = itens.map(eq => {
       const st = getStatus(eq.vel);
       const al = emAlerta(eq);
@@ -904,7 +1024,7 @@ function renderizar() {
     const mediaGrupo = (itens.reduce((s,e) => s+e.vel, 0) / itens.length).toFixed(1);
     return `<div class="grupo-header">
       <div class="grupo-dot"></div>
-      <span class="grupo-nome">${agruparPor === 'frente' ? nomeFrente(classe) : classe}</span>
+      <span class="grupo-nome">${(agruparPor === 'frente' && !dentroDaFrente) ? nomeFrente(classe) : classe}</span>
       <span class="grupo-badge">${itens.length}</span>
       <span class="limite-badge">média ${mediaGrupo} km/h</span>
       ${l ? `<span class="limite-badge">${l.min||'?'}–${l.max||'?'} km/h</span>` : ''}
