@@ -70,6 +70,13 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--bg)
 .lista-container { flex: 1; overflow-y: auto; }
 .grupo-header { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--bg); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
 .agrupar-bar { display: flex; align-items: center; gap: 6px; padding: 0 14px 10px; flex-shrink: 0; }
+.chip-qtd { display: inline-block; background: rgba(255,255,255,0.12); border-radius: 20px; padding: 1px 6px; font-size: 10px; font-weight: 700; margin-left: 3px; }
+.subfiltro-bar { display: none; gap: 6px; padding: 0 14px 10px; flex-shrink: 0; }
+.subfiltro-bar.visivel { display: flex; }
+.sub-btn { background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; color: var(--muted); padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer; flex: 1; }
+.sub-btn.ativo { background: var(--purple); border-color: var(--purple); color: #fff; }
+.sub-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.chip.ativo .chip-qtd { background: rgba(0,0,0,0.25); }
 .agrupar-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 700; margin-right: 2px; }
 .agrupar-btn { background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; color: var(--muted); padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; }
 .agrupar-btn.ativo { background: var(--accent); border-color: var(--accent); color: #fff; }
@@ -103,6 +110,12 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--bg)
 
 /* Config */
 #tela-config { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 200; flex-direction: column; }
+#tela-frentes { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 200; flex-direction: column; }
+.frente-row { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 8px; cursor: pointer; }
+.frente-row input { width: 20px; height: 20px; accent-color: var(--accent); }
+.frente-row-nome { font-size: 14px; font-weight: 700; flex: 1; }
+.frente-row-qtd { font-size: 11px; color: var(--muted); }
+.chip-add { background: transparent; border: 1.5px dashed var(--border); color: var(--muted); font-weight: 700; }
 .config-top { background: var(--surface); padding: 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
 .config-title { font-size: 16px; font-weight: 700; color: var(--purple); }
 .config-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; flex: 1; }
@@ -150,6 +163,20 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--bg)
     <button class="icon-btn" onclick="fecharConfig()">✕</button>
   </div>
   <div class="config-body" id="config-body"></div>
+</div>
+
+<div id="tela-frentes">
+  <div class="config-top">
+    <span class="config-title">🚩 Frentes visíveis</span>
+    <button class="icon-btn" onclick="fecharFrentes()">✕</button>
+  </div>
+  <div class="config-body">
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button class="sub-btn" onclick="marcarTodasFrentes(true)">Marcar todas</button>
+      <button class="sub-btn" onclick="marcarTodasFrentes(false)">Desmarcar todas</button>
+    </div>
+    <div id="frentes-body"></div>
+  </div>
 </div>
 
 <!-- APP -->
@@ -227,6 +254,7 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--bg)
       <input class="search-input" id="busca" placeholder="🔍 Buscar equipamento..." oninput="renderizar()">
     </div>
     <div class="filtros-scroll" id="filtros"></div>
+    <div class="subfiltro-bar" id="subfiltro"></div>
     <div class="agrupar-bar">
       <span class="agrupar-label">Agrupar por</span>
       <button class="agrupar-btn" id="btn-agrupar-classe" onclick="setAgrupamento('classe')">Classe</button>
@@ -272,6 +300,50 @@ function setTexto(id, valor) {
 let token = localStorage.getItem('mv-token');
 let equipamentos = [];
 let filtroClasse = 'todos';
+let filtroFrente = 'todos';   // usado quando os chips mostram frentes
+let filtroTipo = 'todos';     // dentro da frente: 'todos' | 'colhedora' | 'transbordo'
+
+// Guardo as frentes OCULTAS (e não as visíveis) de propósito:
+// assim, uma frente nova que apareça no sistema já entra visível por padrão.
+let frentesOcultas = JSON.parse(localStorage.getItem('mv-frentes-ocultas') || '[]');
+
+// Conversão do código interno (num_frente) para o número real da frente.
+// Extraída do relatório CCT0005 - Colhedora e Dias Trabalhados (safra 2026/2027).
+// Só é usada quando a API não manda dsc_frente.
+const MAPA_FRENTES = {
+  2: 2, 3: 3, 4: 4, 15: 5, 46: 6, 47: 7, 48: 8,
+};
+
+// Transforma "FRENTE 5 - CORTE MECANIZADO" em "Frente 05".
+// Se não conseguir extrair um número, devolve o texto original.
+function nomeFrente(f) {
+  if (!f || f === '-') return 'Sem frente';
+  const m = String(f).match(/FRENTE\s*(\d+)/i);
+  if (m) return 'Frente ' + String(parseInt(m[1], 10)).padStart(2, '0');
+  const n = parseInt(String(f).replace(/\D/g, ''), 10);
+  if (isNaN(n)) return f;
+  return 'Frente ' + String(n).padStart(2, '0');
+}
+
+// Usado para ordenar as frentes na ordem numérica certa
+function numeroFrente(f) {
+  const m = String(f).match(/FRENTE\s*(\d+)/i);
+  if (m) return parseInt(m[1], 10);
+  const n = parseInt(String(f).replace(/\D/g, ''), 10);
+  return isNaN(n) ? Infinity : n;
+}
+
+function frenteVisivel(f) {
+  return !frentesOcultas.includes(f);
+}
+
+// Identifica o tipo pelo nome da classe, sem depender do texto exato do cadastro
+function ehColhedora(eq) {
+  return /colhed/i.test(eq.classe || '');
+}
+function ehTransbordo(eq) {
+  return /transbord/i.test(eq.classe || '');
+}
 // Como a lista é agrupada: 'classe' (padrão) ou 'frente'.
 // Fica salvo no navegador para não perder a escolha ao recarregar.
 let agruparPor = localStorage.getItem('mv-agrupar') || 'classe';
@@ -378,6 +450,39 @@ function minutosParaUsina(eq) {
 
 // Pega a leitura mais recente de trajeto. Se os registros tiverem campo de
 // data, ordena por ele; se não tiverem, mantém o primeiro (como era antes).
+// Procura a data da leitura dentro do trajeto. Como não sei o nome exato do
+// campo, testo os prováveis e, se nenhum bater, varro qualquer campo cujo
+// nome sugira data/hora e cujo valor seja uma data válida.
+function dataLeitura(t) {
+  if (!t) return null;
+  const provaveis = ['dta_trajeto','dta_gps','dta_posicao','dta_evento','dta_atualizacao','dta_leitura','data','dataHora','dta'];
+  for (const c of provaveis) {
+    if (t[c]) {
+      const d = new Date(t[c]);
+      if (!isNaN(d)) return d;
+    }
+  }
+  for (const c of Object.keys(t)) {
+    if (!/dta|data|hora|time/i.test(c)) continue;
+    const d = new Date(t[c]);
+    if (!isNaN(d) && d.getFullYear() > 2000) return d;
+  }
+  return null;
+}
+
+// "há 5min", "há 2h10min" — mostra quão velha está a leitura
+function tempoDesde(d) {
+  if (!d) return null;
+  const seg = Math.floor((new Date() - d) / 1000);
+  if (seg < 0) return 'agora';
+  if (seg < 60) return 'há ' + seg + 's';
+  const min = Math.floor(seg / 60);
+  if (min < 60) return 'há ' + min + 'min';
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return 'há ' + h + 'h' + (m > 0 ? m + 'min' : '');
+}
+
 function trajetoAtual(eq) {
   const lista = eq.trajetos;
   if (!Array.isArray(lista) || lista.length === 0) return null;
@@ -470,7 +575,12 @@ async function buscarDados() {
         fazenda: eq.dsc_fazenda || '-',
         vel: t ? (t.num_velocidade_gps || 0) : 0,
         classe: eq.dsc_tipo_utilizacao || 'SEM CLASSE',
-        frente: eq.num_frente ? 'Fr.' + eq.num_frente : '-',
+        // dsc_frente traz o nome real ("FRENTE 5 - CORTE MECANIZADO").
+        // num_frente é um código interno: 15 = Frente 5, 46 = Frente 6, etc.
+        // Sem dsc_frente, converte pelo MAPA_FRENTES; sem os dois, fica "-".
+        frente: eq.dsc_frente
+          || (MAPA_FRENTES[eq.num_frente] ? 'FRENTE ' + MAPA_FRENTES[eq.num_frente] : null)
+          || '-',
         parada: eq.dsc_motivo_parada || null,
         sem_apontamento: !eq.dsc_motivo_parada && !eq.dsc_atividade,
         tipo_utilizacao: eq.cod_tipo_utilizacao || 0,
@@ -478,7 +588,9 @@ async function buscarDados() {
         dta_inicial: eq.dta_inicial || null,
         lat: eq.LATITUDE || null,
         lng: eq.LONGITUDE || null,
-        rpm: t ? (t.num_rpm || 0) : 0
+        rpm: t ? (t.num_rpm || 0) : 0,
+        // Quando essa leitura de velocidade foi registrada
+        leitura: dataLeitura(t)
       };
     });
 
@@ -522,9 +634,8 @@ async function buscarDados() {
     setTexto('app-time', new Date().toLocaleTimeString('pt-BR'));
 
     const classes = [...new Set(equipamentos.map(e => e.classe))].sort();
-    document.getElementById('filtros').innerHTML = ['todos', ...classes].map(c =>
-      `<div class="chip ${filtroClasse===c?'ativo':''}" onclick="setFiltro('${c}')">${c==='todos'?'Todos':c}</div>`
-    ).join('');
+    montarChips();
+    montarSubfiltro();
 
     // Atualizar select do relatório
     const sel = document.getElementById('rel-filtro-classe');
@@ -546,7 +657,12 @@ async function buscarDados() {
 function setAgrupamento(modo) {
   agruparPor = modo;
   localStorage.setItem('mv-agrupar', modo);
+  // Ao trocar de modo, limpa o filtro do outro para não esconder máquinas sem querer
+  if (modo === 'frente') { filtroClasse = 'todos'; }
+  else { filtroFrente = 'todos'; filtroTipo = 'todos'; }
   atualizarBotoesAgrupamento();
+  montarChips();
+  montarSubfiltro();
   renderizar();
 }
 
@@ -557,9 +673,127 @@ function atualizarBotoesAgrupamento() {
   if (bf) bf.classList.toggle('ativo', agruparPor === 'frente');
 }
 
+// Monta a barra de botões. No modo "frente" mostra as frentes de colheita;
+// no modo "classe" mostra as classes de equipamento.
+function montarChips() {
+  const el = document.getElementById('filtros');
+  if (!el) return;
+
+  if (agruparPor === 'frente') {
+    // Ordena as frentes por número (Fr.3 antes de Fr.15) e joga "-" para o fim
+    const todas = [...new Set(equipamentos.map(e => e.frente || '-'))].sort((a, b) => {
+      return numeroFrente(a) - numeroFrente(b);
+    });
+    const frentes = todas.filter(frenteVisivel);
+    const ocultas = todas.length - frentes.length;
+
+    el.innerHTML = `<div class="chip chip-add" onclick="abrirFrentes()">＋ Adicionar frente${ocultas ? ' (' + ocultas + ')' : ''}</div>`
+    + ['todos', ...frentes].map(f => {
+      const qtd = f === 'todos' ? equipamentos.filter(e => frenteVisivel(e.frente || '-')).length
+                                : equipamentos.filter(e => (e.frente || '-') === f).length;
+      const rotulo = f === 'todos' ? 'Todas' : nomeFrente(f);
+      return `<div class="chip ${filtroFrente === f ? 'ativo' : ''}" onclick="setFiltroFrente('${f}')">${rotulo} <span class="chip-qtd">${qtd}</span></div>`;
+    }).join('');
+  } else {
+    const classes = [...new Set(equipamentos.map(e => e.classe))].sort();
+    el.innerHTML = ['todos', ...classes].map(c => {
+      const qtd = c === 'todos' ? equipamentos.length
+                                : equipamentos.filter(e => e.classe === c).length;
+      return `<div class="chip ${filtroClasse === c ? 'ativo' : ''}" onclick="setFiltro('${c}')">${c === 'todos' ? 'Todos' : c} <span class="chip-qtd">${qtd}</span></div>`;
+    }).join('');
+  }
+}
+
+// Barra de colhedora/transbordo. Só aparece quando uma frente está escolhida.
+// Nem toda frente tem os dois, então o botão sem máquinas fica desabilitado.
+function montarSubfiltro() {
+  const el = document.getElementById('subfiltro');
+  if (!el) return;
+
+  const mostrar = agruparPor === 'frente' && filtroFrente !== 'todos';
+  el.classList.toggle('visivel', mostrar);
+  if (!mostrar) { el.innerHTML = ''; return; }
+
+  const daFrente = equipamentos.filter(e => (e.frente || '-') === filtroFrente);
+  const nColh = daFrente.filter(ehColhedora).length;
+  const nTrans = daFrente.filter(ehTransbordo).length;
+
+  el.innerHTML = `
+    <button class="sub-btn ${filtroTipo === 'todos' ? 'ativo' : ''}" onclick="setFiltroTipo('todos')">Todas ${daFrente.length}</button>
+    <button class="sub-btn ${filtroTipo === 'colhedora' ? 'ativo' : ''}" onclick="setFiltroTipo('colhedora')" ${nColh ? '' : 'disabled'}>🌾 Colhedora ${nColh}</button>
+    <button class="sub-btn ${filtroTipo === 'transbordo' ? 'ativo' : ''}" onclick="setFiltroTipo('transbordo')" ${nTrans ? '' : 'disabled'}>🚛 Transbordo ${nTrans}</button>`;
+}
+
+// --- Tela de escolha de quais frentes aparecem na barra ---
+function abrirFrentes() {
+  const todas = [...new Set(equipamentos.map(e => e.frente || '-'))].sort((a, b) => {
+    return numeroFrente(a) - numeroFrente(b);
+  });
+
+  document.getElementById('frentes-body').innerHTML = todas.map(f => {
+    const daFrente = equipamentos.filter(e => (e.frente || '-') === f);
+    const nColh = daFrente.filter(ehColhedora).length;
+    const nTrans = daFrente.filter(ehTransbordo).length;
+    const detalhe = [
+      daFrente.length + ' máq.',
+      nColh ? nColh + ' colhedora' + (nColh > 1 ? 's' : '') : null,
+      nTrans ? nTrans + ' transbordo' + (nTrans > 1 ? 's' : '') : null,
+    ].filter(Boolean).join(' · ');
+    const id = 'chk-' + f.replace(/[^a-zA-Z0-9]/g, '_');
+    return `<label class="frente-row" for="${id}">
+      <input type="checkbox" id="${id}" ${frenteVisivel(f) ? 'checked' : ''} onchange="alternarFrente('${f}', this.checked)">
+      <div style="flex:1">
+        <div class="frente-row-nome">${nomeFrente(f)}</div>
+        <div class="frente-row-qtd">${detalhe}</div>
+      </div>
+    </label>`;
+  }).join('');
+
+  document.getElementById('tela-frentes').style.display = 'flex';
+}
+
+function alternarFrente(f, visivel) {
+  if (visivel) frentesOcultas = frentesOcultas.filter(x => x !== f);
+  else if (!frentesOcultas.includes(f)) frentesOcultas.push(f);
+  localStorage.setItem('mv-frentes-ocultas', JSON.stringify(frentesOcultas));
+}
+
+function marcarTodasFrentes(marcar) {
+  const todas = [...new Set(equipamentos.map(e => e.frente || '-'))];
+  frentesOcultas = marcar ? [] : todas.slice();
+  localStorage.setItem('mv-frentes-ocultas', JSON.stringify(frentesOcultas));
+  abrirFrentes();   // redesenha os checkboxes
+}
+
+function fecharFrentes() {
+  document.getElementById('tela-frentes').style.display = 'none';
+  // Se a frente selecionada foi escondida, volta para "Todas"
+  if (filtroFrente !== 'todos' && !frenteVisivel(filtroFrente)) {
+    filtroFrente = 'todos';
+    filtroTipo = 'todos';
+  }
+  montarChips();
+  montarSubfiltro();
+  renderizar();
+}
+
+function setFiltroTipo(t) {
+  filtroTipo = t;
+  montarSubfiltro();
+  renderizar();
+}
+
+function setFiltroFrente(f) {
+  filtroFrente = f;
+  filtroTipo = 'todos';   // ao trocar de frente, volta a mostrar tudo
+  montarChips();
+  montarSubfiltro();
+  renderizar();
+}
+
 function setFiltro(c) {
   filtroClasse = c;
-  document.querySelectorAll('#filtros .chip').forEach(b => b.classList.toggle('ativo', b.textContent.trim() === (c==='todos'?'Todos':c)));
+  montarChips();
   renderizar();
 }
 
@@ -568,6 +802,12 @@ function renderizar() {
   const lista = document.getElementById('lista');
   let filtrados = equipamentos.filter(eq => {
     const pc = filtroClasse === 'todos' || eq.classe === filtroClasse;
+    const pf = filtroFrente === 'todos'
+      ? (agruparPor !== 'frente' || frenteVisivel(eq.frente || '-'))
+      : (eq.frente || '-') === filtroFrente;
+    const pt = filtroTipo === 'todos'
+      || (filtroTipo === 'colhedora' && ehColhedora(eq))
+      || (filtroTipo === 'transbordo' && ehTransbordo(eq));
     const pb = !busca || eq.nome.toLowerCase().includes(busca) || eq.cod.toString().includes(busca);
     const st = getStatus(eq.vel).tipo;
     const al = emAlerta(eq);
@@ -582,7 +822,7 @@ function renderizar() {
     else if (filtroStatus === 'verde') { const mins = minutosParaUsina(eq); ps = eq.classe === 'TRANSPORTE CARREGADO' && mins !== null && mins <= 30; }
     else if (filtroStatus === 'amarelo') { const mins = minutosParaUsina(eq); ps = eq.classe === 'TRANSPORTE CARREGADO' && mins !== null && mins > 30 && mins <= 60; }
     else if (filtroStatus === 'vermelho') { const mins = minutosParaUsina(eq); ps = eq.classe === 'TRANSPORTE CARREGADO' && mins !== null && mins > 60; }
-    return pc && pb && ps;
+    return pc && pf && pt && pb && ps;
   });
 
   if (!filtrados.length) { lista.innerHTML = '<div class="empty">Nenhum equipamento encontrado</div>';
@@ -607,11 +847,7 @@ function renderizar() {
   // Ordena os grupos: por número quando for frente, alfabético quando for classe
   const chavesOrdenadas = Object.keys(grupos).sort((a, b) => {
     if (agruparPor !== 'frente') return a.localeCompare(b);
-    const na = parseInt(String(a).replace(/\D/g, ''), 10);
-    const nb = parseInt(String(b).replace(/\D/g, ''), 10);
-    if (isNaN(na)) return 1;
-    if (isNaN(nb)) return -1;
-    return na - nb;
+    return numeroFrente(a) - numeroFrente(b);
   });
 
   lista.innerHTML = chavesOrdenadas.map(classe => {
@@ -651,6 +887,13 @@ function renderizar() {
         <div class="eq-row">
           ${eq.parada ? `<span class="parada-tag">⛔ ${eq.parada}</span>` : eq.atividade ? `<span class="ativ-tag">✅ ${eq.atividade}</span>` : ''}
           ${isParado && eq.dta_inicial ? `<span class="tempo-tag">⏱ ${tempoParado(eq.dta_inicial)}</span>` : ''}
+          ${eq.leitura ? (() => {
+            const min = Math.floor((new Date() - eq.leitura) / 60000);
+            // Leitura com mais de 15min é suspeita: a máquina pode estar sem sinal
+            const cor = min > 30 ? '#ef4444' : min > 15 ? '#eab308' : 'var(--muted)';
+            const hora = eq.leitura.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            return `<span style="background:rgba(0,0,0,0.15);border:1px solid ${cor};border-radius:6px;padding:3px 8px;font-size:11px;color:${cor};white-space:nowrap">🕐 ${hora} · ${tempoDesde(eq.leitura)}</span>`;
+          })() : ''}
           ${eq.classe === 'TRANSPORTE CARREGADO' && eq.lat && eq.lng ? (() => { const mins = Math.round(minutosParaUsina(eq)); const cor = mins <= 30 ? '#22c55e' : mins <= 60 ? '#eab308' : '#ef4444'; return '<span style="background:rgba(0,0,0,0.1);border:1px solid ' + cor + ';border-radius:6px;padding:3px 8px;font-size:11px;color:' + cor + ';white-space:nowrap">🏭 ' + mins + 'min</span>'; })() : ''}
         </div>
         <div class="barra-bg"><div class="barra-fill" style="background:${cor};width:${larg}%"></div></div>
@@ -661,7 +904,7 @@ function renderizar() {
     const mediaGrupo = (itens.reduce((s,e) => s+e.vel, 0) / itens.length).toFixed(1);
     return `<div class="grupo-header">
       <div class="grupo-dot"></div>
-      <span class="grupo-nome">${agruparPor === 'frente' ? '🚩 ' + classe : classe}</span>
+      <span class="grupo-nome">${agruparPor === 'frente' ? nomeFrente(classe) : classe}</span>
       <span class="grupo-badge">${itens.length}</span>
       <span class="limite-badge">média ${mediaGrupo} km/h</span>
       ${l ? `<span class="limite-badge">${l.min||'?'}–${l.max||'?'} km/h</span>` : ''}
