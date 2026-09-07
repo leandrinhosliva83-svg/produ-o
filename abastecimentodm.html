@@ -725,7 +725,6 @@ function aviso(texto, cor){
 /* Envia um pedido ao Apps Script, sempre com a senha junto. */
 async function pedir(corpo){
   if(!API_URL){ await new Promise(r=>setTimeout(r,200)); return {ok:true}; }
-  corpo.senha = senhaAdm;
   const r = await fetch(API_URL,{
     method:"POST",
     headers:{"Content-Type":"text/plain;charset=utf-8"},
