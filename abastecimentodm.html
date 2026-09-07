@@ -310,12 +310,6 @@
         <p class="rot2">Metas cadastradas</p>
         <div id="adm-lista"><p class="vazio">Carregando…</p></div>
 
-        <hr class="div">
-        <p class="rot2">Trocar a senha</p>
-        <div class="dupla">
-          <div class="campo"><input id="adm-nova-senha" type="password" placeholder="Nova senha"></div>
-          <div class="campo"><button id="adm-btn-senha" class="btn-secundario">Trocar</button></div>
-        </div>
       </div>
     </div>
   </details>
@@ -716,8 +710,7 @@ async function salvar(){
 }
 
 /* ---------- 5) ADM: METAS (protegido por senha) ---------- */
-const SENHA_DEMO = "1234";
-let senhaAdm = "";
+const SENHA_ADM = "1234";      // <<< troque aqui a senha do painel ADM
 
 /* Converte "3,8" ou "3.8" em número. Devolve 0 se não for válido. */
 function numero(txt){
@@ -743,39 +736,21 @@ async function pedir(corpo){
   return j;
 }
 
-/* ---------- ENTRADA ---------- */
-async function entrarAdm(){
+/* ---------- ENTRADA DO ADM ----------
+   A senha é conferida aqui mesmo, no arquivo. Para trocar, mude a
+   linha SENHA_ADM lá em cima e publique o arquivo de novo.          */
+function entrarAdm(){
   const digitada = el("adm-senha").value.trim();
   const msg = el("adm-porta-msg");
-  if(!digitada){ msg.style.color="var(--erro)"; msg.textContent="Digite a senha."; return; }
-  msg.style.color="var(--texto-fraco)"; msg.textContent="Conferindo…";
-  try{
-    if(API_URL){
-      const r = await fetch(API_URL,{
-        method:"POST",
-        headers:{"Content-Type":"text/plain;charset=utf-8"},
-        body:JSON.stringify({acao:"verificarSenha", senha:digitada})
-      });
-      const j = await r.json();
-      if(!j.ok) throw new Error(j.erro||"Senha incorreta");
-    }else if(digitada !== SENHA_DEMO){ throw new Error("Senha incorreta"); }
-    senhaAdm = digitada;
-    el("adm-senha").value=""; msg.textContent="";
-    el("adm-porta").style.display="none";
-    el("adm-cofre").style.display="block";
-    carregarMetas();
-  }catch(e){ msg.style.color="var(--erro)"; msg.textContent=e.message; }
-}
-
-async function trocarSenha(){
-  const nova = el("adm-nova-senha").value.trim();
-  if(nova.length < 4){ aviso("A nova senha precisa de ao menos 4 caracteres.","var(--erro)"); return; }
-  aviso("Trocando…","var(--texto-fraco)");
-  try{
-    await pedir({acao:"trocarSenha", nova:nova});
-    senhaAdm = nova; el("adm-nova-senha").value="";
-    aviso("Senha trocada. Anote em lugar seguro.","var(--ok)");
-  }catch(e){ aviso("Erro: "+e.message,"var(--erro)"); }
+  if(digitada !== SENHA_ADM){
+    msg.style.color = "var(--erro)";
+    msg.textContent = digitada ? "Senha incorreta." : "Digite a senha.";
+    return;
+  }
+  el("adm-senha").value = ""; msg.textContent = "";
+  el("adm-porta").style.display = "none";
+  el("adm-cofre").style.display = "block";
+  carregarMetas();
 }
 
 /* ---------- METAS ---------- */
@@ -876,7 +851,6 @@ el("adm-senha").addEventListener("keydown",e=>{ if(e.key==="Enter") entrarAdm();
 el("adm-btn").addEventListener("click",salvarMetaGeral);
 el("adm-btn-cam").addEventListener("click",salvarMetaCaminhao);
 el("adm-btn-massa").addEventListener("click",aplicarMassa);
-el("adm-btn-senha").addEventListener("click",trocarSenha);
 $caminhao.addEventListener("change",carregarHistorico);
 $caminhao.addEventListener("blur",carregarHistorico);
 $km.addEventListener("input",validar);
