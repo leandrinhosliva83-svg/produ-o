@@ -179,6 +179,24 @@
   @keyframes flash-tela{0%,100%{box-shadow:inset 0 0 0 0 transparent}50%{box-shadow:inset 0 0 90px 12px #ff000055}}
   body.em-alarme{animation:flash-tela .7s ease-in-out infinite}
 
+
+  /* média acumulada do veículo */
+  .acumulado{
+    margin-top:14px;padding:14px;border-radius:3px;display:none;
+    background:var(--chapa-alta);border:1px solid var(--linha);border-left:5px solid var(--laranja);
+  }
+  .acumulado.ver{display:block}
+  .acumulado.verde{border-left-color:var(--verde)}
+  .acumulado.vermelho{border-left-color:var(--erro)}
+  .acumulado .rot{display:block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--texto-fraco);margin-bottom:4px}
+  .acumulado .numero{
+    font-family:"Arial Narrow",Impact,sans-serif;font-size:38px;font-weight:900;
+    font-variant-numeric:tabular-nums;line-height:1;letter-spacing:-.01em;color:var(--texto);
+  }
+  .acumulado.verde .numero{color:var(--verde)}
+  .acumulado.vermelho .numero{color:var(--erro)}
+  .acumulado .conta{font-size:13.5px;color:#9aa4ac;margin-top:6px;font-variant-numeric:tabular-nums}
+
   /* área ADM */
   .adm summary{cursor:pointer;font-size:13px;color:var(--texto-fraco);padding:4px 0;letter-spacing:.12em;text-transform:uppercase}
   .adm-corpo{padding-top:16px}
@@ -237,6 +255,12 @@
       <div class="veredito" id="desemp-veredito"></div>
       <button id="btn-alarme" class="btn-alarme">Silenciar alarme</button>
     </div>
+    <div class="acumulado" id="acumulado">
+      <span class="rot">Média acumulada do veículo</span>
+      <div class="numero" id="acum-numero">—</div>
+      <div class="conta" id="acum-conta"></div>
+    </div>
+
   </div>
 
   <div class="cartao">
@@ -349,6 +373,7 @@ const el = id => document.getElementById(id);
 const $caminhao=el("caminhao"), $km=el("km"), $litros=el("litros");
 const $btn=el("btn"), $status=el("status"), $hist=el("historico"), $calc=el("calc");
 
+let acumulado = null;   // média de todo o histórico do veículo
 let historico = [];   // [penúltimo, último] — sempre do veículo informado
 let meta = META_PADRAO;
 let carregando = false;
@@ -360,6 +385,8 @@ async function carregarHistorico(){
   if(!num){
     $hist.innerHTML='<p class="vazio">Digite o número do caminhão para carregar.</p>';
     el("desempenho").className="desempenho";
+    el("acumulado").className="acumulado";
+    acumulado=null;
     validar(); return;
   }
 
@@ -373,10 +400,18 @@ async function carregarHistorico(){
       const r = await fetch(API_URL + "?acao=historico&caminhao=" + encodeURIComponent(num));
       const j = await r.json();
       historico = j.registros || [];
+      acumulado = j.acumulado || null;
       meta = Number(j.meta) > 0 ? Number(j.meta) : META_PADRAO;
     }else{
       await new Promise(r=>setTimeout(r,300));           // simula a rede
       historico = DEMO[num] ? DEMO[num].slice() : [];
+      acumulado = null;
+      if(historico.length >= 2){
+        const kmT = Number(historico[historico.length-1].km) - Number(historico[0].km);
+        let litrosT = 0;
+        for(let i=1;i<historico.length;i++) litrosT += Number(historico[i].litros)||0;
+        if(kmT>0 && litrosT>0) acumulado = {km:kmT, litros:litrosT, media:kmT/litrosT, lancamentos:historico.length};
+      }
       meta = DEMO_METAS[num] || DEMO_META;
     }
   }catch(e){
@@ -387,6 +422,7 @@ async function carregarHistorico(){
   carregando = false;
   desenharHistorico();
   desenharDesempenho();
+  desenharAcumulado();
   validar();
 }
 
@@ -438,6 +474,21 @@ function desenharDesempenho(){
   el("desemp-veredito").textContent = bateu
     ? `Dentro da meta (+${(feito-meta).toFixed(2).replace(".",",")} km/l)`
     : `Abaixo da meta (−${(meta-feito).toFixed(2).replace(".",",")} km/l)`;
+}
+
+
+/* Média acumulada: vem pronta da planilha, considerando todo o histórico. */
+function desenharAcumulado(){
+  const box = el("acumulado");
+  box.className = "acumulado";
+  if(!acumulado) return;
+
+  const bateu = acumulado.media >= meta;
+  box.classList.add("ver", bateu ? "verde" : "vermelho");
+  el("acum-numero").textContent = acumulado.media.toFixed(2).replace(".",",") + " km/l";
+  el("acum-conta").textContent =
+    `${Number(acumulado.km).toLocaleString("pt-BR")} km ÷ ${Number(acumulado.litros).toLocaleString("pt-BR")} L · `+
+    `${acumulado.lancamentos} lançamentos · meta ${meta.toFixed(2).replace(".",",")} km/l`;
 }
 
 function formatarData(d){
@@ -761,14 +812,33 @@ async function carregarMetas(){
     const lista = j.lista || [];
     el("adm-meta").value = String(geral).replace(".", ",");
     lista.sort((a,b)=>String(a.caminhao).localeCompare(String(b.caminhao),"pt-BR",{numeric:true}));
+    metasNaTela = lista;
     el("adm-lista").innerHTML =
       `<div class="meta-linha geral"><span>Geral (padrão)</span><b>${geral.toFixed(2).replace(".",",")} km/l</b></div>` +
-      (lista.length
-        ? lista.map(i=>`<div class="meta-linha"><span>Caminhão ${i.caminhao}</span><b>${Number(i.meta).toFixed(2).replace(".",",")} km/l</b></div>`).join("")
-        : `<p class="vazio" style="padding-top:8px">Nenhuma meta individual. Todos usam a geral.</p>`);
+      `<p class="dica" style="margin:10px 0 6px">${lista.length} caminhão(ões) com meta própria.</p>` +
+      `<input id="adm-busca" placeholder="Buscar caminhão" style="margin-bottom:8px">` +
+      `<div id="adm-lista-itens"></div>`;
+    el("adm-busca").addEventListener("input", desenharItens);
+    desenharItens();
   }catch(e){
     el("adm-lista").innerHTML = '<p class="vazio">Não foi possível carregar as metas.</p>';
   }
+}
+
+let metasNaTela = [];
+
+/* Mostra no máximo 60 linhas: com mil caminhões, a tela travaria. */
+function desenharItens(){
+  const busca = (el("adm-busca")?.value || "").trim().toLowerCase();
+  const filtradas = busca
+    ? metasNaTela.filter(i => String(i.caminhao).toLowerCase().includes(busca))
+    : metasNaTela;
+  const mostrar = filtradas.slice(0, 60);
+
+  el("adm-lista-itens").innerHTML = mostrar.length
+    ? mostrar.map(i=>`<div class="meta-linha"><span>Caminhão ${i.caminhao}</span><b>${Number(i.meta).toFixed(2).replace(".",",")} km/l</b></div>`).join("")
+      + (filtradas.length > 60 ? `<p class="dica" style="padding-top:8px">e mais ${filtradas.length-60}. Use a busca para achar um caminhão.</p>` : "")
+    : `<p class="vazio" style="padding-top:8px">Nada encontrado.</p>`;
 }
 
 async function salvarMetaGeral(){
@@ -816,7 +886,7 @@ function lerColagem(texto){
 async function aplicarMassa(){
   const {boas, ruins} = lerColagem(el("adm-massa").value);
   if(!boas.length){ aviso("Nada reconhecido. Cole duas colunas: caminhão e meta.","var(--erro)"); return; }
-  aviso(`Salvando ${boas.length} caminhões…`,"var(--texto-fraco)");
+  aviso(`Salvando ${boas.length} caminhões… isso pode levar alguns segundos, não feche a tela.`,"var(--texto-fraco)");
   try{
     await pedir({acao:"salvarMetasEmMassa", lista:boas});
     let msg = `${boas.length} metas gravadas.`;
@@ -835,6 +905,8 @@ function limparTela(){
   historico=[];
   $hist.innerHTML='<p class="vazio">Digite o número do caminhão para carregar.</p>';
   el("desempenho").className="desempenho";
+  el("acumulado").className="acumulado";
+  acumulado=null;
   $calc.textContent=""; $calc.classList.remove("piscando"); alertaAnterior="";
   $status.className="status"; $status.innerHTML="";
   alarmeParar();
