@@ -122,6 +122,7 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--bg)
 
 /* Config */
 #tela-config { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 200; flex-direction: column; }
+#tela-historico { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 218; flex-direction: column; }
 #tela-ranking { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 217; flex-direction: column; }
 #tela-painel-tiros { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 216; flex-direction: column; }
 #tela-importar { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 215; flex-direction: column; }
@@ -319,6 +320,7 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--bg)
       <div style="display:flex;gap:8px;margin-top:10px">
         <button class="sub-btn" style="background:var(--green);border-color:var(--green);color:#fff"
           onclick="abrirRanking()">🏆 Ranking</button>
+        <button class="sub-btn" onclick="abrirHistorico()">📅 Histórico</button>
         <button class="sub-btn" style="background:var(--accent);border-color:var(--accent);color:#fff"
           onclick="abrirPainelTiros()">📊 Tiros</button>
         <button class="sub-btn" onclick="baixarTiro()">📥 CSV</button>
@@ -358,6 +360,14 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--bg)
       <button onclick="camera3D()" id="btn-cam3d" style="flex:1;background:#1f2430;color:#fff;border:0;border-radius:8px;padding:9px;font-size:12px;cursor:pointer">👁</button>
     </div>
   </div>
+</div>
+
+<div id="tela-historico">
+  <div class="config-top">
+    <span class="config-title">📅 Histórico por turno</span>
+    <button class="icon-btn" onclick="document.getElementById('tela-historico').style.display='none'">✕</button>
+  </div>
+  <div class="config-body" id="historico-body"></div>
 </div>
 
 <div id="tela-ranking">
@@ -803,6 +813,11 @@ async function buscarDados() {
     renderizar();
     const abaTiro = document.getElementById('tab-tiro');
     if (abaTiro && abaTiro.classList.contains('ativo')) renderTiro();
+    // Grava o resumo do turno a cada 5 minutos, para não perder ao fechar
+    if (!window.__ultSalvo || Date.now() - window.__ultSalvo > 300000) {
+      window.__ultSalvo = Date.now();
+      try { salvarHistorico(); } catch (e) {}
+    }
   } catch(e) {
     document.getElementById('lista').innerHTML = `<div class="empty">❌ ${e.message}</div>`;
     setTexto('app-time', 'Erro');
@@ -2774,6 +2789,148 @@ function desenharMapaAntigo(pontos, trechos) {
 }
 
 // Ranking de todas as colhedoras, da melhor previsão para a pior.
+// ---------- HISTÓRICO DE 24 HORAS ----------
+// Guarda um resumo por máquina e por turno. Ocupa pouco espaço e não se
+// perde quando o rastro antigo é descartado, então serve para comparar
+// dias e ver evolução.
+let historico = JSON.parse(localStorage.getItem('mv-historico') || '{}');
+
+function chaveTurno(d) {
+  const t = new Date(d);
+  if (t.getHours() < 6) t.setDate(t.getDate() - 1);   // antes das 6h ainda é o turno anterior
+  return t.toISOString().slice(0, 10);
+}
+
+function salvarHistorico() {
+  const turno = chaveTurno(new Date());
+  if (!historico[turno]) historico[turno] = {};
+
+  equipamentos.filter(ehColhedora).forEach(eq => {
+    const h = horasDoDia(eq.cod);
+    if (!h) return;
+    const a = analisarRastro(eq.cod);
+    const tiros = a ? a.tiros : [];
+    const mans = a ? a.manobras : [];
+
+    const ant = historico[turno][eq.cod] || {};
+    historico[turno][eq.cod] = {
+      frente: eq.frente || ant.frente || '',
+      modelo: eq.modelo || ant.modelo || '',
+      // guarda sempre o maior valor visto: se o app reabrir, não perde o que já tinha
+      horasCorte: Math.max(ant.horasCorte || 0, h.horasCorte),
+      horasParada: Math.max(ant.horasParada || 0, h.horasParada),
+      km: Math.max(ant.km || 0, h.km),
+      tiros: Math.max(ant.tiros || 0, tiros.length),
+      tiroMedio: tiros.length
+        ? Math.round(tiros.reduce((s,t) => s+t.metros, 0) / tiros.length)
+        : (ant.tiroMedio || 0),
+      manobraMedia: mans.length
+        ? Math.round(mans.reduce((s,t) => s+t.segundos, 0) / mans.length)
+        : (ant.manobraMedia || 0),
+      aproveitamento: Math.round(h.aproveitamento),
+      atualizado: new Date().toISOString(),
+    };
+  });
+
+  // Mantém os últimos 30 turnos
+  const dias = Object.keys(historico).sort();
+  while (dias.length > 30) delete historico[dias.shift()];
+
+  try { localStorage.setItem('mv-historico', JSON.stringify(historico)); } catch (e) {}
+}
+
+function abrirHistorico() {
+  salvarHistorico();
+  const body = document.getElementById('historico-body');
+  document.getElementById('tela-historico').style.display = 'flex';
+
+  const dias = Object.keys(historico).sort().reverse();
+  if (!dias.length) {
+    body.innerHTML = '<div class="empty">Ainda sem histórico.<br><br>'
+      + 'O app salva um resumo por turno enquanto está aberto.</div>';
+    return;
+  }
+
+  const hm = v => {
+    const t = Math.max(0, Math.round(v * 60));
+    return Math.floor(t/60) + 'h' + String(t % 60).padStart(2, '0');
+  };
+
+  let html = '';
+  dias.forEach(dia => {
+    const maqs = Object.entries(historico[dia])
+      .filter(([, m]) => m.horasCorte > 0.1)
+      .sort((a,b) => b[1].horasCorte - a[1].horasCorte);
+    if (!maqs.length) return;
+
+    const totH = maqs.reduce((s,[,m]) => s + m.horasCorte, 0);
+    const totKm = maqs.reduce((s,[,m]) => s + m.km, 0);
+    const tiroM = maqs.filter(([,m]) => m.tiroMedio > 0);
+    const tiroMed = tiroM.length
+      ? Math.round(tiroM.reduce((s,[,m]) => s + m.tiroMedio, 0) / tiroM.length) : 0;
+    const [a, m, d] = dia.split('-');
+    const ehHoje = dia === chaveTurno(new Date());
+
+    html += `<div class="rel-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div>
+          <div style="font-size:15px;font-weight:800">${d}/${m}${ehHoje ? ' <span style="font-size:10px;color:var(--green)">HOJE</span>' : ''}</div>
+          <div style="font-size:10px;color:var(--muted)">${maqs.length} colhedoras</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:22px;font-weight:800;color:var(--green)">${hm(totH)}</div>
+          <div style="font-size:10px;color:var(--muted)">${totKm.toFixed(1)} km · tiro ${tiroMed} m</div>
+        </div>
+      </div>`;
+
+    maqs.forEach(([cod, mq]) => {
+      html += `<div style="display:flex;justify-content:space-between;align-items:center;
+        padding:7px 0;border-top:1px solid var(--border);font-size:11px;gap:8px">
+        <div style="flex:1;min-width:0">
+          <b>${cod}</b>
+          <span style="color:var(--muted)"> ${nomeFrente(mq.frente)}</span>
+        </div>
+        <span style="color:var(--green);font-weight:700;white-space:nowrap">${hm(mq.horasCorte)}</span>
+        <span style="color:var(--muted);white-space:nowrap;width:52px;text-align:right">
+          ${mq.tiroMedio ? mq.tiroMedio + ' m' : '—'}</span>
+        <span style="color:var(--muted);white-space:nowrap;width:42px;text-align:right">
+          ${mq.aproveitamento}%</span>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+
+  html += `<div class="rel-card" style="display:flex;gap:8px">
+    <button class="sub-btn" onclick="baixarHistorico()">📥 Baixar CSV</button>
+    <button class="sub-btn" onclick="limparHistorico()">🗑 Limpar</button>
+  </div>`;
+
+  body.innerHTML = html;
+}
+
+function baixarHistorico() {
+  let csv = 'turno;equipamento;frente;horas_corte;horas_parada;km;tiros;tiro_medio_m;manobra_media_s;aproveitamento_pct\n';
+  Object.keys(historico).sort().forEach(dia => {
+    Object.entries(historico[dia]).forEach(([cod, m]) => {
+      csv += [dia, cod, m.frente, m.horasCorte.toFixed(2).replace('.', ','),
+        (m.horasParada||0).toFixed(2).replace('.', ','), (m.km||0).toFixed(2).replace('.', ','),
+        m.tiros || 0, m.tiroMedio || 0, m.manobraMedia || 0, m.aproveitamento || 0].join(';') + '\n';
+    });
+  });
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'historico-colhedoras.csv';
+  a.click();
+}
+
+function limparHistorico() {
+  if (!confirm('Apagar todo o histórico de turnos?')) return;
+  historico = {};
+  localStorage.removeItem('mv-historico');
+  abrirHistorico();
+}
+
 function abrirRanking() {
   const body = document.getElementById('ranking-body');
   document.getElementById('tela-ranking').style.display = 'flex';
