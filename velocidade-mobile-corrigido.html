@@ -488,6 +488,7 @@ let filtroStatus = 'todos';
 let limites = JSON.parse(localStorage.getItem('mv-limites') || '{}');
 let popupsAtivos = new Set();
 let listaVisivel = true;
+let ultimaBusca = Date.now();   // usada para saber se a página ficou parada
 
 // Modo expandido: esconde os cartões de resumo e a busca para a lista
 // de equipamentos ocupar a tela inteira. Útil no celular.
@@ -782,6 +783,7 @@ async function buscarDados() {
     const elProximo = document.getElementById('r-proximo');
     if (elProximo) elProximo.textContent = proximos;
     setTexto('r-media', m);
+    ultimaBusca = Date.now();
     setTexto('app-time', new Date().toLocaleTimeString('pt-BR'));
 
     const classes = [...new Set(equipamentos.map(e => e.classe))].sort();
@@ -2776,10 +2778,13 @@ function abrirRanking() {
   const body = document.getElementById('ranking-body');
   document.getElementById('tela-ranking').style.display = 'flex';
 
-  const linhas = [];
+  const linhas = [], semAtividade = [];
   equipamentos.filter(ehColhedora).forEach(eq => {
     const h = horasDoDia(eq.cod);
     if (!h || !h.projValida) return;
+    // Máquina sem nenhum apontamento de corte no período: pode estar em
+    // manutenção, transferência ou parada. Fica separada da lista.
+    if (h.horasCorte < 0.1) { semAtividade.push({ eq, h }); return; }
     const a = analisarRastro(eq.cod);
     const tiros = a ? a.tiros : [];
     const tiroMed = tiros.length
@@ -2851,6 +2856,19 @@ function abrirRanking() {
   });
 
   html += `</div>`;
+
+  if (semAtividade.length) {
+    html += `<div class="rel-card">
+      <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">
+        SEM APONTAMENTO DE CORTE (${semAtividade.length})</div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:8px">
+        Podem estar em manutenção, transferência ou paradas.</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${semAtividade.map(x => `<span onclick="verDoRanking('${x.eq.cod}')"
+          style="background:var(--bg);border:1px solid var(--border);border-radius:7px;
+          padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer">${x.eq.cod}</span>`).join('')}
+      </div></div>`;
+  }
 
   // Quem está perdendo mais tempo, e por quê
   const paradas = {};
@@ -3225,6 +3243,33 @@ function salvarLimite(c, tipo, v) {
 // 15s em vez de 30s: com leituras mais frequentes o app percebe a manobra
 // de cabeceira e não emenda duas passadas numa só.
 setInterval(() => { if (token) buscarDados(); }, 15000);
+
+// No celular o navegador congela a página em segundo plano: o timer para
+// e os dados envelhecem sem aviso. Ao voltar para a aba, busca na hora.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && token) {
+    const paradoPor = (Date.now() - ultimaBusca) / 1000;
+    if (paradoPor > 20) buscarDados();
+  }
+});
+window.addEventListener('focus', () => {
+  if (token && (Date.now() - ultimaBusca) / 1000 > 20) buscarDados();
+});
+
+// Mantém a tela ligada enquanto o app está aberto, para o celular não
+// dormir e parar a coleta. Só funciona em navegador que suporte.
+let travaTela = null;
+async function segurarTela() {
+  try {
+    if ('wakeLock' in navigator && document.visibilityState === 'visible') {
+      travaTela = await navigator.wakeLock.request('screen');
+    }
+  } catch (e) {}
+}
+segurarTela();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') segurarTela();
+});
 </script>
 </body>
 </html>
