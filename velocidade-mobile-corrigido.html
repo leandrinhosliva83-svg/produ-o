@@ -2034,7 +2034,14 @@ function horasDoDia(cod) {
   const decorrido = (agora - inicio) / 1000;
   const restante = Math.max(0, (fim - agora) / 1000);
   const ritmo = apJanela / janela;
-  const projecao24 = ritmo * 24 * 3600;
+
+  // Projetar 24h a partir de poucos minutos não faz sentido: se a máquina
+  // está em corte desde que o app abriu, o ritmo dá 100% e a previsão sai
+  // 24h. Exijo pelo menos 1h observada, e limito o teto a 22h — nenhuma
+  // colhedora corta 24h sem abastecer, trocar turno ou desembuchar.
+  const janelaMinima = 3600;
+  const projValida = janela >= janelaMinima;
+  const projecao24 = projValida ? Math.min(ritmo * 24 * 3600, 22 * 3600) : null;
 
   // Cobertura do GPS: quantos pontos existem para o tempo observado.
   // O app coleta a cada 15s, então numa janela bem coberta deveria haver
@@ -2059,9 +2066,11 @@ function horasDoDia(cod) {
     horasDecorridas: decorrido / 3600,
     horasRestantes: restante / 3600,
     aproveitamento: ritmo * 100,
-    projecao: projecao24 / 3600,
+    projecao: projValida ? projecao24 / 3600 : null,
+    projValida,
+    limitada: projValida && ritmo * 24 * 3600 > 22 * 3600,
     km: metros / 1000,
-    kmProjecao: apJanela > 60 ? (metros / apJanela) * projecao24 / 1000 : 0,
+    kmProjecao: (projValida && apJanela > 60) ? (metros / apJanela) * projecao24 / 1000 : 0,
     estadoAtual: atual ? atual.estado : '',
     emCorte: atual ? ehOperacaoCorte(atual.estado) : false,
     topParadas: top,
@@ -2117,11 +2126,15 @@ function cardHoras(h) {
     <div style="margin-top:12px;padding-top:11px;border-top:1px solid var(--border)">
       <div style="font-size:10px;color:var(--muted);font-weight:700">PROJEÇÃO PARA AS 24 HORAS</div>
       <div style="display:flex;gap:18px;align-items:baseline;margin-top:4px">
-        <div style="font-size:32px;font-weight:800;color:var(--accent);line-height:1.1">${hm(h.projecao)}</div>
-        <div style="font-size:14px;font-weight:700;color:var(--green)">${h.kmProjecao.toFixed(1)} km</div>
+        <div style="font-size:32px;font-weight:800;color:${h.projValida ? 'var(--accent)' : 'var(--muted)'};line-height:1.1">
+          ${h.projValida ? hm(h.projecao) : '—'}</div>
+        ${h.projValida ? `<div style="font-size:14px;font-weight:700;color:var(--green)">${h.kmProjecao.toFixed(1)} km</div>` : ''}
       </div>
       <div style="font-size:10px;color:var(--muted)">
-        mantendo o ritmo atual · turno 06:00 às 06:00
+        ${h.projValida
+          ? 'mantendo o ritmo atual · turno 06:00 às 06:00'
+              + (h.limitada ? ' · limitada a 22h' : '')
+          : 'preciso de pelo menos 1h medida (tenho ' + hm(h.horasJanela) + ')'}
       </div>
     </div>
 
@@ -2766,7 +2779,7 @@ function abrirRanking() {
   const linhas = [];
   equipamentos.filter(ehColhedora).forEach(eq => {
     const h = horasDoDia(eq.cod);
-    if (!h || h.horasJanela < 0.05) return;
+    if (!h || !h.projValida) return;
     const a = analisarRastro(eq.cod);
     const tiros = a ? a.tiros : [];
     const tiroMed = tiros.length
