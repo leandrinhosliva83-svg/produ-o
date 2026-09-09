@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#081827">
+  <title>Consulta de KM | Alarcom</title>
+  <style>
+    :root{--bg:#07131f;--card:#0b1c2b;--field:#142b3d;--line:#315067;--text:#f4f7fa;--muted:#9fb0bd;--accent:#ffa726;--ok:#36cc78;--bad:#ff6b6b}
+    *{box-sizing:border-box} body{margin:0;min-height:100dvh;background:radial-gradient(circle at top,#123955 0,#07131f 52%);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif}
+    main{width:min(100%,520px);margin:auto;padding:20px 16px calc(28px + env(safe-area-inset-bottom))}
+    header{padding:14px 4px 22px} h1{margin:0;color:var(--accent);font-size:clamp(25px,7vw,34px)} header p{margin:6px 0 0;color:var(--muted)}
+    .card{background:rgba(11,28,43,.97);border:1px solid rgba(125,166,194,.18);border-radius:20px;padding:20px;box-shadow:0 18px 48px #0007}
+    label{display:block;margin:15px 0 7px;color:#c2d0da;font-size:13px;font-weight:650}
+    input{width:100%;min-height:49px;padding:12px 13px;border:1px solid var(--line);border-radius:10px;background:var(--field);color:#fff;font:inherit;outline:none}
+    input:focus{border-color:var(--accent);box-shadow:0 0 0 3px #ffa72622}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+    button{width:100%;min-height:52px;margin-top:20px;border:0;border-radius:11px;background:var(--accent);color:#151515;font:700 15px inherit;cursor:pointer}
+    button:disabled{opacity:.58;cursor:wait}.settings{margin-top:12px;background:transparent;border:1px solid var(--line);color:#c9d6df}
+    .result{display:none;margin-top:18px;padding:17px;border-radius:13px;background:#102536;border-left:4px solid var(--accent)}
+    .result.show{display:block}.km{display:block;margin:4px 0;color:var(--accent);font-size:38px;font-weight:800}.details{color:#c1ced7;font-size:13px;line-height:1.65}
+    .status{margin-top:14px;color:var(--muted);font-size:12px;text-align:center}.error{color:#ffd3d3;border-left-color:var(--bad)}
+    dialog{width:min(calc(100% - 28px),480px);border:1px solid var(--line);border-radius:18px;background:var(--card);color:#fff;padding:20px}dialog::backdrop{background:#000a}.hint{color:var(--muted);font-size:12px;line-height:1.5}.row{display:flex;gap:10px}.row button{margin-top:16px}.secondary{background:#243b4d;color:#fff}
+    @media(max-width:380px){.grid{grid-template-columns:1fr}.card{padding:17px}}
+  </style>
+</head>
+<body>
+  <main>
+    <header><h1>Consulta de KM</h1><p>Histórico de veículos • Alarcom</p></header>
+    <section class="card">
+      <form id="form">
+        <label for="vehicle">Número do veículo ou placa</label>
+        <input id="vehicle" autocomplete="off" placeholder="Ex.: 173524 ou SWP-8B85" required>
+        <div class="grid">
+          <div><label for="startDate">Data inicial</label><input id="startDate" type="date" required></div>
+          <div><label for="startTime">Hora inicial</label><input id="startTime" type="time" required></div>
+          <div><label for="endDate">Data final</label><input id="endDate" type="date" required></div>
+          <div><label for="endTime">Hora final</label><input id="endTime" type="time" required></div>
+        </div>
+        <button id="submit" type="submit">CONSULTAR KM RODADO</button>
+      </form>
+      <div id="result" class="result" aria-live="polite"></div>
+      <button class="settings" id="settings" type="button">CONFIGURAR CONEXÃO</button>
+      <div id="connection" class="status"></div>
+    </section>
+  </main>
+
+  <dialog id="dialog">
+    <h2>Conexão da API</h2>
+    <p class="hint">Informe o endereço HTTPS do servidor intermediário. Não coloque usuário, senha, cookie ou token da Alarcom neste HTML.</p>
+    <label for="apiUrl">Endereço da API</label>
+    <input id="apiUrl" type="url" placeholder="https://seu-servidor.com/api/km">
+    <div class="row"><button id="save" type="button">SALVAR</button><button id="cancel" class="secondary" type="button">CANCELAR</button></div>
+  </dialog>
+
+  <script>
+    const $=id=>document.getElementById(id), key='alarcom_api_url';
+    const pad=n=>String(n).padStart(2,'0');
+    const now=new Date(), today=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+    $('startDate').value=$('endDate').value=today; $('startTime').value='07:00'; $('endTime').value=`${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    const api=()=>localStorage.getItem(key)||'';
+    function connection(){ $('connection').textContent=api()?'API configurada':'Configure a API para ativar as consultas'; }
+    $('settings').onclick=()=>{$('apiUrl').value=api();$('dialog').showModal()};
+    $('cancel').onclick=()=>$('dialog').close();
+    $('save').onclick=()=>{const value=$('apiUrl').value.trim(); if(value&&!/^https:\/\//i.test(value))return alert('Use um endereço iniciado por https://'); localStorage.setItem(key,value);$('dialog').close();connection()};
+    $('form').onsubmit=async event=>{
+      event.preventDefault(); const endpoint=api(), result=$('result'), submit=$('submit');
+      if(!endpoint){$('dialog').showModal();return}
+      const payload={veiculo:$('vehicle').value.trim().toUpperCase(),inicio:`${$('startDate').value}T${$('startTime').value}:00`,fim:`${$('endDate').value}T${$('endTime').value}:59`};
+      if(new Date(payload.fim)<=new Date(payload.inicio))return alert('O período final deve ser maior que o inicial.');
+      submit.disabled=true;submit.textContent='CONSULTANDO...';result.className='result show';result.textContent='Buscando histórico do veículo...';
+      try{
+        const response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        const data=await response.json().catch(()=>({})); if(!response.ok)throw new Error(data.erro||data.message||`Falha HTTP ${response.status}`);
+        const km=Number(data.kmRodado??data.km); if(!Number.isFinite(km))throw new Error('A API não retornou a quilometragem.');
+        result.className='result show'; result.innerHTML=`<div>Veículo: <b>${escapeHtml(data.veiculo||payload.veiculo)}</b>${data.placa?` • ${escapeHtml(data.placa)}`:''}</div><span class="km">${km.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})} km</span><div class="details">Leitura inicial: ${escapeHtml(data.inicioReal||data.inicio||'-')}<br>Leitura final: ${escapeHtml(data.fimReal||data.fim||'-')}<br>Leituras utilizadas: ${escapeHtml(String(data.leituras??'-'))}</div>`;
+      }catch(error){result.className='result show error';result.textContent=`Não foi possível consultar: ${error.message}`}
+      finally{submit.disabled=false;submit.textContent='CONSULTAR KM RODADO'}
+    };
+    function escapeHtml(value){const div=document.createElement('div');div.textContent=value;return div.innerHTML} connection();
+  </script>
+</body>
+</html>
