@@ -40,32 +40,20 @@
         <button id="submit" type="submit">CONSULTAR KM RODADO</button>
       </form>
       <div id="result" class="result" aria-live="polite"></div>
-      <button class="settings" id="settings" type="button">CONFIGURAR CONEXÃO</button>
       <div id="connection" class="status"></div>
     </section>
   </main>
 
-  <dialog id="dialog">
-    <h2>Conexão da API</h2>
-    <p class="hint">Informe o endereço HTTPS do servidor intermediário. Não coloque usuário, senha, cookie ou token da Alarcom neste HTML.</p>
-    <label for="apiUrl">Endereço da API</label>
-    <input id="apiUrl" type="url" placeholder="https://seu-servidor.com/api/km">
-    <div class="row"><button id="save" type="button">SALVAR</button><button id="cancel" class="secondary" type="button">CANCELAR</button></div>
-  </dialog>
-
   <script>
-    const $=id=>document.getElementById(id), key='alarcom_api_url';
+    const $=id=>document.getElementById(id);
+    const API_URL='https://proxy-alarcom-km.leandrinhosliva83.workers.dev/api/km';
     const pad=n=>String(n).padStart(2,'0');
     const now=new Date(), today=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
     $('startDate').value=$('endDate').value=today; $('startTime').value='07:00'; $('endTime').value=`${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    const api=()=>localStorage.getItem(key)||'';
-    function connection(){ $('connection').textContent=api()?'API configurada':'Configure a API para ativar as consultas'; }
-    $('settings').onclick=()=>{$('apiUrl').value=api();$('dialog').showModal()};
-    $('cancel').onclick=()=>$('dialog').close();
-    $('save').onclick=()=>{const value=$('apiUrl').value.trim(); if(value&&!/^https:\/\//i.test(value))return alert('Use um endereço iniciado por https://'); localStorage.setItem(key,value);$('dialog').close();connection()};
+    function connection(){ $('connection').textContent=API_URL?'Conexão segura ativa':'Integração segura em preparação'; }
     $('form').onsubmit=async event=>{
-      event.preventDefault(); const endpoint=api(), result=$('result'), submit=$('submit');
-      if(!endpoint){$('dialog').showModal();return}
+      event.preventDefault(); const endpoint=API_URL, result=$('result'), submit=$('submit');
+      if(!endpoint){result.className='result show error';result.textContent='A conexão segura com a Alarcom ainda não foi configurada.';return}
       const payload={veiculo:$('vehicle').value.trim().toUpperCase(),inicio:`${$('startDate').value}T${$('startTime').value}:00`,fim:`${$('endDate').value}T${$('endTime').value}:59`};
       if(new Date(payload.fim)<=new Date(payload.inicio))return alert('O período final deve ser maior que o inicial.');
       submit.disabled=true;submit.textContent='CONSULTANDO...';result.className='result show';result.textContent='Buscando histórico do veículo...';
