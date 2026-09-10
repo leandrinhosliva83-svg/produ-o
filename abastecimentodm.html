@@ -348,6 +348,13 @@
         <p class="adm-msg" id="adm-msg"></p>
 
         <hr class="div">
+
+        <hr class="div">
+        <p class="rot2">Atualizar a planilha</p>
+        <p class="dica">Refaz o histórico inteiro com as metas de agora. Use depois de mudar qualquer meta.</p>
+        <button id="adm-btn-recalcular" class="btn-secundario">Recalcular histórico</button>
+
+        <hr class="div">
         <p class="rot2">Metas cadastradas</p>
         <div id="adm-lista"><p class="vazio">Carregando…</p></div>
 
@@ -362,7 +369,7 @@
    1) CONFIGURAÇÃO — cole aqui a URL do seu Web App do Google Apps Script.
    Enquanto estiver vazio, a tela roda em MODO DEMONSTRAÇÃO com dados fictícios.
    ===================================================================== */
-const API_URL = "https://script.google.com/macros/s/AKfycbzetZaIFp_etY4ySrSAATdRD81dVPwiY_eE7OUDpzyQhALMZf-JYpfFzFX62BZSqOQR/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyVc-Esyz5tpGc_AJh_Y_9dzYY8kBkdHXqloBshA0k4Jpd-sWH_OblZ1KP4MxMBPdyw/exec";
 
 /* Regras de validação (ajuste os números conforme sua frota) */
 const REGRAS = {
@@ -909,6 +916,19 @@ function desenharItens(){
     : `<p class="vazio" style="padding-top:8px">Nada encontrado.</p>`;
 }
 
+
+/* Refaz todo o histórico da planilha com as metas atuais. */
+async function recalcularHistorico(){
+  if(!confirm("Refazer o histórico inteiro com as metas atuais?\n\nIsso reescreve consumo, meta, diferença e situação de todos os lançamentos.")) return;
+  aviso("Recalculando… pode levar alguns segundos, não feche a tela.","var(--texto-fraco)");
+  try{
+    const j = await pedir({acao:"recalcular"});
+    const r = j.resumo || {};
+    aviso(`${r.linhas||0} lançamentos refeitos · ${r.comMetaPropria||0} com meta própria · ${r.semMetaPropria||0} usando a geral.`,"var(--ok)");
+    if($caminhao.value.trim()) carregarHistorico();
+  }catch(e){ aviso("Erro: "+e.message,"var(--erro)"); }
+}
+
 async function salvarMetaGeral(){
   const valor = numero(el("adm-meta").value);
   if(!valor){ aviso("Meta geral inválida.","var(--erro)"); return; }
@@ -993,6 +1013,7 @@ el("adm-senha").addEventListener("keydown",e=>{ if(e.key==="Enter") entrarAdm();
 el("adm-btn").addEventListener("click",salvarMetaGeral);
 el("adm-btn-cam").addEventListener("click",salvarMetaCaminhao);
 el("adm-btn-massa").addEventListener("click",aplicarMassa);
+el("adm-btn-recalcular").addEventListener("click",recalcularHistorico);
 $caminhao.addEventListener("change",carregarHistorico);
 $caminhao.addEventListener("blur",carregarHistorico);
 $km.addEventListener("input",validar);
