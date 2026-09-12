@@ -208,6 +208,13 @@
   }
   .periodos button.ativo{background:var(--laranja);color:#000;border-color:var(--laranja)}
 
+
+  /* perda em litros e em reais */
+  .perda{margin-top:12px;padding:12px;border-radius:3px;background:#3a0f0a;border-left:5px solid var(--erro)}
+  .perda .rot{display:block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#ffb3ab;margin-bottom:4px}
+  .perda .valor{font-family:"Arial Narrow",Impact,sans-serif;font-size:34px;font-weight:900;color:#ff8a7d;line-height:1;font-variant-numeric:tabular-nums}
+  .perda .detalhe{font-size:13.5px;color:#e0a49d;margin-top:6px;font-variant-numeric:tabular-nums}
+
   /* área ADM */
   .adm summary{cursor:pointer;font-size:13px;color:var(--texto-fraco);padding:4px 0;letter-spacing:.12em;text-transform:uppercase}
   .adm-corpo{padding-top:16px}
@@ -265,6 +272,11 @@
       <div class="numero" id="desemp-numero">—</div>
       <div class="conta" id="desemp-conta"></div>
       <div class="veredito" id="desemp-veredito"></div>
+      <div class="perda" id="perda" style="display:none">
+        <span class="rot">Combustível gasto a mais</span>
+        <div class="valor" id="perda-valor">—</div>
+        <div class="detalhe" id="perda-detalhe"></div>
+      </div>
       <button id="btn-alarme" class="btn-alarme">Silenciar alarme</button>
     </div>
     <div class="acumulado" id="acumulado">
@@ -349,7 +361,14 @@
 
         <p class="adm-msg" id="adm-msg"></p>
 
+
         <hr class="div">
+        <p class="rot2">Preço do combustível</p>
+        <p class="dica">Usado para mostrar ao motorista quanto custou o litro gasto a mais.</p>
+        <div class="dupla">
+          <div class="campo"><input id="adm-preco" inputmode="decimal" placeholder="6,20"></div>
+          <div class="campo"><button id="adm-btn-preco" class="btn-secundario">Salvar preço</button></div>
+        </div>
 
         <hr class="div">
         <p class="rot2">Atualizar a planilha</p>
@@ -402,6 +421,7 @@ const $btn=el("btn"), $status=el("status"), $hist=el("historico"), $calc=el("cal
 let acumulado = null;   // média de todo o histórico do veículo
 let historico = [];   // [penúltimo, último] — sempre do veículo informado
 let meta = META_PADRAO;
+let precoLitro = 0;        // R$ por litro, definido no ADM
 let carregando = false;
 
 /* ---------- 2) BUSCAR HISTÓRICO ---------- */
@@ -429,6 +449,7 @@ async function carregarHistorico(){
       acumulado = j.acumulado || null;
       todosRegistros = j.todos || [];
       meta = Number(j.meta) > 0 ? Number(j.meta) : META_PADRAO;
+      precoLitro = Number(j.preco) || 0;
     }else{
       await new Promise(r=>setTimeout(r,300));           // simula a rede
       historico = DEMO[num] ? DEMO[num].slice() : [];
@@ -502,6 +523,24 @@ function desenharDesempenho(){
   el("desemp-veredito").textContent = bateu
     ? `Dentro da meta (+${(feito-meta).toFixed(2).replace(".",",")} km/l)`
     : `Abaixo da meta (−${(meta-feito).toFixed(2).replace(".",",")} km/l)`;
+
+  /* Litros gastos a mais: o que deveria ter usado se tivesse batido a meta */
+  const caixa = el("perda");
+  if(!bateu){
+    const litrosIdeais = rodou / meta;
+    const perdidos = litros - litrosIdeais;
+    caixa.style.display = "block";
+    el("perda-valor").textContent = precoLitro > 0
+      ? "R$ " + (perdidos*precoLitro).toFixed(2).replace(".",",")
+      : perdidos.toFixed(1).replace(".",",") + " L";
+    el("perda-detalhe").textContent =
+      `Gastou ${litros.toLocaleString("pt-BR")} L para rodar ${rodou.toLocaleString("pt-BR")} km. `+
+      `Na meta seriam ${litrosIdeais.toFixed(1).replace(".",",")} L — `+
+      `${perdidos.toFixed(1).replace(".",",")} L a mais`+
+      (precoLitro > 0 ? ` a R$ ${precoLitro.toFixed(2).replace(".",",")} o litro.` : ". Cadastre o preço no ADM.");
+  }else{
+    caixa.style.display = "none";
+  }
 }
 
 
@@ -888,6 +927,8 @@ async function carregarMetas(){
     const geral = Number(j.geral) || 2.5;
     const lista = j.lista || [];
     el("adm-meta").value = String(geral).replace(".", ",");
+    precoLitro = Number(j.preco) || 0;
+    if(precoLitro) el("adm-preco").value = precoLitro.toFixed(2).replace(".", ",");
     lista.sort((a,b)=>String(a.caminhao).localeCompare(String(b.caminhao),"pt-BR",{numeric:true}));
     metasNaTela = lista;
     el("adm-lista").innerHTML =
@@ -927,6 +968,19 @@ async function recalcularHistorico(){
     const j = await pedir({acao:"recalcular"});
     const r = j.resumo || {};
     aviso(`${r.linhas||0} lançamentos refeitos · ${r.comMetaPropria||0} com meta própria · ${r.semMetaPropria||0} usando a geral.`,"var(--ok)");
+    if($caminhao.value.trim()) carregarHistorico();
+  }catch(e){ aviso("Erro: "+e.message,"var(--erro)"); }
+}
+
+
+async function salvarPreco(){
+  const valor = numero(el("adm-preco").value);
+  if(!valor){ aviso("Preço inválido.","var(--erro)"); return; }
+  aviso("Salvando…","var(--texto-fraco)");
+  try{
+    await pedir({acao:"salvarPreco", preco:valor});
+    precoLitro = valor;
+    aviso(`Preço salvo: R$ ${valor.toFixed(2).replace(".",",")} por litro.`,"var(--ok)");
     if($caminhao.value.trim()) carregarHistorico();
   }catch(e){ aviso("Erro: "+e.message,"var(--erro)"); }
 }
@@ -995,6 +1049,7 @@ function limparTela(){
   historico=[];
   $hist.innerHTML='<p class="vazio">Digite o número do caminhão para carregar.</p>';
   el("desempenho").className="desempenho";
+  el("perda").style.display="none";
   el("acumulado").className="acumulado";
   acumulado=null; todosRegistros=[];
   $calc.textContent=""; $calc.classList.remove("piscando"); alertaAnterior="";
@@ -1016,6 +1071,7 @@ el("adm-btn").addEventListener("click",salvarMetaGeral);
 el("adm-btn-cam").addEventListener("click",salvarMetaCaminhao);
 el("adm-btn-massa").addEventListener("click",aplicarMassa);
 el("adm-btn-recalcular").addEventListener("click",recalcularHistorico);
+el("adm-btn-preco").addEventListener("click",salvarPreco);
 $caminhao.addEventListener("change",carregarHistorico);
 $caminhao.addEventListener("blur",carregarHistorico);
 $km.addEventListener("input",validar);
