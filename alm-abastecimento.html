@@ -215,6 +215,12 @@
   .perda .valor{font-family:"Arial Narrow",Impact,sans-serif;font-size:34px;font-weight:900;color:#ff8a7d;line-height:1;font-variant-numeric:tabular-nums}
   .perda .detalhe{font-size:13.5px;color:#e0a49d;margin-top:6px;font-variant-numeric:tabular-nums}
 
+
+  .perda.verde{background:#16240f;border-left-color:var(--verde)}
+  .perda.verde .rot{color:#c3e39a}
+  .perda.verde .valor{color:var(--verde)}
+  .perda.verde .detalhe{color:#a8c98a}
+
   /* área ADM */
   .adm summary{cursor:pointer;font-size:13px;color:var(--texto-fraco);padding:4px 0;letter-spacing:.12em;text-transform:uppercase}
   .adm-corpo{padding-top:16px}
@@ -273,7 +279,7 @@
       <div class="conta" id="desemp-conta"></div>
       <div class="veredito" id="desemp-veredito"></div>
       <div class="perda" id="perda" style="display:none">
-        <span class="rot">Combustível gasto a mais</span>
+        <span class="rot" id="perda-rot">Combustível gasto a mais</span>
         <div class="valor" id="perda-valor">—</div>
         <div class="detalhe" id="perda-detalhe"></div>
       </div>
@@ -524,23 +530,23 @@ function desenharDesempenho(){
     ? `Dentro da meta (+${(feito-meta).toFixed(2).replace(".",",")} km/l)`
     : `Abaixo da meta (−${(meta-feito).toFixed(2).replace(".",",")} km/l)`;
 
-  /* Litros gastos a mais: o que deveria ter usado se tivesse batido a meta */
+  /* Litros e reais: economia quando bate a meta, prejuízo quando não bate */
   const caixa = el("perda");
-  if(!bateu){
-    const litrosIdeais = rodou / meta;
-    const perdidos = litros - litrosIdeais;
-    caixa.style.display = "block";
-    el("perda-valor").textContent = precoLitro > 0
-      ? "R$ " + (perdidos*precoLitro).toFixed(2).replace(".",",")
-      : perdidos.toFixed(1).replace(".",",") + " L";
-    el("perda-detalhe").textContent =
-      `Gastou ${litros.toLocaleString("pt-BR")} L para rodar ${rodou.toLocaleString("pt-BR")} km. `+
-      `Na meta seriam ${litrosIdeais.toFixed(1).replace(".",",")} L — `+
-      `${perdidos.toFixed(1).replace(".",",")} L a mais`+
-      (precoLitro > 0 ? ` a R$ ${precoLitro.toFixed(2).replace(".",",")} o litro.` : ". Cadastre o preço no ADM.");
-  }else{
-    caixa.style.display = "none";
-  }
+  const litrosIdeais = rodou / meta;
+  const diferencaL = litros - litrosIdeais;        // positivo = gastou mais
+  caixa.style.display = "block";
+  caixa.className = "perda" + (bateu ? " verde" : "");
+
+  const qtd = Math.abs(diferencaL);
+  el("perda-rot").textContent = bateu ? "Combustível economizado" : "Combustível gasto a mais";
+  el("perda-valor").textContent = precoLitro > 0
+    ? (bateu ? "+ R$ " : "− R$ ") + (qtd*precoLitro).toFixed(2).replace(".",",")
+    : qtd.toFixed(1).replace(".",",") + " L";
+  el("perda-detalhe").textContent =
+    `Gastou ${litros.toLocaleString("pt-BR")} L para rodar ${rodou.toLocaleString("pt-BR")} km. `+
+    `Na meta seriam ${litrosIdeais.toFixed(1).replace(".",",")} L — `+
+    `${qtd.toFixed(1).replace(".",",")} L ${bateu ? "a menos" : "a mais"}`+
+    (precoLitro > 0 ? ` a R$ ${precoLitro.toFixed(2).replace(".",",")} o litro.` : ". Cadastre o preço no ADM.");
 }
 
 
