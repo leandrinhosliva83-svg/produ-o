@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b3b25">
+  <title>Quadro de Frentes</title>
+  <style>
+    *{box-sizing:border-box} body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:#f1f5f3;color:#14251c} button{font:inherit}
+    .inicio{min-height:100vh;display:grid;place-items:center;padding:24px;position:relative;overflow:hidden;background:radial-gradient(circle at 18% 18%,#134e87 0,transparent 28%),radial-gradient(circle at 82% 30%,#123c63 0,transparent 30%),linear-gradient(150deg,#030913 0%,#071c2d 48%,#041019 100%)}
+    .inicio:before{content:'';position:absolute;inset:42% -25% -32%;background-image:linear-gradient(rgba(49,174,255,.22) 1px,transparent 1px),linear-gradient(90deg,rgba(49,174,255,.22) 1px,transparent 1px);background-size:58px 58px;transform:perspective(420px) rotateX(62deg) scale(1.45);transform-origin:center top;animation:gridMove 11s linear infinite;mask-image:linear-gradient(to bottom,#000,transparent)}
+    .inicio:after{content:'';position:absolute;width:440px;height:440px;border:1px solid #55bdff33;border-radius:50%;box-shadow:0 0 90px #0075bd45,inset 0 0 90px #0075bd22;right:-190px;top:-180px;animation:giro 24s linear infinite}
+    @keyframes gridMove{to{background-position:0 58px,58px 0}}@keyframes giro{to{transform:rotate(360deg)}}
+    .inicio-box{position:relative;z-index:2;text-align:center;color:#fff;width:min(420px,94vw);padding:34px 32px;border:1px solid #75caff38;border-radius:28px;background:linear-gradient(145deg,rgba(8,27,43,.88),rgba(5,14,25,.72));box-shadow:0 28px 80px #0009,0 0 50px #0089d629,inset 0 1px #ffffff2b;backdrop-filter:blur(18px)}
+    .logo{width:96px;height:96px;margin:auto auto 21px;border-radius:25px;background:#fff;display:grid;place-items:center;box-shadow:0 0 0 7px #ffffff10,0 16px 45px #00a56735;overflow:hidden}.logo img{width:82%;height:82%;object-fit:contain}
+    h1{margin:0 0 8px;font-size:29px;letter-spacing:.2px}.inicio p{margin:0 0 24px;color:#a9c9dc}.login{width:100%;display:grid;gap:11px}.campo{width:100%;border:1px solid #68bce257;background:#061728b8;color:#fff;border-radius:13px;padding:15px;font-size:16px;outline:none;box-shadow:inset 0 1px 10px #0005}.campo::placeholder{color:#7fa2b6}.campo:focus{border-color:#46c5ff;box-shadow:0 0 0 3px #46c5ff1f,inset 0 1px 10px #0004}.abrir{border:0;border-radius:14px;background:linear-gradient(100deg,#00a85a,#8ecb3f);color:#fff;padding:15px 28px;font-weight:800;font-size:17px;cursor:pointer;box-shadow:0 12px 32px #00a65a42;transition:.2s}.abrir:hover{transform:translateY(-2px);box-shadow:0 16px 38px #00a65a66}.erro-login{display:none;background:#7d1717;color:#fff;border-radius:10px;padding:10px;font-size:13px}
+    .app{display:none;min-height:100vh}.topo{position:sticky;top:0;z-index:5;background:#0b5834;color:#fff;padding:15px 18px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 3px 14px #0002}
+    .topo strong{font-size:18px}.atualizar{border:1px solid #ffffff66;background:#ffffff12;color:#fff;border-radius:10px;padding:9px 12px;font-weight:700;cursor:pointer}
+    main{max-width:1100px;margin:auto;padding:20px}.titulo{display:flex;align-items:end;justify-content:space-between;gap:10px;margin-bottom:16px}.titulo h2{margin:0;font-size:23px}.titulo span{color:#64736b;font-size:13px}
+    .grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}.frente{min-height:180px;text-align:left;border:1px solid #1f6245;background:linear-gradient(145deg,#123d2c,#071f17);color:#fff;border-radius:16px;padding:18px;cursor:pointer;box-shadow:0 12px 28px #123b2926;transition:.16s;position:relative;overflow:hidden}.frente:after{content:"";position:absolute;width:90px;height:90px;border:16px solid #ffffff08;right:-35px;bottom:-40px;transform:rotate(18deg)}
+    .frente:hover{transform:translateY(-3px);border-color:#38b875;box-shadow:0 16px 34px #123b2938}.frente b{display:block;color:#fff;font-size:21px;text-transform:uppercase;letter-spacing:.3px}.frente small{display:block;color:#a9c9b8;margin-top:6px}.estado{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:18px;font-size:11px;font-weight:800}.on{color:#62e89f}.off{color:#ff8585}.manut{color:#ffd166}.seta{display:block;margin-top:15px;font-size:12px;font-weight:800;color:#fff}
+    .detalhe{display:none}.voltar{border:0;background:#e1ece6;color:#155c39;border-radius:10px;padding:9px 12px;font-weight:800;cursor:pointer;margin-bottom:13px}.tipo-filtros{display:flex;gap:9px;overflow-x:auto;padding:2px 2px 15px;margin-bottom:4px;scrollbar-width:thin}.tipo-btn{border:1px solid #cedbd4;background:#fff;color:#375044;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:800;white-space:nowrap;cursor:pointer;box-shadow:0 4px 12px #1835250a}.tipo-btn.ativo{background:#0b6b40;border-color:#0b6b40;color:#fff;box-shadow:0 7px 18px #0b6b4030}.tipo-btn .qtd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;margin-left:5px;border-radius:999px;background:#e9f1ed;font-size:11px}.tipo-btn.ativo .qtd{background:#ffffff24}.lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px}.equip{background:#fff;border:1px solid #d7e1db;border-left:5px solid #89958f;border-radius:14px;padding:15px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 8px 20px #1835250c}.equip.produtivo{border-left-color:#18a15f}.equip.manutencao{border-left-color:#e6a700}.equip.parado{border-left-color:#dc3b3b}.equip.movimento{border-left-color:#2589d8}.equip-info{min-width:0}.equip-info b{font-size:18px}.equip-info div{color:#68766f;font-size:12px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.status-tag{display:inline-block!important;width:max-content;border-radius:999px;padding:4px 8px;font-size:10px!important;font-weight:900;text-transform:uppercase}.status-tag.produtivo{background:#daf7e8;color:#087340}.status-tag.manutencao{background:#fff2c9;color:#8b6200}.status-tag.parado{background:#ffe0e0;color:#a12121}.status-tag.movimento{background:#dceeff;color:#17649c}.atividade{font-weight:700;color:#263d31!important}.leitura{font-size:11px!important;color:#728078!important}.vel{font-weight:900;color:#0b6b40!important}.local{border:0;border-radius:10px;background:#1578d4;color:white;padding:11px 13px;font-weight:800;cursor:pointer;white-space:nowrap}.local:disabled{background:#adb8b2;cursor:not-allowed}.vazio{text-align:center;padding:55px 20px;color:#718078;grid-column:1/-1}.erro{background:#fff1f1;border:1px solid #ffcaca;color:#a32424;border-radius:12px;padding:14px;grid-column:1/-1}
+    @media(max-width:520px){main{padding:14px}.grade{grid-template-columns:1fr;gap:10px}.frente{min-height:168px;padding:15px}.lista{grid-template-columns:1fr}.equip{align-items:flex-start;flex-wrap:wrap}.local{width:100%;justify-content:center}.titulo{align-items:flex-start;flex-direction:column}}
+  </style>
+</head>
+<body>
+  <section class="inicio" id="inicio"><div class="inicio-box"><div class="logo"><img alt="Grupo Moreno" src="data:image/webp;base64,UklGRkADAABXRUJQVlA4IDQDAABwFACdASpgAFsAPn02k0ekoyGhOrb4AJAPiWgAybyiDi/D8rvzCZ99R+IDoAOcB5gPN19DW8y+gt0ymQoeL+vvmtEhb6soHgBpfoTQb3o/uXvxzJy9JBuH/SNiQCcwQfWV5tKAGwFlO2oNkxqAeejxq+Ljj8aiTHi+60GFWR3EUHLazkb5lb0654gQ7535NdAr7ke5YLW0gLrC6u28cbvThzKc8g9sjYO/UKgAAP77xy+eXLov46xiQxqO0yqsyrAjUH+S55v91eA/8FLrmfxHhC1ioE5kn9UuR7F1VPQXNFc6cHv512KYunPJ5+fPKSRVZH2C9hXh0Z9/85iJNI3Lml0AqWVT9zjLXZPFXOy0Bk1V/ybWR6lbF0uKrLq22sfxexvvdLVOJO5ZSsqQqsPmacUQ8GBg85cIIMBfrxqRY23birEqELhpp4ZPfgVC28hpie2rDq47QqceP0omWTDxJ4N9oGyhZ+7VbkHMPMPmnEhZzxI0Fhj+kk+v0rF9y1R6HNh2Sdc8KfJ4/FY3HRHtvMb23pM2psKAdetnc9UCYn4FSQvlzhg4Qs+wh7ajKNSSoly+6F9Jp46x+lxKOlEvJTW5dFRZ13cM2slnEBAxKPlQMkTvC9wZj1qgzWN2u2wMf39HJaxVG6SyNW/iIzu8+JJ0FvTfQpB/3A8LSt/H0KAlbBYKWKXGzw6tNsS0KJDNQoSE5oHOt6RZtIk6jtLicr8aR1np/TL6c9XblrqNC7JVBc+DXgZ/XQ8cMuBG0JYOCVjTseuwJi8IKdPVVKGCZ1mMUheQa+2unegYYipSR8k5Zx3+MuNTxzo8Qmv3OtQTY2iOwRtfoYoYDGIN3kobVPK0Y6qpFPdSjtSUFGyz3aRi0+UUtzLYdeCxYKRDe+f8tZtzva9UX/JVm/fyDqjL4W2aapkV8q8mMSBT3C9UKu4PyqbNJmdqfHqTmwiLBmbiJRNZk95gIDllLm4sBviESBjJ8M2dVf/B+c2eK/HdCaNnf7qRH3x20V/1ME78F30mMGyCylerf+F5hoxjFZax97P/0N22Dbj0k287VoKUVIlbaiY0fNJ9uzv+XfB5y7ijEAAA"></div><h1>Quadro de Frentes</h1><p>Inteligência operacional e localização em tempo real.</p><div class="login"><input class="campo" id="email" type="email" placeholder="E-mail" autocomplete="username"><input class="campo" id="senha" type="password" placeholder="Senha" autocomplete="current-password" onkeydown="if(event.key==='Enter')entrar()"><button class="abrir" id="btn-entrar" onclick="entrar()">Entrar e abrir frentes</button><div class="erro-login" id="erro-login"></div></div></div></section>
+  <section class="app" id="app">
+    <header class="topo"><strong>🚩 Frentes de Operação</strong><button class="atualizar" onclick="carregar()">↻ Atualizar</button></header>
+    <main>
+      <section id="visao-frentes"><div class="titulo"><h2>Selecione uma frente ou operação</h2><span id="atualizacao">Carregando...</span></div><div class="grade" id="grade"><div class="vazio">Buscando equipamentos...</div></div></section>
+      <section class="detalhe" id="visao-equip"><button class="voltar" onclick="voltar()">← Todas as frentes</button><div class="titulo"><h2 id="nome-frente">Frente</h2><span id="qtd-frente"></span></div><div class="tipo-filtros" id="tipo-filtros"></div><div class="lista" id="lista"></div></section>
+    </main>
+  </section>
+<script>
+const API='https://proxy-velocidade.leandrinhosliva83.workers.dev';
+const MAPA_FRENTES={2:2,3:3,4:4,15:5,46:6,47:7,48:8};
+let equipamentos=[];
+let token=localStorage.getItem('qf-token')||'';
+let frenteAtual='';
+let filtroTipoAtual='todos';
+
+async function entrar(){
+  const btn=document.getElementById('btn-entrar'),erro=document.getElementById('erro-login');
+  erro.style.display='none';btn.disabled=true;btn.textContent='Entrando...';
+  try{
+    const r=await fetch(API+'/sessions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:document.getElementById('email').value.trim(),password:document.getElementById('senha').value})});
+    const data=await r.json();if(!data.token)throw new Error('E-mail ou senha incorretos.');
+    token=data.token;localStorage.setItem('qf-token',token);abrirQuadro();
+  }catch(e){erro.textContent=e.message||'Não foi possível entrar.';erro.style.display='block'}
+  finally{btn.disabled=false;btn.textContent='Entrar e abrir frentes'}
+}
+function abrirQuadro(){document.getElementById('inicio').style.display='none';document.getElementById('app').style.display='block';carregar()}
+function nomeFrente(v){if(!v||v==='-')return'Sem frente';const m=String(v).match(/FRENTE\s*(\d+)/i);const n=m?+m[1]:parseInt(String(v).replace(/\D/g,''));return isNaN(n)?v:'Frente '+String(n).padStart(2,'0')}
+function numeroFrente(v){const m=String(v||'').match(/FRENTE\s*(\d+)/i);return m?+m[1]:999}
+function compararGrupos(a,b){const na=numeroFrente(a),nb=numeroFrente(b);return na!==nb?na-nb:String(a).localeCompare(String(b),'pt-BR')}
+function trajetoAtual(eq){const t=Array.isArray(eq.trajetos)?eq.trajetos:[];return t[0]||{}}
+function dataLeitura(t){if(!t)return null;const campos=['dta_trajeto','dta_gps','dta_posicao','dta_evento','dta_atualizacao','dta_leitura','data','dataHora','dta'];for(const c of campos){if(t[c]){const d=new Date(t[c]);if(!isNaN(d))return d}}for(const c of Object.keys(t)){if(!/dta|data|hora|time/i.test(c))continue;const d=new Date(t[c]);if(!isNaN(d)&&d.getFullYear()>2000)return d}return null}
+function estadoEq(e){const txt=(e.parada||'')+' '+(e.atividade||'');if(/manuten|oficina|mec[aâ]nic|el[eé]tric|corretiv|preventiv/i.test(txt))return{chave:'manutencao',nome:'Manutenção'};if(e.atividade&&!/aguard|parad|refei|abastec|troca|desloc|improdut/i.test(e.atividade))return{chave:'produtivo',nome:'Produtivo'};if(e.vel>.1)return{chave:'movimento',nome:'Em movimento'};return{chave:'parado',nome:e.parada||e.atividade?'Parado':'Sem apontamento'}}
+const TIPOS={todos:{nome:'Todos',icone:'▦'},colhedora:{nome:'Colhedoras',icone:'🌾'},transbordo:{nome:'Transbordos',icone:'🚜'},agua:{nome:"Caminhão-d’água",icone:'💧'},caminhao:{nome:'Caminhões',icone:'🚛'},trator:{nome:'Tratores',icone:'⚙️'},apoio:{nome:'Outros',icone:'＋'}};
+function tipoEquipamento(e){const t=[e.classe,e.modelo,e.atividade].filter(Boolean).join(' ');if(/transbord|puma\s*(200|215|230)|magnum|t8\.?/i.test(t))return'transbordo';if(/colhed|colheita|austoft|a8[0-9]{3}|ch\s?[0-9]{2,3}/i.test(t))return'colhedora';if(/caminh[aã]o.{0,12}[áa]gua|[áa]gua|pipa/i.test(t))return'agua';if(/caminh[aã]o|scania|volvo|mercedes|vw\s|constellation/i.test(t))return'caminhao';if(/trator/i.test(t))return'trator';return'apoio'}
+function horaLeitura(d){if(!d)return'Horário não informado';const min=Math.max(0,Math.floor((Date.now()-d.getTime())/60000)),hora=d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});return min<1?hora+' · agora':min<60?hora+' · há '+min+' min':hora+' · há '+Math.floor(min/60)+'h '+min%60+'min'}
+
+async function carregar(){
+  document.getElementById('atualizacao').textContent='Atualizando...';
+  document.getElementById('grade').innerHTML='<div class="vazio">Buscando equipamentos...</div>';
+  try{
+    const url=API+'/dashboard?tipo[]=0&tipo[]=51&tipo[]=52&tipo[]=53&tipo[]=61&tipo[]=101&tipo[]=102&tipo[]=104&tipo[]=106&tipo[]=107&tipo[]=109&tipo[]=1010&tipo[]=1011&tipo[]=1013&tipo[]=1014&tipo[]=1025&tipo[]=1026&tipo[]=141&tipo[]=2323&tipo[]=273&tipo[]=54&tipo[]=11&tipo[]=12&tipo[]=123&tipo[]=126&tipo[]=31&tipo[]=3131&atividades[]=0&eqpto=';
+    const r=await fetch(url,{headers:{Authorization:'Bearer '+token}});
+    if(r.status===401||r.status===403){localStorage.removeItem('qf-token');token='';document.getElementById('app').style.display='none';document.getElementById('inicio').style.display='grid';throw new Error('Sua sessão expirou. Entre novamente.')}
+    if(!r.ok)throw new Error('Falha na consulta: '+r.status);
+    const data=await r.json();
+    equipamentos=(data.alocacao||[]).map(eq=>{const t=trajetoAtual(eq),frente=eq.dsc_frente||(MAPA_FRENTES[eq.num_frente]?'FRENTE '+MAPA_FRENTES[eq.num_frente]:''),classe=eq.dsc_tipo_utilizacao||eq.dsc_modelo||eq.dsc_equipamento||'SEM CLASSIFICAÇÃO';return{cod:eq.cod_equipamento,modelo:eq.dsc_modelo||eq.dsc_equipamento||'-',nome:eq.nome||'-',classe:classe,frente:frente||classe,vel:Number(t.num_velocidade_gps||0),lat:eq.LATITUDE,lng:eq.LONGITUDE,atividade:eq.dsc_atividade||null,parada:eq.dsc_motivo_parada||null,inicio:eq.dta_inicial||null,leitura:dataLeitura(t)}});
+    renderFrentes();document.getElementById('atualizacao').textContent='Atualizado às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){document.getElementById('grade').innerHTML='<div class="erro">⚠ '+e.message+'</div>';document.getElementById('atualizacao').textContent='Não atualizado'}
+}
+
+function renderFrentes(){
+  const frentes=[...new Set(equipamentos.map(e=>e.frente))].sort(compararGrupos);
+  document.getElementById('grade').innerHTML=frentes.length?frentes.map(f=>{const it=equipamentos.filter(e=>e.frente===f),prod=it.filter(e=>estadoEq(e).chave==='produtivo').length,man=it.filter(e=>estadoEq(e).chave==='manutencao').length,mov=it.filter(e=>estadoEq(e).chave==='movimento').length,par=it.filter(e=>estadoEq(e).chave==='parado').length;return`<button class="frente" onclick="abrirFrente('${String(f).replace(/'/g,"\\'")}')"><b>${nomeFrente(f)}</b><small>${it.length} equipamento${it.length===1?'':'s'}</small><span class="estado"><span class="on">● ${prod} produtivo${prod===1?'':'s'}</span><span class="manut">● ${man} manutenção</span><span style="color:#77c7ff">● ${mov} movimento</span><span class="off">● ${par} parado${par===1?'':'s'}</span></span><span class="seta">Abrir operação →</span></button>`}).join(''):'<div class="vazio">Nenhuma frente encontrada.</div>'
+}
+
+function abrirFrente(frente){
+  frenteAtual=frente;filtroTipoAtual='todos';document.getElementById('visao-frentes').style.display='none';document.getElementById('visao-equip').style.display='block';document.getElementById('nome-frente').textContent=nomeFrente(frente);renderTipos();renderEquipamentos();
+}
+function renderTipos(){const itens=equipamentos.filter(e=>e.frente===frenteAtual),ordem=['todos','colhedora','transbordo','agua','caminhao','trator','apoio'];document.getElementById('qtd-frente').textContent=itens.length+' equipamento'+(itens.length===1?'':'s');document.getElementById('tipo-filtros').innerHTML=ordem.filter(k=>k==='todos'||itens.some(e=>tipoEquipamento(e)===k)).map(k=>{const n=k==='todos'?itens.length:itens.filter(e=>tipoEquipamento(e)===k).length,t=TIPOS[k];return`<button class="tipo-btn ${filtroTipoAtual===k?'ativo':''}" onclick="filtrarTipo('${k}')">${t.icone} ${t.nome}<span class="qtd">${n}</span></button>`}).join('')}
+function filtrarTipo(tipo){filtroTipoAtual=tipo;renderTipos();renderEquipamentos()}
+function renderEquipamentos(){let itens=equipamentos.filter(e=>e.frente===frenteAtual);if(filtroTipoAtual!=='todos')itens=itens.filter(e=>tipoEquipamento(e)===filtroTipoAtual);itens.sort((a,b)=>String(a.cod).localeCompare(String(b.cod)));document.getElementById('lista').innerHTML=itens.map(e=>{const st=estadoEq(e),fazendo=e.parada||e.atividade||(e.vel>.1?'Em deslocamento':'Sem atividade apontada');return`<article class="equip ${st.chave}"><div class="equip-info"><b>${e.cod}</b><div>${e.modelo} · ${e.nome}</div><span class="status-tag ${st.chave}">${st.nome}</span><div class="atividade">${fazendo}</div><div class="vel">${e.vel.toFixed(1)} km/h</div><div class="leitura">🕐 Atualização: ${horaLeitura(e.leitura)}</div></div><button class="local" ${e.lat&&e.lng?'':'disabled'} onclick="localizar(${e.lat||'null'},${e.lng||'null'})">📍 Localização</button></article>`}).join('')||'<div class="vazio">Nenhum equipamento desta categoria nesta frente.</div>'}
+function voltar(){document.getElementById('visao-equip').style.display='none';document.getElementById('visao-frentes').style.display='block'}
+function localizar(lat,lng){if(!lat||!lng)return;window.open('https://www.google.com/maps/dir/?api=1&destination='+lat+','+lng+'&travelmode=driving','_blank')}
+</script>
+</body>
+</html>
