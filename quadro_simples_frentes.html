@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0b3b25">
-  <title>Quadro de Frentes</title>
+  <title>Quadro de Frentes · Definitivo</title>
   <style>
     *{box-sizing:border-box} body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:#f1f5f3;color:#14251c} button{font:inherit}
     .inicio{min-height:100vh;display:grid;place-items:center;padding:24px;position:relative;overflow:hidden;background:radial-gradient(circle at 18% 18%,#134e87 0,transparent 28%),radial-gradient(circle at 82% 30%,#123c63 0,transparent 30%),linear-gradient(150deg,#030913 0%,#071c2d 48%,#041019 100%)}
@@ -21,6 +21,7 @@
     .frente:hover{transform:translateY(-3px);border-color:#38b875;box-shadow:0 16px 34px #123b2938}.frente b{display:block;color:#fff;font-size:21px;text-transform:uppercase;letter-spacing:.3px}.frente small{display:block;color:#a9c9b8;margin-top:6px}.estado{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:18px;font-size:11px;font-weight:800}.on{color:#62e89f}.off{color:#ff8585}.manut{color:#ffd166}.seta{display:block;margin-top:15px;font-size:12px;font-weight:800;color:#fff}
     .detalhe{display:none}.voltar{border:0;background:#e1ece6;color:#155c39;border-radius:10px;padding:9px 12px;font-weight:800;cursor:pointer;margin-bottom:13px}.filtro-titulo{font-size:12px;font-weight:900;color:#52645a;text-transform:uppercase;letter-spacing:.5px;margin:5px 2px 8px}.operacao-filtros,.tipo-filtros{display:flex;flex-wrap:wrap;align-items:center;gap:8px;overflow:visible;padding:2px 2px 12px;margin-bottom:4px}.operacao-btn,.tipo-btn{border:1px solid #cedbd4;background:#fff;color:#375044;border-radius:11px;padding:8px 11px;font-size:12px;font-weight:800;white-space:normal;cursor:pointer;box-shadow:0 4px 12px #1835250a;line-height:1.2}.operacao-btn.ativo,.tipo-btn.ativo{background:#0b6b40;border-color:#0b6b40;color:#fff;box-shadow:0 7px 18px #0b6b4030}.operacao-btn .qtd,.tipo-btn .qtd{display:inline-grid;place-items:center;min-width:21px;height:21px;padding:0 6px;margin-left:5px;border-radius:999px;background:#e9f1ed;font-size:10px}.operacao-btn.ativo .qtd,.tipo-btn.ativo .qtd{background:#ffffff24}.lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px}.equip{background:#fff;border:1px solid #d7e1db;border-left:5px solid #89958f;border-radius:14px;padding:15px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 8px 20px #1835250c}.equip.produtivo{border-left-color:#18a15f}.equip.manutencao{border-left-color:#e6a700}.equip.parado{border-left-color:#dc3b3b}.equip.movimento{border-left-color:#2589d8}.equip-info{min-width:0}.equip-info b{font-size:18px}.equip-info div{color:#68766f;font-size:12px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.status-tag{display:inline-block!important;width:max-content;border-radius:999px;padding:4px 8px;font-size:10px!important;font-weight:900;text-transform:uppercase}.status-tag.produtivo{background:#daf7e8;color:#087340}.status-tag.manutencao{background:#fff2c9;color:#8b6200}.status-tag.parado{background:#ffe0e0;color:#a12121}.status-tag.movimento{background:#dceeff;color:#17649c}.atividade{font-weight:700;color:#263d31!important}.leitura{font-size:11px!important;color:#728078!important}.vel{font-weight:900;color:#0b6b40!important}.local{border:0;border-radius:10px;background:#1578d4;color:white;padding:11px 13px;font-weight:800;cursor:pointer;white-space:nowrap}.local:disabled{background:#adb8b2;cursor:not-allowed}.vazio{text-align:center;padding:55px 20px;color:#718078;grid-column:1/-1}.erro{background:#fff1f1;border:1px solid #ffcaca;color:#a32424;border-radius:12px;padding:14px;grid-column:1/-1}
     .tempo-apontamento{color:#9fc7b4!important;font-size:10px!important;font-weight:700}.tempo-apontamento::first-letter{color:#47e995}
+    .distancia-carga{display:block!important;width:max-content;max-width:100%;margin-top:4px!important;padding:3px 7px;border:1px solid #755bc6;border-radius:999px;background:#211c39;color:#d7c8ff!important;font-size:9px!important;font-weight:850}.distancia-carga.finalizada{border-color:#19a969;background:#0c2b20;color:#76f4b1!important}
     .conexao-tag{display:inline-block!important;width:max-content;border-radius:999px;padding:4px 8px;font-size:10px!important;font-weight:900;text-transform:uppercase;margin-left:4px}.conexao-tag.online{background:#d9f8e7;color:#087340}.conexao-tag.recente{background:#e7eef4;color:#52636d}.bateria-tag{display:inline-block!important;width:max-content;border-radius:999px;padding:4px 8px;margin-left:4px;font-size:10px!important;font-weight:900}.bateria-tag.boa{background:#123d2a;color:#54ffa8}.bateria-tag.media{background:#4b3c12;color:#ffdc55}.bateria-tag.critica{background:#4d1d25;color:#ff7884;animation:alertaParado 1.15s ease-in-out infinite}
     @media(max-width:520px){main{padding:14px}.grade{grid-template-columns:1fr;gap:10px}.frente{min-height:168px;padding:15px}.lista{grid-template-columns:1fr}.equip{align-items:flex-start;flex-wrap:wrap}.local{width:100%;justify-content:center}.titulo{align-items:flex-start;flex-direction:column}}
     /* Acabamento moderno e delicado, otimizado para celular */
@@ -78,6 +79,10 @@
     .local{position:relative;isolation:isolate;overflow:hidden;min-width:108px;padding:9px 14px;font-weight:850;letter-spacing:.15px}.local:before{content:'';position:absolute;z-index:-1;inset:0;background:linear-gradient(110deg,transparent 15%,#ffffff2b 45%,transparent 70%);transform:translateX(-130%);transition:transform .5s}.local:hover:before{transform:translateX(130%)}.local .pin{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#ffffff18}.local .pin svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;animation:pulsoMapa 2s ease-in-out infinite}.local-text{font-size:11px}.local-arrow{font-size:13px;opacity:.75;transition:transform .15s}.local:hover .local-arrow{transform:translateX(2px)}
     .equip:before{content:'';position:absolute;top:0;left:18px;right:18px;height:1px;background:linear-gradient(90deg,transparent,#ffffff1d,transparent)}
     .mobi-link{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-width:58px;padding:7px 9px;border:1px solid #3475a8;border-radius:10px;background:#102c43;color:#7dc8ff;text-decoration:none;font-size:9px;font-weight:850;white-space:nowrap}.mobi-link:hover{background:#14649a;border-color:#65c4ff;color:#fff}.mobi-link span:first-child{font-size:11px}.mobi-link.bloqueado{background:#171d22;border-color:#3b4953;color:#82909a;cursor:pointer}.topo-acoes{display:flex;align-items:center;gap:7px}.adm-btn{border:1px solid #4b6270;border-radius:9px;background:#111f28;color:#a9bdc9;padding:7px 10px;font-size:9px;font-weight:850;cursor:pointer}.adm-btn.liberado{border-color:#24d980;background:#0c402b;color:#65ffa8}
+.equip.transbordo-adm{cursor:pointer;box-shadow:inset 0 0 0 1px #1d7f68}
+.equip.transbordo-adm:hover{border-color:#3ce3a0;transform:translateY(-1px)}
+.cubicagem-tag{display:inline-flex;align-items:center;gap:4px;margin-top:6px;padding:4px 7px;border:1px solid #2e7860;border-radius:7px;background:#0d3028;color:#75f2b1;font-size:9px;font-weight:850}
+.cubicagem-tag.sem{border-color:#765b2e;background:#30250d;color:#ffd36a}
     @media(max-width:600px){.local{min-width:82px;padding:6px 9px}.local .pin{width:17px;height:17px}.local .pin svg{width:12px;height:12px}.local-text{font-size:9px}.local-arrow{display:none}}
     @media(max-width:360px){.local{min-width:30px;width:30px;padding:0}.local .pin{background:transparent}.local-text{display:none}}
     @media(prefers-reduced-motion:reduce){.local .pin svg{animation:none}.local:before{display:none}}
@@ -98,6 +103,11 @@
     @media(max-width:600px){.grafico-horas{height:58px}.linha-evolucao{stroke-width:2.2}.rotulo-eixo,.rotulo-pct{font-size:6px}.eixo-pct{font-size:5px}}
     .kpi-conexao.clicavel{appearance:none;width:100%;text-align:left;font:inherit;cursor:pointer;transition:transform .15s,border-color .15s,box-shadow .15s}.kpi-conexao.clicavel:hover,.kpi-conexao.clicavel:focus-visible{transform:translateY(-2px);outline:0;box-shadow:0 9px 22px #0007}.kpi-conexao.online.clicavel:hover{border-color:#35f293}.kpi-conexao.offline.clicavel:hover{border-color:#ff586a}.kpi-conexao.sem-status.clicavel:hover{border-color:#8ba1ae}.kpi-seta{float:right;margin-top:-18px;font-size:18px;color:#708a7d}.resultado-conexao{display:none;margin:0 0 12px}.resultado-conexao.ativo{display:block}.resultado-conexao-topo{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0}.resultado-conexao-topo h3{margin:0;color:#fff;font-size:15px}.resultado-conexao-topo .voltar{margin:0}.frente-tag{display:inline-block!important;margin:0 0 4px!important;padding:2px 6px;border:1px solid #2f6550;border-radius:999px;color:#67e9a1!important;font-size:8px!important;font-weight:800}.lista-conexao{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
     @media(max-width:600px){.kpi-conexao.clicavel:hover{transform:none}.kpi-seta{font-size:13px;margin-top:-14px}.resultado-conexao-topo{margin:5px 0}.resultado-conexao-topo h3{font-size:12px}.lista-conexao{grid-template-columns:1fr}}
+    .logistica-card{max-width:760px;margin:8px auto 11px;border:1px solid #235848;border-radius:14px;background:linear-gradient(145deg,#0c1c20,#081316);box-shadow:0 8px 22px #0005;overflow:hidden}.logistica-topo{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border:0;background:transparent;color:#ecfff5;cursor:pointer;text-align:left}.logistica-topo strong{font-size:11px}.logistica-topo small{display:block;margin-top:2px;color:#7fa596;font-size:7.5px;font-weight:500}.logistica-toggle{display:flex;align-items:center;gap:5px;color:#65f3a7;font-size:8px;font-weight:800}.logistica-toggle i{font-style:normal;font-size:12px;transition:transform .18s}.logistica-card.aberto .logistica-toggle i{transform:rotate(180deg)}.logistica-conteudo{display:none;padding:0 9px 9px}.logistica-card.aberto .logistica-conteudo{display:block}.logistica-grade{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.logistica-item{position:relative;grid-column:auto!important;min-width:0;padding:8px 7px!important;border:1px solid #24443e;border-radius:10px;background:#0d211f;text-align:left}.logistica-item.etapa-vazio{border-color:#2376a1;background:linear-gradient(145deg,#0d2630,#0b1c23)}.logistica-item.etapa-carregamento{border-color:#c68c25;background:linear-gradient(145deg,#2a2412,#17180f)}.logistica-item.etapa-carregado{border-color:#755bc6;background:linear-gradient(145deg,#211c39,#151525)}.logistica-item.etapa-basculamento{border-color:#19a969;background:linear-gradient(145deg,#0c2b20,#0b1b17)}.logistica-item span{display:block;color:#9fb9ad;font-size:7px;text-transform:uppercase;letter-spacing:.45px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.logistica-item strong{display:block;margin-top:4px;color:#fff;font-size:15px;line-height:1}.logistica-item small{display:block;margin-top:4px;color:#789487;font-size:7px}.logistica-total{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:7px;padding:8px 11px;border:1px solid #2c6c59;border-radius:10px;background:linear-gradient(135deg,#103127,#0a211b);box-shadow:inset 0 1px #ffffff0b}.logistica-total span{color:#90baa8;font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.55px}.logistica-total strong{color:#72f5ad;font-size:16px;line-height:1}.logistica-total small{color:#668779;font-size:6px}.logistica-total.incompleto strong{color:#78968a;font-size:10px}.logistica-nota{margin:7px 2px 0;color:#69877a;font-size:7px;text-align:center}.logistica-item.sem-dado strong{color:#657b71;font-size:12px}.logistica-item.sem-dado{opacity:.72}
+    .logistica-historico{display:none;margin-top:8px;padding-top:7px;border-top:1px solid #1c3b34}.logistica-historico.aberto{display:block}.logistica-historico-titulo{display:flex;justify-content:space-between;color:#a7c9ba;font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}.logistica-eventos{display:grid;gap:3px;margin-top:5px}.logistica-evento{display:grid;grid-template-columns:55px 1fr auto auto;gap:6px;align-items:center;padding:4px 6px;border-radius:7px;background:#ffffff05;color:#86a397;font-size:7px}.logistica-evento b{color:#eafff3}.logistica-evento em{font-style:normal;color:#5feaa1}.logistica-sem-historico{padding:7px;text-align:center;border:1px dashed #29473d;border-radius:8px;color:#789286;font-size:7px}.logistica-item{cursor:pointer;transition:transform .15s,box-shadow .15s}.logistica-item:hover,.logistica-item:focus-visible{transform:translateY(-1px);box-shadow:0 7px 16px #0006;outline:0}.logistica-item.selecionado{box-shadow:0 0 0 1px #7ee9bb,0 7px 18px #0006}.logistica-item:after{content:'Ver histórico';position:absolute;right:7px;top:7px;color:#78998b;font-size:5px;font-weight:700;text-transform:uppercase;letter-spacing:.25px}
+    .logistica-metragem{display:flex!important;align-items:center;gap:5px;width:max-content;max-width:100%;margin:6px 0 2px!important;padding:5px 8px;border:1px solid #a87aff;border-radius:8px;background:linear-gradient(135deg,#392263,#21163f);box-shadow:0 4px 13px #8b5cff38;color:#eadfff!important;font-size:13px!important;font-weight:900;line-height:1}.logistica-metragem small{margin:0!important;color:#cbb7ff!important;font-size:5.5px!important;font-weight:800;text-transform:uppercase;letter-spacing:.35px;white-space:nowrap}
+    @media(max-width:600px){.logistica-card{margin:6px auto 8px;border-radius:11px}.logistica-topo{padding:7px 9px}.logistica-topo strong{font-size:9px}.logistica-topo small{font-size:6.5px}.logistica-toggle{font-size:7px}.logistica-conteudo{padding:0 6px 6px}.logistica-grade{gap:4px}.logistica-item{padding:6px 4px;border-radius:8px;text-align:center}.logistica-item span{font-size:5.8px;letter-spacing:.1px}.logistica-item strong{font-size:11px}.logistica-item small,.logistica-nota{font-size:5.8px}.logistica-total{padding:6px 8px}.logistica-total span{font-size:6px}.logistica-total strong{font-size:13px}.logistica-total small{display:none}}
+    @media(max-width:600px){.logistica-metragem{margin:5px auto 2px!important;padding:4px 6px;font-size:10px!important}.logistica-metragem small{display:none!important}}
     /* Filtros organizados, vivos e confortáveis ao toque */
     .detalhe>.filtro-titulo{display:flex;align-items:center;justify-content:center;gap:8px;margin:10px auto 6px;color:#9ec9b6;font-size:9px;font-weight:850;letter-spacing:1.15px}
     .detalhe>.filtro-titulo:before,.detalhe>.filtro-titulo:after{content:"";width:34px;height:1px;background:linear-gradient(90deg,transparent,#2ad984)}
@@ -119,15 +129,298 @@
       .operacao-btn,.tipo-btn{min-height:25px;padding:4px 7px;font-size:7.5px;line-height:1.15}
       .operacao-btn .qtd,.tipo-btn .qtd{min-width:16px;height:16px;padding:0 4px;font-size:7px}
     }
-  </style>
+    /* Acabamento executivo: metragem e localização */
+    .logistica-metragem{display:grid!important;grid-template-columns:22px auto;grid-template-areas:"icone valor" "icone legenda";align-items:center;column-gap:7px;row-gap:1px;width:100%;margin:7px 0 3px!important;padding:7px 8px;border:1px solid #2b6471;border-radius:9px;background:linear-gradient(145deg,#102a32,#0a1b21);box-shadow:inset 0 1px #ffffff0b,0 5px 13px #0004;color:#f0fdff!important;line-height:1}
+    .metragem-icone{grid-area:icone;display:grid!important;place-items:center;width:22px;height:22px;border:1px solid #397988;border-radius:7px;background:#163944;color:#74d8e9!important;font-size:12px!important}.metragem-valor{grid-area:valor;display:block!important;color:#f2fdff!important;font-size:14px!important;font-weight:900;letter-spacing:.15px;text-transform:none!important}.logistica-metragem small{grid-area:legenda;display:block!important;margin:0!important;color:#79a8b2!important;font-size:5.7px!important;font-weight:750;text-transform:uppercase;letter-spacing:.38px;white-space:nowrap}
+    .local{position:relative;min-width:100px;padding:7px 11px;border:1px solid #2c6875;border-radius:10px;background:linear-gradient(145deg,#13333b,#0b2026);box-shadow:inset 0 1px #ffffff0b,0 5px 12px #0004;color:#d8f9ff;font-weight:800;letter-spacing:.1px}.local:before{display:none!important}.local .pin{width:19px;height:19px;border:1px solid #347584;background:#1a414b;color:#83ddea}.local .pin svg{width:12px;height:12px;animation:none!important}.local-text{font-size:10px}.local-arrow{color:#75b9c5;font-size:11px}.local:hover{transform:translateY(-1px);border-color:#55afbd;background:linear-gradient(145deg,#194550,#103039);box-shadow:0 7px 15px #0005;color:#fff}.local:hover .local-arrow{color:#a9edf5}.local:disabled{border-color:#293b40;background:#111d20;color:#65777b;box-shadow:none}
+    @media(max-width:600px){.logistica-metragem{grid-template-columns:19px auto;padding:5px 6px;margin:5px 0 2px!important;column-gap:5px}.metragem-icone{width:19px;height:19px;font-size:10px!important}.metragem-valor{font-size:11px!important}.logistica-metragem small{display:block!important;font-size:4.8px!important;letter-spacing:.2px}.local{min-width:76px;padding:5px 7px;border-radius:8px}.local .pin{width:17px;height:17px}.local-text{font-size:8px}}
+  
+/* ===== V4 COMPACTO: capacidade + tempos logísticos ===== */
+#capacidade-frente{padding:8px!important;margin-bottom:8px!important}
+#capacidade-frente>div[style*="grid-template-columns"]{gap:5px!important;margin-top:7px!important}
+#capacidade-frente>div[style*="grid-template-columns"]>div{padding:7px!important;min-height:42px!important}
+#capacidade-frente strong{line-height:1.05!important}
+#capacidade-frente>div[style*="margin-top:10px"]{margin-top:6px!important;padding:6px 8px!important}
+#capacidade-frente>div[style*="font-size:8px"]{margin-top:5px!important;line-height:1.25!important}
+
+#logistica-card{margin-top:6px!important;padding:8px!important}
+#logistica-card .logistica-topo{padding:0 0 6px!important}
+#logistica-card .logistica-grade{gap:6px!important}
+#logistica-card .logistica-item{padding:7px!important;min-height:104px!important}
+#logistica-card .logistica-item>span{font-size:7px!important}
+#logistica-card .logistica-item>strong{font-size:17px!important;margin:2px 0!important}
+#logistica-card .logistica-item>small{font-size:6.5px!important;line-height:1.2!important}
+#logistica-card .logistica-metragem{margin-top:5px!important;padding:5px 6px!important;min-height:auto!important}
+#logistica-card .metragem-valor{font-size:12px!important}
+#logistica-card .logistica-total{margin-top:6px!important;padding:6px 8px!important}
+#logistica-card .logistica-total strong{font-size:9px!important}
+#logistica-card .logistica-total small{font-size:6px!important}
+#logistica-card .historico-vazio{padding:5px!important}
+
+/* histórico de metragem interno: mais baixo e em linha */
+#logistica-card .logistica-item [style*="HISTÓRICO"]{line-height:1.1!important}
+#logistica-card .logistica-item div[style*="margin-top:7px"][style*="background:#0b2026"]{padding:5px!important;margin-top:5px!important}
+#logistica-card .logistica-item div[style*="display:grid;gap:4px"]{gap:2px!important}
+#logistica-card .logistica-item div[style*="grid-template-columns:22px 1fr auto"]{padding:3px 4px!important}
+
+/* gráfico/histórico abaixo: reduz espaços antes do gráfico */
+.historico-card,.historico-logistico{margin-top:7px!important;padding-top:7px!important}
+
+
+/* ===== V5 MOBILE + CUBICAGEM EM MASSA ===== */
+#modal-cub-massa{
+  position:fixed;inset:0;z-index:10020;background:#03100dcc;
+  display:none;align-items:flex-end;justify-content:center;padding:12px
+}
+#modal-cub-massa.aberto{display:flex}
+.cub-massa-box{
+  width:min(560px,100%);max-height:86vh;overflow:auto;
+  background:#09211c;border:1px solid #2d7c61;border-radius:18px;
+  box-shadow:0 20px 60px #0009;padding:14px
+}
+.cub-massa-topo{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.cub-massa-topo strong{font-size:14px;color:#eafff3}
+.cub-massa-fechar{border:1px solid #365c52;background:#102b25;color:#d8eee5;border-radius:9px;padding:7px 10px;font-weight:900}
+.cub-massa-lista{display:grid;gap:7px}
+.cub-massa-item{
+  display:grid;grid-template-columns:1fr 92px;gap:8px;align-items:center;
+  border:1px solid #214e40;background:#0b2a22;border-radius:10px;padding:8px
+}
+.cub-massa-item b{display:block;color:#eafff3;font-size:11px}
+.cub-massa-item small{display:block;color:#83aa99;font-size:8px;margin-top:2px}
+.cub-massa-item input{
+  width:100%;box-sizing:border-box;padding:9px 7px;border-radius:8px;
+  border:1px solid #39735e;background:#061a16;color:white;font-weight:900;text-align:center
+}
+.cub-massa-acoes{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+.cub-massa-acoes button{padding:10px;border-radius:9px;font-size:10px;font-weight:900;cursor:pointer}
+.cub-massa-salvar{border:1px solid #39d894;background:#0d5138;color:#8fffc3}
+.cub-massa-cancelar{border:1px solid #405c54;background:#122923;color:#bdd5ca}
+
+@media(max-width:640px){
+  body{font-size:11px}
+  .topo{padding:7px 8px!important;gap:6px!important;flex-wrap:wrap}
+  .topo strong{font-size:11px!important}
+  .acoes{gap:4px!important;flex-wrap:wrap}
+  .acoes button,.adm-btn{padding:6px 7px!important;font-size:7px!important;border-radius:7px!important}
+  .conteudo{padding:6px!important}
+  .titulo-frente{margin:4px 0 6px!important}
+  .titulo-frente h2,#nome-frente{font-size:14px!important}
+
+  #capacidade-frente{padding:7px!important;border-radius:11px!important}
+  #capacidade-frente>div:first-child{font-size:10px!important}
+  #capacidade-frente>div[style*="grid-template-columns"]{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:4px!important
+  }
+  #capacidade-frente>div[style*="grid-template-columns"]>div{
+    min-width:0!important;padding:6px!important;min-height:38px!important
+  }
+  #capacidade-frente span{font-size:6.5px!important}
+  #capacidade-frente strong{font-size:13px!important;word-break:break-word}
+  #capacidade-frente>div[style*="font-size:8px"]{font-size:6.5px!important}
+
+  #logistica-card{padding:7px!important;border-radius:11px!important}
+  #logistica-card .logistica-grade{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:4px!important
+  }
+  #logistica-card .logistica-item{
+    min-width:0!important;min-height:82px!important;padding:6px!important;border-radius:9px!important
+  }
+  #logistica-card .logistica-item>strong{font-size:15px!important}
+  #logistica-card .logistica-metragem{padding:4px!important}
+  #logistica-card .metragem-valor{font-size:10px!important}
+  #logistica-card .logistica-total{padding:5px 6px!important}
+
+  .grade-equip,.equipamentos,.grid-equip{grid-template-columns:1fr!important;gap:5px!important}
+  .equip{padding:8px!important;border-radius:11px!important;min-height:0!important}
+  .equip-info b{font-size:12px!important}
+  .equip-info>div{line-height:1.2}
+  .local{padding:7px!important;font-size:8px!important}
+  .cubicagem-tag{font-size:8px!important;padding:4px 5px!important;flex-wrap:wrap}
+  .cubicagem-tag button{margin-left:0!important;margin-top:3px!important;width:100%}
+
+  .cub-massa-box{padding:10px;border-radius:15px 15px 8px 8px}
+  .cub-massa-item{grid-template-columns:1fr 78px;padding:7px}
+  .cub-massa-item input{padding:8px 5px}
+}
+
+
+/* ===== V6 EXECUTIVO: mais limpo, compacto e organizado ===== */
+:root{--gap-exec:6px}
+.conteudo{max-width:1500px!important;margin:auto!important;padding:8px!important}
+.topo{min-height:42px!important;padding:6px 10px!important}
+.titulo-frente{margin:5px 0!important}
+
+/* CAPACIDADE: faixa executiva horizontal */
+#capacidade-frente{padding:8px!important;margin:6px 0!important;border-radius:10px!important}
+#capacidade-frente>div:first-child{min-height:22px!important}
+#capacidade-frente>div[style*="grid-template-columns"]{
+  grid-template-columns:repeat(8,minmax(90px,1fr))!important;
+  gap:5px!important;margin-top:5px!important
+}
+#capacidade-frente>div[style*="grid-template-columns"]>div{
+  min-height:36px!important;padding:6px 7px!important;border-radius:7px!important
+}
+#capacidade-frente>div[style*="grid-template-columns"] span{font-size:6px!important}
+#capacidade-frente>div[style*="grid-template-columns"] strong{
+  font-size:13px!important;margin-top:3px!important;line-height:1.05!important
+}
+#capacidade-frente>div[style*="margin-top:10px"]{
+  margin-top:5px!important;padding:5px 7px!important;border-radius:7px!important
+}
+#capacidade-frente>div[style*="font-size:8px"]{
+  margin-top:4px!important;font-size:6px!important;line-height:1.25!important
+}
+
+/* TEMPOS: quatro cards rasos, alinhados */
+#logistica-card{padding:8px!important;margin:6px 0!important;border-radius:10px!important}
+#logistica-card .logistica-topo{min-height:22px!important;padding:0 0 5px!important}
+#logistica-card .logistica-grade{
+  display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:5px!important
+}
+#logistica-card .logistica-item{
+  min-height:72px!important;padding:6px 7px!important;border-radius:8px!important
+}
+#logistica-card .logistica-item>span{font-size:6px!important}
+#logistica-card .logistica-item>strong{font-size:16px!important;line-height:1!important;margin:3px 0!important}
+#logistica-card .logistica-item>small{font-size:6px!important;line-height:1.15!important}
+#logistica-card .logistica-metragem{
+  display:grid!important;grid-template-columns:auto 1fr!important;
+  gap:2px 6px!important;align-items:center!important;
+  margin-top:4px!important;padding:4px 5px!important;border-radius:6px!important
+}
+#logistica-card .metragem-icone{grid-row:1/3!important}
+#logistica-card .metragem-valor{font-size:10px!important}
+#logistica-card .logistica-metragem small{font-size:5.5px!important}
+#logistica-card .logistica-total{
+  min-height:24px!important;margin-top:5px!important;padding:4px 7px!important;border-radius:7px!important
+}
+
+/* histórico de metragem: resumo compacto, sem virar um segundo painel enorme */
+#logistica-card .logistica-item div[style*="background:#0b2026"]{
+  max-height:58px!important;overflow:auto!important;padding:4px!important;margin-top:4px!important
+}
+#logistica-card .logistica-item div[style*="grid-template-columns:22px 1fr auto"]{
+  padding:2px 3px!important;min-height:14px!important
+}
+
+/* histórico/gráfico abaixo */
+.historico-card,.historico-logistico{margin-top:6px!important;padding:7px!important}
+canvas{max-height:180px}
+
+/* equipamentos */
+.grade-equip,.equipamentos,.grid-equip{gap:6px!important}
+.equip{padding:8px!important;border-radius:10px!important}
+.cubicagem-tag{margin-top:4px!important}
+
+/* CELULAR: uma tela limpa, 2 colunas onde faz sentido */
+@media(max-width:640px){
+  .conteudo{padding:5px!important}
+  .topo{padding:5px 6px!important;min-height:38px!important}
+  .topo strong{font-size:10px!important}
+  .acoes{width:100%;display:flex!important;gap:3px!important}
+  .acoes button,.adm-btn{flex:1 1 auto;padding:6px 4px!important;font-size:6.5px!important}
+
+  #capacidade-frente>div[style*="grid-template-columns"]{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:4px!important
+  }
+  #capacidade-frente>div[style*="grid-template-columns"]>div{min-height:34px!important;padding:5px!important}
+  #capacidade-frente>div[style*="grid-template-columns"] strong{font-size:12px!important}
+  #capacidade-frente>div[style*="font-size:8px"]{display:none!important}
+
+  #logistica-card .logistica-grade{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:4px!important
+  }
+  #logistica-card .logistica-item{min-height:66px!important;padding:5px!important}
+  #logistica-card .logistica-item>strong{font-size:14px!important}
+
+  .grade-equip,.equipamentos,.grid-equip{grid-template-columns:1fr!important}
+  .equip{padding:7px!important}
+  canvas{max-height:150px}
+}
+
+/* telas bem estreitas */
+@media(max-width:380px){
+  #capacidade-frente>div[style*="grid-template-columns"] strong{font-size:11px!important}
+  #logistica-card .logistica-item>strong{font-size:13px!important}
+}
+
+
+/* ===== V7: equilíbrio entre compacto e legível ===== */
+#capacidade-frente{padding:11px!important}
+#capacidade-frente>div:first-child{font-size:12px!important;margin-bottom:8px!important}
+#capacidade-frente>div[style*="grid-template-columns"]{
+  grid-template-columns:repeat(4,minmax(145px,1fr))!important;
+  gap:8px!important;margin-top:8px!important
+}
+#capacidade-frente>div[style*="grid-template-columns"]>div{
+  min-height:56px!important;padding:9px 10px!important;
+  display:flex!important;flex-direction:column!important;justify-content:center!important
+}
+#capacidade-frente>div[style*="grid-template-columns"] span{
+  font-size:8px!important;line-height:1.2!important
+}
+#capacidade-frente>div[style*="grid-template-columns"] strong{
+  font-size:20px!important;line-height:1.1!important;margin-top:5px!important
+}
+#capacidade-frente>div[style*="margin-top:10px"]{
+  font-size:9px!important;padding:7px 9px!important;margin-top:8px!important
+}
+#capacidade-frente details{font-size:8px!important;margin-top:7px!important}
+#capacidade-frente details summary{font-size:8px!important}
+
+#logistica-card{padding:10px!important}
+#logistica-card .logistica-topo{min-height:30px!important}
+#logistica-card .logistica-topo strong{font-size:12px!important}
+#logistica-card .logistica-topo small{font-size:8px!important}
+#logistica-card .logistica-toggle{font-size:8px!important;padding:6px 8px!important}
+
+/* celular: duas colunas, números bem legíveis */
+@media(max-width:640px){
+  #capacidade-frente>div[style*="grid-template-columns"]{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important
+  }
+  #capacidade-frente>div[style*="grid-template-columns"]>div{
+    min-height:52px!important;padding:8px!important
+  }
+  #capacidade-frente>div[style*="grid-template-columns"] span{font-size:7.5px!important}
+  #capacidade-frente>div[style*="grid-template-columns"] strong{font-size:17px!important}
+  #logistica-card .logistica-grade{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+
+/* telas médias: evita oito cartões espremidos */
+@media(min-width:641px) and (max-width:1050px){
+  #capacidade-frente>div[style*="grid-template-columns"]{
+    grid-template-columns:repeat(4,minmax(120px,1fr))!important
+  }
+}
+
+
+.resumo-entregas{margin:7px 0;padding:9px;border:1px solid #225b49;border-radius:11px;background:#071b17}
+.resumo-entregas-topo{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:7px}
+.resumo-entregas-topo strong{font-size:11px;color:#eafff3}.resumo-entregas-topo span{font-size:7px;color:#7ba997}
+.resumo-entregas-grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:6px}
+.resumo-entrega-item{padding:8px;border:1px solid #28624f;border-radius:9px;background:#0a2921;cursor:pointer}
+.re-frente{font-size:8px;color:#94b9a9}.re-valor{font-size:18px;font-weight:950;color:#70f4ae;margin-top:3px}.re-gargalo{font-size:8px;color:#d6eee4;margin-top:3px}.re-pendente{font-size:11px;font-weight:900;color:#ffd36a;margin-top:4px}
+@media(max-width:640px){.resumo-entregas{padding:7px}.resumo-entregas-grade{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}.resumo-entrega-item{padding:7px}.re-valor{font-size:15px}}
+
+
+.resumo-entregas-total{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 9px;margin-bottom:6px;border:1px solid #31735d;border-radius:8px;background:#0b2c24}
+.resumo-entregas-total span{font-size:8px;color:#9bc5b2}
+.resumo-entregas-total strong{font-size:16px;color:#7bffc0}
+@media(max-width:640px){.resumo-entregas-total{padding:6px 7px}.resumo-entregas-total strong{font-size:14px}}
+
+</style>
 </head>
 <body>
-  <section class="inicio" id="inicio"><div class="inicio-box"><div class="logo"><img alt="Grupo Moreno" src="data:image/webp;base64,UklGRkADAABXRUJQVlA4IDQDAABwFACdASpgAFsAPn02k0ekoyGhOrb4AJAPiWgAybyiDi/D8rvzCZ99R+IDoAOcB5gPN19DW8y+gt0ymQoeL+vvmtEhb6soHgBpfoTQb3o/uXvxzJy9JBuH/SNiQCcwQfWV5tKAGwFlO2oNkxqAeejxq+Ljj8aiTHi+60GFWR3EUHLazkb5lb0654gQ7535NdAr7ke5YLW0gLrC6u28cbvThzKc8g9sjYO/UKgAAP77xy+eXLov46xiQxqO0yqsyrAjUH+S55v91eA/8FLrmfxHhC1ioE5kn9UuR7F1VPQXNFc6cHv512KYunPJ5+fPKSRVZH2C9hXh0Z9/85iJNI3Lml0AqWVT9zjLXZPFXOy0Bk1V/ybWR6lbF0uKrLq22sfxexvvdLVOJO5ZSsqQqsPmacUQ8GBg85cIIMBfrxqRY23birEqELhpp4ZPfgVC28hpie2rDq47QqceP0omWTDxJ4N9oGyhZ+7VbkHMPMPmnEhZzxI0Fhj+kk+v0rF9y1R6HNh2Sdc8KfJ4/FY3HRHtvMb23pM2psKAdetnc9UCYn4FSQvlzhg4Qs+wh7ajKNSSoly+6F9Jp46x+lxKOlEvJTW5dFRZ13cM2slnEBAxKPlQMkTvC9wZj1qgzWN2u2wMf39HJaxVG6SyNW/iIzu8+JJ0FvTfQpB/3A8LSt/H0KAlbBYKWKXGzw6tNsS0KJDNQoSE5oHOt6RZtIk6jtLicr8aR1np/TL6c9XblrqNC7JVBc+DXgZ/XQ8cMuBG0JYOCVjTseuwJi8IKdPVVKGCZ1mMUheQa+2unegYYipSR8k5Zx3+MuNTxzo8Qmv3OtQTY2iOwRtfoYoYDGIN3kobVPK0Y6qpFPdSjtSUFGyz3aRi0+UUtzLYdeCxYKRDe+f8tZtzva9UX/JVm/fyDqjL4W2aapkV8q8mMSBT3C9UKu4PyqbNJmdqfHqTmwiLBmbiJRNZk95gIDllLm4sBviESBjJ8M2dVf/B+c2eK/HdCaNnf7qRH3x20V/1ME78F30mMGyCylerf+F5hoxjFZax97P/0N22Dbj0k287VoKUVIlbaiY0fNJ9uzv+XfB5y7ijEAAA"></div><h1>Quadro de Frentes</h1><p>Inteligência operacional e localização em tempo real.</p><div class="login"><input class="campo" id="email" type="email" placeholder="E-mail" autocomplete="username"><input class="campo" id="senha" type="password" placeholder="Senha" autocomplete="current-password" onkeydown="if(event.key==='Enter')entrar()"><button class="abrir" id="btn-entrar" onclick="entrar()">Entrar e abrir frentes</button><div class="erro-login" id="erro-login"></div></div></div></section>
+  <section class="inicio" id="inicio"><div class="inicio-box"><div class="logo"><img alt="Grupo Moreno" src="data:image/webp;base64,UklGRkADAABXRUJQVlA4IDQDAABwFACdASpgAFsAPn02k0ekoyGhOrb4AJAPiWgAybyiDi/D8rvzCZ99R+IDoAOcB5gPN19DW8y+gt0ymQoeL+vvmtEhb6soHgBpfoTQb3o/uXvxzJy9JBuH/SNiQCcwQfWV5tKAGwFlO2oNkxqAeejxq+Ljj8aiTHi+60GFWR3EUHLazkb5lb0654gQ7535NdAr7ke5YLW0gLrC6u28cbvThzKc8g9sjYO/UKgAAP77xy+eXLov46xiQxqO0yqsyrAjUH+S55v91eA/8FLrmfxHhC1ioE5kn9UuR7F1VPQXNFc6cHv512KYunPJ5+fPKSRVZH2C9hXh0Z9/85iJNI3Lml0AqWVT9zjLXZPFXOy0Bk1V/ybWR6lbF0uKrLq22sfxexvvdLVOJO5ZSsqQqsPmacUQ8GBg85cIIMBfrxqRY23birEqELhpp4ZPfgVC28hpie2rDq47QqceP0omWTDxJ4N9oGyhZ+7VbkHMPMPmnEhZzxI0Fhj+kk+v0rF9y1R6HNh2Sdc8KfJ4/FY3HRHtvMb23pM2psKAdetnc9UCYn4FSQvlzhg4Qs+wh7ajKNSSoly+6F9Jp46x+lxKOlEvJTW5dFRZ13cM2slnEBAxKPlQMkTvC9wZj1qgzWN2u2wMf39HJaxVG6SyNW/iIzu8+JJ0FvTfQpB/3A8LSt/H0KAlbBYKWKXGzw6tNsS0KJDNQoSE5oHOt6RZtIk6jtLicr8aR1np/TL6c9XblrqNC7JVBc+DXgZ/XQ8cMuBG0JYOCVjTseuwJi8IKdPVVKGCZ1mMUheQa+2unegYYipSR8k5Zx3+MuNTxzo8Qmv3OtQTY2iOwRtfoYoYDGIN3kobVPK0Y6qpFPdSjtSUFGyz3aRi0+UUtzLYdeCxYKRDe+f8tZtzva9UX/JVm/fyDqjL4W2aapkV8q8mMSBT3C9UKu4PyqbNJmdqfHqTmwiLBmbiJRNZk95gIDllLm4sBviESBjJ8M2dVf/B+c2eK/HdCaNnf7qRH3x20V/1ME78F30mMGyCylerf+F5hoxjFZax97P/0N22Dbj0k287VoKUVIlbaiY0fNJ9uzv+XfB5y7ijEAAA"></div><h1>Quadro de Frentes</h1><p>Inteligência operacional e localização em tempo real.</p><div class="login"><input class="campo" id="email" type="email" placeholder="E-mail" autocomplete="username"><input class="campo" id="senha" type="password" placeholder="Senha" autocomplete="current-password" onkeydown="if(event.key==='Enter')entrar()"><button class="abrir" id="btn-entrar" onclick="entrar()">Entrar e abrir frentes</button>
+<button class="abrir" id="btn-teste" onclick="entrarModoTeste()" style="background:linear-gradient(100deg,#1578d4,#38a8ff);box-shadow:0 12px 32px #1578d442">🧪 Entrar em modo teste</button>
+<div class="erro-login" id="erro-login"></div></div></div></section>
   <section class="app" id="app">
-    <header class="topo"><strong>🚩 Frentes de Operação</strong><div class="topo-acoes"><button class="adm-btn" id="btn-adm" onclick="liberarAdm()">🔒 ADM</button><button class="atualizar" onclick="carregar()">↻ Atualizar</button></div></header>
+    <header class="topo"><strong>🚩 Frentes de Operação</strong><div class="topo-acoes"><button class="adm-btn" id="btn-adm" onclick="liberarAdm()">🔒 ADM</button><button class="adm-btn" id="btn-cub-massa" onclick="abrirCubicagemMassa()" style="display:none">▣ CUBICAGEM EM MASSA</button><button class="atualizar" id="btn-atualizar" onclick="carregar()">↻ Atualizar</button></div></header>
     <main>
-      <section id="visao-frentes"><div class="pesquisa-equip pesquisa-topo"><span class="lupa-pesquisa" aria-hidden="true">⌕</span><input id="pesquisa-equip" inputmode="numeric" aria-label="Número do equipamento" placeholder="Pesquisar equipamento" onkeydown="if(event.key==='Enter')pesquisarEquipamento()"><button onclick="pesquisarEquipamento()"><span>Pesquisar</span><b aria-hidden="true">›</b></button></div><div class="pesquisa-msg" id="pesquisa-msg"></div><div class="titulo"><h2>Selecione uma frente ou operação</h2><span id="atualizacao">Carregando...</span></div><div class="resumo-conexao" id="resumo-conexao" aria-label="Resumo de conexão dos equipamentos"></div><div class="historico-card fechado" id="historico-card"><div class="historico-topo"><strong>Online hora a hora</strong><div class="historico-acoes"><span>Últimas 24 horas</span><button class="toggle-grafico" id="toggle-grafico" aria-expanded="false" onclick="alternarGrafico()"><span>Exibir gráfico</span><i aria-hidden="true">⌄</i></button></div></div><div class="historico-conteudo"><div class="grafico-horas" id="grafico-horas" aria-label="Percentual médio online por hora"></div><div class="legenda-historico"><span><b>━</b> medição contínua &nbsp; ┄ intervalo sem dados</span></div></div></div><section class="resultado-conexao" id="resultado-conexao"><div class="resultado-conexao-topo"><button class="voltar" onclick="voltarFrentesConexao()">← Todas as frentes</button><h3 id="titulo-conexao">Equipamentos</h3></div><div class="lista lista-conexao" id="lista-conexao"></div></section><div class="grade" id="grade"><div class="vazio">Buscando equipamentos...</div></div></section>
-      <section class="detalhe" id="visao-equip"><button class="voltar" onclick="voltar()">← Todas as frentes</button><div class="titulo"><h2 id="nome-frente">Frente</h2><span id="qtd-frente"></span></div><div class="filtro-titulo">Operações desta frente</div><div class="operacao-filtros" id="operacao-filtros"></div><div class="filtro-titulo">Tipos de equipamento</div><div class="tipo-filtros" id="tipo-filtros"></div><div class="lista" id="lista"></div></section>
+      <section id="visao-frentes"><div class="pesquisa-equip pesquisa-topo"><span class="lupa-pesquisa" aria-hidden="true">⌕</span><input id="pesquisa-equip" inputmode="numeric" aria-label="Número do equipamento" placeholder="Pesquisar equipamento" onkeydown="if(event.key==='Enter')pesquisarEquipamento()"><button onclick="pesquisarEquipamento()"><span>Pesquisar</span><b aria-hidden="true">›</b></button></div><div class="pesquisa-msg" id="pesquisa-msg"></div><div class="titulo"><h2>Selecione uma frente ou operação</h2><span id="atualizacao">Carregando...</span></div><div class="resumo-conexao" id="resumo-conexao" aria-label="Resumo de conexão dos equipamentos"></div><section class="resumo-entregas" id="resumo-entregas"><div class="resumo-entregas-topo"><strong>🌾 Frentes de Colheita · 02 a 08</strong><span>entrega possível · limitante</span></div><div class="resumo-entregas-grade" id="resumo-entregas-grade"></div></section><div class="historico-card fechado" id="historico-card"><div class="historico-topo"><strong>Online hora a hora</strong><div class="historico-acoes"><span>Últimas 24 horas</span><button class="toggle-grafico" id="toggle-grafico" aria-expanded="false" onclick="alternarGrafico()"><span>Exibir gráfico</span><i aria-hidden="true">⌄</i></button></div></div><div class="historico-conteudo"><div class="grafico-horas" id="grafico-horas" aria-label="Percentual médio online por hora"></div><div class="legenda-historico"><span><b>━</b> medição contínua &nbsp; ┄ intervalo sem dados</span></div></div></div><section class="resultado-conexao" id="resultado-conexao"><div class="resultado-conexao-topo"><button class="voltar" onclick="voltarFrentesConexao()">← Todas as frentes</button><h3 id="titulo-conexao">Equipamentos</h3></div><div class="lista lista-conexao" id="lista-conexao"></div></section><div class="grade" id="grade"><div class="vazio">Buscando equipamentos...</div></div></section>
+      <section class="detalhe" id="visao-equip"><button class="voltar" onclick="voltar()">← Todas as frentes</button><div class="titulo"><h2 id="nome-frente">Frente</h2><span id="qtd-frente"></span></div><div class="logistica-card" id="logistica-card"><button class="logistica-topo" onclick="alternarLogistica()" aria-expanded="false"><span><strong>⏱ Tempos logísticos</strong><small>Últimas 10 amostras válidas · histórico contínuo</small></span><span class="logistica-toggle"><span>Exibir</span><i>⌄</i></span></button><div class="logistica-conteudo"><div class="logistica-grade" id="logistica-grade"></div><div class="logistica-total incompleto" id="logistica-total"><span>⏱ Tempo logístico total médio</span><strong>Aguardando ciclo completo</strong><small>Soma das quatro etapas</small></div><div class="logistica-nota">Média móvel das últimas 10 amostras válidas por etapa, sem zerar na virada do dia. A 11ª substitui a mais antiga.</div><div class="logistica-historico"><div class="logistica-historico-titulo"><span>Histórico contínuo</span><span>Últimas 10</span></div><div class="logistica-eventos" id="logistica-eventos"></div></div></div></div><div class="filtro-titulo">Operações desta frente</div><div class="operacao-filtros" id="operacao-filtros"></div><div class="filtro-titulo">Tipos de equipamento</div><div class="tipo-filtros" id="tipo-filtros"></div><div class="lista" id="lista"></div></section>
     </main>
   </section>
 <script>
@@ -145,6 +438,7 @@ let filtroTipoAtual='todos';
 let equipamentoDestacado='';
 let atualizacaoAutomatica=null;
 let carregandoAgora=false;
+let modoTeste=false;
 let filtroConexaoResumoAtual=null;
 let verificacaoAxiagroConcluida=false;
 const axiagroConfirmados=new Map();
@@ -154,9 +448,103 @@ const MOBI_DUPLICADOS={'19226 - ROUBADO':{online:false,battery:2,seen:'2026-01-0
 const MOBI_IDS={"11037":"355296341359656","11040":"355296341126253","11041":"355296341126329","11042":"355296341126014","11152":"355296342715427","11155":"355296342977167","11156":"355296340966600","11157":"355296340969851","11158":"355296340966345","11173":"355296340966519","11175":"355296340966337","11176":"355296342977373","11177":"355296342715500","11180":"355296341198278","11182":"355296341198427","11190":"355296340966410","11191":"355296340982185","11195":"355296341300544","11196":"355296341373566","11199":"355296341155294","11205":"355296342715815","11207":"355296341299639","11219":"355296342977118","11233":"355296342715872","11248":"355296341155146","11288":"355296341299233","11296":"355296342977233","11297":"355296341198419","11298":"355296341359771","11386":"355296341197544","11394":"355296342977142","11396":"355296341368061","11400":"355296341368921","11401":"355296342977258","11402":"355296341369002","11591":"355296341198328","11604":"355296341162589","11605":"355296341198302","11607":"355296341198203","11618":"355296341208663","11619":"355296341198104","13010":"355296341299431","13055":"355296341207772","13062":"355296340968507","13063":"355296342981284","13064":"355296341125586","13065":"355296341231509","13066":"355296342715732","13071":"355296341300809","13072":"355296341155021","13073":"355296341155013","13074":"355296341300254","13075":"355296341300858","13079":"355296341155062","13083":"355296341155237","13084":"355296341155112","13085":"355296341233067","13087":"355296341199383","13088":"355296342977902","13139":"355296342981326","13140":"355296341126279","13141":"355296341208838","13142":"355296341126345","13143":"355296341207889","13144":"355296341197684","13145":"355296341198997","13146":"355296342977100","13147":"355296341155666","13148":"355296342977126","13723":"355296342977209","13817":"355296341299217","13823":"355296342977175","13826":"355296341125578","13833":"355296341299597","13834":"355296341197924","13835":"355296342715963","13836":"355296341199318","13838":"355296341126154","13839":"355296341126105","13842":"355296342977316","13843":"355296341164114","13844":"355296341126238","19152":"355296340990873","19154":"355296340991699","19155":"355296341161235","19157":"355296341161946","19159":"355296341299498","19160":"355296341161177","19185":"355296341207863","19186":"355296341207517","19206":"355296340990931","19224":"355296342977092","19225":"355296341207525","19226":"355296341346109","19227":"355296341207509","19228":"355296341149016","19229":"355296341149032","19230":"355296341126030","19231":"355296341149057","19232":"355296340991657","19233":"355296340990907","19235":"355296340991756","19240":"355296341125933","19260":"355296340968200","19262":"355296341198153","19277":"355296341155401","19278":"355296341126444","19283":"355296341300387","19284":"355296341299084","19285":"355296341155203","19286":"355296341300437","19287":"355296341300296","19288":"355296342715898","21089":"355296340966733","21311":"355296341198245","21319":"355296341198344","21640":"355296340990915","31610":"355296341126592","31611":"355296342715443","35004":"355296341155245","35005":"355296342976920","35006":"355296342977084","35009":"355296342750424","35012":"355296342761462","35013":"355296342976532","35015":"355296341154941","35016":"355296342974248","35017":"355296342974651","35018":"355296342976250","35019":"355296342977159","35021":"355296342976656","35022":"355296342976243","35024":"355296342976581","35025":"355296342976490","110023":"355296341299373","110024":"355296341197643","110026":"355296340966469","110122":"355296341163777","110123":"355296341300338","110124":"355296341299191","110126":"355296341198377","110223":"355296341194293","110225":"355296340991012","110226":"355296340966311","110322":"355296341299696","110323":"355738552473031","110325":"355296341198336","110326":"355296341231210","110422":"355296340966568","110423":"355296341234198","110425":"355296341198146","110522":"355296341149040","110523":"355296341300213","110524":"355296341300411","110623":"355296341300445","110624":"355296342977027","110722":"355296341151087","110723":"355296341300619","110724":"355296341300874","110822":"355296341247570","110823":"355296341302383","110824":"355296341155005","110922":"355296341164130","110924":"355296341125685","111022":"355296341299142","111023":"355296341125719","111024":"355296341126089","111122":"355296341299399","111123":"355296341155518","111124":"355296341154966","111223":"355296341154933","111224":"355296341238694","111322":"355296340966378","111323":"355296341197874","111324":"355296342974644","111422":"355296341368186","111424":"355296342981839","111522":"355296341197676","111523":"355296341162845","111524":"355296342976987","111622":"355296341162597","111623":"355296341232960","111624":"355296342976524","111722":"355296342715807","111724":"355296342976482","112122":"355296342976938","112222":"355296342976680","120022":"355296341368095","120024":"355296341198120","120122":"355296341199821","120124":"355296341197650","180023":"355296341299829","180024":"355296342715849","180025":"355296342976888","180026":"355296342974586","180123":"355296342715880","180124":"355296341198294","180125":"355296342976276","180126":"355296342974628","180223":"355296340966618","180224":"355296341198229","180225":"355296342976300","180226":"355296342977456","180323":"355296340966451","180325":"355296342974198","180326":"355296341299134","180422":"355296342715831","180423":"355296340966592","180522":"355296341233141","180523":"355296340969273","180722":"355296341198435","180822":"355296341199102","180824":"355296341233075","180922":"355296341299282","181122":"355296341125321","181224":"355296341299746","181324":"355296341155617","181424":"355296341162720","181724":"355296341299092","181824":"355296341126212","182024":"355296340969265","182224":"355296341125313","182424":"355296341369721","190323":"355296340991749","380023":"355296342976284","985929":"355296342976508","991525":"355296342976607","991549":"355296342974602","992713":"355296342976946","992773":"355296342752941","992982":"355296341234115","993604":"355296342976912","993611":"355296342976979","994086":"355296342990582","994733":"355296342977035","994839":"355296342974230","995527":"355296342868788","996135":"355296342976573","997266":"355296342974594","997810":"355296342752602","998685":"355296342752743","11615 - F08":"355296342715922","13054 - SUMIU":"355296341126311","111922 - SUMIU":"355296341304819","19226 - ROUBADO":"355296341155443","110923 - ok":"355296341301344","11613 - OK":"355296341208572","11614 - F07 - ok":"355296341161540","11617 - F07":"355296341163728","19115 - F08 - patio":"355296341231095","19259 - F05":"355296341208754","181024 - F04 - OK":"355296341208721","180924 - F04 - OK":"355296341208804","181022 - F04 - OK":"355296341161516","110222 - F08 - OK":"355296341208812","13076 - OK":"355296341155088","19238 - F06 - OK":"355296341208473","19256 - F02":"355296341208770","19163 - F05 - OK":"355296341208713","19165 - F02 - OK":"355296341209257","182124 - F03 - OK":"355296342977241","19116 - F06 - OK":"355296341208820","19156 - F02 - OK":"355296341208747","19161 - F05":"355296341209190","19263 - F05 - OK":"355296341230923","182324 - F04 - OK":"355296341162464","180322 - F06 - OK":"355296341208549","19258 - F05":"355296341230873","181524 - F03":"355296341208366","180622 - F06 - Ok":"355296341208127","180122 - F06 - OK":"355296341209653","180022 - F06 - ok":"355296341230931","180324 - F03 - OK":"355296341231004","19264 - F02 - OK":"355296341208523","181124 - F04":"355296341209612","19257 - F02 - OK":"355296341231145","181624 - F03 - OK":"355296341209620","180222 - F07 - ok":"355296341208531","180424 - F03":"355296341208739","180724 - F04 - OK":"355296341161870","181924 - F03 - OK":"355296341164080","19153 - F02 - ok":"355296340992309","190124 - F03":"355296340991640","190023 - F07 - OK":"355296340990675","190523 - F03 - OK":"355296341368988","190123 - F07 - OK":"355296340991665","19111 - F03":"355296341197825","190223 - F08 - OK":"355296340990790","190423 - F05 - OK":"355296341368160","190024 - F08 - OK":"355296340990642","21652 - F02 - OK":"355296340990691","19236 - F05 - OK":"355296340990733","19237 - F05":"355296340990824","21651 - F07":"355296340991772","19234 - F02 - ok":"355296340991731","19113 - F07":"355296341162753","19164 - F05":"355296341208564","11589 - patio":"355296341207814","19261 - F07 - ok":"355296342977357","180524 - F03 - ok":"355296342977225","110622 - F08":"355296342977274","11616 - F07":"355296341125446","11609 - F05":"355296341125537","19114 - F07 - OK":"355296341231012","190226 - F03 - OK":"355296341149149","190526 - F04 - OK":"355296341299118","190426 - F04 - ok":"355296341161623","190326 - F06 - OK":"355296341207871","190026 - F04 - OK":"355296341149081","190126 - F06 - ok":"355296341231160","190626 - F06 - ok":"355296341207806","CEM - 00357 - Teste Lucas":"350551931358038","CEM - 11174":"355296340966626"};
 function deviceIdMobi(codigo){const nome=String(codigo||'').trim();if(MOBI_IDS[nome])return MOBI_IDS[nome];const base=codigoBaseMobi(nome);if(MOBI_IDS[base])return MOBI_IDS[base];const chave=Object.keys(MOBI_IDS).find(k=>codigoBaseMobi(k)===base&&!/ROUBADO|SUMIU/i.test(k));return chave?MOBI_IDS[chave]:null}
 function abrirMobi(codigo){const id=deviceIdMobi(codigo);if(!id)return;window.open('https://usinamoreno.mdmcloud.com.br/MobiControl/WebConsole/home/dashboard/devices/'+encodeURIComponent(id)+'/DeviceDetails?subGroups=false&count=250','_blank','noopener')}
+
+const CHAVE_CUBICAGEM_TRANSBORDO='qf-cubicagem-transbordo-v1';
+function lerCubicagens(){
+  try{return JSON.parse(localStorage.getItem(CHAVE_CUBICAGEM_TRANSBORDO)||'{}')}catch{return{}}
+}
+function cubicagemTransbordo(cod){
+  const v=Number(lerCubicagens()[String(cod)]);
+  return Number.isFinite(v)&&v>0?v:null;
+}
+function salvarCubicagemTransbordo(cod,valor){
+  const dados=lerCubicagens(),v=Number(valor);
+  if(!(v>0))return false;
+  dados[String(cod)]=v;
+  localStorage.setItem(CHAVE_CUBICAGEM_TRANSBORDO,JSON.stringify(dados));
+  return true;
+}
+async function editarCubicagemTransbordo(cod){
+  if(!acessoAdm&&!(await liberarAdm()))return;
+  const atual=cubicagemTransbordo(cod);
+  const entrada=prompt('Cubicagem do '+cod+' em toneladas (t):',atual??'');
+  if(entrada===null)return;
+  const valor=Number(String(entrada).replace(',','.'));
+  if(!(valor>0)){alert('Informe uma cubicagem válida em toneladas.');return}
+  salvarCubicagemTransbordo(cod,valor);
+  renderEquipamentos();
+  if(modoTeste)renderCapacidadeFrenteTeste();
+  else if(frenteAtual)renderCapacidadeFrente();
+}
+function clicarEquipamento(ev,cod,tipo){
+  if(tipo!=='transbordo')return;
+  if(ev.target.closest('button,a'))return;
+  editarCubicagemTransbordo(cod);
+}
+function tagCubicagem(e){
+  if(tipoEquipamento(e)!=='transbordo')return'';
+  const cap=cubicagemTransbordo(e.cod);
+  const texto=cap?`▣ Cubicagem: ${cap.toLocaleString('pt-BR',{maximumFractionDigits:2})} t`:'⚠ Cubicagem não cadastrada';
+  const editar=acessoAdm?`<button type="button" onclick="event.stopPropagation();editarCubicagemTransbordo('${String(e.cod).replace(/'/g,"\\'")}')" style="margin-left:6px;padding:4px 7px;border:1px solid #3ce3a0;border-radius:6px;background:#103c30;color:#73f6b0;font-size:8px;font-weight:900;cursor:pointer">✎ CADASTRAR / EDITAR</button>`:'';
+  return `<div class="cubicagem-tag ${cap?'':'sem'}">${texto}${editar}</div>`;
+}
+
+
+function transbordosParaCadastro(){
+  const mapa=new Map();
+  for(const e of equipamentos){
+    if(tipoEquipamento(e)==='transbordo')mapa.set(String(e.cod),e);
+  }
+  return [...mapa.values()].sort((a,b)=>String(a.cod).localeCompare(String(b.cod),'pt-BR',{numeric:true}));
+}
+function atualizarBotaoCubicagemMassa(){
+  const b=document.getElementById('btn-cub-massa');
+  if(b)b.style.display=acessoAdm?'inline-flex':'none';
+}
+function abrirCubicagemMassa(){
+  if(!acessoAdm){liberarAdm().then(ok=>{if(ok){atualizarBotaoCubicagemMassa();abrirCubicagemMassa()}});return}
+  const lista=document.getElementById('cub-massa-lista');
+  const itens=transbordosParaCadastro();
+  if(!itens.length){
+    lista.innerHTML='<div style="padding:12px;color:#9ebcaf;text-align:center">Nenhum transbordo carregado no painel neste momento.</div>';
+  }else{
+    lista.innerHTML=itens.map(e=>{
+      const atual=cubicagemTransbordo(e.cod);
+      return `<label class="cub-massa-item">
+        <span><b>${e.cod}</b><small>${e.modelo||'Transbordo'}${e.frente?` · Frente ${e.frente}`:''}</small></span>
+        <input class="cub-massa-input" data-cod="${String(e.cod).replace(/"/g,'&quot;')}" type="number" min="0.1" step="0.1" inputmode="decimal" placeholder="t" value="${atual??''}">
+      </label>`;
+    }).join('');
+  }
+  document.getElementById('modal-cub-massa').classList.add('aberto');
+}
+function fecharCubicagemMassa(){
+  document.getElementById('modal-cub-massa')?.classList.remove('aberto');
+}
+function salvarCubicagemMassa(){
+  const inputs=[...document.querySelectorAll('.cub-massa-input')];
+  const dados=lerCubicagens();
+  let salvos=0;
+  for(const inp of inputs){
+    const raw=String(inp.value||'').trim().replace(',','.');
+    if(!raw)continue;
+    const v=Number(raw);
+    if(v>0){
+      dados[String(inp.dataset.cod)]=v;
+      salvos++;
+    }
+  }
+  localStorage.setItem(CHAVE_CUBICAGEM_TRANSBORDO,JSON.stringify(dados));
+  fecharCubicagemMassa();
+  renderEquipamentos();
+  if(modoTeste)renderCapacidadeFrenteTeste();
+  else if(frenteAtual)renderCapacidadeFrente();
+  alert(`${salvos} cubicagem(ns) salva(s).`);
+}
+
 async function hashSenha(valor){const dados=new TextEncoder().encode(valor),hash=await crypto.subtle.digest('SHA-256',dados);return[...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,'0')).join('')}
 function atualizarBotaoAdm(){const btn=document.getElementById('btn-adm');if(btn){btn.textContent=acessoAdm?'🔓 ADM liberado':'🔒 ADM';btn.classList.toggle('liberado',acessoAdm)}}
-async function liberarAdm(){if(acessoAdm){acessoAdm=false;sessionStorage.removeItem('qf-adm-liberado');atualizarBotaoAdm();if(frenteAtual)renderEquipamentos();if(filtroConexaoResumoAtual)renderListaConexao(filtroConexaoResumoAtual);return false}const senha=prompt('Digite a senha administrativa');if(senha===null)return false;if(await hashSenha(senha)!==ADMIN_HASH){alert('Senha administrativa incorreta.');return false}acessoAdm=true;sessionStorage.setItem('qf-adm-liberado','1');atualizarBotaoAdm();if(frenteAtual)renderEquipamentos();if(filtroConexaoResumoAtual)renderListaConexao(filtroConexaoResumoAtual);return true}
+async function liberarAdm(){if(acessoAdm){acessoAdm=false;sessionStorage.removeItem('qf-adm-liberado');atualizarBotaoAdm();if(frenteAtual)renderEquipamentos();if(filtroConexaoResumoAtual)renderListaConexao(filtroConexaoResumoAtual);return false}const senha=prompt('Digite a senha administrativa');if(senha===null)return false;if(await hashSenha(senha)!==ADMIN_HASH){alert('Senha administrativa incorreta.');return false}acessoAdm=true;atualizarBotaoCubicagemMassa();sessionStorage.setItem('qf-adm-liberado','1');atualizarBotaoAdm();if(frenteAtual)renderEquipamentos();if(filtroConexaoResumoAtual)renderListaConexao(filtroConexaoResumoAtual);return true}
 async function abrirMobiSeguro(codigo){if(!acessoAdm&&!(await liberarAdm()))return;abrirMobi(codigo)}
 function botaoMobi(e){const id=deviceIdMobi(e.cod);return id?'<button class="mobi-link '+(acessoAdm?'':'bloqueado')+'" title="'+(acessoAdm?'Abrir dispositivo no MobiControl':'Acesso administrativo protegido')+'" aria-label="Abrir '+e.cod+' no MobiControl" onclick="abrirMobiSeguro(\''+String(e.cod).replace(/'/g,"\\'")+'\')"><span aria-hidden="true">'+(acessoAdm?'▣':'🔒')+'</span><span>Mobi</span></button>':''}
 function statusMobi(codigo){const nome=String(codigo||'').trim();return MOBI_DUPLICADOS[nome]||MOBI_SNAPSHOT[codigoBaseMobi(nome)]||null}
@@ -169,12 +557,223 @@ async function entrar(){
   const btn=document.getElementById('btn-entrar'),erro=document.getElementById('erro-login');
   erro.style.display='none';btn.disabled=true;btn.textContent='Entrando...';
   try{
-    const r=await fetch(API+'/sessions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:document.getElementById('email').value.trim(),password:document.getElementById('senha').value})});
-    const data=await r.json();if(!data.token)throw new Error('E-mail ou senha incorretos.');
-    token=data.token;localStorage.setItem('qf-token',token);abrirQuadro();
-  }catch(e){erro.textContent=e.message||'Não foi possível entrar.';erro.style.display='block'}
-  finally{btn.disabled=false;btn.textContent='Entrar e abrir frentes'}
+    const r=await fetch(API+'/sessions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        email:document.getElementById('email').value.trim(),
+        password:document.getElementById('senha').value
+      })
+    });
+    let data={};
+    try{data=await r.json()}catch(_){}
+    if(r.status===400||r.status===401)throw new Error('E-mail ou senha incorretos.');
+    if(r.status>=500)throw new Error('Servidor temporariamente indisponível. Tente novamente em alguns minutos.');
+    if(!r.ok)throw new Error(data.erro||data.message||'Não foi possível entrar.');
+    if(!data.token)throw new Error('O servidor respondeu, mas não retornou o token de acesso.');
+    token=data.token;
+    localStorage.setItem('qf-token',token);
+    modoTeste=false;
+    abrirQuadro();
+  }catch(e){
+    const msg=(e&&e.message)||'Não foi possível entrar.';
+    erro.textContent=/Failed to fetch|NetworkError|Load failed/i.test(msg)
+      ?'Não foi possível conectar ao servidor.'
+      :msg;
+    erro.style.display='block';
+  }finally{
+    btn.disabled=false;
+    btn.textContent='Entrar e abrir frentes';
+  }
 }
+
+function entrarModoTeste(){
+  modoTeste=true;
+  const cubTeste=lerCubicagens();
+  const padraoTeste={'TRB-201':18,'TRB-202':20,'TRB-203':22,'TRB-204':24,'TRB-205':20};
+  let alterouCub=false;
+  for(const [cod,cap] of Object.entries(padraoTeste)){if(!(Number(cubTeste[cod])>0)){cubTeste[cod]=cap;alterouCub=true}}
+  if(alterouCub)localStorage.setItem(CHAVE_CUBICAGEM_TRANSBORDO,JSON.stringify(cubTeste));
+  if(atualizacaoAutomatica){clearInterval(atualizacaoAutomatica);atualizacaoAutomatica=null}
+  const agora=new Date();
+  const inicioMin=m=>new Date(agora.getTime()-m*60000);
+  equipamentos=[
+    {cod:'COL-101',modelo:'Austoft 8800',nome:'Operador 1',classe:'COLHEDORA',frente:2,vel:4.2,lat:null,lng:null,atividade:'Colheita produtiva',parada:null,inicio:inicioMin(42),leitura:new Date(agora),online:true},
+    {cod:'COL-102',modelo:'Austoft 8800',nome:'Operador 2',classe:'COLHEDORA',frente:2,vel:4.0,lat:null,lng:null,atividade:'Colheita produtiva',parada:null,inicio:inicioMin(38),leitura:new Date(agora),online:true},
+    {cod:'COL-103',modelo:'Austoft 8800',nome:'Operador 3',classe:'COLHEDORA',frente:2,vel:3.8,lat:null,lng:null,atividade:'Colheita produtiva',parada:null,inicio:inicioMin(35),leitura:new Date(agora),online:true},
+    {cod:'COL-104',modelo:'Austoft 8800',nome:'Operador 4',classe:'COLHEDORA',frente:2,vel:0,lat:null,lng:null,atividade:'Manutenção mecânica',parada:'Manutenção',inicio:inicioMin(55),leitura:new Date(agora),online:true},
+    {cod:'TRB-201',modelo:'Transbordo',nome:'Conjunto 1',classe:'TRANSBORDO',frente:2,vel:8,lat:null,lng:null,atividade:'Deslocamento vazio até a frente',parada:null,inicio:inicioMin(4),leitura:new Date(agora),online:true},
+    {cod:'TRB-202',modelo:'Transbordo',nome:'Conjunto 2',classe:'TRANSBORDO',frente:2,vel:0,lat:null,lng:null,atividade:'Carregamento',parada:null,inicio:inicioMin(6),leitura:new Date(agora),online:true},
+    {cod:'TRB-203',modelo:'Transbordo',nome:'Conjunto 3',classe:'TRANSBORDO',frente:2,vel:10,lat:null,lng:null,atividade:'Deslocamento carregado',parada:null,inicio:inicioMin(5),leitura:new Date(agora),online:true},
+    {cod:'TRB-204',modelo:'Transbordo',nome:'Conjunto 4',classe:'TRANSBORDO',frente:2,vel:0,lat:null,lng:null,atividade:'Basculamento',parada:null,inicio:inicioMin(3),leitura:new Date(agora),online:true},
+    {cod:'TRB-205',modelo:'Transbordo',nome:'Conjunto 5',classe:'TRANSBORDO',frente:2,vel:0,lat:null,lng:null,atividade:'Manutenção mecânica',parada:'Manutenção',inicio:inicioMin(25),leitura:new Date(agora),online:true}
+  ];
+  frentesEncontradas=[2];
+  frenteAtual=2;
+  document.getElementById('inicio').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.querySelector('.topo strong').textContent='🧪 MODO TESTE · Frente 2';
+  document.getElementById('btn-atualizar').textContent='🧪 Recarregar teste';
+  document.getElementById('btn-atualizar').onclick=entrarModoTeste;
+  document.getElementById('visao-frentes').style.display='none';
+  document.getElementById('visao-equip').style.display='block';
+  document.getElementById('nome-frente').textContent='Frente 2 · SIMULAÇÃO';
+  filtroOperacaoAtual='todas'; filtroTipoAtual='todos';
+  renderTemposLogisticosTeste();
+  renderOperacoes(); renderTipos(); renderEquipamentos();
+}
+
+function renderTemposLogisticosTeste(){
+  const grade=document.getElementById('logistica-grade');
+  const card=document.getElementById('logistica-card');
+  card.classList.add('aberto');
+  const btn=card.querySelector('.logistica-topo');
+  btn.setAttribute('aria-expanded','true');
+  btn.querySelector('.logistica-toggle span').textContent='Ocultar';
+  const etapas=[
+    ['vazio','↗','Desloc. vazio',6],
+    ['carregamento','▣','Carregamento',10],
+    ['carregado','↘','Desloc. carregado',8],
+    ['basculamento','⌄','Basculamento',6]
+  ];
+  grade.innerHTML=etapas.map(([chave,icone,nome,min]) =>
+    `<div class="logistica-item etapa-${chave}"><span>${icone} ${nome}</span><strong>${min} min</strong><small>Valor simulado para conferência</small></div>`
+  ).join('');
+  const total=document.getElementById('logistica-total');
+  total.classList.remove('incompleto');
+  total.querySelector('strong').textContent='30 min';
+  total.querySelector('small').textContent='6 + 10 + 8 + 6 · cenário de teste';
+  renderCapacidadeFrenteTeste();
+}
+
+function renderCapacidadeFrenteTeste(){
+  let painel=document.getElementById('capacidade-frente');
+  if(!painel){
+    painel=document.createElement('section');
+    painel.id='capacidade-frente';
+    painel.className='logistica-card';
+    painel.style.padding='12px';
+    document.getElementById('logistica-card').before(painel);
+  }
+
+  // No teste, as cubicagens ficam salvas por equipamento e podem ser editadas pelo ADM.
+  const cubicagens={};
+  for(const cod of ['TRB-201','TRB-202','TRB-203','TRB-204']){
+    const cap=cubicagemTransbordo(cod);
+    if(cap)cubicagens[cod]=cap;
+  }
+
+  painel.innerHTML=`
+    <div style="display:flex;justify-content:space-between;gap:8px;color:#eafff3;font-weight:800;font-size:12px">
+      <span>🧪 Teste · cubicagens já cadastradas</span>
+      <span style="color:#64eaa6;font-size:9px">Somente tempos logísticos</span>
+    </div>
+
+    <div style="margin-top:10px;padding:10px;border:1px solid #2b6551;border-radius:9px;background:#0b241f">
+      <div style="font-size:9px;color:#93bba7;margin-bottom:7px">CUBICAGEM CADASTRADA DOS TRANSBORDOS PRODUTIVOS</div>
+      <div style="display:flex;flex-wrap:wrap;gap:7px">
+        ${Object.entries(cubicagens).map(([cod,cap])=>`<span style="padding:6px 8px;border-radius:7px;background:#12332b;color:#eafff3;font-size:9px"><b>${cod}</b> · ${cap} t</span>`).join('')}
+      </div>
+    </div>
+
+    <div style="margin-top:12px;color:#a2bcaf;font-size:9px">TEMPOS LOGÍSTICOS DA FRENTE</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px;margin-top:7px">
+      <label style="color:#a2bcaf;font-size:9px">Vazio (min)
+        <input id="teste-vazio" type="number" min="0" max="60" step="0.1" value="6" style="display:block;width:100%;margin-top:4px;padding:9px;border-radius:8px;border:1px solid #35715b;background:#0c2320;color:white">
+      </label>
+      <label style="color:#a2bcaf;font-size:9px">Carregamento (min)
+        <input id="teste-carregamento" type="number" min="0" max="60" step="0.1" value="10" style="display:block;width:100%;margin-top:4px;padding:9px;border-radius:8px;border:1px solid #35715b;background:#0c2320;color:white">
+      </label>
+      <label style="color:#a2bcaf;font-size:9px">Carregado (min)
+        <input id="teste-carregado" type="number" min="0" max="60" step="0.1" value="8" style="display:block;width:100%;margin-top:4px;padding:9px;border-radius:8px;border:1px solid #35715b;background:#0c2320;color:white">
+      </label>
+      <label style="color:#a2bcaf;font-size:9px">Basculamento (min)
+        <input id="teste-basculamento" type="number" min="0" max="7" step="0.1" value="6" style="display:block;width:100%;margin-top:4px;padding:9px;border-radius:8px;border:1px solid #35715b;background:#0c2320;color:white">
+      </label>
+    </div>
+
+    <div id="teste-resultados" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px;margin-top:12px"></div>
+    <div id="teste-gargalo" style="margin-top:10px;padding:10px;border:1px solid #2b6551;border-radius:9px;background:#0b241f;font-size:10px;color:#dff8eb"></div>
+
+    <div style="font-size:8px;color:#739887;margin-top:8px">
+      Regra do teste: 3 colhedoras produtivas. Cada colhedora enche 1 transbordo em 28 min.
+      A capacidade das colhedoras usa a média das cubicagens dos transbordos produtivos.
+      A capacidade dos transbordos mantém a cubicagem individual de cada conjunto.
+    </div>`;
+
+  const atualizar=()=>{
+    const ler=id=>Math.max(0,Number(document.getElementById(id).value)||0);
+    const vazio=ler('teste-vazio');
+    const carregamento=ler('teste-carregamento');
+    const carregado=ler('teste-carregado');
+    const basculamento=Math.min(7,ler('teste-basculamento'));
+    const ciclo=vazio+carregamento+carregado+basculamento;
+
+    const caps=Object.values(cubicagens);
+    const somaCap=caps.reduce((a,b)=>a+b,0);
+    const mediaCap=somaCap/caps.length;
+    const colhedorasProd=3;
+
+    // Regra definida: 60/28 cargas por hora por colhedora.
+    const capCol=(60/28)*mediaCap*colhedorasProd;
+
+    // Cada transbordo preserva sua cubicagem individual; todos usam o ciclo logístico da frente.
+    const capTrans=ciclo>0 ? caps.reduce((total,cap)=>total+(cap*60/ciclo),0) : 0;
+    const entrega=ciclo>0 ? Math.min(capCol,capTrans) : 0;
+
+    const fmt=n=>n.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+' t/h';
+    const dados=[
+      ['Colhedoras produtivas',String(colhedorasProd)],
+      ['Transbordos produtivos',String(caps.length)],
+      ['Cubicagem média',mediaCap.toLocaleString('pt-BR',{maximumFractionDigits:1})+' t'],
+      ['Ciclo logístico',ciclo.toLocaleString('pt-BR',{maximumFractionDigits:1})+' min'],
+      ['Cap. colhedoras',fmt(capCol)],
+      ['Cap. transbordos',fmt(capTrans)],
+      ['ENTREGA POSSÍVEL',fmt(entrega)]
+    ];
+
+    document.getElementById('teste-resultados').innerHTML=dados.map(([n,v])=>`
+      <div style="padding:10px;border:1px solid #2b6551;border-radius:9px;background:#0b241f">
+        <span style="display:block;font-size:8px;color:#93bba7">${n}</span>
+        <strong style="display:block;margin-top:5px;font-size:17px;color:#73f6b0">${v}</strong>
+      </div>`).join('');
+
+    let msg;
+    if(ciclo<=0) msg='Informe os tempos logísticos para calcular a capacidade dos transbordos.';
+    else if(Math.abs(capTrans-capCol)<0.05) msg='✓ Capacidades equilibradas.';
+    else if(capTrans<capCol) msg='⚠ Gargalo: TRANSBORDOS · a logística está entregando menos do que as colhedoras conseguem produzir.';
+    else msg='⚠ Gargalo: COLHEDORAS · a capacidade logística dos transbordos está acima da produção das colhedoras.';
+
+    document.getElementById('teste-gargalo').textContent=
+      msg+' · Última atualização: '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+
+    // Sincroniza visualmente o cartão de tempos do modo teste.
+    const grade=document.getElementById('logistica-grade');
+    if(grade){
+      const etapas=[
+        ['vazio','↗','Desloc. vazio',vazio],
+        ['carregamento','▣','Carregamento',carregamento],
+        ['carregado','↘','Desloc. carregado',carregado],
+        ['basculamento','⌄','Basculamento',basculamento]
+      ];
+      grade.innerHTML=etapas.map(([chave,icone,nome,min]) =>
+        `<div class="logistica-item etapa-${chave}"><span>${icone} ${nome}</span><strong>${min.toLocaleString('pt-BR',{maximumFractionDigits:1})} min</strong><small>Tempo usado no teste</small></div>`
+      ).join('');
+      const total=document.getElementById('logistica-total');
+      if(total){
+        total.classList.toggle('incompleto',ciclo<=0);
+        total.querySelector('strong').textContent=ciclo.toLocaleString('pt-BR',{maximumFractionDigits:1})+' min';
+        total.querySelector('small').textContent='ciclo logístico calculado automaticamente';
+      }
+    }
+  };
+
+  ['teste-vazio','teste-carregamento','teste-carregado','teste-basculamento'].forEach(id=>{
+    document.getElementById(id).addEventListener('input',atualizar);
+  });
+  atualizar();
+}
+
 function abrirQuadro(){document.getElementById('inicio').style.display='none';document.getElementById('app').style.display='block';atualizarBotaoAdm();restaurarGrafico();carregar();if(!atualizacaoAutomatica)atualizacaoAutomatica=setInterval(()=>{if(document.visibilityState==='visible')carregar(true)},30000)}
 function nomeFrente(v){if(!v||v==='-')return'Sem frente';const texto=String(v).trim();if(/PLANTIO MANUAL/i.test(texto))return'Plantio Manual';if(/FERTIRRIGAÇÃO CAMINHÃO/i.test(texto))return'Fertirrigação · Caminhão';if(/FERTIRRIGAÇÃO CANAL/i.test(texto))return'Fertirrigação · Canal';const m=texto.match(/FRENTE\s*(\d+)/i),n=m?+m[1]:parseInt(texto.replace(/\D/g,''));if(n===1)return'Frente 01 · Corte Manual';if(n===10)return'Frente 10 · Herbicida';if(n===11)return'Frente 11 · Preparo de Solo';if(n===12)return'Frente 12 · Apoio';return isNaN(n)?texto:'Frente '+String(n).padStart(2,'0')}
 function numeroFrente(v){const m=String(v||'').match(/FRENTE\s*(\d+)/i);return m?+m[1]:999}
@@ -206,26 +805,217 @@ function definirGraficoAberto(aberto,salvar=true){const card=document.getElement
 function alternarGrafico(){const card=document.getElementById('historico-card');definirGraficoAberto(card.classList.contains('fechado'))}
 function restaurarGrafico(){let aberto=false;try{aberto=localStorage.getItem('qf-grafico-aberto')==='1'}catch(_){}definirGraficoAberto(aberto,false)}
 function equipamentoVisivel(e){return true}
-function converterEquipamento(eq){const t=trajetoAtual(eq),leitura=dataLeitura(t)||dataLeitura(eq),classe=eq.dsc_tipo_utilizacao||eq.tipo_utilizacao||eq.dsc_modelo||eq.dsc_equipamento||'SEM CLASSIFICAÇÃO';return{cod:eq.cod_equipamento||eq.equipamento,modelo:eq.dsc_modelo||eq.dsc_equipamento||eq.modelo||'-',nome:eq.nome||eq.dsc_operador||'-',classe,frente:resolverFrente(eq),vel:Number(t.num_velocidade_gps||eq.num_velocidade_gps||0),lat:eq.LATITUDE||eq.latitude||t.LATITUDE||t.latitude,lng:eq.LONGITUDE||eq.longitude||t.LONGITUDE||t.longitude,atividade:eq.dsc_atividade||eq.dsc_operacao||eq.operacao||t.dsc_atividade||null,parada:eq.dsc_motivo_parada||t.dsc_motivo_parada||null,inicio:eq.dta_inicial||eq.dta_inicio||eq.data_inicio||eq.dataHoraInicio||t.dta_inicial||t.dta_inicio||t.data_inicio||null,leitura,online:detectarOnline(eq,t)}}
+function codigosApontamentoAxiagro(eq,t){const chaves=['cod_atividade','cod_atividade_atual','codigo_atividade','cod_operacao','cod_operacao_atual','codigo_operacao','cod_apontamento','codigo_apontamento','cod_motivo_parada'];return [...new Set([eq,t].flatMap(o=>chaves.map(k=>o?.[k]).filter(v=>v!==null&&v!==undefined&&/^\\d+$/.test(String(v).trim())).map(Number)))]}
+function apontamento901(e){return(e.codigosApontamento||[]).includes(901)||/(?:^|\\D)901(?:\\D|$)/.test(String(e.atividade||''))}
+function inicioApontamento901(e,agora){const t=e.inicio?new Date(e.inicio).getTime():NaN;return Number.isFinite(t)&&t<=agora?t:agora}
+
+function converterEquipamento(eq){const t=trajetoAtual(eq),leitura=dataLeitura(t)||dataLeitura(eq),classe=eq.dsc_tipo_utilizacao||eq.tipo_utilizacao||eq.dsc_modelo||eq.dsc_equipamento||'SEM CLASSIFICAÇÃO',atividade=eq.dsc_atividade||eq.dsc_atividade_atual||eq.atividade_atual||eq.dsc_operacao||eq.operacao||t.dsc_atividade||t.dsc_atividade_atual||t.atividade_atual||t.dsc_operacao||t.operacao||null;return{codigosApontamento:codigosApontamentoAxiagro(eq,t),cod:eq.cod_equipamento||eq.equipamento,modelo:eq.dsc_modelo||eq.dsc_equipamento||eq.modelo||'-',nome:eq.nome||eq.dsc_operador||'-',classe,frente:resolverFrente(eq),vel:Number(t.num_velocidade_gps||eq.num_velocidade_gps||0),lat:eq.LATITUDE||eq.latitude||eq.lat||t.LATITUDE||t.latitude||t.lat,lng:eq.LONGITUDE||eq.longitude||eq.lng||eq.lon||t.LONGITUDE||t.longitude||t.lng||t.lon,atividade,parada:eq.dsc_motivo_parada||eq.motivo_parada||t.dsc_motivo_parada||t.motivo_parada||null,inicio:eq.dta_inicial||eq.dta_inicio||eq.data_inicio||eq.dataHoraInicio||eq.inicio_atividade||t.dta_inicial||t.dta_inicio||t.data_inicio||t.dataHoraInicio||t.inicio_atividade||null,leitura,online:detectarOnline(eq,t)}}
 function estadoEq(e){const txt=(e.parada||'')+' '+(e.atividade||'');if(/manuten|oficina|mec[aâ]nic|el[eé]tric|corretiv|preventiv/i.test(txt))return{chave:'manutencao',nome:'Manutenção'};if(e.atividade&&!/aguard|parad|refei|abastec|troca|desloc|improdut/i.test(e.atividade))return{chave:'produtivo',nome:'Produtivo'};if(e.vel>.1)return{chave:'movimento',nome:'Em movimento'};return{chave:'parado',nome:e.parada||e.atividade?'Parado':'Sem apontamento'}}
 const TIPOS={todos:{nome:'Todos',icone:'▦'},colhedora:{nome:'Colhedoras',icone:'🌾'},transbordo:{nome:'Transbordos',icone:'🚜'},agua:{nome:"Caminhão-d’água",icone:'💧'},caminhao:{nome:'Caminhões',icone:'🚛'},trator:{nome:'Tratores',icone:'⚙️'},apoio:{nome:'Outros',icone:'＋'}};
-function tipoEquipamento(e){const classe=normalizar(e.classe),t=normalizar([e.classe,e.modelo,e.atividade].filter(Boolean).join(' '));if(String(e.cod)==='180722'||/trator|4x4/.test(classe))return'trator';if(/transbord/.test(t)||(/puma\s*(200|215|230)|magnum|t8\.?/.test(t)&&!/trator/.test(classe)))return'transbordo';if(/colhed|colheita|austoft|a8[0-9]{3}|ch\s?[0-9]{2,3}/.test(t))return'colhedora';if(/caminhao.{0,12}agua|agua|pipa/.test(t))return'agua';if(/caminhao|scania|volvo|mercedes|vw\s|constellation/.test(t))return'caminhao';if(/trator/.test(t))return'trator';return'apoio'}
+function tipoEquipamento(e){const classe=normalizar(e.classe),t=normalizar([e.classe,e.modelo,e.atividade].filter(Boolean).join(' '));if(String(e.cod)==='180722')return'trator';if(/transbord/.test(t)||/puma\s*(200|215|230)|magnum|t8\.?/.test(t))return'transbordo';if(/trator|4x4/.test(classe))return'trator';if(/colhed|colheita|austoft|a8[0-9]{3}|ch\s?[0-9]{2,3}/.test(t))return'colhedora';if(/caminhao.{0,12}agua|agua|pipa/.test(t))return'agua';if(/caminhao|scania|volvo|mercedes|vw\s|constellation/.test(t))return'caminhao';if(/trator/.test(t))return'trator';return'apoio'}
 function caminhaoEmCiclo(e){const s=normalizar([e.atividade,e.parada].filter(Boolean).join(' '));return /deslocamento\s+vazio.*(?:ate\s+)?(?:a\s+)?frente|(?:em\s+)?carregamento|aguardando.*carregar|deslocamento\s+carregado/.test(s)}
 function passaFiltroOperacional(e){return tipoEquipamento(e)!=='caminhao'||caminhaoEmCiclo(e)}
 function operacaoEq(e){if(e.atividade&&String(e.atividade).trim())return String(e.atividade).trim();const classe=String(e.classe||'').trim();if(classe&&classe!=='SEM CLASSIFICAÇÃO')return classe;return'Operação não informada pela Axiagro'}
 function horaLeitura(d){if(!d)return'Horário não informado';const min=Math.max(0,Math.floor((Date.now()-d.getTime())/60000)),hora=d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});return min<1?hora+' · agora':min<60?hora+' · há '+min+' min':hora+' · há '+Math.floor(min/60)+'h '+min%60+'min'}
 function tempoApontamento(e){if(!e.inicio)return'Tempo do apontamento não informado';const inicio=new Date(e.inicio);if(isNaN(inicio))return'Tempo do apontamento não informado';const min=Math.max(0,Math.floor((Date.now()-inicio.getTime())/60000)),dias=Math.floor(min/1440),horas=Math.floor((min%1440)/60),mins=min%60;if(dias)return'Neste apontamento: '+dias+'d '+horas+'h '+mins+'min';if(horas)return'Neste apontamento: '+horas+'h '+mins+'min';return'Neste apontamento: '+mins+'min'}
+function etapaLogisticaExplicita(e){if(e.leitura instanceof Date&&!isNaN(e.leitura)&&idadeMinutos(e.leitura)>10)return null;const s=normalizar([e.atividade,e.parada].filter(Boolean).join(' '));if(/bascul|descarreg|descarga|transferindo|em transferencia|no ponto de transferencia/.test(s))return'basculamento';if(apontamento901(e))return'carregado';if(/deslocamento.*carregad|viagem.*carregad|percurso.*volta.*(?:ate.*)?(?:ponto.*)?car|volta.*(?:ate.*)?(?:ponto.*)?car|percurso.*ida.*ponto.*(?:descar|transf|bascul)|ida.*ponto.*(?:descar|transf|bascul)|carregado.*(?:usina|industria|destino|ponto)/.test(s))return'carregado';if(/deslocamento.*vazio|viagem.*vazi|ida.*ponto.*car|vazio.*(?:frente|lavoura|origem|carreg)/.test(s))return'vazio';if(/carregamento|carregando|em carga|recebendo carga|ponto de carregamento/.test(s)&&!/aguard|espera/.test(s))return'carregamento';return null}
+function minutosApontamento(e){if(!e.inicio)return null;const d=new Date(e.inicio);if(isNaN(d))return null;const min=Math.floor((Date.now()-d.getTime())/60000);return min>=0&&min<=10080?min:null}
+function formatarMinutos(min){if(min===null||!Number.isFinite(min))return'—';min=Math.round(min);if(min<60)return min+' min';const h=Math.floor(min/60),m=min%60;return h+'h'+(m?' '+m+'min':'')}
+const CHAVE_DISTANCIA_CARGA='qf-distancia-carga-v3';
+const MIN_CICLOS_DISTANCIA=3;
+const CHAVE_TEMPOS_LOGISTICOS='qf-tempos-logisticos-v2';
+let etapaHistoricoAberta=null;
+function inicioDiaOperacional(){const d=new Date();d.setHours(6,0,0,0);if(Date.now()<d.getTime())d.setDate(d.getDate()-1);return d.getTime()}
+function lerTemposLogisticos(){try{const d=JSON.parse(localStorage.getItem(CHAVE_TEMPOS_LOGISTICOS)||'{}');return d&&typeof d==='object'?d:{}}catch(_){return{}}}
+function etapaLogistica(e){const explicita=etapaLogisticaExplicita(e);if(e.leitura instanceof Date&&!isNaN(e.leitura)&&idadeMinutos(e.leitura)>10)return null;if(explicita==='basculamento')return explicita;if(apontamento901(e)||lerTemposLogisticos()[String(e.cod)]?.ciclo901?.ativo)return'carregado';return explicita}
+function duracaoLogisticaValida(etapa,duracao){if(!Number.isFinite(duracao)||duracao<=0)return false;if(etapa==='basculamento')return duracao<=7;return duracao<=60}
+function medianaLogistica(valores){const a=valores.map(Number).sort((a,b)=>a-b),m=Math.floor(a.length/2);return a.length?(a.length%2?a[m]:(a[m-1]+a[m])/2):null}
+function dentroPadraoLogistico(duracao,base){if(base.length<3)return true;const mediana=medianaLogistica(base.map(h=>h.duracao));return duracao>=mediana*.5&&duracao<=mediana*1.5}
+const CHAVE_AMOSTRAS_PADRAO='qf-logistica-10-padrao-v1';
+function amostrasPadraoLogistico(frente,etapa,dados=lerTemposLogisticos()){let banco={};try{banco=JSON.parse(localStorage.getItem(CHAVE_AMOSTRAS_PADRAO)||'{}')||{}}catch(_){}const id=String(frente)+'|'+etapa;if(!Array.isArray(banco[id])){const antigas=Object.values(dados).flatMap(r=>(r.historico||[]).map(h=>({...h,frente:h.frente??r.frente}))).filter(h=>String(h.frente)===String(frente)&&h.etapa===etapa&&duracaoLogisticaValida(etapa,Number(h.duracao))).sort((a,b)=>(b.fim||0)-(a.fim||0)),referencia=antigas.slice(0,10);banco[id]=antigas.filter(h=>dentroPadraoLogistico(Number(h.duracao),referencia)).slice(0,10);try{localStorage.setItem(CHAVE_AMOSTRAS_PADRAO,JSON.stringify(banco))}catch(_){}}return banco[id]}
+function aceitarAmostraLogistica(amostra,dados){if(!duracaoLogisticaValida(amostra.etapa,Number(amostra.duracao)))return false;const base=amostrasPadraoLogistico(amostra.frente,amostra.etapa,dados);if(!dentroPadraoLogistico(Number(amostra.duracao),base)){try{const rejeitadas=JSON.parse(localStorage.getItem('qf-logistica-fora-padrao-v1')||'[]');rejeitadas.unshift({...amostra,motivo:'Variação maior que 50% da mediana',mediana:medianaLogistica(base.map(h=>h.duracao))});localStorage.setItem('qf-logistica-fora-padrao-v1',JSON.stringify(rejeitadas.slice(0,100)))}catch(_){}return false}let banco={};try{banco=JSON.parse(localStorage.getItem(CHAVE_AMOSTRAS_PADRAO)||'{}')||{};const id=String(amostra.frente)+'|'+amostra.etapa;banco[id]=[amostra,...base].sort((a,b)=>(b.fim||0)-(a.fim||0)).slice(0,10);localStorage.setItem(CHAVE_AMOSTRAS_PADRAO,JSON.stringify(banco))}catch(_){}return true}
+function atualizarTemposLogisticos(){const dados=lerTemposLogisticos(),agora=Date.now();for(const e of equipamentos){const etapa=etapaLogistica(e);if(!etapa)continue;const codigo=String(e.cod),registro=dados[codigo]||{etapas:{},historico:[],frente:e.frente},inicioInformado=e.inicio?new Date(e.inicio).getTime():NaN,inicioEtapa=Number.isFinite(inicioInformado)&&inicioInformado<=agora?inicioInformado:agora;registro.etapas=registro.etapas||{};registro.historico=Array.isArray(registro.historico)?registro.historico:[];if(etapa==='basculamento'&&registro.ciclo901?.ativo){const fimInformado=e.inicio?new Date(e.inicio).getTime():NaN,fim901=Number.isFinite(fimInformado)&&fimInformado>=registro.ciclo901.inicio&&fimInformado<=agora?fimInformado:agora,duracao901=(fim901-registro.ciclo901.inicio)/60000;if(aceitarAmostraLogistica({etapa:'carregado',origem:'901',duracao:duracao901,inicio:registro.ciclo901.inicio,fim:fim901,codigo,frente:e.frente},dados))registro.historico.unshift({etapa:'carregado',origem:'901',duracao:duracao901,inicio:registro.ciclo901.inicio,fim:fim901,codigo,frente:e.frente});registro.ciclo901.ativo=false}else if(apontamento901(e)&&!registro.ciclo901?.ativo){registro.ciclo901={ativo:true,inicio:inicioApontamento901(e,agora)}}if(!registro.etapaAtual){registro.etapaAtual=etapa;registro.inicioAtual=inicioEtapa}else if(registro.etapaAtual!==etapa){const etapaFechada=registro.etapaAtual,fim=inicioEtapa>=Number(registro.inicioAtual||0)?inicioEtapa:agora,duracao=Math.max(0,Math.round((fim-Number(registro.inicioAtual||agora))/60000)),anterior=registro.etapas[etapaFechada]||{totalMinutos:0,ocorrencias:0};if(etapaFechada!=='carregado'&&aceitarAmostraLogistica({etapa:etapaFechada,duracao,inicio:Number(registro.inicioAtual)||null,fim,codigo,frente:e.frente},dados)){anterior.totalMinutos=(Number(anterior.totalMinutos)||0)+duracao;anterior.ocorrencias=(Number(anterior.ocorrencias)||0)+1;anterior.ultimoMinutos=duracao;anterior.ultimaConclusao=agora;registro.etapas[etapaFechada]=anterior;registro.historico.unshift({etapa:etapaFechada,duracao,inicio:Number(registro.inicioAtual)||null,fim,codigo,frente:e.frente});registro.historico=['vazio','carregamento','carregado','basculamento'].flatMap(k=>registro.historico.filter(h=>h.etapa===k&&duracaoLogisticaValida(k,Number(h.duracao))).slice(0,10))}registro.etapaAtual=etapa;registro.inicioAtual=inicioEtapa}registro.frente=e.frente;registro.atualizado=agora;dados[codigo]=registro}try{localStorage.setItem(CHAVE_TEMPOS_LOGISTICOS,JSON.stringify(dados))}catch(_){}arquivarLogistica24h()}
+function resumoTempoEtapa(itens,chave){const amostras=[...new Set(itens.map(e=>String(e.frente)))].flatMap(frente=>amostrasPadraoLogistico(frente,chave)).sort((a,b)=>(b.fim||0)-(a.fim||0)).slice(0,10),total=amostras.reduce((s,h)=>s+Number(h.duracao),0);return{media:amostras.length?total/amostras.length:null,ocorrencias:amostras.length,amostras}}
+function lerDistanciasCarga(){try{const d=JSON.parse(localStorage.getItem(CHAVE_DISTANCIA_CARGA)||'{}');if(!d||typeof d!=='object')return{};for(const r of Object.values(d)){if(r&&!r.ativo&&r.finalizado&&!Number(r.ciclos)&&Number(r.metros)>0){r.ultimoMetros=Number(r.metros);r.totalMetros=Number(r.metros);r.ciclos=1}}return d}catch(_){return{}}}
+function distanciaEntre(lat1,lng1,lat2,lng2){const valores=[lat1,lng1,lat2,lng2].map(Number);if(valores.some(v=>!Number.isFinite(v)))return 0;const [a,b,c,d]=valores,r=6371000,p=x=>x*Math.PI/180,dp=p(c-a),dl=p(d-b),h=Math.sin(dp/2)**2+Math.cos(p(a))*Math.cos(p(c))*Math.sin(dl/2)**2;return 2*r*Math.asin(Math.sqrt(h))}
+function atualizarDistanciasCarga(){const dados=lerDistanciasCarga(),agora=Date.now();for(const e of equipamentos){if(!e.lat||!e.lng)continue;const codigo=String(e.cod),etapa=etapaLogistica(e),velocidade=Number(e.vel)||0,lat=parseFloat(String(e.lat).replace(',','.')),lng=parseFloat(String(e.lng).replace(',','.')),tempoGps=e.leitura instanceof Date&&!isNaN(e.leitura)?e.leitura.getTime():agora,anterior=dados[codigo];if(!Number.isFinite(lat)||!Number.isFinite(lng)||agora-tempoGps>10*60000)continue;if(etapa==='carregado'&&(apontamento901(e)||anterior?.ativo)){if(!anterior||!anterior.ativo){dados[codigo]={...(anterior||{}),ativo:true,metros:0,inicioCarga:inicioApontamento901(e,agora),lat,lng,tempoGps,frente:e.frente,historico:Array.isArray(anterior?.historico)?anterior.historico:[]}}else if(tempoGps>Number(anterior.tempoGps||0)){const intervalo=(tempoGps-Number(anterior.tempoGps))/1000,trecho=distanciaEntre(anterior.lat,anterior.lng,lat,lng),velocidadeTrecho=intervalo>0?trecho/intervalo*3.6:Infinity;if(velocidade>2&&intervalo>=5&&intervalo<=600&&trecho>=5&&velocidadeTrecho<=50)anterior.metros=(Number(anterior.metros)||0)+trecho;anterior.lat=lat;anterior.lng=lng;anterior.tempoGps=tempoGps;anterior.atualizado=agora;anterior.frente=e.frente}}else if(etapa==='basculamento'&&anterior?.ativo){const informado=e.inicio?new Date(e.inicio).getTime():NaN,fim=Number.isFinite(informado)&&informado>=anterior.inicioCarga&&informado<=agora?informado:tempoGps,duracao=Math.max(0,(fim-Number(anterior.inicioCarga||fim))/60000),metros=Math.round(Number(anterior.metros)||0),amostra={metros,minutos:duracao,fim:tempoGps,codigo,frente:e.frente};anterior.ativo=false;anterior.finalizado=tempoGps;anterior.ultimoMetros=metros;anterior.ultimoMinutos=duracao;anterior.historico=Array.isArray(anterior.historico)?anterior.historico:[];if(distanciaCargaValida(amostra))anterior.historico.unshift(amostra);anterior.historico=anterior.historico.filter(distanciaCargaValida).slice(0,10);anterior.pontoTransferencia={lat,lng}}}try{localStorage.setItem(CHAVE_DISTANCIA_CARGA,JSON.stringify(dados))}catch(_){}arquivarLogistica24h()}
+function formatarDistancia(metros){metros=Math.max(0,Math.round(Number(metros)||0));return metros.toLocaleString('pt-BR')+' m'}
+function distanciaCargaEquipamento(e){const etapa=etapaLogistica(e),r=lerDistanciasCarga()[String(e.cod)];if(!r)return'';const atual=Number(r.metros)||0,inicio=inicioDiaOperacional(),amostras=(Array.isArray(r.historico)?r.historico:[]).filter(distanciaCargaValida).slice(0,10),total=amostras.reduce((s,a)=>s+(Number(a.metros)||0),0),media=amostras.length?total/amostras.length:0,tempos=amostras.filter(a=>Number(a.minutos)>0),mediaTempo=tempos.length?tempos.reduce((s,a)=>s+Number(a.minutos),0)/tempos.length:0;if(!r.ativo&&!amostras.length)return'';const principal=r.ativo?'Percurso atual: '+formatarDistancia(atual):'Último válido: '+formatarDistancia(amostras[0]?.metros||0)+(amostras[0]?.minutos?' em '+formatarMinutos(amostras[0].minutos):''),acumulado=amostras.length?' · Média '+amostras.length+'/10: '+formatarDistancia(media)+(mediaTempo?' / '+formatarMinutos(mediaTempo):''):'';return`<div class="distancia-carga ${!r.ativo&&etapa==='basculamento'?'finalizada':''}">📏 ${principal}${acumulado}</div>`}
+function distanciaCargaValida(a){const metros=Number(a?.metros),minutos=Number(a?.minutos);if(!Number.isFinite(metros)||metros<100||metros>50000)return false;if(!Number.isFinite(minutos)||minutos<=0||minutos>60)return false;return metros/minutos<=834}
+function resumoCiclosCarregados(itens){const dados=lerDistanciasCarga(),inicio=inicioDiaOperacional(),amostras=itens.flatMap(e=>{const r=dados[String(e.cod)];return Array.isArray(r?.historico)?r.historico:[]}).filter(a=>distanciaCargaValida(a)).sort((a,b)=>(b.fim||0)-(a.fim||0)).slice(0,10),totalMetros=amostras.reduce((s,a)=>s+Number(a.metros),0),confiavel=amostras.length>=MIN_CICLOS_DISTANCIA;return{ciclos:amostras.length,confiavel,mediaMetros:confiavel?totalMetros/amostras.length:0,mediaMinutos:confiavel?amostras.reduce((s,a)=>s+Number(a.minutos),0)/amostras.length:null,totalMetros,amostras}}
+const CHAVE_GRAFICOS_LOGISTICA='qf-graficos-logistica-24h-v1';
+function arquivarLogistica24h(){const agora=Date.now(),limite=agora-86400000;let arquivo=[];try{arquivo=JSON.parse(localStorage.getItem(CHAVE_GRAFICOS_LOGISTICA)||'[]');if(!Array.isArray(arquivo))arquivo=[]}catch(_){}const novos=[];for(const [codigo,r] of Object.entries(lerTemposLogisticos()))for(const h of r.historico||[])if(duracaoLogisticaValida(h.etapa,Number(h.duracao)))novos.push({...h,codigo,fonte:'tempo'});for(const [codigo,r] of Object.entries(lerDistanciasCarga()))for(const h of r.historico||[])if(distanciaCargaValida(h))novos.push({...h,codigo,etapa:'carregado',fonte:'gps'});const mapa=new Map();for(const h of [...arquivo,...novos])if(Number(h.fim)>=limite&&Number(h.fim)<=agora&&(h.fonte==='gps'?distanciaCargaValida(h):duracaoLogisticaValida(h.etapa,Number(h.duracao))))mapa.set([h.fonte,h.codigo,h.etapa,h.fim].join('|'),h);arquivo=[...mapa.values()].sort((a,b)=>a.fim-b.fim);try{localStorage.setItem(CHAVE_GRAFICOS_LOGISTICA,JSON.stringify(arquivo))}catch(_){}return arquivo}
+function graficoLogistico24h(chave,metragem=false){const agora=Date.now(),inicio=inicioDiaOperacional(),arquivo=arquivarLogistica24h(),eventos=arquivo.filter(h=>String(h.frente)===String(frenteAtual)&&Number(h.fim)>=inicio&&Number(h.fim)<=agora&&h.etapa===chave&&h.fonte===(metragem?'gps':'tempo')),bins=Array.from({length:24},()=>[]);for(const h of eventos){const i=Math.floor((h.fim-inicio)/3600000);if(i>=0&&i<24)bins[i].push(Number(metragem?h.metros:h.duracao))}const medias=bins.map(a=>a.length?a.reduce((s,v)=>s+v,0)/a.length:null),max=Math.max(metragem?100:7,...medias.filter(v=>v!==null)),cor=metragem?'#6ad4e6':({vazio:'#65c6ed',carregamento:'#e3b34a',carregado:'#b297ff',basculamento:'#51df9b'}[chave]),x=i=>48+i*590/23,y=v=>112-v/max*86;let desenho='';for(let i=0;i<24;i++){if(medias[i]===null)continue;if(i&&medias[i-1]!==null)desenho+='<line x1="'+x(i-1)+'" y1="'+y(medias[i-1])+'" x2="'+x(i)+'" y2="'+y(medias[i])+'" stroke="'+cor+'" stroke-width="2"/>';const hora=new Date(inicio+i*3600000).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});desenho+='<circle cx="'+x(i)+'" cy="'+y(medias[i])+'" r="3" fill="'+cor+'"><title>'+hora+' · '+(metragem?formatarDistancia(medias[i]):formatarMinutos(medias[i]))+' · '+bins[i].length+' amostras</title></circle>'}for(const i of [0,6,12,18,23])desenho+='<text x="'+x(i)+'" y="132" text-anchor="middle" fill="#8aa69d" font-size="8">'+new Date(inicio+i*3600000).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+'</text>';for(const v of [0,max/2,max])desenho+='<line x1="48" x2="638" y1="'+y(v)+'" y2="'+y(v)+'" stroke="#ffffff12"/><text x="42" y="'+(y(v)+3)+'" text-anchor="end" fill="#8aa69d" font-size="8">'+Math.round(v)+'</text>';const nome=metragem?'Metragem do percurso carregado':'Tempo · '+({vazio:'Deslocamento vazio',carregamento:'Carregamento',carregado:'Deslocamento carregado',basculamento:'Basculamento'}[chave]);return '<div style="margin:7px 0;padding:9px;border:1px solid #284b44;border-radius:10px;background:#0b1c20"><div style="display:flex;justify-content:space-between;color:#b6d4c7;font-size:9px;font-weight:800"><span>'+nome+'</span><span>Dia operacional · desde 06h · '+(metragem?'metros':'minutos')+'</span></div><svg role="img" aria-label="'+nome+' desde as 06h do dia operacional" viewBox="0 0 660 145" style="display:block;width:100%;height:auto">'+desenho+'</svg><div style="color:#7a998b;font-size:7px">'+(eventos.length?'Média por hora · '+eventos.length+' amostras válidas. Horas sem amostras ficam sem linha.':'Sem registros válidos disponíveis desde as 06h; coletando sem preencher lacunas.')+'</div></div>'}
+
+function renderHistoricoLogistico(itens){const el=document.getElementById('logistica-eventos'),box=el?.closest('.logistica-historico');if(!el||!box)return;box.classList.toggle('aberto',!!etapaHistoricoAberta);if(!etapaHistoricoAberta){el.innerHTML='';return}const inicio=inicioDiaOperacional(),codigos=new Set(itens.map(e=>String(e.cod))),nomes={vazio:'Desloc. vazio',carregamento:'Carregamento',carregado:'Desloc. carregado',basculamento:'Basculamento'};box.querySelector('.logistica-historico-titulo span:first-child').textContent='Histórico · '+nomes[etapaHistoricoAberta];const dados=lerTemposLogisticos();let eventos=resumoTempoEtapa(itens,etapaHistoricoAberta).amostras;el.innerHTML=graficoLogistico24h(etapaHistoricoAberta)+(etapaHistoricoAberta==='carregado'?graficoLogistico24h('carregado',true):'')+(eventos.length?eventos.map(h=>`<div class="logistica-evento"><b>${h.codigo}</b><span>${nomes[h.etapa]||h.etapa}${h.metros?' · '+formatarDistancia(h.metros):''}</span><em>${formatarMinutos(h.duracao)}</em><span>${new Date(h.fim).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span></div>`).join(''):'<div class="logistica-sem-historico">Nenhuma amostra válida registrada nesta etapa.</div>')}
+function alternarHistoricoEtapa(chave){etapaHistoricoAberta=etapaHistoricoAberta===chave?null:chave;renderTemposLogisticos()}
+const CHAVE_KPI_LOGISTICA='qf-kpi-logistica-validos-v3';
+function manterResumoLogistico(chave,resumo,distancias){let cache={};try{cache=JSON.parse(localStorage.getItem(CHAVE_KPI_LOGISTICA)||'{}')||{}}catch(_){}const id=String(frenteAtual)+'|'+chave+(chave==='carregado'?'|apontamento':'');if(resumo.media!==null&&duracaoLogisticaValida(chave,resumo.media)){const registro={media:resumo.media,ocorrencias:resumo.ocorrencias,atualizado:Date.now()};if(chave==='carregado'&&Number.isFinite(cache[id]?.mediaMetros)){registro.mediaMetros=cache[id].mediaMetros;registro.ciclosMetros=cache[id].ciclosMetros}if(chave==='carregado'&&distancias?.confiavel){registro.mediaMetros=distancias.mediaMetros;registro.ciclosMetros=distancias.ciclos}cache[id]=registro;try{localStorage.setItem(CHAVE_KPI_LOGISTICA,JSON.stringify(cache))}catch(_){}return{...registro,retido:false}}const anterior=cache[id];return anterior&&duracaoLogisticaValida(chave,anterior.media)?{...anterior,retido:true}:resumo}
+function resumosLogisticosMantidos(itens,distancias){return Object.fromEntries(['vazio','carregamento','carregado','basculamento'].map(chave=>[chave,manterResumoLogistico(chave,resumoTempoEtapa(itens,chave),distancias)]))}
+function renderTotalLogistico(itens,distancias){const el=document.getElementById('logistica-total');if(!el)return;const resumos=Object.values(resumosLogisticosMantidos(itens,distancias)),completo=resumos.every(r=>r.media!==null&&Number.isFinite(r.media)),total=completo?resumos.reduce((s,r)=>s+r.media,0):null;let cache={};try{cache=JSON.parse(localStorage.getItem('qf-total-logistico-validos-v1')||'{}')||{}}catch(_){}const id=String(frenteAtual),valido=total!==null&&total<=60;if(valido){cache[id]={total,atualizado:Date.now()};try{localStorage.setItem('qf-total-logistico-validos-v1',JSON.stringify(cache))}catch(_){}}const anterior=cache[id],mantido=!valido&&anterior&&Number.isFinite(anterior.total)&&anterior.total<=60;el.classList.toggle('incompleto',!valido&&!mantido);el.querySelector('strong').textContent=valido?formatarMinutos(total):mantido?formatarMinutos(anterior.total):completo?'Ciclo fora do limite de 60 min':'Coletando as quatro etapas';el.querySelector('small').textContent=mantido?'Último total válido mantido':completo&&!valido?'Apontamentos incompatíveis — não usados no total':resumos.some(r=>r.retido)?'Inclui última média válida mantida':'Soma das médias das quatro etapas · limite 60 min'}
+const TEMPO_ENCHIMENTO_TRANSBORDO=28;
+
+function equipamentoRecenteCapacidade(e){
+  return e.leitura instanceof Date&&!isNaN(e.leitura)&&idadeMinutos(e.leitura)<=10;
+}
+function transbordoDaFrente(e){
+  return tipoEquipamento(e)==='transbordo'||/transbord/.test(normalizar([e.classe,e.modelo].join(' ')));
+}
+function transbordoProdutivoCapacidade(e){
+  if(!equipamentoRecenteCapacidade(e)||!transbordoDaFrente(e))return false;
+  const st=estadoEq(e).chave;
+  return st!=='manutencao'&&(st==='produtivo'||!!etapaLogistica(e));
+}
+function colhedoraProdutivaCapacidade(e){
+  return equipamentoRecenteCapacidade(e)&&tipoEquipamento(e)==='colhedora'&&estadoEq(e).chave==='produtivo';
+}
+function cicloLogisticoFrente(itens){
+  const distancias=resumoCiclosCarregados(itens);
+  const resumos=Object.values(resumosLogisticosMantidos(itens,distancias));
+  const completo=resumos.every(r=>Number.isFinite(r.media)&&r.media>0);
+  const soma=completo?resumos.reduce((s,r)=>s+r.media,0):null;
+  return{
+    ciclo:soma!==null&&soma>0?soma:null,
+    soma,
+    acimaLimite:soma!==null&&soma>60,
+    resumos,
+    distancias
+  };
+}
+function calculoCapacidadeAutomatica(){
+  const itens=[...new Map(
+    equipamentos.filter(e=>e.frente===frenteAtual).map(e=>[String(e.cod),e])
+  ).values()];
+  const colhedoras=itens.filter(colhedoraProdutivaCapacidade);
+  const transbordos=itens.filter(transbordoProdutivoCapacidade);
+  const cadastrados=transbordos
+    .map(e=>({e,cap:cubicagemTransbordo(e.cod)}))
+    .filter(x=>Number.isFinite(x.cap)&&x.cap>0);
+  const semCadastro=transbordos.filter(e=>!cubicagemTransbordo(e.cod));
+  const mediaCub=cadastrados.length
+    ?cadastrados.reduce((s,x)=>s+x.cap,0)/cadastrados.length
+    :null;
+
+  // Cada colhedora enche 1 transbordo em 28 min.
+  // Para as colhedoras usa a média das cubicagens dos transbordos produtivos cadastrados.
+  const capCol=colhedoras.length&&mediaCub
+    ?colhedoras.length*(60/TEMPO_ENCHIMENTO_TRANSBORDO)*mediaCub
+    :null;
+
+  const log=cicloLogisticoFrente(itens);
+
+  // Nos transbordos, mantém a cubicagem individual de cada conjunto.
+  // O ciclo da frente vem dos quatro tempos logísticos.
+  const capTrans=log.ciclo&&transbordos.length&&cadastrados.length===transbordos.length
+    ?cadastrados.reduce((s,x)=>s+(x.cap*60/log.ciclo),0)
+    :null;
+
+  const entrega=capCol!==null&&capTrans!==null?Math.min(capCol,capTrans):null;
+  const gargalo=entrega===null?'Aguardando dados'
+    :Math.abs(capCol-capTrans)<0.05?'Equilibrado'
+    :capCol<capTrans?'Colhedoras':'Transbordos';
+
+  return{itens,colhedoras,transbordos,cadastrados,semCadastro,mediaCub,capCol,capTrans,entrega,gargalo,...log};
+}
+function renderCapacidadeFrente(){
+  if(!frenteAtual)return;
+  let painel=document.getElementById('capacidade-frente');
+  if(!painel){
+    painel=document.createElement('section');
+    painel.id='capacidade-frente';
+    painel.className='logistica-card';
+    painel.style.padding='12px';
+    document.getElementById('logistica-card').before(painel);
+  }
+
+  const r=calculoCapacidadeAutomatica();
+  const fmt=v=>v===null?'Aguardando dados':v.toLocaleString('pt-BR',{maximumFractionDigits:1})+' t/h';
+  const fmtT=v=>v===null?'—':v.toLocaleString('pt-BR',{maximumFractionDigits:2})+' t';
+  const cicloTexto=r.ciclo!==null
+    ?formatarMinutos(r.ciclo)+(r.acimaLimite?' ⚠':'')
+    :'Coletando';
+  const faltando=r.semCadastro.map(e=>String(e.cod)).join(', ');
+
+  painel.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;color:#eafff3;font-weight:800;font-size:12px">
+      <span>⚙ Capacidade automática da frente</span>
+      <span style="color:#64eaa6;font-size:9px">SEM PREENCHIMENTO DIÁRIO</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px;margin-top:12px">
+      ${[
+        ['Colhedoras produtivas',String(r.colhedoras.length)],
+        ['Transbordos produtivos',String(r.transbordos.length)],
+        ['Cubicagem média',fmtT(r.mediaCub)],
+        ['Ciclo logístico',cicloTexto],
+        ['Cap. colhedoras',fmt(r.capCol)],
+        ['Cap. transbordos',fmt(r.capTrans)],
+        ['ENTREGA POSSÍVEL',fmt(r.entrega)],
+        ['Gargalo',r.gargalo]
+      ].map(([nome,valor])=>`
+        <div style="padding:10px;border:1px solid #2b6551;border-radius:9px;background:#0b241f">
+          <span style="display:block;font-size:8px;color:#93bba7">${nome}</span>
+          <strong style="display:block;margin-top:5px;font-size:${nome==='Gargalo'?'14':'17'}px;color:#73f6b0">${valor}</strong>
+        </div>`).join('')}
+    </div>
+
+    <div style="margin-top:10px;padding:9px;border:1px solid ${faltando?'#765b2e':'#2b6551'};border-radius:9px;background:${faltando?'#30250d':'#0b241f'};font-size:9px;color:${faltando?'#ffd36a':'#a8cbbb'};line-height:1.5">
+      ${faltando
+        ?`⚠ Falta cadastrar a cubicagem no ADM: ${faltando}. Libere o ADM e clique diretamente no cartão do transbordo.`
+        :r.transbordos.length
+          ?`✓ Todos os ${r.transbordos.length} transbordos produtivos possuem cubicagem cadastrada.`
+          :'Aguardando transbordos produtivos.'}
+    </div>
+
+    <details style="margin-top:4px;color:#739887;font-size:6px">
+      <summary style="cursor:pointer;color:#7fae9a">Como é calculado</summary>
+      <div style="padding-top:4px;line-height:1.35">
+        Colhedoras = quantidade produtiva × (60 ÷ ${TEMPO_ENCHIMENTO_TRANSBORDO}) × cubicagem média dos transbordos produtivos.
+        Transbordos = soma de cada cubicagem individual × 60 ÷ ciclo logístico.
+        Ciclo acima de 60 min continua sendo calculado e aparece apenas como alerta.
+        Entrega possível = menor valor entre colhedoras e transbordos.
+        Manutenção não entra no cálculo. Leituras AxiAgro consideradas: até 10 min.
+      </div>
+    </details>`;
+}
+
+
+function historicoMetragemHtml(itens){
+  const d=resumoCiclosCarregados(itens);
+  const amostras=d.amostras||[];
+  if(!amostras.length){
+    return `<div style="margin-top:6px;padding:7px;border:1px dashed #355966;border-radius:8px;color:#7ea3ad;font-size:7px">📏 Histórico de metragem: aguardando o primeiro ciclo carregado válido.</div>`;
+  }
+  const mediaTodas=amostras.reduce((s,a)=>s+Number(a.metros||0),0)/amostras.length;
+  return `<div style="margin-top:7px;padding:8px;border:1px solid #315c69;border-radius:9px;background:#0b2026">
+    <div style="display:flex;justify-content:space-between;gap:6px;align-items:center;margin-bottom:6px">
+      <b style="font-size:8px;color:#dffaff">📏 HISTÓRICO DE METRAGEM</b>
+      <span style="font-size:7px;color:#76d9e9">${amostras.length}/10 válidas · média ${formatarDistancia(mediaTodas)}</span>
+    </div>
+    <div style="display:grid;gap:4px">
+      ${amostras.map((a,i)=>`<div style="display:grid;grid-template-columns:22px 1fr auto;gap:6px;align-items:center;padding:5px 6px;border-radius:6px;background:#102a31">
+        <span style="font-size:7px;color:#7298a2">#${i+1}</span>
+        <span style="font-size:7px;color:#a9cbd2">${a.codigo||'TRB'} · ${a.fim?new Date(a.fim).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</span>
+        <strong style="font-size:9px;color:#75e7f5">${formatarDistancia(a.metros)}</strong>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderTemposLogisticos(){const grade=document.getElementById('logistica-grade');if(!grade)return;const etapas=[['vazio','↗','Desloc. vazio'],['carregamento','▣','Carregamento'],['carregado','↘','Desloc. carregado'],['basculamento','⌄','Basculamento']],itens=equipamentos.filter(e=>e.frente===frenteAtual),distancias=resumoCiclosCarregados(itens);renderTotalLogistico(itens,distancias);renderCapacidadeFrente();grade.innerHTML=etapas.map(([chave,icone,nome])=>{const ativos=itens.filter(e=>etapaLogistica(e)===chave),historico=manterResumoLogistico(chave,resumoTempoEtapa(itens,chave),distancias),temMedia=historico.media!==null,metragem=chave==='carregado'?((Number.isFinite(historico.mediaMetros)?`<div class="logistica-metragem"><span class="metragem-icone">↔</span><span class="metragem-valor">${formatarDistancia(historico.mediaMetros)}</span><small>Média GPS separada · ${historico.ciclosMetros}/10</small></div>`:`<div class="logistica-metragem"><span class="metragem-icone">↔</span><span class="metragem-valor" style="font-size:9px!important">${distancias.amostras?.length?formatarDistancia(distancias.amostras[0].metros):'Metragem'}</span><small style="white-space:normal!important;line-height:1.4">${distancias.amostras?.length?'Última válida · média oficial após '+MIN_CICLOS_DISTANCIA+' ciclos':'Aguardando GPS válido · 0/'+MIN_CICLOS_DISTANCIA+' ciclos'}</small></div>`)+historicoMetragemHtml(itens)):'';let detalhe=historico.retido?'Última média válida mantida · '+new Date(historico.atualizado).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):temMedia?'Últimas '+historico.ocorrencias+'/10 amostras válidas':'Sem ciclo válido concluído';if(ativos.length){const tempos=ativos.map(e=>minutosApontamento(e)).filter(v=>v!==null),mediaAtual=tempos.length?tempos.reduce((a,b)=>a+b,0)/tempos.length:null;detalhe+=' · '+ativos.length+' em andamento'+(mediaAtual!==null?' há '+formatarMinutos(mediaAtual):'')}return`<div class="logistica-item etapa-${chave} ${!temMedia?'sem-dado':''} ${etapaHistoricoAberta===chave?'selecionado':''}" role="button" tabindex="0" onclick="alternarHistoricoEtapa('${chave}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();alternarHistoricoEtapa('${chave}')}" aria-expanded="${etapaHistoricoAberta===chave}"><span>${icone} ${nome}</span><strong>${temMedia?formatarMinutos(historico.media):'Coletando'}</strong>${metragem}<small>${detalhe}</small></div>`}).join('');renderHistoricoLogistico(itens)}
+function alternarLogistica(){const card=document.getElementById('logistica-card'),btn=card?.querySelector('.logistica-topo');if(!card||!btn)return;const aberto=card.classList.toggle('aberto');btn.setAttribute('aria-expanded',String(aberto));btn.querySelector('.logistica-toggle span').textContent=aberto?'Ocultar':'Exibir'}
 function extrairCodigosTipos(payload){const lista=Array.isArray(payload)?payload:(payload.tipos||payload.data||payload.resultado||payload.results||[]),chaves=['cod_tipo_utilizacao','cod_tipo','codigo','cod','id','value'];return[...new Set((Array.isArray(lista)?lista:[]).map(item=>{if(typeof item==='number'||/^\d+$/.test(String(item)))return Number(item);if(!item||typeof item!=='object')return null;for(const [chave,valor] of Object.entries(item)){if(chaves.includes(normalizar(chave))&&/^\d+$/.test(String(valor)))return Number(valor)}return null}).filter(n=>Number.isFinite(n)))]}
+async function fetchComLimite(url,opcoes={},limite=12000){const controle=new AbortController(),timer=setTimeout(()=>controle.abort(),limite);try{return await fetch(url,{...opcoes,signal:controle.signal})}finally{clearTimeout(timer)}}
 
 async function carregar(silencioso=false){
-  if(carregandoAgora)return;carregandoAgora=true;
+  const btnAtualizar=document.getElementById('btn-atualizar');if(carregandoAgora){if(!silencioso)document.getElementById('atualizacao').textContent='Atualização já está em andamento...';return}carregandoAgora=true;if(btnAtualizar){btnAtualizar.disabled=true;btnAtualizar.textContent='↻ Atualizando...'}
   if(!silencioso){document.getElementById('atualizacao').textContent='Atualizando...';document.getElementById('grade').innerHTML='<div class="vazio">Buscando equipamentos...</div>'}
   try{
     const tiposPadrao='tipo[]=11&tipo[]=12&tipo[]=123&tipo[]=126&tipo[]=31&tipo[]=51&tipo[]=52&tipo[]=53&tipo[]=54&tipo[]=61&tipo[]=101&tipo[]=102&tipo[]=103&tipo[]=104&tipo[]=106&tipo[]=107&tipo[]=109&tipo[]=1010&tipo[]=1011&tipo[]=1013&tipo[]=1014&tipo[]=1024&tipo[]=1025&tipo[]=1026&tipo[]=141&tipo[]=167&tipo[]=169&tipo[]=2323&tipo[]=273&tipo[]=281&tipo[]=291&tipo[]=3131';
     let tipos=tiposPadrao;
-    try{const rt=await fetch(API+'/tipos',{headers:{Authorization:'Bearer '+token}});if(rt.ok){const codigos=extrairCodigosTipos(await rt.json());if(codigos.length)tipos=codigos.map(c=>'tipo[]='+encodeURIComponent(c)).join('&')}}catch(_){}
+    try{const rt=await fetchComLimite(API+'/tipos',{headers:{Authorization:'Bearer '+token}},8000);if(rt.ok){const codigos=extrairCodigosTipos(await rt.json());if(codigos.length)tipos=codigos.map(c=>'tipo[]='+encodeURIComponent(c)).join('&')}}catch(_){}
     const url=API+'/dashboard?'+tipos+'&atividades[]=0&eqpto=';
-    const r=await fetch(url,{headers:{Authorization:'Bearer '+token}});
+    const r=await fetchComLimite(url,{headers:{Authorization:'Bearer '+token}},15000);
     if(r.status===401||r.status===403){localStorage.removeItem('qf-token');token='';document.getElementById('app').style.display='none';document.getElementById('inicio').style.display='grid';throw new Error('Sua sessão expirou. Entre novamente.')}
     if(!r.ok)throw new Error('Falha na consulta: '+r.status);
     const data=await r.json();
@@ -237,9 +1027,9 @@ async function carregar(silencioso=false){
       API+'/dashboard?atividades[]=0&eqpto=',
       API+'/dashboard?tipo[]=0&atividades[]=0&eqpto='
     ];
-    for(const complementar of consultasComplementares){try{const resposta=await fetch(complementar,{headers:{Authorization:'Bearer '+token}});if(resposta.ok){const complemento=await resposta.json();for(const eq of (complemento.alocacao||[])){const chave=String(eq.cod_equipamento||'')+'|'+resolverFrente(eq);if(!alocacao.some(x=>String(x.cod_equipamento||'')+'|'+resolverFrente(x)===chave))alocacao.push(eq)}}}catch(_){}}
+    const complementos=await Promise.all(consultasComplementares.map(async consulta=>{try{const resposta=await fetchComLimite(consulta,{headers:{Authorization:'Bearer '+token}},10000);return resposta.ok?await resposta.json():null}catch(_){return null}}));for(const complemento of complementos.filter(Boolean)){for(const eq of (complemento.alocacao||[])){const chave=String(eq.cod_equipamento||'')+'|'+resolverFrente(eq);if(!alocacao.some(x=>String(x.cod_equipamento||'')+'|'+resolverFrente(x)===chave))alocacao.push(eq)}}
     // Consulta pontual complementar: a frente e a operação continuam vindo da Axiagro.
-    for(const consulta180824 of [API+'/dashboard?eqpto=180824',API+'/dashboard?atividades[]=0&eqpto=180824',API+'/dashboard?'+tipos+'&eqpto=180824']){try{const resposta=await fetch(consulta180824,{headers:{Authorization:'Bearer '+token}});if(resposta.ok){const complemento=await resposta.json();alocacao=alocacao.concat(complemento.alocacao||complemento.equipamentos||complemento.data||[])}}catch(_){}}
+    const extras180824=await Promise.all([API+'/dashboard?eqpto=180824',API+'/dashboard?atividades[]=0&eqpto=180824',API+'/dashboard?'+tipos+'&eqpto=180824'].map(async consulta=>{try{const resposta=await fetchComLimite(consulta,{headers:{Authorization:'Bearer '+token}},10000);return resposta.ok?await resposta.json():null}catch(_){return null}}));for(const complemento of extras180824.filter(Boolean))alocacao=alocacao.concat(complemento.alocacao||complemento.equipamentos||complemento.data||[]);
     const todosConvertidos=alocacao.map(converterEquipamento);
     const porEquipamento=new Map();
     for(const e of todosConvertidos){const chave=codigoBaseMobi(e.cod)||String(e.cod||''),anterior=porEquipamento.get(chave),pontuar=x=>(x.frente?4:0)+(x.atividade?3:0)+(x.leitura?2:0)+(x.lat&&x.lng?1:0);if(!anterior||pontuar(e)>pontuar(anterior))porEquipamento.set(chave,e)}
@@ -247,13 +1037,64 @@ async function carregar(silencioso=false){
     for(const [nome,mobi] of Object.entries(MOBI_DUPLICADOS)){porEquipamento.set('mobi-duplicado-'+nome,{cod:nome,modelo:'Dispositivo MobiControl',nome:'Cadastro separado preservado',classe:'DISPOSITIVO MOBICONTROL',frente:'SEM FRENTE AXIAGRO',vel:0,lat:null,lng:null,atividade:null,parada:null,inicio:null,leitura:new Date(mobi.seen),online:mobi.online})}
     for(const [codigo,e] of axiagroConfirmados)porEquipamento.set(codigo,e);
     const convertidos=[...porEquipamento.values()];
-    equipamentos=convertidos.filter(e=>e.frente&&equipamentoVisivel(e));
+    equipamentos=convertidos.filter(e=>e.frente&&equipamentoVisivel(e));atualizarTemposLogisticos();atualizarDistanciasCarga();
     frentesEncontradas=[...new Set(equipamentos.map(e=>e.frente).filter(Boolean))].sort(compararGrupos);
-    registrarHistoricoConexao();renderFrentes();if(document.getElementById('visao-equip').style.display==='block'){renderOperacoes();renderTipos();renderEquipamentos()}document.getElementById('atualizacao').textContent='Tempo real · '+equipamentos.length+' equipamentos · '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  }catch(e){if(!silencioso)document.getElementById('grade').innerHTML='<div class="erro">⚠ '+e.message+'</div>';document.getElementById('atualizacao').textContent='Falha na atualização automática'}finally{carregandoAgora=false}
+    registrarHistoricoConexao();renderFrentes();if(document.getElementById('visao-equip').style.display==='block'){renderTemposLogisticos();renderOperacoes();renderTipos();renderEquipamentos()}document.getElementById('atualizacao').textContent='Tempo real · '+equipamentos.length+' equipamentos · '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){const mensagem=e.name==='AbortError'?'A Axiagro demorou para responder. Tente novamente.':e.message;if(!silencioso)document.getElementById('grade').innerHTML='<div class="erro">⚠ '+mensagem+'</div>';document.getElementById('atualizacao').textContent=e.name==='AbortError'?'Tempo limite da Axiagro · tente atualizar novamente':'Falha na atualização automática'}finally{carregandoAgora=false;if(btnAtualizar){btnAtualizar.disabled=false;btnAtualizar.textContent='↻ Atualizar'}}
 }
 
+
+function calculoCapacidadeDaFrente(frente){
+  const numeroFrente=v=>{
+    const n=parseInt(String(v??'').replace(/\D/g,''),10);
+    return Number.isFinite(n)?n:null;
+  };
+  const itens=[...new Map(
+    equipamentos
+      .filter(e=>numeroFrente(e.frente)===numeroFrente(frente))
+      .map(e=>[String(e.cod),e])
+  ).values()];
+  const colhedoras=itens.filter(colhedoraProdutivaCapacidade);
+  const transbordos=itens.filter(transbordoProdutivoCapacidade);
+  const cadastrados=transbordos.map(e=>({e,cap:cubicagemTransbordo(e.cod)})).filter(x=>Number.isFinite(x.cap)&&x.cap>0);
+  const mediaCub=cadastrados.length?cadastrados.reduce((s,x)=>s+x.cap,0)/cadastrados.length:null;
+  const capCol=colhedoras.length&&mediaCub?colhedoras.length*(60/TEMPO_ENCHIMENTO_TRANSBORDO)*mediaCub:null;
+  const log=cicloLogisticoFrente(itens);
+  const capTrans=log.ciclo&&transbordos.length&&cadastrados.length===transbordos.length?cadastrados.reduce((s,x)=>s+(x.cap*60/log.ciclo),0):null;
+  const entrega=capCol!==null&&capTrans!==null?Math.min(capCol,capTrans):null;
+  const gargalo=entrega===null?'Aguardando':Math.abs(capCol-capTrans)<0.05?'Equilibrado':capCol<capTrans?'Colhedoras':'Transbordos';
+  return{entrega,gargalo};
+}
+function renderResumoEntregas(){
+  const grade=document.getElementById('resumo-entregas-grade');if(!grade)return;
+
+  // Resumo inicial: somente frentes de colheita 02 a 08, sempre nessa ordem.
+  const frentes=[2,3,4,5,6,7,8];
+  const resultados=frentes.map(frente=>({frente,...calculoCapacidadeDaFrente(frente)}));
+  const validas=resultados.filter(r=>r.entrega!==null);
+  const total=validas.reduce((s,r)=>s+r.entrega,0);
+
+  let totalBox=document.getElementById('resumo-entregas-total');
+  if(!totalBox){
+    totalBox=document.createElement('div');
+    totalBox.id='resumo-entregas-total';
+    totalBox.className='resumo-entregas-total';
+    grade.parentElement.insertBefore(totalBox,grade);
+  }
+  totalBox.innerHTML=`<span>Entrega somada das frentes calculadas</span><strong>${validas.length?total.toLocaleString('pt-BR',{maximumFractionDigits:1})+' t/h':'Aguardando'}</strong>`;
+
+  grade.innerHTML=resultados.map(r=>{
+    const numero=String(r.frente).padStart(2,'0');
+    return `<div class="resumo-entrega-item" onclick="abrirFrente((equipamentos.find(e=>{const n=parseInt(String(e.frente??'').replace(/\\D/g,''),10);return n===${r.frente}})||{}).frente??${r.frente})">
+      <div class="re-frente">FRENTE ${numero}</div>
+      ${r.entrega!==null
+        ?`<div class="re-valor">${r.entrega.toLocaleString('pt-BR',{maximumFractionDigits:1})} t/h</div><div class="re-gargalo">Limitante: <b>${r.gargalo}</b></div>`
+        :`<div class="re-pendente">Aguardando dados</div><div class="re-gargalo">Ciclo ou cubicagem incompleto</div>`}
+    </div>`;
+  }).join('');
+}
 function renderFrentes(){
+  renderResumoEntregas();
   renderResumoConexao();
   renderGraficoConexao();
   if(filtroConexaoResumoAtual)renderListaConexao(filtroConexaoResumoAtual);
@@ -263,20 +1104,35 @@ function renderFrentes(){
 function renderResumoConexao(){const base=todosDispositivosMobi(),total=base.length,status=base.map(statusConexao),online=status.filter(s=>s.valor===true).length,offline=status.filter(s=>s.valor===false).length,semStatus=status.filter(s=>s.valor===null).length,diferenca=base.filter(e=>e.modelo==='Dispositivo MobiControl').length,axiagro=total-diferenca,pct=total?Math.round(online*100/total):0,el=document.getElementById('resumo-conexao');if(!el)return;el.innerHTML=`<div class="kpi-conexao destaque-online"><div class="anel-online" style="--pct:${pct}"><span>${pct}%</span></div><div><small>Conexão da frota</small><strong>Equipamentos online</strong><p>${online} de ${total} equipamentos com comunicação ativa</p></div></div><button class="kpi-conexao online clicavel" onclick="mostrarEquipamentosConexao('online')"><small>Online</small><strong>${online}</strong><span class="kpi-seta">›</span></button><button class="kpi-conexao offline clicavel" onclick="mostrarEquipamentosConexao('offline')"><small>Offline confirmado</small><strong>${offline}</strong><span class="kpi-seta">›</span></button><button class="kpi-conexao sem-status clicavel" onclick="mostrarEquipamentosConexao('sem-status')"><small>Sem confirmação</small><strong>${semStatus}</strong><span class="kpi-seta">›</span></button><div class="fonte-dados"><span class="axi"><b>Inf. Axiagro:</b> ${axiagro} monitorados · frente, operação, atividade e localização</span><span class="mobi"><b>Inf. MobiControl:</b> ${total} cadastrados · online/offline e bateria</span><button class="botao-diferenca" onclick="mostrarSemCorrespondencia()">${verificacaoAxiagroConcluida?'Confirmados':'Verificar'}: ${diferenca} ${verificacaoAxiagroConcluida?'sem correspondência':'possíveis diferenças'} <span aria-hidden="true">›</span></button></div>`}
 function mostrarEquipamentosConexao(tipo){filtroConexaoResumoAtual=tipo;document.getElementById('grade').style.display='none';document.getElementById('resultado-conexao').classList.add('ativo');renderListaConexao(tipo);document.getElementById('resultado-conexao').scrollIntoView({behavior:'smooth',block:'start'})}
 function voltarFrentesConexao(){filtroConexaoResumoAtual=null;document.getElementById('resultado-conexao').classList.remove('ativo');document.getElementById('grade').style.display='grid'}
-function renderListaConexao(tipo){const mapaValor={online:true,offline:false,'sem-status':null},valor=mapaValor[tipo],nomes={online:'Equipamentos online',offline:'Offline confirmado pelo MobiControl','sem-status':'Sem confirmação de conexão'},itens=todosDispositivosMobi().filter(e=>statusConexao(e).valor===valor).sort((a,b)=>compararGrupos(a.frente,b.frente)||String(a.cod).localeCompare(String(b.cod))),titulo=document.getElementById('titulo-conexao'),lista=document.getElementById('lista-conexao');titulo.textContent=(nomes[tipo]||'Equipamentos')+' · '+itens.length;lista.innerHTML=itens.map(e=>{const st=estadoEq(e),con=statusConexao(e),fazendo=e.parada||e.atividade||(e.vel>.1?'Em deslocamento':'Sem atividade apontada'),codigo=String(e.cod).replace(/\D/g,'');return`<article id="conexao-${codigo}" class="equip ${st.chave}"><div class="equip-info"><span class="frente-tag">${nomeFrente(e.frente)}</span><b>${e.cod}</b><div>${e.modelo} · ${e.nome}</div><span class="status-tag ${st.chave}">${st.nome}</span><span class="conexao-tag ${con.c}" title="${con.fonte}">${con.n}</span>${badgeBateria(e)}<div class="atividade">${fazendo}</div><div class="tempo-apontamento">⏱ ${tempoApontamento(e)}</div><div class="leitura">🕐 ${horaLeitura(e.leitura)}</div></div><button class="local" aria-label="Traçar rota até o equipamento ${e.cod}" ${e.lat&&e.lng?'':'disabled'} onclick="localizar(${e.lat||'null'},${e.lng||'null'})"><span class="pin" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span class="local-text">Localizar</span><span class="local-arrow" aria-hidden="true">›</span></button>${botaoMobi(e)}</article>`}).join('')||'<div class="vazio">Nenhum equipamento neste status.</div>'}
+function renderListaConexao(tipo){const mapaValor={online:true,offline:false,'sem-status':null},valor=mapaValor[tipo],nomes={online:'Equipamentos online',offline:'Offline confirmado pelo MobiControl','sem-status':'Sem confirmação de conexão'},itens=todosDispositivosMobi().filter(e=>statusConexao(e).valor===valor).sort((a,b)=>compararGrupos(a.frente,b.frente)||String(a.cod).localeCompare(String(b.cod))),titulo=document.getElementById('titulo-conexao'),lista=document.getElementById('lista-conexao');titulo.textContent=(nomes[tipo]||'Equipamentos')+' · '+itens.length;lista.innerHTML=itens.map(e=>{const st=estadoEq(e),con=statusConexao(e),fazendo=e.parada||e.atividade||(e.vel>.1?'Em deslocamento':'Sem atividade apontada'),codigo=String(e.cod).replace(/\D/g,'');return`<article id="conexao-${codigo}" class="equip ${st.chave}"><div class="equip-info"><span class="frente-tag">${nomeFrente(e.frente)}</span><b>${e.cod}</b><div>${e.modelo} · ${e.nome}</div><span class="status-tag ${st.chave}">${st.nome}</span><span class="conexao-tag ${con.c}" title="${con.fonte}">${con.n}</span>${badgeBateria(e)}<div class="atividade">${fazendo}</div>${distanciaCargaEquipamento(e)}<div class="tempo-apontamento">⏱ ${tempoApontamento(e)}</div><div class="leitura">🕐 ${horaLeitura(e.leitura)}</div></div><button class="local" aria-label="Traçar rota até o equipamento ${e.cod}" ${e.lat&&e.lng?'':'disabled'} onclick="localizar(${e.lat||'null'},${e.lng||'null'})"><span class="pin" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span class="local-text">Localizar</span><span class="local-arrow" aria-hidden="true">›</span></button>${botaoMobi(e)}</article>`}).join('')||'<div class="vazio">Nenhum equipamento neste status.</div>'}
 async function mostrarSemCorrespondencia(){filtroConexaoResumoAtual=null;document.getElementById('grade').style.display='none';document.getElementById('resultado-conexao').classList.add('ativo');const titulo=document.getElementById('titulo-conexao'),lista=document.getElementById('lista-conexao');if(!verificacaoAxiagroConcluida){const pendentes=todosDispositivosMobi().filter(e=>e.modelo==='Dispositivo MobiControl'&&!/ROUBADO/i.test(String(e.cod)));titulo.textContent='Verificando '+pendentes.length+' possíveis diferenças...';lista.innerHTML='<div class="vazio">Consultando cada equipamento diretamente na Axiagro. Aguarde...</div>';let indice=0;async function trabalhador(){while(indice<pendentes.length){const item=pendentes[indice++],codigo=codigoBaseMobi(item.cod);try{const resposta=await fetch(API+'/dashboard?eqpto='+encodeURIComponent(codigo),{headers:{Authorization:'Bearer '+token}});if(!resposta.ok)continue;const dados=await resposta.json(),brutos=dados.alocacao||dados.equipamentos||dados.data||[],achado=(Array.isArray(brutos)?brutos:[brutos]).map(converterEquipamento).find(e=>codigoBaseMobi(e.cod)===codigo&&e.frente);if(achado)axiagroConfirmados.set(codigo,achado)}catch(_){}}}await Promise.all(Array.from({length:Math.min(8,pendentes.length||1)},trabalhador));for(const e of axiagroConfirmados.values())equipamentos.push(e);verificacaoAxiagroConcluida=true;renderResumoConexao()}const itens=todosDispositivosMobi().filter(e=>e.modelo==='Dispositivo MobiControl').sort((a,b)=>String(a.cod).localeCompare(String(b.cod),'pt-BR',{numeric:true}));titulo.textContent='Sem correspondência confirmada na Axiagro · '+itens.length;lista.innerHTML=itens.map(e=>{const con=statusConexao(e);return '<article class="equip"><div class="equip-info"><span class="frente-tag">MobiControl</span><b>'+e.cod+'</b><div>Não retornado pela consulta individual da Axiagro</div><span class="conexao-tag '+con.c+'" title="'+con.fonte+'">'+con.n+'</span>'+badgeBateria(e)+'<div class="leitura">🕐 Última comunicação: '+horaLeitura(e.leitura)+'</div></div>'+botaoMobi(e)+'</article>'}).join('')||'<div class="vazio">Todos os dispositivos possuem correspondência na Axiagro.</div>';document.getElementById('resultado-conexao').scrollIntoView({behavior:'smooth',block:'start'})}
 async function pesquisarEquipamento(){const campo=document.getElementById('pesquisa-equip'),msg=document.getElementById('pesquisa-msg'),codigo=String(campo.value||'').replace(/\D/g,'');msg.textContent='';if(!codigo){msg.textContent='Digite o número do equipamento.';campo.focus();return}let e=equipamentos.find(x=>String(x.cod).replace(/\D/g,'')===codigo);if(!e){msg.textContent='Consultando a Axiagro...';try{const resposta=await fetch(API+'/dashboard?eqpto='+codigo,{headers:{Authorization:'Bearer '+token}});if(resposta.ok){const dados=await resposta.json(),lista=dados.alocacao||dados.equipamentos||dados.data||[];const novos=(Array.isArray(lista)?lista:[lista]).map(converterEquipamento).filter(x=>x.frente);for(const novo of novos){if(!equipamentos.some(x=>String(x.cod)===String(novo.cod)&&x.frente===novo.frente))equipamentos.push(novo)}frentesEncontradas=[...new Set(equipamentos.map(x=>x.frente).filter(Boolean))].sort(compararGrupos);e=equipamentos.find(x=>String(x.cod).replace(/\D/g,'')===codigo)}}catch(_){}}if(!e){msg.textContent='Equipamento '+codigo+' não encontrado nos dados retornados pela Axiagro.';return}msg.textContent='';equipamentoDestacado=String(e.cod);abrirFrente(e.frente);filtroOperacaoAtual=operacaoEq(e);filtroTipoAtual='todos';renderOperacoes();renderTipos();renderEquipamentos();setTimeout(()=>document.getElementById('equip-'+codigo)?.scrollIntoView({behavior:'smooth',block:'center'}),80)}
 
 function abrirFrente(frente){
-  frenteAtual=frente;filtroOperacaoAtual='todas';filtroTipoAtual='todos';document.getElementById('visao-frentes').style.display='none';document.getElementById('visao-equip').style.display='block';document.getElementById('nome-frente').textContent=nomeFrente(frente);renderOperacoes();renderTipos();renderEquipamentos();
+  frenteAtual=frente;filtroOperacaoAtual='todas';filtroTipoAtual='todos';document.getElementById('visao-frentes').style.display='none';document.getElementById('visao-equip').style.display='block';document.getElementById('nome-frente').textContent=modoTeste?'Frente 2 · SIMULAÇÃO':nomeFrente(frente);if(modoTeste)renderTemposLogisticosTeste();else renderTemposLogisticos();renderOperacoes();renderTipos();renderEquipamentos();
 }
 function renderOperacoes(){const itens=equipamentos.filter(e=>e.frente===frenteAtual),operacoes=[...new Set(itens.map(operacaoEq))].sort((a,b)=>a.localeCompare(b,'pt-BR'));document.getElementById('operacao-filtros').innerHTML=`<button class="operacao-btn ${filtroOperacaoAtual==='todas'?'ativo':''}" onclick="filtrarOperacao('todas')">▦ Todas<span class="qtd">${itens.length}</span></button>`+operacoes.map(op=>{const n=itens.filter(e=>operacaoEq(e)===op).length,cod=encodeURIComponent(op);return`<button class="operacao-btn ${filtroOperacaoAtual===op?'ativo':''}" onclick="filtrarOperacao(decodeURIComponent('${cod}'))">⚙ ${op}<span class="qtd">${n}</span></button>`}).join('')}
 function filtrarOperacao(operacao){filtroOperacaoAtual=operacao;filtroTipoAtual='todos';renderOperacoes();renderTipos();renderEquipamentos()}
 function renderTipos(){let itens=equipamentos.filter(e=>e.frente===frenteAtual);if(filtroOperacaoAtual!=='todas')itens=itens.filter(e=>operacaoEq(e)===filtroOperacaoAtual);const totalFrente=equipamentos.filter(e=>e.frente===frenteAtual).length,ordem=['todos','colhedora','transbordo','agua','caminhao','trator','apoio'];document.getElementById('qtd-frente').textContent=totalFrente+' equipamento'+(totalFrente===1?'':'s');document.getElementById('tipo-filtros').innerHTML=ordem.filter(k=>k==='todos'||itens.some(e=>tipoEquipamento(e)===k)).map(k=>{const n=k==='todos'?itens.length:itens.filter(e=>tipoEquipamento(e)===k&&(k!=='caminhao'||caminhaoEmCiclo(e))).length,t=TIPOS[k];return`<button class="tipo-btn ${filtroTipoAtual===k?'ativo':''}" onclick="filtrarTipo('${k}')">${t.icone} ${t.nome}<span class="qtd">${n}</span></button>`}).join('')}
 function filtrarTipo(tipo){filtroTipoAtual=tipo;renderTipos();renderEquipamentos()}
-function renderEquipamentos(){let itens=equipamentos.filter(e=>e.frente===frenteAtual);if(filtroOperacaoAtual!=='todas')itens=itens.filter(e=>operacaoEq(e)===filtroOperacaoAtual);if(filtroTipoAtual!=='todos')itens=itens.filter(e=>tipoEquipamento(e)===filtroTipoAtual&&(filtroTipoAtual!=='caminhao'||caminhaoEmCiclo(e)));itens.sort((a,b)=>String(a.cod).localeCompare(String(b.cod)));document.getElementById('lista').innerHTML=itens.map(e=>{const st=estadoEq(e),fazendo=e.parada||e.atividade||(e.vel>.1?'Em deslocamento':'Sem atividade apontada'),con=statusConexao(e),codigo=String(e.cod).replace(/\D/g,'');return`<article id="equip-${codigo}" class="equip ${st.chave} ${String(e.cod)===equipamentoDestacado?'destaque':''}"><div class="equip-info"><b>${e.cod}</b><div>${e.modelo} · ${e.nome}</div><span class="status-tag ${st.chave}">${st.nome}</span><span class="conexao-tag ${con.c}" title="${con.fonte}">${con.n}</span>${badgeBateria(e)}<div class="atividade">${fazendo}</div><div class="tempo-apontamento">⏱ ${tempoApontamento(e)}</div><div class="vel">${e.vel.toFixed(1)} km/h</div><div class="leitura">🕐 Atualização: ${horaLeitura(e.leitura)}</div></div><button class="local" aria-label="Traçar rota até o equipamento ${e.cod}" ${e.lat&&e.lng?'':'disabled'} onclick="localizar(${e.lat||'null'},${e.lng||'null'})"><span class="pin" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span class="local-text">Localizar</span><span class="local-arrow" aria-hidden="true">›</span></button>${botaoMobi(e)}</article>`}).join('')||'<div class="vazio">Nenhum equipamento desta operação e categoria.</div>'}
+function renderEquipamentos(){let itens=equipamentos.filter(e=>e.frente===frenteAtual);if(filtroOperacaoAtual!=='todas')itens=itens.filter(e=>operacaoEq(e)===filtroOperacaoAtual);if(filtroTipoAtual!=='todos')itens=itens.filter(e=>tipoEquipamento(e)===filtroTipoAtual&&(filtroTipoAtual!=='caminhao'||caminhaoEmCiclo(e)));itens.sort((a,b)=>String(a.cod).localeCompare(String(b.cod)));document.getElementById('lista').innerHTML=itens.map(e=>{const st=estadoEq(e),fazendo=e.parada||e.atividade||(e.vel>.1?'Em deslocamento':'Sem atividade apontada'),con=statusConexao(e),codigo=String(e.cod).replace(/\D/g,'');return`<article id="equip-${codigo}" class="equip ${st.chave} ${String(e.cod)===equipamentoDestacado?'destaque':''} ${tipoEquipamento(e)==='transbordo'&&acessoAdm?'transbordo-adm':''}" onclick="clicarEquipamento(event,'${String(e.cod).replace(/'/g,"\\'")}','${tipoEquipamento(e)}')"><div class="equip-info"><b>${e.cod}</b><div>${e.modelo} · ${e.nome}</div><span class="status-tag ${st.chave}">${st.nome}</span><span class="conexao-tag ${con.c}" title="${con.fonte}">${con.n}</span>${badgeBateria(e)}<div class="atividade">${fazendo}</div>${distanciaCargaEquipamento(e)}<div class="tempo-apontamento">⏱ ${tempoApontamento(e)}</div><div class="vel">${e.vel.toFixed(1)} km/h</div>${tagCubicagem(e)}<div class="leitura">🕐 Atualização: ${horaLeitura(e.leitura)}</div></div><button class="local" aria-label="Traçar rota até o equipamento ${e.cod}" ${e.lat&&e.lng?'':'disabled'} onclick="localizar(${e.lat||'null'},${e.lng||'null'})"><span class="pin" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span class="local-text">Localizar</span><span class="local-arrow" aria-hidden="true">›</span></button>${botaoMobi(e)}</article>`}).join('')||'<div class="vazio">Nenhum equipamento desta operação e categoria.</div>'}
 function voltar(){document.getElementById('visao-equip').style.display='none';document.getElementById('visao-frentes').style.display='block'}
 function localizar(lat,lng){if(!lat||!lng)return;window.open('https://www.google.com/maps/dir/?api=1&destination='+lat+','+lng+'&travelmode=driving','_blank')}
 </script>
+
+<div id="modal-cub-massa" onclick="if(event.target===this)fecharCubicagemMassa()">
+  <div class="cub-massa-box">
+    <div class="cub-massa-topo">
+      <div><strong>▣ Cubicagem em massa</strong><div style="font-size:8px;color:#83aa99;margin-top:2px">Cadastre uma vez por transbordo. Os valores ficam salvos por equipamento.</div></div>
+      <button class="cub-massa-fechar" onclick="fecharCubicagemMassa()">✕</button>
+    </div>
+    <div id="cub-massa-lista" class="cub-massa-lista"></div>
+    <div class="cub-massa-acoes">
+      <button class="cub-massa-cancelar" onclick="fecharCubicagemMassa()">CANCELAR</button>
+      <button class="cub-massa-salvar" onclick="salvarCubicagemMassa()">✓ SALVAR TODOS</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
