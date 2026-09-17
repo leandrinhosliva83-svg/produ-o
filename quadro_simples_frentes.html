@@ -450,11 +450,15 @@ function deviceIdMobi(codigo){const nome=String(codigo||'').trim();if(MOBI_IDS[n
 function abrirMobi(codigo){const id=deviceIdMobi(codigo);if(!id)return;window.open('https://usinamoreno.mdmcloud.com.br/MobiControl/WebConsole/home/dashboard/devices/'+encodeURIComponent(id)+'/DeviceDetails?subGroups=false&count=250','_blank','noopener')}
 
 const CHAVE_CUBICAGEM_TRANSBORDO='qf-cubicagem-transbordo-v1';
+const CUBICAGENS_FIXAS={"19274":20,"140824":30,"140323":22,"19166":18,"19271":20,"19269":20,"19171":20,"19168":20,"140025":30,"12819":22,"12813":18,"19275":20,"12791":20,"12781":15,"12816":20,"140125":30,"19265":22,"19167":18,"19266":20,"12818":20,"110622":14,"19170":20,"140325":30,"19172":22,"12821":18,"19270":20,"12829":20,"110122":14,"19272":20,"140724":30,"19169":22,"12826":18,"19267":20,"19273":20,"12798":20,"140423":22,"12799":18};
 function lerCubicagens(){
   try{return JSON.parse(localStorage.getItem(CHAVE_CUBICAGEM_TRANSBORDO)||'{}')}catch{return{}}
 }
 function cubicagemTransbordo(cod){
-  const v=Number(lerCubicagens()[String(cod)]);
+  const chave=String(cod).trim();
+  const fixa=Number(CUBICAGENS_FIXAS[chave]);
+  if(Number.isFinite(fixa)&&fixa>0)return fixa;
+  const v=Number(lerCubicagens()[chave]);
   return Number.isFinite(v)&&v>0?v:null;
 }
 function salvarCubicagemTransbordo(cod,valor){
