@@ -908,22 +908,47 @@ function aplicarHistoricoCentral(itens){
   try{localStorage.setItem(CHAVE_DISTANCIA_CARGA,JSON.stringify(dist))}catch(_ ){}
 }
 
+function buscarHistoricoCentralJSONP(){
+  return new Promise((resolve,reject)=>{
+    const cb='qfHist_'+Date.now()+'_'+Math.floor(Math.random()*100000);
+    const script=document.createElement('script');
+    const timer=setTimeout(()=>finalizar(new Error('Tempo esgotado ao ler histórico central')),12000);
+    function limpar(){
+      clearTimeout(timer);
+      try{delete window[cb]}catch(_){window[cb]=undefined}
+      script.remove();
+    }
+    function finalizar(erro,dados){
+      limpar();
+      erro?reject(erro):resolve(dados);
+    }
+    window[cb]=dados=>finalizar(null,dados);
+    script.onerror=()=>finalizar(new Error('Falha ao carregar histórico central'));
+    script.src=API_HISTORICO_CENTRAL+'?acao=historico&callback='+encodeURIComponent(cb)+'&_='+Date.now();
+    document.head.appendChild(script);
+  });
+}
+
 async function sincronizarHistoricoCentral(renderizar=true){
   if(sincronizandoHistorico)return;
   sincronizandoHistorico=true;
   try{
-    // Primeiro envia o que este aparelho já possui; o servidor elimina duplicidades.
     await enviarHistoricoCentral(amostrasLocaisParaCentral());
-    const r=await fetch(API_HISTORICO_CENTRAL+'?acao=historico&_='+Date.now(),{cache:'no-store'});
-    const d=await r.json();
-    if(r.ok&&d.ok){
-      aplicarHistoricoCentral(d.itens||[]);
+    const d=await buscarHistoricoCentralJSONP();
+    if(d&&d.ok){
+      // Remove duplicidades como "FRENTE 4" e "4" da mesma medição.
+      const unicos=new Map();
+      for(const h of (d.itens||[])){
+        const frente=chaveFrenteHistorico(h.frente);
+        const chave=[h.tipo,frente,h.etapa,h.codigo,Number(h.fim)||0].join('|');
+        unicos.set(chave,{...h,frente});
+      }
+      aplicarHistoricoCentral([...unicos.values()]);
       if(renderizar&&typeof renderTemposLogisticos==='function'&&frenteAtual)renderTemposLogisticos();
     }
   }catch(e){console.warn('Histórico central indisponível; mantendo cache local.',e)}
   finally{sincronizandoHistorico=false}
 }
-
 function registrarAmostraCentral(amostra,tipo='tempo'){
   const item=tipo==='gps'
     ?{tipo:'gps',frente:chaveFrenteHistorico(amostra.frente),etapa:'carregado',codigo:String(amostra.codigo||''),fim:Number(amostra.fim)||Date.now(),metros:Number(amostra.metros)||0,minutos:Number(amostra.minutos)||0}
@@ -1208,7 +1233,7 @@ async function mostrarSemCorrespondencia(){filtroConexaoResumoAtual=null;documen
 async function pesquisarEquipamento(){const campo=document.getElementById('pesquisa-equip'),msg=document.getElementById('pesquisa-msg'),codigo=String(campo.value||'').replace(/\D/g,'');msg.textContent='';if(!codigo){msg.textContent='Digite o número do equipamento.';campo.focus();return}let e=equipamentos.find(x=>String(x.cod).replace(/\D/g,'')===codigo);if(!e){msg.textContent='Consultando a Axiagro...';try{const resposta=await fetch(API+'/dashboard?eqpto='+codigo,{headers:{Authorization:'Bearer '+token}});if(resposta.ok){const dados=await resposta.json(),lista=dados.alocacao||dados.equipamentos||dados.data||[];const novos=(Array.isArray(lista)?lista:[lista]).map(converterEquipamento).filter(x=>x.frente);for(const novo of novos){if(!equipamentos.some(x=>String(x.cod)===String(novo.cod)&&x.frente===novo.frente))equipamentos.push(novo)}frentesEncontradas=[...new Set(equipamentos.map(x=>x.frente).filter(Boolean))].sort(compararGrupos);e=equipamentos.find(x=>String(x.cod).replace(/\D/g,'')===codigo)}}catch(_){}}if(!e){msg.textContent='Equipamento '+codigo+' não encontrado nos dados retornados pela Axiagro.';return}msg.textContent='';equipamentoDestacado=String(e.cod);abrirFrente(e.frente);filtroOperacaoAtual=operacaoEq(e);filtroTipoAtual='todos';renderOperacoes();renderTipos();renderEquipamentos();setTimeout(()=>document.getElementById('equip-'+codigo)?.scrollIntoView({behavior:'smooth',block:'center'}),80)}
 
 function abrirFrente(frente){
-  frenteAtual=frente;filtroOperacaoAtual='todas';filtroTipoAtual='todos';document.getElementById('visao-frentes').style.display='none';document.getElementById('visao-equip').style.display='block';document.getElementById('nome-frente').textContent=modoTeste?'Frente 2 · SIMULAÇÃO':nomeFrente(frente);if(modoTeste)renderTemposLogisticosTeste();else renderTemposLogisticos();renderOperacoes();renderTipos();renderEquipamentos();
+  frenteAtual=frente;filtroOperacaoAtual='todas';filtroTipoAtual='todos';document.getElementById('visao-frentes').style.display='none';document.getElementById('visao-equip').style.display='block';sincronizarHistoricoCentral(true);document.getElementById('nome-frente').textContent=modoTeste?'Frente 2 · SIMULAÇÃO':nomeFrente(frente);if(modoTeste)renderTemposLogisticosTeste();else renderTemposLogisticos();renderOperacoes();renderTipos();renderEquipamentos();
 }
 function renderOperacoes(){const itens=equipamentos.filter(e=>e.frente===frenteAtual),operacoes=[...new Set(itens.map(operacaoEq))].sort((a,b)=>a.localeCompare(b,'pt-BR'));document.getElementById('operacao-filtros').innerHTML=`<button class="operacao-btn ${filtroOperacaoAtual==='todas'?'ativo':''}" onclick="filtrarOperacao('todas')">▦ Todas<span class="qtd">${itens.length}</span></button>`+operacoes.map(op=>{const n=itens.filter(e=>operacaoEq(e)===op).length,cod=encodeURIComponent(op);return`<button class="operacao-btn ${filtroOperacaoAtual===op?'ativo':''}" onclick="filtrarOperacao(decodeURIComponent('${cod}'))">⚙ ${op}<span class="qtd">${n}</span></button>`}).join('')}
 function filtrarOperacao(operacao){filtroOperacaoAtual=operacao;filtroTipoAtual='todos';renderOperacoes();renderTipos();renderEquipamentos()}
