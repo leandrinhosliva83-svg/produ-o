@@ -778,7 +778,7 @@ function renderCapacidadeFrenteTeste(){
   atualizar();
 }
 
-function abrirQuadro(){document.getElementById('inicio').style.display='none';document.getElementById('app').style.display='block';atualizarBotaoAdm();restaurarGrafico();carregar();if(!atualizacaoAutomatica)atualizacaoAutomatica=setInterval(()=>{if(document.visibilityState==='visible')carregar(true)},30000)}
+function abrirQuadro(){document.getElementById('inicio').style.display='none';document.getElementById('app').style.display='block';atualizarBotaoAdm();restaurarGrafico();sincronizarHistoricoCentral(false).finally(()=>carregar());if(!atualizacaoAutomatica)atualizacaoAutomatica=setInterval(()=>{if(document.visibilityState==='visible'){sincronizarHistoricoCentral(false);carregar(true)}},30000)}
 function nomeFrente(v){if(!v||v==='-')return'Sem frente';const texto=String(v).trim();if(/PLANTIO MANUAL/i.test(texto))return'Plantio Manual';if(/FERTIRRIGAÇÃO CAMINHÃO/i.test(texto))return'Fertirrigação · Caminhão';if(/FERTIRRIGAÇÃO CANAL/i.test(texto))return'Fertirrigação · Canal';const m=texto.match(/FRENTE\s*(\d+)/i),n=m?+m[1]:parseInt(texto.replace(/\D/g,''));if(n===1)return'Frente 01 · Corte Manual';if(n===10)return'Frente 10 · Herbicida';if(n===11)return'Frente 11 · Preparo de Solo';if(n===12)return'Frente 12 · Apoio';return isNaN(n)?texto:'Frente '+String(n).padStart(2,'0')}
 function numeroFrente(v){const m=String(v||'').match(/FRENTE\s*(\d+)/i);return m?+m[1]:999}
 function compararGrupos(a,b){const na=numeroFrente(a),nb=numeroFrente(b);return na!==nb?na-nb:String(a).localeCompare(String(b),'pt-BR')}
@@ -836,13 +836,103 @@ function duracaoLogisticaValida(etapa,duracao){if(!Number.isFinite(duracao)||dur
 function medianaLogistica(valores){const a=valores.map(Number).sort((a,b)=>a-b),m=Math.floor(a.length/2);return a.length?(a.length%2?a[m]:(a[m-1]+a[m])/2):null}
 function dentroPadraoLogistico(duracao,base){if(base.length<3)return true;const mediana=medianaLogistica(base.map(h=>h.duracao));return duracao>=mediana*.5&&duracao<=mediana*1.5}
 const CHAVE_AMOSTRAS_PADRAO='qf-logistica-10-padrao-v1';
+const API_HISTORICO_CENTRAL='https://script.google.com/macros/s/AKfycbzt3u3nlcJUUMERyHbmyU9RNzEh7F-UIztmuhWIRCtePaYTgGcwdgW7lHi9vuyhtXhd/exec';
+let sincronizandoHistorico=false;
+
+function amostrasLocaisParaCentral(){
+  const itens=[];
+  try{
+    const banco=JSON.parse(localStorage.getItem(CHAVE_AMOSTRAS_PADRAO)||'{}')||{};
+    for(const [id,arr] of Object.entries(banco)){
+      const [frente,etapa]=id.split('|');
+      for(const h of (Array.isArray(arr)?arr:[]).slice(0,10)){
+        itens.push({tipo:'tempo',frente,etapa,codigo:String(h.codigo||''),fim:Number(h.fim)||0,duracao:Number(h.duracao)||0,inicio:Number(h.inicio)||0,origem:h.origem||''});
+      }
+    }
+  }catch(_ ){}
+  try{
+    const dist=lerDistanciasCarga();
+    for(const [codigo,r] of Object.entries(dist)){
+      for(const h of (Array.isArray(r?.historico)?r.historico:[]).filter(distanciaCargaValida).slice(0,10)){
+        itens.push({tipo:'gps',frente:String(h.frente??r.frente??''),etapa:'carregado',codigo:String(h.codigo||codigo),fim:Number(h.fim)||0,metros:Number(h.metros)||0,minutos:Number(h.minutos)||0});
+      }
+    }
+  }catch(_ ){}
+  return itens.filter(x=>x.frente&&x.fim>0);
+}
+
+async function enviarHistoricoCentral(itens){
+  if(!Array.isArray(itens)||!itens.length)return true;
+  try{
+    const r=await fetch(API_HISTORICO_CENTRAL,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({acao:'salvarHistoricos',itens})
+    });
+    const d=await r.json();
+    return !!d.ok;
+  }catch(e){console.warn('Falha ao enviar histórico central',e);return false}
+}
+
+function aplicarHistoricoCentral(itens){
+  if(!Array.isArray(itens))return;
+  let banco={};
+  try{banco=JSON.parse(localStorage.getItem(CHAVE_AMOSTRAS_PADRAO)||'{}')||{}}catch(_ ){}
+  const dist=lerDistanciasCarga();
+
+  for(const h of itens){
+    if(h.tipo==='tempo'){
+      const id=String(h.frente)+'|'+String(h.etapa);
+      const atual=Array.isArray(banco[id])?banco[id]:[];
+      const am={etapa:h.etapa,duracao:Number(h.duracao),inicio:Number(h.inicio)||null,fim:Number(h.fim),codigo:String(h.codigo||''),frente:h.frente,origem:h.origem||undefined};
+      const mapa=new Map([am,...atual].map(x=>[[x.codigo,x.etapa,x.fim].join('|'),x]));
+      banco[id]=[...mapa.values()].filter(x=>duracaoLogisticaValida(x.etapa,Number(x.duracao))).sort((a,b)=>(b.fim||0)-(a.fim||0)).slice(0,10);
+    }else if(h.tipo==='gps'){
+      const codigo=String(h.codigo||'');
+      if(!codigo)continue;
+      const r=dist[codigo]||{historico:[],frente:h.frente};
+      const am={metros:Number(h.metros),minutos:Number(h.minutos),fim:Number(h.fim),codigo,frente:h.frente};
+      const atual=Array.isArray(r.historico)?r.historico:[];
+      const mapa=new Map([am,...atual].map(x=>[[x.codigo,x.fim].join('|'),x]));
+      r.historico=[...mapa.values()].filter(distanciaCargaValida).sort((a,b)=>(b.fim||0)-(a.fim||0)).slice(0,10);
+      r.frente=h.frente;
+      dist[codigo]=r;
+    }
+  }
+  try{localStorage.setItem(CHAVE_AMOSTRAS_PADRAO,JSON.stringify(banco))}catch(_ ){}
+  try{localStorage.setItem(CHAVE_DISTANCIA_CARGA,JSON.stringify(dist))}catch(_ ){}
+}
+
+async function sincronizarHistoricoCentral(renderizar=true){
+  if(sincronizandoHistorico)return;
+  sincronizandoHistorico=true;
+  try{
+    // Primeiro envia o que este aparelho já possui; o servidor elimina duplicidades.
+    await enviarHistoricoCentral(amostrasLocaisParaCentral());
+    const r=await fetch(API_HISTORICO_CENTRAL+'?acao=historico&_='+Date.now(),{cache:'no-store'});
+    const d=await r.json();
+    if(r.ok&&d.ok){
+      aplicarHistoricoCentral(d.itens||[]);
+      if(renderizar&&typeof renderTemposLogisticos==='function'&&frenteAtual)renderTemposLogisticos();
+    }
+  }catch(e){console.warn('Histórico central indisponível; mantendo cache local.',e)}
+  finally{sincronizandoHistorico=false}
+}
+
+function registrarAmostraCentral(amostra,tipo='tempo'){
+  const item=tipo==='gps'
+    ?{tipo:'gps',frente:String(amostra.frente||''),etapa:'carregado',codigo:String(amostra.codigo||''),fim:Number(amostra.fim)||Date.now(),metros:Number(amostra.metros)||0,minutos:Number(amostra.minutos)||0}
+    :{tipo:'tempo',frente:String(amostra.frente||''),etapa:String(amostra.etapa||''),codigo:String(amostra.codigo||''),fim:Number(amostra.fim)||Date.now(),inicio:Number(amostra.inicio)||0,duracao:Number(amostra.duracao)||0,origem:amostra.origem||''};
+  enviarHistoricoCentral([item]);
+}
+
 function amostrasPadraoLogistico(frente,etapa,dados=lerTemposLogisticos()){let banco={};try{banco=JSON.parse(localStorage.getItem(CHAVE_AMOSTRAS_PADRAO)||'{}')||{}}catch(_){}const id=String(frente)+'|'+etapa;if(!Array.isArray(banco[id])){const antigas=Object.values(dados).flatMap(r=>(r.historico||[]).map(h=>({...h,frente:h.frente??r.frente}))).filter(h=>String(h.frente)===String(frente)&&h.etapa===etapa&&duracaoLogisticaValida(etapa,Number(h.duracao))).sort((a,b)=>(b.fim||0)-(a.fim||0)),referencia=antigas.slice(0,10);banco[id]=antigas.filter(h=>dentroPadraoLogistico(Number(h.duracao),referencia)).slice(0,10);try{localStorage.setItem(CHAVE_AMOSTRAS_PADRAO,JSON.stringify(banco))}catch(_){}}return banco[id]}
-function aceitarAmostraLogistica(amostra,dados){if(!duracaoLogisticaValida(amostra.etapa,Number(amostra.duracao)))return false;const base=amostrasPadraoLogistico(amostra.frente,amostra.etapa,dados);if(!dentroPadraoLogistico(Number(amostra.duracao),base)){try{const rejeitadas=JSON.parse(localStorage.getItem('qf-logistica-fora-padrao-v1')||'[]');rejeitadas.unshift({...amostra,motivo:'Variação maior que 50% da mediana',mediana:medianaLogistica(base.map(h=>h.duracao))});localStorage.setItem('qf-logistica-fora-padrao-v1',JSON.stringify(rejeitadas.slice(0,100)))}catch(_){}return false}let banco={};try{banco=JSON.parse(localStorage.getItem(CHAVE_AMOSTRAS_PADRAO)||'{}')||{};const id=String(amostra.frente)+'|'+amostra.etapa;banco[id]=[amostra,...base].sort((a,b)=>(b.fim||0)-(a.fim||0)).slice(0,10);localStorage.setItem(CHAVE_AMOSTRAS_PADRAO,JSON.stringify(banco))}catch(_){}return true}
+function aceitarAmostraLogistica(amostra,dados){if(!duracaoLogisticaValida(amostra.etapa,Number(amostra.duracao)))return false;const base=amostrasPadraoLogistico(amostra.frente,amostra.etapa,dados);if(!dentroPadraoLogistico(Number(amostra.duracao),base)){try{const rejeitadas=JSON.parse(localStorage.getItem('qf-logistica-fora-padrao-v1')||'[]');rejeitadas.unshift({...amostra,motivo:'Variação maior que 50% da mediana',mediana:medianaLogistica(base.map(h=>h.duracao))});localStorage.setItem('qf-logistica-fora-padrao-v1',JSON.stringify(rejeitadas.slice(0,100)))}catch(_){}return false}let banco={};try{banco=JSON.parse(localStorage.getItem(CHAVE_AMOSTRAS_PADRAO)||'{}')||{};const id=String(amostra.frente)+'|'+amostra.etapa;banco[id]=[amostra,...base].sort((a,b)=>(b.fim||0)-(a.fim||0)).slice(0,10);localStorage.setItem(CHAVE_AMOSTRAS_PADRAO,JSON.stringify(banco));registrarAmostraCentral(amostra,'tempo')}catch(_){}return true}
 function atualizarTemposLogisticos(){const dados=lerTemposLogisticos(),agora=Date.now();for(const e of equipamentos){const etapa=etapaLogistica(e);if(!etapa)continue;const codigo=String(e.cod),registro=dados[codigo]||{etapas:{},historico:[],frente:e.frente},inicioInformado=e.inicio?new Date(e.inicio).getTime():NaN,inicioEtapa=Number.isFinite(inicioInformado)&&inicioInformado<=agora?inicioInformado:agora;registro.etapas=registro.etapas||{};registro.historico=Array.isArray(registro.historico)?registro.historico:[];if(etapa==='basculamento'&&registro.ciclo901?.ativo){const fimInformado=e.inicio?new Date(e.inicio).getTime():NaN,fim901=Number.isFinite(fimInformado)&&fimInformado>=registro.ciclo901.inicio&&fimInformado<=agora?fimInformado:agora,duracao901=(fim901-registro.ciclo901.inicio)/60000;if(aceitarAmostraLogistica({etapa:'carregado',origem:'901',duracao:duracao901,inicio:registro.ciclo901.inicio,fim:fim901,codigo,frente:e.frente},dados))registro.historico.unshift({etapa:'carregado',origem:'901',duracao:duracao901,inicio:registro.ciclo901.inicio,fim:fim901,codigo,frente:e.frente});registro.ciclo901.ativo=false}else if(apontamento901(e)&&!registro.ciclo901?.ativo){registro.ciclo901={ativo:true,inicio:inicioApontamento901(e,agora)}}if(!registro.etapaAtual){registro.etapaAtual=etapa;registro.inicioAtual=inicioEtapa}else if(registro.etapaAtual!==etapa){const etapaFechada=registro.etapaAtual,fim=inicioEtapa>=Number(registro.inicioAtual||0)?inicioEtapa:agora,duracao=Math.max(0,Math.round((fim-Number(registro.inicioAtual||agora))/60000)),anterior=registro.etapas[etapaFechada]||{totalMinutos:0,ocorrencias:0};if(etapaFechada!=='carregado'&&aceitarAmostraLogistica({etapa:etapaFechada,duracao,inicio:Number(registro.inicioAtual)||null,fim,codigo,frente:e.frente},dados)){anterior.totalMinutos=(Number(anterior.totalMinutos)||0)+duracao;anterior.ocorrencias=(Number(anterior.ocorrencias)||0)+1;anterior.ultimoMinutos=duracao;anterior.ultimaConclusao=agora;registro.etapas[etapaFechada]=anterior;registro.historico.unshift({etapa:etapaFechada,duracao,inicio:Number(registro.inicioAtual)||null,fim,codigo,frente:e.frente});registro.historico=['vazio','carregamento','carregado','basculamento'].flatMap(k=>registro.historico.filter(h=>h.etapa===k&&duracaoLogisticaValida(k,Number(h.duracao))).slice(0,10))}registro.etapaAtual=etapa;registro.inicioAtual=inicioEtapa}registro.frente=e.frente;registro.atualizado=agora;dados[codigo]=registro}try{localStorage.setItem(CHAVE_TEMPOS_LOGISTICOS,JSON.stringify(dados))}catch(_){}arquivarLogistica24h()}
 function resumoTempoEtapa(itens,chave){const amostras=[...new Set(itens.map(e=>String(e.frente)))].flatMap(frente=>amostrasPadraoLogistico(frente,chave)).sort((a,b)=>(b.fim||0)-(a.fim||0)).slice(0,10),total=amostras.reduce((s,h)=>s+Number(h.duracao),0);return{media:amostras.length?total/amostras.length:null,ocorrencias:amostras.length,amostras}}
 function lerDistanciasCarga(){try{const d=JSON.parse(localStorage.getItem(CHAVE_DISTANCIA_CARGA)||'{}');if(!d||typeof d!=='object')return{};for(const r of Object.values(d)){if(r&&!r.ativo&&r.finalizado&&!Number(r.ciclos)&&Number(r.metros)>0){r.ultimoMetros=Number(r.metros);r.totalMetros=Number(r.metros);r.ciclos=1}}return d}catch(_){return{}}}
 function distanciaEntre(lat1,lng1,lat2,lng2){const valores=[lat1,lng1,lat2,lng2].map(Number);if(valores.some(v=>!Number.isFinite(v)))return 0;const [a,b,c,d]=valores,r=6371000,p=x=>x*Math.PI/180,dp=p(c-a),dl=p(d-b),h=Math.sin(dp/2)**2+Math.cos(p(a))*Math.cos(p(c))*Math.sin(dl/2)**2;return 2*r*Math.asin(Math.sqrt(h))}
-function atualizarDistanciasCarga(){const dados=lerDistanciasCarga(),agora=Date.now();for(const e of equipamentos){if(!e.lat||!e.lng)continue;const codigo=String(e.cod),etapa=etapaLogistica(e),velocidade=Number(e.vel)||0,lat=parseFloat(String(e.lat).replace(',','.')),lng=parseFloat(String(e.lng).replace(',','.')),tempoGps=e.leitura instanceof Date&&!isNaN(e.leitura)?e.leitura.getTime():agora,anterior=dados[codigo];if(!Number.isFinite(lat)||!Number.isFinite(lng)||agora-tempoGps>10*60000)continue;if(etapa==='carregado'&&(apontamento901(e)||anterior?.ativo)){if(!anterior||!anterior.ativo){dados[codigo]={...(anterior||{}),ativo:true,metros:0,inicioCarga:inicioApontamento901(e,agora),lat,lng,tempoGps,frente:e.frente,historico:Array.isArray(anterior?.historico)?anterior.historico:[]}}else if(tempoGps>Number(anterior.tempoGps||0)){const intervalo=(tempoGps-Number(anterior.tempoGps))/1000,trecho=distanciaEntre(anterior.lat,anterior.lng,lat,lng),velocidadeTrecho=intervalo>0?trecho/intervalo*3.6:Infinity;if(velocidade>2&&intervalo>=5&&intervalo<=600&&trecho>=5&&velocidadeTrecho<=50)anterior.metros=(Number(anterior.metros)||0)+trecho;anterior.lat=lat;anterior.lng=lng;anterior.tempoGps=tempoGps;anterior.atualizado=agora;anterior.frente=e.frente}}else if(etapa==='basculamento'&&anterior?.ativo){const informado=e.inicio?new Date(e.inicio).getTime():NaN,fim=Number.isFinite(informado)&&informado>=anterior.inicioCarga&&informado<=agora?informado:tempoGps,duracao=Math.max(0,(fim-Number(anterior.inicioCarga||fim))/60000),metros=Math.round(Number(anterior.metros)||0),amostra={metros,minutos:duracao,fim:tempoGps,codigo,frente:e.frente};anterior.ativo=false;anterior.finalizado=tempoGps;anterior.ultimoMetros=metros;anterior.ultimoMinutos=duracao;anterior.historico=Array.isArray(anterior.historico)?anterior.historico:[];if(distanciaCargaValida(amostra))anterior.historico.unshift(amostra);anterior.historico=anterior.historico.filter(distanciaCargaValida).slice(0,10);anterior.pontoTransferencia={lat,lng}}}try{localStorage.setItem(CHAVE_DISTANCIA_CARGA,JSON.stringify(dados))}catch(_){}arquivarLogistica24h()}
+function atualizarDistanciasCarga(){const dados=lerDistanciasCarga(),agora=Date.now();for(const e of equipamentos){if(!e.lat||!e.lng)continue;const codigo=String(e.cod),etapa=etapaLogistica(e),velocidade=Number(e.vel)||0,lat=parseFloat(String(e.lat).replace(',','.')),lng=parseFloat(String(e.lng).replace(',','.')),tempoGps=e.leitura instanceof Date&&!isNaN(e.leitura)?e.leitura.getTime():agora,anterior=dados[codigo];if(!Number.isFinite(lat)||!Number.isFinite(lng)||agora-tempoGps>10*60000)continue;if(etapa==='carregado'&&(apontamento901(e)||anterior?.ativo)){if(!anterior||!anterior.ativo){dados[codigo]={...(anterior||{}),ativo:true,metros:0,inicioCarga:inicioApontamento901(e,agora),lat,lng,tempoGps,frente:e.frente,historico:Array.isArray(anterior?.historico)?anterior.historico:[]}}else if(tempoGps>Number(anterior.tempoGps||0)){const intervalo=(tempoGps-Number(anterior.tempoGps))/1000,trecho=distanciaEntre(anterior.lat,anterior.lng,lat,lng),velocidadeTrecho=intervalo>0?trecho/intervalo*3.6:Infinity;if(velocidade>2&&intervalo>=5&&intervalo<=600&&trecho>=5&&velocidadeTrecho<=50)anterior.metros=(Number(anterior.metros)||0)+trecho;anterior.lat=lat;anterior.lng=lng;anterior.tempoGps=tempoGps;anterior.atualizado=agora;anterior.frente=e.frente}}else if(etapa==='basculamento'&&anterior?.ativo){const informado=e.inicio?new Date(e.inicio).getTime():NaN,fim=Number.isFinite(informado)&&informado>=anterior.inicioCarga&&informado<=agora?informado:tempoGps,duracao=Math.max(0,(fim-Number(anterior.inicioCarga||fim))/60000),metros=Math.round(Number(anterior.metros)||0),amostra={metros,minutos:duracao,fim:tempoGps,codigo,frente:e.frente};anterior.ativo=false;anterior.finalizado=tempoGps;anterior.ultimoMetros=metros;anterior.ultimoMinutos=duracao;anterior.historico=Array.isArray(anterior.historico)?anterior.historico:[];if(distanciaCargaValida(amostra)){anterior.historico.unshift(amostra);registrarAmostraCentral(amostra,'gps')}anterior.historico=anterior.historico.filter(distanciaCargaValida).slice(0,10);anterior.pontoTransferencia={lat,lng}}}try{localStorage.setItem(CHAVE_DISTANCIA_CARGA,JSON.stringify(dados))}catch(_){}arquivarLogistica24h()}
 function formatarDistancia(metros){metros=Math.max(0,Math.round(Number(metros)||0));return metros.toLocaleString('pt-BR')+' m'}
 function distanciaCargaEquipamento(e){const etapa=etapaLogistica(e),r=lerDistanciasCarga()[String(e.cod)];if(!r)return'';const atual=Number(r.metros)||0,inicio=inicioDiaOperacional(),amostras=(Array.isArray(r.historico)?r.historico:[]).filter(distanciaCargaValida).slice(0,10),total=amostras.reduce((s,a)=>s+(Number(a.metros)||0),0),media=amostras.length?total/amostras.length:0,tempos=amostras.filter(a=>Number(a.minutos)>0),mediaTempo=tempos.length?tempos.reduce((s,a)=>s+Number(a.minutos),0)/tempos.length:0;if(!r.ativo&&!amostras.length)return'';const principal=r.ativo?'Percurso atual: '+formatarDistancia(atual):'Último válido: '+formatarDistancia(amostras[0]?.metros||0)+(amostras[0]?.minutos?' em '+formatarMinutos(amostras[0].minutos):''),acumulado=amostras.length?' · Média '+amostras.length+'/10: '+formatarDistancia(media)+(mediaTempo?' / '+formatarMinutos(mediaTempo):''):'';return`<div class="distancia-carga ${!r.ativo&&etapa==='basculamento'?'finalizada':''}">📏 ${principal}${acumulado}</div>`}
 function distanciaCargaValida(a){const metros=Number(a?.metros),minutos=Number(a?.minutos);if(!Number.isFinite(metros)||metros<100||metros>50000)return false;if(!Number.isFinite(minutos)||minutos<=0||minutos>60)return false;return metros/minutos<=834}
