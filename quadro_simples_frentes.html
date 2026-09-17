@@ -424,6 +424,8 @@ canvas{max-height:180px}
     </main>
   </section>
 <script>
+const TEMPO_ENCHIMENTO_TRANSBORDO=28;
+
 const API='https://proxy-velocidade.leandrinhosliva83.workers.dev';
 const ADMIN_HASH='5ddd07dbe77285de2ab79b44766acd37f02f0cacd6f72b5436cb0df9dfdc2113';
 let acessoAdm=sessionStorage.getItem('qf-adm-liberado')==='1';
@@ -822,6 +824,21 @@ function passaFiltroOperacional(e){return tipoEquipamento(e)!=='caminhao'||camin
 function operacaoEq(e){if(e.atividade&&String(e.atividade).trim())return String(e.atividade).trim();const classe=String(e.classe||'').trim();if(classe&&classe!=='SEM CLASSIFICAÇÃO')return classe;return'Operação não informada pela Axiagro'}
 function horaLeitura(d){if(!d)return'Horário não informado';const min=Math.max(0,Math.floor((Date.now()-d.getTime())/60000)),hora=d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});return min<1?hora+' · agora':min<60?hora+' · há '+min+' min':hora+' · há '+Math.floor(min/60)+'h '+min%60+'min'}
 function tempoApontamento(e){if(!e.inicio)return'Tempo do apontamento não informado';const inicio=new Date(e.inicio);if(isNaN(inicio))return'Tempo do apontamento não informado';const min=Math.max(0,Math.floor((Date.now()-inicio.getTime())/60000)),dias=Math.floor(min/1440),horas=Math.floor((min%1440)/60),mins=min%60;if(dias)return'Neste apontamento: '+dias+'d '+horas+'h '+mins+'min';if(horas)return'Neste apontamento: '+horas+'h '+mins+'min';return'Neste apontamento: '+mins+'min'}
+function diagnosticoApontamento(e){
+  const encontrados=[];
+  for(const [k,v] of Object.entries(e||{})){
+    if(v===null||v===undefined||typeof v==='object')continue;
+    const ks=normalizar(k), vs=String(v);
+    if(/ativ|apont|oper|status|parad|descr|cod/.test(ks)||/\b(227|229|233|901)\b/.test(vs))encontrados.push(k+'='+vs);
+  }
+  return encontrados.join(' | ');
+}
+function diagColetaHtml(e){
+  if(tipoEquipamento(e)!=='transbordo')return'';
+  const reconhecida=etapaLogisticaExplicita(e)||'NÃO RECONHECIDA';
+  const bruto=diagnosticoApontamento(e)||'nenhum campo candidato';
+  return `<div style="margin-top:5px;padding:5px 6px;border:1px dashed #7b8d85;border-radius:6px;font-size:8px;line-height:1.35;word-break:break-word;color:#cfe5da"><b style="color:#7effb7">DIAG COLETA:</b> ${esc(reconhecida)}<br>${esc(bruto)}</div>`;
+}
 function etapaLogisticaExplicita(e){
   const camposCodigo=[
     e?.codAtividade,e?.codigoAtividade,e?.cod_atividade,e?.atividadeCodigo,
@@ -1308,7 +1325,7 @@ function renderOperacoes(){const itens=equipamentos.filter(e=>e.frente===frenteA
 function filtrarOperacao(operacao){filtroOperacaoAtual=operacao;filtroTipoAtual='todos';renderOperacoes();renderTipos();renderEquipamentos()}
 function renderTipos(){let itens=equipamentos.filter(e=>e.frente===frenteAtual);if(filtroOperacaoAtual!=='todas')itens=itens.filter(e=>operacaoEq(e)===filtroOperacaoAtual);const totalFrente=equipamentos.filter(e=>e.frente===frenteAtual).length,ordem=['todos','colhedora','transbordo','agua','caminhao','trator','apoio'];document.getElementById('qtd-frente').textContent=totalFrente+' equipamento'+(totalFrente===1?'':'s');document.getElementById('tipo-filtros').innerHTML=ordem.filter(k=>k==='todos'||itens.some(e=>tipoEquipamento(e)===k)).map(k=>{const n=k==='todos'?itens.length:itens.filter(e=>tipoEquipamento(e)===k&&(k!=='caminhao'||caminhaoEmCiclo(e))).length,t=TIPOS[k];return`<button class="tipo-btn ${filtroTipoAtual===k?'ativo':''}" onclick="filtrarTipo('${k}')">${t.icone} ${t.nome}<span class="qtd">${n}</span></button>`}).join('')}
 function filtrarTipo(tipo){filtroTipoAtual=tipo;renderTipos();renderEquipamentos()}
-function renderEquipamentos(){let itens=equipamentos.filter(e=>e.frente===frenteAtual);if(filtroOperacaoAtual!=='todas')itens=itens.filter(e=>operacaoEq(e)===filtroOperacaoAtual);if(filtroTipoAtual!=='todos')itens=itens.filter(e=>tipoEquipamento(e)===filtroTipoAtual&&(filtroTipoAtual!=='caminhao'||caminhaoEmCiclo(e)));itens.sort((a,b)=>String(a.cod).localeCompare(String(b.cod)));document.getElementById('lista').innerHTML=itens.map(e=>{const st=estadoEq(e),fazendo=e.parada||e.atividade||(e.vel>.1?'Em deslocamento':'Sem atividade apontada'),con=statusConexao(e),codigo=String(e.cod).replace(/\D/g,'');return`<article id="equip-${codigo}" class="equip ${st.chave} ${String(e.cod)===equipamentoDestacado?'destaque':''} ${tipoEquipamento(e)==='transbordo'&&acessoAdm?'transbordo-adm':''}" onclick="clicarEquipamento(event,'${String(e.cod).replace(/'/g,"\\'")}','${tipoEquipamento(e)}')"><div class="equip-info"><b>${e.cod}</b><div>${e.modelo} · ${e.nome}</div><span class="status-tag ${st.chave}">${st.nome}</span><span class="conexao-tag ${con.c}" title="${con.fonte}">${con.n}</span>${badgeBateria(e)}<div class="atividade">${fazendo}</div>${distanciaCargaEquipamento(e)}<div class="tempo-apontamento">⏱ ${tempoApontamento(e)}</div><div class="vel">${e.vel.toFixed(1)} km/h</div>${tagCubicagem(e)}<div class="leitura">🕐 Atualização: ${horaLeitura(e.leitura)}</div></div><button class="local" aria-label="Traçar rota até o equipamento ${e.cod}" ${e.lat&&e.lng?'':'disabled'} onclick="localizar(${e.lat||'null'},${e.lng||'null'})"><span class="pin" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span class="local-text">Localizar</span><span class="local-arrow" aria-hidden="true">›</span></button>${botaoMobi(e)}</article>`}).join('')||'<div class="vazio">Nenhum equipamento desta operação e categoria.</div>'}
+function renderEquipamentos(){let itens=equipamentos.filter(e=>e.frente===frenteAtual);if(filtroOperacaoAtual!=='todas')itens=itens.filter(e=>operacaoEq(e)===filtroOperacaoAtual);if(filtroTipoAtual!=='todos')itens=itens.filter(e=>tipoEquipamento(e)===filtroTipoAtual&&(filtroTipoAtual!=='caminhao'||caminhaoEmCiclo(e)));itens.sort((a,b)=>String(a.cod).localeCompare(String(b.cod)));document.getElementById('lista').innerHTML=itens.map(e=>{const st=estadoEq(e),fazendo=e.parada||e.atividade||(e.vel>.1?'Em deslocamento':'Sem atividade apontada'),con=statusConexao(e),codigo=String(e.cod).replace(/\D/g,'');return`<article id="equip-${codigo}" class="equip ${st.chave} ${String(e.cod)===equipamentoDestacado?'destaque':''} ${tipoEquipamento(e)==='transbordo'&&acessoAdm?'transbordo-adm':''}" onclick="clicarEquipamento(event,'${String(e.cod).replace(/'/g,"\\'")}','${tipoEquipamento(e)}')"><div class="equip-info"><b>${e.cod}</b><div>${e.modelo} · ${e.nome}</div><span class="status-tag ${st.chave}">${st.nome}</span><span class="conexao-tag ${con.c}" title="${con.fonte}">${con.n}</span>${badgeBateria(e)}<div class="atividade">${fazendo}</div>${distanciaCargaEquipamento(e)}<div class="tempo-apontamento">⏱ ${tempoApontamento(e)}</div><div class="vel">${e.vel.toFixed(1)} km/h</div>${tagCubicagem(e)}${diagColetaHtml(e)}<div class="leitura">🕐 Atualização: ${horaLeitura(e.leitura)}</div></div><button class="local" aria-label="Traçar rota até o equipamento ${e.cod}" ${e.lat&&e.lng?'':'disabled'} onclick="localizar(${e.lat||'null'},${e.lng||'null'})"><span class="pin" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span class="local-text">Localizar</span><span class="local-arrow" aria-hidden="true">›</span></button>${botaoMobi(e)}</article>`}).join('')||'<div class="vazio">Nenhum equipamento desta operação e categoria.</div>'}
 function voltar(){document.getElementById('visao-equip').style.display='none';document.getElementById('visao-frentes').style.display='block'}
 function localizar(lat,lng){if(!lat||!lng)return;window.open('https://www.google.com/maps/dir/?api=1&destination='+lat+','+lng+'&travelmode=driving','_blank')}
 </script>
