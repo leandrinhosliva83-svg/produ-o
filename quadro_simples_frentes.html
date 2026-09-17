@@ -420,7 +420,7 @@ canvas{max-height:180px}
     <header class="topo"><strong>🚩 Frentes de Operação</strong><div class="topo-acoes"><button class="adm-btn" id="btn-adm" onclick="liberarAdm()">🔒 ADM</button><button class="adm-btn" id="btn-cub-massa" onclick="abrirCubicagemMassa()" style="display:none">▣ CUBICAGEM EM MASSA</button><button class="atualizar" id="btn-atualizar" onclick="carregar()">↻ Atualizar</button></div></header>
     <main>
       <section id="visao-frentes"><div class="pesquisa-equip pesquisa-topo"><span class="lupa-pesquisa" aria-hidden="true">⌕</span><input id="pesquisa-equip" inputmode="numeric" aria-label="Número do equipamento" placeholder="Pesquisar equipamento" onkeydown="if(event.key==='Enter')pesquisarEquipamento()"><button onclick="pesquisarEquipamento()"><span>Pesquisar</span><b aria-hidden="true">›</b></button></div><div class="pesquisa-msg" id="pesquisa-msg"></div><div class="titulo"><h2>Selecione uma frente ou operação</h2><span id="atualizacao">Carregando...</span></div><div class="resumo-conexao" id="resumo-conexao" aria-label="Resumo de conexão dos equipamentos"></div><section class="resumo-entregas" id="resumo-entregas"><div class="resumo-entregas-topo"><strong>🌾 Frentes de Colheita · 02 a 08</strong><span>entrega possível · limitante</span></div><div class="resumo-entregas-grade" id="resumo-entregas-grade"></div></section><div class="historico-card fechado" id="historico-card"><div class="historico-topo"><strong>Online hora a hora</strong><div class="historico-acoes"><span>Últimas 24 horas</span><button class="toggle-grafico" id="toggle-grafico" aria-expanded="false" onclick="alternarGrafico()"><span>Exibir gráfico</span><i aria-hidden="true">⌄</i></button></div></div><div class="historico-conteudo"><div class="grafico-horas" id="grafico-horas" aria-label="Percentual médio online por hora"></div><div class="legenda-historico"><span><b>━</b> medição contínua &nbsp; ┄ intervalo sem dados</span></div></div></div><section class="resultado-conexao" id="resultado-conexao"><div class="resultado-conexao-topo"><button class="voltar" onclick="voltarFrentesConexao()">← Todas as frentes</button><h3 id="titulo-conexao">Equipamentos</h3></div><div class="lista lista-conexao" id="lista-conexao"></div></section><div class="grade" id="grade"><div class="vazio">Buscando equipamentos...</div></div></section>
-      <section class="detalhe" id="visao-equip"><button class="voltar" onclick="voltar()">← Todas as frentes</button><div class="titulo"><h2 id="nome-frente">Frente</h2><span id="qtd-frente"></span></div><div class="logistica-card" id="logistica-card"><button class="logistica-topo" onclick="alternarLogistica()" aria-expanded="false"><span><strong>⏱ Tempos logísticos</strong><small>Últimas 10 amostras válidas · histórico contínuo</small></span><span class="logistica-toggle"><span>Exibir</span><i>⌄</i></span></button><div class="logistica-conteudo"><div class="logistica-grade" id="logistica-grade"></div><div class="logistica-total incompleto" id="logistica-total"><span>⏱ Tempo logístico total médio</span><strong>Aguardando ciclo completo</strong><small>Soma das quatro etapas</small></div><div class="logistica-nota">Média móvel das últimas 10 amostras válidas por etapa, sem zerar na virada do dia. A 11ª substitui a mais antiga.</div><div class="logistica-historico"><div class="logistica-historico-titulo"><span>Histórico contínuo</span><span>Últimas 10</span></div><div class="logistica-eventos" id="logistica-eventos"></div></div></div></div><div class="filtro-titulo">Operações desta frente</div><div class="operacao-filtros" id="operacao-filtros"></div><div class="filtro-titulo">Tipos de equipamento</div><div class="tipo-filtros" id="tipo-filtros"></div><div class="lista" id="lista"></div></section>
+      <section class="detalhe" id="visao-equip"><button class="voltar" onclick="voltar()">← Todas as frentes</button><div class="titulo"><h2 id="nome-frente">Frente</h2><span id="qtd-frente"></span></div><div class="logistica-card" id="logistica-card"><button class="logistica-topo" onclick="alternarLogistica()" aria-expanded="false"><span><strong>⏱ Tempos logísticos</strong><small>Últimas 10 amostras válidas · histórico contínuo</small></span><span class="logistica-toggle"><span>Exibir</span><i>⌄</i></span></button><div class="logistica-conteudo"><div class="logistica-grade" id="logistica-grade"></div><div class="logistica-total incompleto" id="logistica-total"><span>⏱ Tempo logístico total médio</span><strong>Aguardando ciclo completo</strong><small>Soma das quatro etapas</small></div><div class="logistica-nota">Uma viagem completa já fecha o ciclo e libera os cálculos. Depois, a média usa até as últimas 10 amostras válidas por etapa.</div><div class="logistica-historico"><div class="logistica-historico-titulo"><span>Histórico contínuo</span><span>Últimas 10</span></div><div class="logistica-eventos" id="logistica-eventos"></div></div></div></div><div class="filtro-titulo">Operações desta frente</div><div class="operacao-filtros" id="operacao-filtros"></div><div class="filtro-titulo">Tipos de equipamento</div><div class="tipo-filtros" id="tipo-filtros"></div><div class="lista" id="lista"></div></section>
     </main>
   </section>
 <script>
@@ -822,7 +822,31 @@ function passaFiltroOperacional(e){return tipoEquipamento(e)!=='caminhao'||camin
 function operacaoEq(e){if(e.atividade&&String(e.atividade).trim())return String(e.atividade).trim();const classe=String(e.classe||'').trim();if(classe&&classe!=='SEM CLASSIFICAÇÃO')return classe;return'Operação não informada pela Axiagro'}
 function horaLeitura(d){if(!d)return'Horário não informado';const min=Math.max(0,Math.floor((Date.now()-d.getTime())/60000)),hora=d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});return min<1?hora+' · agora':min<60?hora+' · há '+min+' min':hora+' · há '+Math.floor(min/60)+'h '+min%60+'min'}
 function tempoApontamento(e){if(!e.inicio)return'Tempo do apontamento não informado';const inicio=new Date(e.inicio);if(isNaN(inicio))return'Tempo do apontamento não informado';const min=Math.max(0,Math.floor((Date.now()-inicio.getTime())/60000)),dias=Math.floor(min/1440),horas=Math.floor((min%1440)/60),mins=min%60;if(dias)return'Neste apontamento: '+dias+'d '+horas+'h '+mins+'min';if(horas)return'Neste apontamento: '+horas+'h '+mins+'min';return'Neste apontamento: '+mins+'min'}
-function etapaLogisticaExplicita(e){if(e.leitura instanceof Date&&!isNaN(e.leitura)&&idadeMinutos(e.leitura)>10)return null;const s=normalizar([e.atividade,e.parada].filter(Boolean).join(' '));if(/bascul|descarreg|descarga|transferindo|em transferencia|no ponto de transferencia/.test(s))return'basculamento';if(apontamento901(e))return'carregado';if(/deslocamento.*carregad|viagem.*carregad|percurso.*volta.*(?:ate.*)?(?:ponto.*)?car|volta.*(?:ate.*)?(?:ponto.*)?car|percurso.*ida.*ponto.*(?:descar|transf|bascul)|ida.*ponto.*(?:descar|transf|bascul)|carregado.*(?:usina|industria|destino|ponto)/.test(s))return'carregado';if(/deslocamento.*vazio|viagem.*vazi|ida.*ponto.*car|vazio.*(?:frente|lavoura|origem|carreg)/.test(s))return'vazio';if(/carregamento|carregando|em carga|recebendo carga|ponto de carregamento/.test(s)&&!/aguard|espera/.test(s))return'carregamento';return null}
+function etapaLogisticaExplicita(e){
+  const camposCodigo=[
+    e?.codAtividade,e?.codigoAtividade,e?.cod_atividade,e?.atividadeCodigo,
+    e?.codApontamento,e?.codigoApontamento,e?.cod_apontamento,e?.apontamentoCodigo,
+    e?.operacaoCodigo,e?.codigoOperacao,e?.codOperacao
+  ];
+  const texto=[e?.atividade,e?.parada,e?.descricao,e?.descricaoAtividade,e?.apontamento,e?.operacao,e?.status]
+    .filter(Boolean).join(' ');
+  const numeros=(camposCodigo.filter(v=>v!==undefined&&v!==null).map(v=>String(v).trim())
+    .concat((texto.match(/\b(?:227|229|233|901)\b/g)||[])));
+
+  // Apontamentos confirmados da AxiAgro para transbordo.
+  if(numeros.includes('227'))return'carregamento';
+  if(numeros.includes('901'))return'carregado';
+  if(numeros.includes('229'))return'basculamento';
+  if(numeros.includes('233'))return'vazio';
+
+  // Fallback textual caso algum retorno da API venha sem o código.
+  const t=normalizar(texto);
+  if(/carregamento transbordo|carregamento|carregando|em carga|recebendo carga/.test(t))return'carregamento';
+  if(/percurso volta ate ponto|deslocamento carregado|transbordo carregado/.test(t))return'carregado';
+  if(/descarreg carga|basculamento|basculando|descarregando/.test(t))return'basculamento';
+  if(/deslocamento vazio|transbordo vazio/.test(t))return'vazio';
+  return null;
+}
 function minutosApontamento(e){if(!e.inicio)return null;const d=new Date(e.inicio);if(isNaN(d))return null;const min=Math.floor((Date.now()-d.getTime())/60000);return min>=0&&min<=10080?min:null}
 function formatarMinutos(min){if(min===null||!Number.isFinite(min))return'—';min=Math.round(min);if(min<60)return min+' min';const h=Math.floor(min/60),m=min%60;return h+'h'+(m?' '+m+'min':'')}
 const CHAVE_DISTANCIA_CARGA='qf-distancia-carga-v3';
@@ -1013,9 +1037,22 @@ function alternarHistoricoEtapa(chave){etapaHistoricoAberta=etapaHistoricoAberta
 const CHAVE_KPI_LOGISTICA='qf-kpi-logistica-validos-v3';
 function manterResumoLogistico(chave,resumo,distancias){let cache={};try{cache=JSON.parse(localStorage.getItem(CHAVE_KPI_LOGISTICA)||'{}')||{}}catch(_){}const id=String(frenteAtual)+'|'+chave+(chave==='carregado'?'|apontamento':'');if(resumo.media!==null&&duracaoLogisticaValida(chave,resumo.media)){const registro={media:resumo.media,ocorrencias:resumo.ocorrencias,atualizado:Date.now()};if(chave==='carregado'&&Number.isFinite(cache[id]?.mediaMetros)){registro.mediaMetros=cache[id].mediaMetros;registro.ciclosMetros=cache[id].ciclosMetros}if(chave==='carregado'&&distancias?.confiavel){registro.mediaMetros=distancias.mediaMetros;registro.ciclosMetros=distancias.ciclos}cache[id]=registro;try{localStorage.setItem(CHAVE_KPI_LOGISTICA,JSON.stringify(cache))}catch(_){}return{...registro,retido:false}}const anterior=cache[id];return anterior&&duracaoLogisticaValida(chave,anterior.media)?{...anterior,retido:true}:resumo}
 function resumosLogisticosMantidos(itens,distancias){return Object.fromEntries(['vazio','carregamento','carregado','basculamento'].map(chave=>[chave,manterResumoLogistico(chave,resumoTempoEtapa(itens,chave),distancias)]))}
-function renderTotalLogistico(itens,distancias){const el=document.getElementById('logistica-total');if(!el)return;const resumos=Object.values(resumosLogisticosMantidos(itens,distancias)),completo=resumos.every(r=>r.media!==null&&Number.isFinite(r.media)),total=completo?resumos.reduce((s,r)=>s+r.media,0):null;let cache={};try{cache=JSON.parse(localStorage.getItem('qf-total-logistico-validos-v1')||'{}')||{}}catch(_){}const id=String(frenteAtual),valido=total!==null&&total<=60;if(valido){cache[id]={total,atualizado:Date.now()};try{localStorage.setItem('qf-total-logistico-validos-v1',JSON.stringify(cache))}catch(_){}}const anterior=cache[id],mantido=!valido&&anterior&&Number.isFinite(anterior.total)&&anterior.total<=60;el.classList.toggle('incompleto',!valido&&!mantido);el.querySelector('strong').textContent=valido?formatarMinutos(total):mantido?formatarMinutos(anterior.total):completo?'Ciclo fora do limite de 60 min':'Coletando as quatro etapas';el.querySelector('small').textContent=mantido?'Último total válido mantido':completo&&!valido?'Apontamentos incompatíveis — não usados no total':resumos.some(r=>r.retido)?'Inclui última média válida mantida':'Soma das médias das quatro etapas · limite 60 min'}
-const TEMPO_ENCHIMENTO_TRANSBORDO=28;
-
+function renderTotalLogistico(itens,distancias){
+  const el=document.getElementById('logistica-total');if(!el)return;
+  const mapa=resumosLogisticosMantidos(itens,distancias);
+  const chaves=['vazio','carregamento','carregado','basculamento'];
+  const faltando=chaves.filter(k=>!Number.isFinite(mapa[k]?.media)||mapa[k].media<=0);
+  const completo=faltando.length===0;
+  const total=completo?chaves.reduce((s,k)=>s+Number(mapa[k].media),0):null;
+  el.classList.toggle('incompleto',!completo);
+  if(completo){
+    el.querySelector('strong').textContent=formatarMinutos(total)+(total>60?' ⚠':'');
+    el.querySelector('small').textContent=(total>60?'Ciclo acima de 60 min · cálculo mantido':'Ciclo completo')+' · 1 viagem válida já fecha o cálculo';
+  }else{
+    el.querySelector('strong').textContent='Aguardando '+faltando.join(', ');
+    el.querySelector('small').textContent='Basta 1 medição válida em cada uma das 4 etapas para fechar o ciclo';
+  }
+}
 function equipamentoRecenteCapacidade(e){
   return e.leitura instanceof Date&&!isNaN(e.leitura)&&idadeMinutos(e.leitura)<=10;
 }
@@ -1032,16 +1069,11 @@ function colhedoraProdutivaCapacidade(e){
 }
 function cicloLogisticoFrente(itens){
   const distancias=resumoCiclosCarregados(itens);
-  const resumos=Object.values(resumosLogisticosMantidos(itens,distancias));
+  const chaves=['vazio','carregamento','carregado','basculamento'];
+  const resumos=chaves.map(chave=>manterResumoLogistico(chave,resumoTempoEtapa(itens,chave),distancias));
   const completo=resumos.every(r=>Number.isFinite(r.media)&&r.media>0);
-  const soma=completo?resumos.reduce((s,r)=>s+r.media,0):null;
-  return{
-    ciclo:soma!==null&&soma>0?soma:null,
-    soma,
-    acimaLimite:soma!==null&&soma>60,
-    resumos,
-    distancias
-  };
+  const soma=completo?resumos.reduce((s,r)=>s+Number(r.media),0):null;
+  return{ciclo:soma!==null&&soma>0?soma:null,soma,acimaLimite:soma!==null&&soma>60,resumos,distancias,minimoAmostras:1};
 }
 function calculoCapacidadeAutomatica(){
   const itens=[...new Map(
