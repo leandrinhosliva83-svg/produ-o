@@ -838,6 +838,7 @@ function dentroPadraoLogistico(duracao,base){if(base.length<3)return true;const 
 const CHAVE_AMOSTRAS_PADRAO='qf-logistica-10-padrao-v1';
 const API_HISTORICO_CENTRAL='https://script.google.com/macros/s/AKfycbzt3u3nlcJUUMERyHbmyU9RNzEh7F-UIztmuhWIRCtePaYTgGcwdgW7lHi9vuyhtXhd/exec';
 let sincronizandoHistorico=false;
+let HISTORICO_CENTRAL_MEMORIA=[];
 function chaveFrenteHistorico(v){
   const n=parseInt(String(v??'').replace(/\D/g,''),10);
   return Number.isFinite(n)?String(n):String(v??'').trim();
@@ -943,7 +944,8 @@ async function sincronizarHistoricoCentral(renderizar=true){
         const chave=[h.tipo,frente,h.etapa,h.codigo,Number(h.fim)||0].join('|');
         unicos.set(chave,{...h,frente});
       }
-      aplicarHistoricoCentral([...unicos.values()]);
+      HISTORICO_CENTRAL_MEMORIA=[...unicos.values()];
+      aplicarHistoricoCentral(HISTORICO_CENTRAL_MEMORIA);
       if(renderizar&&typeof renderTemposLogisticos==='function'&&frenteAtual)renderTemposLogisticos();
     }
   }catch(e){console.warn('Histórico central indisponível; mantendo cache local.',e)}
@@ -956,7 +958,42 @@ function registrarAmostraCentral(amostra,tipo='tempo'){
   enviarHistoricoCentral([item]);
 }
 
-function amostrasPadraoLogistico(frente,etapa,dados=lerTemposLogisticos()){let banco={};try{banco=JSON.parse(localStorage.getItem(CHAVE_AMOSTRAS_PADRAO)||'{}')||{}}catch(_){}const canon=chaveFrenteHistorico(frente),id=canon+'|'+etapa,alternativos=Object.keys(banco).filter(k=>{const p=k.split('|');return chaveFrenteHistorico(p[0])===canon&&p[1]===etapa});if(!Array.isArray(banco[id])&&alternativos.length){banco[id]=alternativos.flatMap(k=>Array.isArray(banco[k])?banco[k]:[]).sort((a,b)=>(b.fim||0)-(a.fim||0)).slice(0,10)}if(!Array.isArray(banco[id])){const antigas=Object.values(dados).flatMap(r=>(r.historico||[]).map(h=>({...h,frente:h.frente??r.frente}))).filter(h=>String(h.frente)===String(frente)&&h.etapa===etapa&&duracaoLogisticaValida(etapa,Number(h.duracao))).sort((a,b)=>(b.fim||0)-(a.fim||0)),referencia=antigas.slice(0,10);banco[id]=antigas.filter(h=>dentroPadraoLogistico(Number(h.duracao),referencia)).slice(0,10);try{localStorage.setItem(CHAVE_AMOSTRAS_PADRAO,JSON.stringify(banco))}catch(_){}}return banco[id]}
+function amostrasPadraoLogistico(frente,etapa,dados=lerTemposLogisticos()){
+  const canon=chaveFrenteHistorico(frente);
+
+  // Fonte principal da tela: base central já carregada em memória.
+  const centrais=HISTORICO_CENTRAL_MEMORIA
+    .filter(h=>h.tipo==='tempo'&&chaveFrenteHistorico(h.frente)===canon&&String(h.etapa)===String(etapa))
+    .filter(h=>duracaoLogisticaValida(etapa,Number(h.duracao)))
+    .sort((a,b)=>(b.fim||0)-(a.fim||0));
+
+  // Elimina duplicidades antigas (ex.: "FRENTE 4" e "4") e limita às 10 últimas.
+  const unicos=new Map();
+  for(const h of centrais){
+    const k=[canon,etapa,String(h.codigo||''),Number(h.fim)||0].join('|');
+    if(!unicos.has(k))unicos.set(k,{...h,frente:canon});
+  }
+  const daCentral=[...unicos.values()].slice(0,10);
+  if(daCentral.length)return daCentral;
+
+  // Fallback local apenas quando a base central ainda não terminou de carregar.
+  let banco={};
+  try{banco=JSON.parse(localStorage.getItem(CHAVE_AMOSTRAS_PADRAO)||'{}')||{}}catch(_){}
+  const id=canon+'|'+etapa;
+  const alternativos=Object.keys(banco).filter(k=>{
+    const p=k.split('|');
+    return chaveFrenteHistorico(p[0])===canon&&p[1]===etapa;
+  });
+  let locais=[];
+  if(Array.isArray(banco[id]))locais=banco[id];
+  else if(alternativos.length)locais=alternativos.flatMap(k=>Array.isArray(banco[k])?banco[k]:[]);
+  if(locais.length)return locais.sort((a,b)=>(b.fim||0)-(a.fim||0)).slice(0,10);
+
+  const antigas=Object.values(dados).flatMap(r=>(r.historico||[]).map(h=>({...h,frente:h.frente??r.frente})))
+    .filter(h=>chaveFrenteHistorico(h.frente)===canon&&h.etapa===etapa&&duracaoLogisticaValida(etapa,Number(h.duracao)))
+    .sort((a,b)=>(b.fim||0)-(a.fim||0));
+  return antigas.slice(0,10);
+}
 function aceitarAmostraLogistica(amostra,dados){if(!duracaoLogisticaValida(amostra.etapa,Number(amostra.duracao)))return false;const base=amostrasPadraoLogistico(amostra.frente,amostra.etapa,dados);if(!dentroPadraoLogistico(Number(amostra.duracao),base)){try{const rejeitadas=JSON.parse(localStorage.getItem('qf-logistica-fora-padrao-v1')||'[]');rejeitadas.unshift({...amostra,motivo:'Variação maior que 50% da mediana',mediana:medianaLogistica(base.map(h=>h.duracao))});localStorage.setItem('qf-logistica-fora-padrao-v1',JSON.stringify(rejeitadas.slice(0,100)))}catch(_){}return false}let banco={};try{banco=JSON.parse(localStorage.getItem(CHAVE_AMOSTRAS_PADRAO)||'{}')||{};const id=String(amostra.frente)+'|'+amostra.etapa;banco[id]=[amostra,...base].sort((a,b)=>(b.fim||0)-(a.fim||0)).slice(0,10);localStorage.setItem(CHAVE_AMOSTRAS_PADRAO,JSON.stringify(banco));registrarAmostraCentral(amostra,'tempo')}catch(_){}return true}
 function atualizarTemposLogisticos(){const dados=lerTemposLogisticos(),agora=Date.now();for(const e of equipamentos){const etapa=etapaLogistica(e);if(!etapa)continue;const codigo=String(e.cod),registro=dados[codigo]||{etapas:{},historico:[],frente:e.frente},inicioInformado=e.inicio?new Date(e.inicio).getTime():NaN,inicioEtapa=Number.isFinite(inicioInformado)&&inicioInformado<=agora?inicioInformado:agora;registro.etapas=registro.etapas||{};registro.historico=Array.isArray(registro.historico)?registro.historico:[];if(etapa==='basculamento'&&registro.ciclo901?.ativo){const fimInformado=e.inicio?new Date(e.inicio).getTime():NaN,fim901=Number.isFinite(fimInformado)&&fimInformado>=registro.ciclo901.inicio&&fimInformado<=agora?fimInformado:agora,duracao901=(fim901-registro.ciclo901.inicio)/60000;if(aceitarAmostraLogistica({etapa:'carregado',origem:'901',duracao:duracao901,inicio:registro.ciclo901.inicio,fim:fim901,codigo,frente:e.frente},dados))registro.historico.unshift({etapa:'carregado',origem:'901',duracao:duracao901,inicio:registro.ciclo901.inicio,fim:fim901,codigo,frente:e.frente});registro.ciclo901.ativo=false}else if(apontamento901(e)&&!registro.ciclo901?.ativo){registro.ciclo901={ativo:true,inicio:inicioApontamento901(e,agora)}}if(!registro.etapaAtual){registro.etapaAtual=etapa;registro.inicioAtual=inicioEtapa}else if(registro.etapaAtual!==etapa){const etapaFechada=registro.etapaAtual,fim=inicioEtapa>=Number(registro.inicioAtual||0)?inicioEtapa:agora,duracao=Math.max(0,Math.round((fim-Number(registro.inicioAtual||agora))/60000)),anterior=registro.etapas[etapaFechada]||{totalMinutos:0,ocorrencias:0};if(etapaFechada!=='carregado'&&aceitarAmostraLogistica({etapa:etapaFechada,duracao,inicio:Number(registro.inicioAtual)||null,fim,codigo,frente:e.frente},dados)){anterior.totalMinutos=(Number(anterior.totalMinutos)||0)+duracao;anterior.ocorrencias=(Number(anterior.ocorrencias)||0)+1;anterior.ultimoMinutos=duracao;anterior.ultimaConclusao=agora;registro.etapas[etapaFechada]=anterior;registro.historico.unshift({etapa:etapaFechada,duracao,inicio:Number(registro.inicioAtual)||null,fim,codigo,frente:e.frente});registro.historico=['vazio','carregamento','carregado','basculamento'].flatMap(k=>registro.historico.filter(h=>h.etapa===k&&duracaoLogisticaValida(k,Number(h.duracao))).slice(0,10))}registro.etapaAtual=etapa;registro.inicioAtual=inicioEtapa}registro.frente=e.frente;registro.atualizado=agora;dados[codigo]=registro}try{localStorage.setItem(CHAVE_TEMPOS_LOGISTICOS,JSON.stringify(dados))}catch(_){}arquivarLogistica24h()}
 function resumoTempoEtapa(itens,chave){const amostras=[...new Set(itens.map(e=>String(e.frente)))].flatMap(frente=>amostrasPadraoLogistico(frente,chave)).sort((a,b)=>(b.fim||0)-(a.fim||0)).slice(0,10),total=amostras.reduce((s,h)=>s+Number(h.duracao),0);return{media:amostras.length?total/amostras.length:null,ocorrencias:amostras.length,amostras}}
@@ -1233,7 +1270,7 @@ async function mostrarSemCorrespondencia(){filtroConexaoResumoAtual=null;documen
 async function pesquisarEquipamento(){const campo=document.getElementById('pesquisa-equip'),msg=document.getElementById('pesquisa-msg'),codigo=String(campo.value||'').replace(/\D/g,'');msg.textContent='';if(!codigo){msg.textContent='Digite o número do equipamento.';campo.focus();return}let e=equipamentos.find(x=>String(x.cod).replace(/\D/g,'')===codigo);if(!e){msg.textContent='Consultando a Axiagro...';try{const resposta=await fetch(API+'/dashboard?eqpto='+codigo,{headers:{Authorization:'Bearer '+token}});if(resposta.ok){const dados=await resposta.json(),lista=dados.alocacao||dados.equipamentos||dados.data||[];const novos=(Array.isArray(lista)?lista:[lista]).map(converterEquipamento).filter(x=>x.frente);for(const novo of novos){if(!equipamentos.some(x=>String(x.cod)===String(novo.cod)&&x.frente===novo.frente))equipamentos.push(novo)}frentesEncontradas=[...new Set(equipamentos.map(x=>x.frente).filter(Boolean))].sort(compararGrupos);e=equipamentos.find(x=>String(x.cod).replace(/\D/g,'')===codigo)}}catch(_){}}if(!e){msg.textContent='Equipamento '+codigo+' não encontrado nos dados retornados pela Axiagro.';return}msg.textContent='';equipamentoDestacado=String(e.cod);abrirFrente(e.frente);filtroOperacaoAtual=operacaoEq(e);filtroTipoAtual='todos';renderOperacoes();renderTipos();renderEquipamentos();setTimeout(()=>document.getElementById('equip-'+codigo)?.scrollIntoView({behavior:'smooth',block:'center'}),80)}
 
 function abrirFrente(frente){
-  frenteAtual=frente;filtroOperacaoAtual='todas';filtroTipoAtual='todos';document.getElementById('visao-frentes').style.display='none';document.getElementById('visao-equip').style.display='block';sincronizarHistoricoCentral(true);document.getElementById('nome-frente').textContent=modoTeste?'Frente 2 · SIMULAÇÃO':nomeFrente(frente);if(modoTeste)renderTemposLogisticosTeste();else renderTemposLogisticos();renderOperacoes();renderTipos();renderEquipamentos();
+  frenteAtual=frente;filtroOperacaoAtual='todas';filtroTipoAtual='todos';document.getElementById('visao-frentes').style.display='none';document.getElementById('visao-equip').style.display='block';sincronizarHistoricoCentral(true).then(()=>{if(frenteAtual){renderTemposLogisticos();renderHistoricoLogistico(equipamentos.filter(e=>chaveFrenteHistorico(e.frente)===chaveFrenteHistorico(frenteAtual)))}});document.getElementById('nome-frente').textContent=modoTeste?'Frente 2 · SIMULAÇÃO':nomeFrente(frente);if(modoTeste)renderTemposLogisticosTeste();else renderTemposLogisticos();renderOperacoes();renderTipos();renderEquipamentos();
 }
 function renderOperacoes(){const itens=equipamentos.filter(e=>e.frente===frenteAtual),operacoes=[...new Set(itens.map(operacaoEq))].sort((a,b)=>a.localeCompare(b,'pt-BR'));document.getElementById('operacao-filtros').innerHTML=`<button class="operacao-btn ${filtroOperacaoAtual==='todas'?'ativo':''}" onclick="filtrarOperacao('todas')">▦ Todas<span class="qtd">${itens.length}</span></button>`+operacoes.map(op=>{const n=itens.filter(e=>operacaoEq(e)===op).length,cod=encodeURIComponent(op);return`<button class="operacao-btn ${filtroOperacaoAtual===op?'ativo':''}" onclick="filtrarOperacao(decodeURIComponent('${cod}'))">⚙ ${op}<span class="qtd">${n}</span></button>`}).join('')}
 function filtrarOperacao(operacao){filtroOperacaoAtual=operacao;filtroTipoAtual='todos';renderOperacoes();renderTipos();renderEquipamentos()}
