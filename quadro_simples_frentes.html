@@ -450,19 +450,67 @@ function deviceIdMobi(codigo){const nome=String(codigo||'').trim();if(MOBI_IDS[n
 function abrirMobi(codigo){const id=deviceIdMobi(codigo);if(!id)return;window.open('https://usinamoreno.mdmcloud.com.br/MobiControl/WebConsole/home/dashboard/devices/'+encodeURIComponent(id)+'/DeviceDetails?subGroups=false&count=250','_blank','noopener')}
 
 const CHAVE_CUBICAGEM_TRANSBORDO='qf-cubicagem-transbordo-v1';
+const API_CUBICAGEM='https://script.google.com/macros/s/AKfycbzt3u3nlcJUUMERyHbmyU9RNzEh7F-UIztmuhWIRCtePaYTgGcwdgW7lHi9vuyhtXhd/exec';
+let cubicagensCompartilhadas={};
+let sincronizandoCubicagens=false;
+
 function lerCubicagens(){
-  try{return JSON.parse(localStorage.getItem(CHAVE_CUBICAGEM_TRANSBORDO)||'{}')}catch{return{}}
+  try{
+    const local=JSON.parse(localStorage.getItem(CHAVE_CUBICAGEM_TRANSBORDO)||'{}');
+    return {...local,...cubicagensCompartilhadas};
+  }catch{return {...cubicagensCompartilhadas}}
 }
 function cubicagemTransbordo(cod){
   const v=Number(lerCubicagens()[String(cod)]);
   return Number.isFinite(v)&&v>0?v:null;
 }
-function salvarCubicagemTransbordo(cod,valor){
-  const dados=lerCubicagens(),v=Number(valor);
+function cacheCubicagens(dados){
+  cubicagensCompartilhadas={...(dados||{})};
+  try{localStorage.setItem(CHAVE_CUBICAGEM_TRANSBORDO,JSON.stringify(cubicagensCompartilhadas))}catch(_ ){}
+}
+async function sincronizarCubicagens(remostrar=true){
+  if(sincronizandoCubicagens)return false;
+  sincronizandoCubicagens=true;
+  try{
+    const r=await fetch(API_CUBICAGEM+'?acao=listar&_='+Date.now(),{cache:'no-store'});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const data=await r.json();
+    if(!data.ok)throw new Error(data.erro||'Falha ao listar cubicagens');
+    cacheCubicagens(data.cubicagens||{});
+    if(remostrar){
+      if(typeof renderResumoEntregas==='function')renderResumoEntregas();
+      if(document.getElementById('visao-equip')?.style.display==='block'){
+        renderEquipamentos();
+        if(modoTeste)renderCapacidadeFrenteTeste();
+        else if(frenteAtual)renderCapacidadeFrente();
+      }
+    }
+    return true;
+  }catch(e){
+    console.warn('Cubicagem central indisponível; usando último cache.',e);
+    return false;
+  }finally{sincronizandoCubicagens=false}
+}
+async function salvarCubicagemTransbordo(cod,valor){
+  const v=Number(valor);
   if(!(v>0))return false;
-  dados[String(cod)]=v;
-  localStorage.setItem(CHAVE_CUBICAGEM_TRANSBORDO,JSON.stringify(dados));
-  return true;
+  const anterior=lerCubicagens();
+  anterior[String(cod)]=v;
+  cacheCubicagens(anterior);
+  try{
+    const r=await fetch(API_CUBICAGEM,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({acao:'salvar',equipamento:String(cod),cubicagem:v})
+    });
+    const data=await r.json();
+    if(!r.ok||!data.ok)throw new Error(data.erro||('HTTP '+r.status));
+    await sincronizarCubicagens(false);
+    return true;
+  }catch(e){
+    console.error('Erro ao salvar cubicagem central',e);
+    return false;
+  }
 }
 async function editarCubicagemTransbordo(cod){
   if(!acessoAdm&&!(await liberarAdm()))return;
@@ -471,10 +519,12 @@ async function editarCubicagemTransbordo(cod){
   if(entrada===null)return;
   const valor=Number(String(entrada).replace(',','.'));
   if(!(valor>0)){alert('Informe uma cubicagem válida em toneladas.');return}
-  salvarCubicagemTransbordo(cod,valor);
+  const ok=await salvarCubicagemTransbordo(cod,valor);
   renderEquipamentos();
   if(modoTeste)renderCapacidadeFrenteTeste();
   else if(frenteAtual)renderCapacidadeFrente();
+  if(typeof renderResumoEntregas==='function')renderResumoEntregas();
+  alert(ok?'Cubicagem salva e sincronizada.':'Cubicagem ficou salva neste aparelho, mas a base central não respondeu. Tente novamente.');
 }
 function clicarEquipamento(ev,cod,tipo){
   if(tipo!=='transbordo')return;
@@ -521,27 +571,39 @@ function abrirCubicagemMassa(){
 function fecharCubicagemMassa(){
   document.getElementById('modal-cub-massa')?.classList.remove('aberto');
 }
-function salvarCubicagemMassa(){
+async function salvarCubicagemMassa(){
   const inputs=[...document.querySelectorAll('.cub-massa-input')];
-  const dados=lerCubicagens();
-  let salvos=0;
+  const itens=[];
   for(const inp of inputs){
     const raw=String(inp.value||'').trim().replace(',','.');
     if(!raw)continue;
     const v=Number(raw);
-    if(v>0){
-      dados[String(inp.dataset.cod)]=v;
-      salvos++;
-    }
+    if(v>0)itens.push({equipamento:String(inp.dataset.cod),cubicagem:v});
   }
-  localStorage.setItem(CHAVE_CUBICAGEM_TRANSBORDO,JSON.stringify(dados));
-  fecharCubicagemMassa();
-  renderEquipamentos();
-  if(modoTeste)renderCapacidadeFrenteTeste();
-  else if(frenteAtual)renderCapacidadeFrente();
-  alert(`${salvos} cubicagem(ns) salva(s).`);
+  if(!itens.length){alert('Nenhuma cubicagem preenchida.');return}
+  const dados=lerCubicagens();
+  for(const item of itens)dados[item.equipamento]=item.cubicagem;
+  cacheCubicagens(dados);
+  try{
+    const r=await fetch(API_CUBICAGEM,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({acao:'salvarTodos',itens})
+    });
+    const resp=await r.json();
+    if(!r.ok||!resp.ok)throw new Error(resp.erro||('HTTP '+r.status));
+    await sincronizarCubicagens(false);
+    fecharCubicagemMassa();
+    renderEquipamentos();
+    if(modoTeste)renderCapacidadeFrenteTeste();
+    else if(frenteAtual)renderCapacidadeFrente();
+    if(typeof renderResumoEntregas==='function')renderResumoEntregas();
+    alert(`${itens.length} cubicagem(ns) salva(s) e sincronizada(s).`);
+  }catch(e){
+    console.error(e);
+    alert('Não consegui gravar na base central. Os valores ficaram apenas no cache deste aparelho; tente novamente.');
+  }
 }
-
 async function hashSenha(valor){const dados=new TextEncoder().encode(valor),hash=await crypto.subtle.digest('SHA-256',dados);return[...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,'0')).join('')}
 function atualizarBotaoAdm(){const btn=document.getElementById('btn-adm');if(btn){btn.textContent=acessoAdm?'🔓 ADM liberado':'🔒 ADM';btn.classList.toggle('liberado',acessoAdm)}}
 async function liberarAdm(){if(acessoAdm){acessoAdm=false;sessionStorage.removeItem('qf-adm-liberado');atualizarBotaoAdm();if(frenteAtual)renderEquipamentos();if(filtroConexaoResumoAtual)renderListaConexao(filtroConexaoResumoAtual);return false}const senha=prompt('Digite a senha administrativa');if(senha===null)return false;if(await hashSenha(senha)!==ADMIN_HASH){alert('Senha administrativa incorreta.');return false}acessoAdm=true;atualizarBotaoCubicagemMassa();sessionStorage.setItem('qf-adm-liberado','1');atualizarBotaoAdm();if(frenteAtual)renderEquipamentos();if(filtroConexaoResumoAtual)renderListaConexao(filtroConexaoResumoAtual);return true}
@@ -774,7 +836,7 @@ function renderCapacidadeFrenteTeste(){
   atualizar();
 }
 
-function abrirQuadro(){document.getElementById('inicio').style.display='none';document.getElementById('app').style.display='block';atualizarBotaoAdm();restaurarGrafico();carregar();if(!atualizacaoAutomatica)atualizacaoAutomatica=setInterval(()=>{if(document.visibilityState==='visible')carregar(true)},30000)}
+function abrirQuadro(){document.getElementById('inicio').style.display='none';document.getElementById('app').style.display='block';atualizarBotaoAdm();restaurarGrafico();sincronizarCubicagens(false).finally(()=>carregar());if(!atualizacaoAutomatica)atualizacaoAutomatica=setInterval(()=>{if(document.visibilityState==='visible'){sincronizarCubicagens(false);carregar(true)}},30000)}
 function nomeFrente(v){if(!v||v==='-')return'Sem frente';const texto=String(v).trim();if(/PLANTIO MANUAL/i.test(texto))return'Plantio Manual';if(/FERTIRRIGAÇÃO CAMINHÃO/i.test(texto))return'Fertirrigação · Caminhão';if(/FERTIRRIGAÇÃO CANAL/i.test(texto))return'Fertirrigação · Canal';const m=texto.match(/FRENTE\s*(\d+)/i),n=m?+m[1]:parseInt(texto.replace(/\D/g,''));if(n===1)return'Frente 01 · Corte Manual';if(n===10)return'Frente 10 · Herbicida';if(n===11)return'Frente 11 · Preparo de Solo';if(n===12)return'Frente 12 · Apoio';return isNaN(n)?texto:'Frente '+String(n).padStart(2,'0')}
 function numeroFrente(v){const m=String(v||'').match(/FRENTE\s*(\d+)/i);return m?+m[1]:999}
 function compararGrupos(a,b){const na=numeroFrente(a),nb=numeroFrente(b);return na!==nb?na-nb:String(a).localeCompare(String(b),'pt-BR')}
