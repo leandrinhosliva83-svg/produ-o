@@ -214,15 +214,19 @@ function parseDataBR(valor){
   const m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);
   return m?new Date(+m[3],+m[2]-1,+m[1],+(m[4]||0),+(m[5]||0)):null;
 }
-function carregar(){
+const API_URL = 'https://script.google.com/macros/s/AKfycbzdZpZ-MyssDqJVW8tV4vyYedCznwuj4nG8h2QW3xtGHl4ErPf8mSSwmc339Te9s380Mw/exec';
+async function carregar(){
   document.getElementById('abast').textContent='Atualizando base real...';
-  if(!(window.google&&google.script&&google.script.run)){
-    document.getElementById('abast').textContent='Abra pelo Web App do Google Apps Script.'; return;
+  try{
+    const resp = await fetch(API_URL + '?acao=dados&t=' + Date.now(), {cache:'no-store'});
+    if(!resp.ok) throw new Error('HTTP ' + resp.status);
+    const dados = await resp.json();
+    baseCompleta = (dados && dados.registros) || [];
+    renderizar(baseCompleta);
+  }catch(err){
+    console.error(err);
+    document.getElementById('abast').textContent='Erro ao consultar a base real.';
   }
-  google.script.run
-    .withSuccessHandler(resp=>{baseCompleta=(resp&&resp.registros)||[];renderizar(baseCompleta);})
-    .withFailureHandler(err=>{console.error(err);document.getElementById('abast').textContent='Erro ao consultar a base real.';})
-    .getDados();
 }
 function filtrarPeriodo(registros){
   const hoje=new Date();
