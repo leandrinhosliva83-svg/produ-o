@@ -89,6 +89,8 @@
 .mc-head h2{margin:0;font-size:20px}.mc-close{background:transparent;border:0;color:#fff;font-size:25px;cursor:pointer}
 .mc-table{width:100%;border-collapse:collapse}.mc-table th,.mc-table td{padding:10px;border-bottom:1px solid #26313b;text-align:left}
 .mc-table th{color:#8493a0;font-size:11px;letter-spacing:1px}.mc-num{color:#a8ff12;font-weight:900}
+.mc-actions{display:flex;justify-content:flex-end;margin:0 0 14px}.mc-pdf{border:1px solid #a8ff12;background:#182119;color:#dfff9d;padding:10px 16px;border-radius:8px;font-weight:900;cursor:pointer}.mc-pdf:hover{background:#243224}
+.mc-bar-wrap{display:flex;align-items:center;gap:10px;min-width:220px}.mc-bar-bg{height:10px;flex:1;background:#26313b;border-radius:999px;overflow:hidden}.mc-bar{height:100%;border-radius:999px}.mc-qtd{min-width:26px;text-align:right;font-weight:900}
 
 </style>
 </head>
@@ -141,6 +143,7 @@
   <div class="mc-box">
     <div class="mc-head"><div><h2>VEÍCULOS COM MENOS LANÇAMENTOS DE CONSUMO</h2><div class="sub">Quantidade de registros no período selecionado</div></div>
     <button class="mc-close" id="mcClose">×</button></div>
+    <div class="mc-actions"><button class="mc-pdf" id="btnGerarPdf">GERAR PDF</button></div>
     <div id="mcConteudo"></div>
   </div>
 </div>
@@ -156,14 +159,30 @@ function abrirMenosConsumo(){
     if(id) cont[id]=(cont[id]||0)+1;
   });
   const arr=Object.entries(cont).sort((a,b)=>a[1]-b[1] || a[0].localeCompare(b[0],'pt-BR',{numeric:true}));
-  const menor=arr.length?arr[0][1]:0;
-  const linhas=arr.map(([f,q])=>`<tr><td>${f}</td><td class="mc-num">${q}</td><td>${q===0?'SEM LANÇAMENTO':q===menor?'MENOR QUANTIDADE':''}</td></tr>`).join('');
-  document.getElementById('mcConteudo').innerHTML=`<table class="mc-table"><thead><tr><th>VEÍCULO</th><th>LANÇAMENTOS</th><th>SITUAÇÃO</th></tr></thead><tbody>${linhas}</tbody></table>`;
+  const menor=arr.length?arr[0][1]:0, maior=arr.length?Math.max(...arr.map(x=>x[1])):0;
+  const corBarra=q=>{const t=maior?Math.min(1,q/maior):0;const hue=Math.round(t*120);return `hsl(${hue} 82% 48%)`;};
+  const linhas=arr.map(([f,q],i)=>{const pct=maior?Math.max(5,(q/maior)*100):(q===0?5:100);return `<tr><td>${i+1}º</td><td>${f}</td><td><div class="mc-bar-wrap"><div class="mc-bar-bg"><div class="mc-bar" style="width:${pct}%;background:${corBarra(q)}"></div></div><span class="mc-qtd">${q}</span></div></td><td>${q===0?'SEM LANÇAMENTO':q===menor?'MENOR QUANTIDADE':''}</td></tr>`}).join('');
+  document.getElementById('mcConteudo').innerHTML=`<table class="mc-table"><thead><tr><th>CLASSIFICAÇÃO</th><th>VEÍCULO</th><th>LANÇAMENTOS / INDICADOR</th><th>SITUAÇÃO</th></tr></thead><tbody>${linhas}</tbody></table>`;
   document.getElementById('mcOverlay').style.display='block';
 }
+
+function gerarPdfMenosConsumo(){
+  const dados=filtrarPeriodo(baseCompleta||[]), cont={};
+  FROTAS_MONITORADAS.forEach(f=>cont[f]=0);
+  dados.forEach(r=>{const id=String(r.caminhao||'').trim();if(id)cont[id]=(cont[id]||0)+1;});
+  const arr=Object.entries(cont).sort((a,b)=>a[1]-b[1] || a[0].localeCompare(b[0],'pt-BR',{numeric:true}));
+  const periodoTxt=periodo===0?'Hoje':periodo===7?'Últimos 7 dias':periodo===30?'Últimos 30 dias':`Últimos ${periodo} dias`;
+  const maior=arr.length?Math.max(...arr.map(x=>x[1])):0; const linhas=arr.map(([f,q],i)=>{const pct=maior?Math.max(4,(q/maior)*100):(q===0?4:100);const hue=Math.round((maior?Math.min(1,q/maior):0)*120);return `<tr><td>${i+1}º</td><td>${f}</td><td><div class=\"pdfbarbg\"><div class=\"pdfbar\" style=\"width:${pct}%;background:hsl(${hue} 82% 48%)\"></div></div></td><td><b>${q}</b></td><td>${q===0?'SEM LANÇAMENTO':''}</td></tr>`}).join('');
+  const w=window.open('','_blank');
+  if(!w){alert('Permita pop-ups para gerar o PDF.');return;}
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Menos Lançamentos - Grupo Moreno</title><style>@page{size:A4;margin:12mm}body{font-family:Arial,sans-serif;color:#111;margin:0}h1{font-size:20px;margin:0 0 4px}.sub{font-size:12px;color:#555;margin-bottom:16px}.info{font-size:12px;margin-bottom:12px}table{width:100%;border-collapse:collapse;font-size:11px}th,td{padding:7px 8px;border-bottom:1px solid #ddd;text-align:left}th{background:#eee;font-size:10px}td:nth-child(1),td:nth-child(4){font-weight:700}.pdfbarbg{width:150px;height:9px;background:#e6e6e6;border-radius:999px;overflow:hidden}.pdfbar{height:100%;border-radius:999px}.rodape{margin-top:12px;font-size:10px;color:#777}@media print{button{display:none}}</style></head><body><h1>GRUPO MORENO — MENOS LANÇAMENTOS</h1><div class="sub">Classificação do menor para o maior número de lançamentos</div><div class="info"><b>Período:</b> ${periodoTxt} &nbsp; | &nbsp; <b>Total de veículos:</b> ${arr.length}</div><table><thead><tr><th>CLASSIFICAÇÃO</th><th>VEÍCULO</th><th>INDICADOR</th><th>LANÇAMENTOS</th><th>SITUAÇÃO</th></tr></thead><tbody>${linhas}</tbody></table><div class="rodape">Gerado em ${new Date().toLocaleString('pt-BR')}</div><script>window.onload=()=>{window.print();}<\/script></body></html>`);
+  w.document.close();
+}
+
 window.addEventListener('load',()=>{
- const b=document.getElementById('btnMenosConsumo'),c=document.getElementById('mcClose'),o=document.getElementById('mcOverlay');
+ const b=document.getElementById('btnMenosConsumo'),c=document.getElementById('mcClose'),o=document.getElementById('mcOverlay'),p=document.getElementById('btnGerarPdf');
  if(b)b.addEventListener('click',abrirMenosConsumo);
+ if(p)p.addEventListener('click',gerarPdfMenosConsumo);
  if(c)c.addEventListener('click',()=>o.style.display='none');
  if(o)o.addEventListener('click',e=>{if(e.target===o)o.style.display='none'});
 });
@@ -214,11 +233,11 @@ function parseDataBR(valor){
   const m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);
   return m?new Date(+m[3],+m[2]-1,+m[1],+(m[4]||0),+(m[5]||0)):null;
 }
-const API_URL = 'https://script.google.com/macros/s/AKfycbzdZpZ-MyssDqJVW8tV4vyYedCznwuj4nG8h2QW3xtGHl4ErPf8mSSwmc339Te9s380Mw/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbycG8l1sThxDVTLd7UOO6zE-0KNS-fujC-UVmsvg0B3_z6skXTMLuyRYigCWWHUbT8_Gw/exec';
 async function carregar(){
   document.getElementById('abast').textContent='Atualizando base real...';
   try{
-    const resp = await fetch(API_URL + '?acao=dados&t=' + Date.now(), {cache:'no-store'});
+    const resp = await fetch(API_URL + '?api=1&t=' + Date.now(), {cache:'no-store'});
     if(!resp.ok) throw new Error('HTTP ' + resp.status);
     const dados = await resp.json();
     baseCompleta = (dados && dados.registros) || [];
@@ -258,6 +277,20 @@ function renderizar(registros){
   document.getElementById('aderencia').textContent=fmt(ader,0)+'% de aderência à meta';
 }
 carregar();
+
+
+function gerarPdfMenosConsumo(){
+  const dados=filtrarPeriodo(baseCompleta||[]), cont={};
+  FROTAS_MONITORADAS.forEach(f=>cont[f]=0);
+  dados.forEach(r=>{const id=String(r.caminhao||'').trim();if(id)cont[id]=(cont[id]||0)+1;});
+  const arr=Object.entries(cont).sort((a,b)=>a[1]-b[1] || a[0].localeCompare(b[0],'pt-BR',{numeric:true}));
+  const periodoTxt=periodo===0?'Hoje':periodo===7?'Últimos 7 dias':periodo===30?'Últimos 30 dias':`Últimos ${periodo} dias`;
+  const maior=arr.length?Math.max(...arr.map(x=>x[1])):0; const linhas=arr.map(([f,q],i)=>{const pct=maior?Math.max(4,(q/maior)*100):(q===0?4:100);const hue=Math.round((maior?Math.min(1,q/maior):0)*120);return `<tr><td>${i+1}º</td><td>${f}</td><td><div class=\"pdfbarbg\"><div class=\"pdfbar\" style=\"width:${pct}%;background:hsl(${hue} 82% 48%)\"></div></div></td><td><b>${q}</b></td><td>${q===0?'SEM LANÇAMENTO':''}</td></tr>`}).join('');
+  const w=window.open('','_blank');
+  if(!w){alert('Permita pop-ups para gerar o PDF.');return;}
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Menos Lançamentos - Grupo Moreno</title><style>@page{size:A4;margin:12mm}body{font-family:Arial,sans-serif;color:#111;margin:0}h1{font-size:20px;margin:0 0 4px}.sub{font-size:12px;color:#555;margin-bottom:16px}.info{font-size:12px;margin-bottom:12px}table{width:100%;border-collapse:collapse;font-size:11px}th,td{padding:7px 8px;border-bottom:1px solid #ddd;text-align:left}th{background:#eee;font-size:10px}td:nth-child(1),td:nth-child(4){font-weight:700}.pdfbarbg{width:150px;height:9px;background:#e6e6e6;border-radius:999px;overflow:hidden}.pdfbar{height:100%;border-radius:999px}.rodape{margin-top:12px;font-size:10px;color:#777}@media print{button{display:none}}</style></head><body><h1>GRUPO MORENO — MENOS LANÇAMENTOS</h1><div class="sub">Classificação do menor para o maior número de lançamentos</div><div class="info"><b>Período:</b> ${periodoTxt} &nbsp; | &nbsp; <b>Total de veículos:</b> ${arr.length}</div><table><thead><tr><th>CLASSIFICAÇÃO</th><th>VEÍCULO</th><th>INDICADOR</th><th>LANÇAMENTOS</th><th>SITUAÇÃO</th></tr></thead><tbody>${linhas}</tbody></table><div class="rodape">Gerado em ${new Date().toLocaleString('pt-BR')}</div><script>window.onload=()=>{window.print();}<\/script></body></html>`);
+  w.document.close();
+}
 
 window.addEventListener('load',()=>{
   const atualizarExtra=()=>setTimeout(()=>{try{renderPerformanceExtra(baseCompleta)}catch(e){console.error(e)}},250);
