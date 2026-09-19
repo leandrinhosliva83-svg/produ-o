@@ -160,65 +160,31 @@ function _n(v){if(typeof v==='number')return v;let s=String(v??'').trim().replac
 function _fmt(v,c=2){return Number.isFinite(v)?v.toLocaleString('pt-BR',{minimumFractionDigits:c,maximumFractionDigits:c}):'-'}
 function renderPerformance(registros){
   const rows=Array.isArray(registros)?registros:[];
-  const porVeiculo={};
-
-  rows.forEach(r=>{
-    const id=String(r.caminhao||'').trim();
-    const litros=n(r.litros);
-    const realizado=n(r.realizado);
-    const meta=n(r.meta);
-    if(!id || realizado<=0 || meta<=0) return;
-
-    if(!porVeiculo[id]) porVeiculo[id]={litros:0, realizados:[], metas:[]};
-    porVeiculo[id].litros += litros;
-    porVeiculo[id].realizados.push(realizado);
-    porVeiculo[id].metas.push(meta);
-  });
-
-  const dados=Object.keys(porVeiculo).map(id=>{
-    const v=porVeiculo[id];
-    return {
-      frota:id,
-      litros:v.litros,
-      media:v.realizados.reduce((a,b)=>a+b,0)/v.realizados.length,
-      meta:v.metas.reduce((a,b)=>a+b,0)/v.metas.length
-    };
-  }).sort((a,b)=>a.frota.localeCompare(b.frota,'pt-BR',{numeric:true}));
-
-  const body=document.getElementById('perfBody');
-  const rank=document.getElementById('rankBody');
-  const upd=document.getElementById('perfUpdate');
-
-  if(upd) upd.textContent='ATUALIZADO '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-
-  if(!dados.length){
-    if(body) body.innerHTML='<tr><td colspan="6" class="perf-empty">Nenhum veículo no período selecionado.</td></tr>';
-    if(rank) rank.innerHTML='<div class="perf-empty">Sem dados para o ranking.</div>';
-    return;
-  }
-
-  if(body) body.innerHTML=dados.map(x=>{
-    const pct=x.meta ? (x.media/x.meta)*100 : 0;
-    const ok=x.media>=x.meta;
-    const largura=Math.max(0,Math.min(100,pct));
-    return `<tr>
-      <td>${x.frota}</td>
-      <td>${fmt(x.litros,2)} L</td>
-      <td>${fmt(x.meta,2)} km/L</td>
-      <td class="perf-real">${fmt(x.media,2)} km/L</td>
-      <td><div class="perf-pct">${fmt(pct,2)}%</div><div class="perf-bar"><i style="width:${largura}%"></i></div></td>
-      <td><span class="perf-status ${ok?'':'bad'}">${ok?'DENTRO DA META':'PONTO DE ATENÇÃO'}</span></td>
-    </tr>`;
+  const dados=rows.map(r=>{
+    const frota=_v(r,['Frota','frota','Veículo','Veiculo','veiculo','Equipamento','equipamento']);
+    const litros=_n(_v(r,['Litros','litros','Litragem','litragem']));
+    const meta=_n(_v(r,['Meta','meta']));
+    const media=_n(_v(r,['Média','Media','media','média','Realizado','realizado']));
+    return {frota:String(frota||'-'),litros,meta,media};
+  }).filter(x=>x.frota!=='-' && (Number.isFinite(x.media)||Number.isFinite(x.litros)));
+  const body=document.getElementById('perfBody'), rank=document.getElementById('rankBody'), upd=document.getElementById('perfUpdate');
+  if(upd)upd.textContent='ATUALIZADO '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  if(!dados.length){if(body)body.innerHTML='<tr><td colspan="6" class="perf-empty">Nenhum veículo no período selecionado.</td></tr>';if(rank)rank.innerHTML='<div class="perf-empty">Sem dados para o ranking.</div>';return}
+  if(body)body.innerHTML=dados.map(x=>{
+    const pct=(Number.isFinite(x.media)&&Number.isFinite(x.meta)&&x.meta!==0)?x.media/x.meta*100:NaN;
+    const ok=Number.isFinite(x.media)&&Number.isFinite(x.meta)?x.media>=x.meta:true;
+    const largura=Number.isFinite(pct)?Math.max(0,Math.min(pct,150))/1.5:0;
+    return `<tr><td>${x.frota}</td><td>${_fmt(x.litros,2)} L</td><td>${_fmt(x.meta,2)} km/L</td>
+      <td class="perf-real">${_fmt(x.media,2)} km/L</td>
+      <td><div class="perf-pct">${Number.isFinite(pct)?_fmt(pct,2)+'%':'-'}</div><div class="perf-bar"><i style="width:${largura}%"></i></div></td>
+      <td><span class="perf-status ${ok?'':'bad'}">${ok?'DENTRO DA META':'PONTO DE ATENÇÃO'}</span></td></tr>`;
   }).join('');
-
-  const ordenado=[...dados].sort((a,b)=>b.media-a.media);
-  if(rank) rank.innerHTML=ordenado.map((x,i)=>{
-    const ok=x.media>=x.meta;
-    return `<div class="rank-item ${ok?'':'bad'}">
-      <div class="rank-pos">${String(i+1).padStart(2,'0')}</div>
-      <div><div class="rank-name">${x.frota}</div><div class="rank-meta">Meta ${fmt(x.meta,2)} km/L</div></div>
-      <div class="rank-value">${fmt(x.media,2)}</div>
-    </div>`;
+  const ordenado=[...dados].filter(x=>Number.isFinite(x.media)).sort((a,b)=>b.media-a.media);
+  if(rank)rank.innerHTML=ordenado.map((x,i)=>{
+    const ok=Number.isFinite(x.meta)?x.media>=x.meta:true;
+    return `<div class="rank-item ${ok?'':'bad'}"><div class="rank-pos">${String(i+1).padStart(2,'0')}</div>
+      <div><div class="rank-name">${x.frota}</div><div class="rank-meta">Meta ${_fmt(x.meta,2)} km/L</div></div>
+      <div class="rank-value">${_fmt(x.media,2)}</div></div>`;
   }).join('');
 }
 
@@ -262,8 +228,8 @@ function filtrarPeriodo(registros){
   return registros.filter(r=>{const d=parseDataBR(r.data);return d&&d>=limite;});
 }
 function renderizar(registros){
+  renderPerformance(registros);
   const dados=filtrarPeriodo(registros||[]);
-  renderPerformance(dados);
   const litros=dados.reduce((s,r)=>s+n(r.litros),0);
   const validos=dados.filter(r=>n(r.realizado)>0&&n(r.meta)>0);
   const pv={};
